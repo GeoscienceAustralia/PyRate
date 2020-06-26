@@ -22,10 +22,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -146,11 +146,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -251,9 +252,11 @@
 </li>
       <li><a href="config.html#pyrate.core.config.APSEST">APSEST (in module pyrate.core.config)</a>
 </li>
+      <li><a href="mpiops.html#pyrate.core.mpiops.array_split">array_split() (in module pyrate.core.mpiops)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="mpiops.html#pyrate.core.mpiops.array_split">array_split() (in module pyrate.core.mpiops)</a>
+      <li><a href="pyrate.merge.html#pyrate.merge.assemble_tiles">assemble_tiles() (in module pyrate.merge)</a>
 </li>
       <li><a href="shared.html#pyrate.core.shared.Incidence.azimuth_band">azimuth_band() (pyrate.core.shared.Incidence property)</a>
 </li>
@@ -291,11 +294,13 @@
 </li>
       <li><a href="gamma.html#pyrate.core.gamma.combine_headers">combine_headers() (in module pyrate.core.gamma)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="config.html#pyrate.core.config.ConfigException">ConfigException</a>
 </li>
-      <li><a href="config.html#pyrate.core.config.convert_geographic_coordinate_to_pixel_value">convert_geographic_coordinate_to_pixel_value() (in module pyrate.core.config)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="refpixel.html#pyrate.core.refpixel.convert_geographic_coordinate_to_pixel_value">convert_geographic_coordinate_to_pixel_value() (in module pyrate.core.refpixel)</a>
+</li>
+      <li><a href="refpixel.html#pyrate.core.refpixel.convert_pixel_value_to_geographic_coordinate">convert_pixel_value_to_geographic_coordinate() (in module pyrate.core.refpixel)</a>
 </li>
       <li><a href="shared.html#pyrate.core.shared.convert_radians_to_mm">convert_radians_to_mm() (in module pyrate.core.shared)</a>
 </li>
@@ -305,7 +310,7 @@
 </li>
       <li><a href="shared.html#pyrate.core.shared.CorrectionStatusError">CorrectionStatusError</a>
 </li>
-      <li><a href="pyrate.merge.html#pyrate.merge.create_png_from_tif">create_png_from_tif() (in module pyrate.merge)</a>
+      <li><a href="pyrate.merge.html#pyrate.merge.create_png_and_kml_from_tif">create_png_and_kml_from_tif() (in module pyrate.merge)</a>
 </li>
       <li><a href="shared.html#pyrate.core.shared.create_tiles">create_tiles() (in module pyrate.core.shared)</a>
 </li>
@@ -365,6 +370,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="pyrate.prepifg.html#pyrate.prepifg.find_header">find_header() (in module pyrate.prepifg)</a>
+</li>
       <li><a href="refpixel.html#pyrate.core.refpixel.find_min_mean">find_min_mean() (in module pyrate.core.refpixel)</a>
 </li>
   </ul></td>
@@ -400,8 +407,6 @@
       <li><a href="shared.html#pyrate.core.shared.get_geotiff_header_info">get_geotiff_header_info() (in module pyrate.core.shared)</a>
 </li>
       <li><a href="gamma.html#pyrate.core.gamma.get_header_paths">get_header_paths() (in module pyrate.core.gamma)</a>
-</li>
-      <li><a href="config.html#pyrate.core.config.get_ifg_paths">get_ifg_paths() (in module pyrate.core.config)</a>
 </li>
       <li><a href="orbital.html#pyrate.core.orbital.get_network_design_matrix">get_network_design_matrix() (in module pyrate.core.orbital)</a>
 </li>
@@ -447,10 +452,10 @@
 </li>
       <li><a href="config.html#pyrate.core.config.IFG_YFIRST">IFG_YFIRST (in module pyrate.core.config)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="config.html#pyrate.core.config.IFG_YLAST">IFG_YLAST (in module pyrate.core.config)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="shared.html#pyrate.core.shared.IfgException">IfgException</a>
 </li>
       <li><a href="shared.html#pyrate.core.shared.IfgPart">IfgPart (class in pyrate.core.shared)</a>
@@ -464,6 +469,8 @@
       <li><a href="orbital.html#pyrate.core.orbital.independent_orbital_correction">independent_orbital_correction() (in module pyrate.core.orbital)</a>
 </li>
       <li><a href="shared.html#pyrate.core.shared.Ifg.initialize">initialize() (pyrate.core.shared.Ifg method)</a>
+</li>
+      <li><a href="shared.html#pyrate.core.shared.InputTypes">InputTypes (class in pyrate.core.shared)</a>
 </li>
       <li><a href="shared.html#pyrate.core.shared.RasterBase.is_open">is_open() (pyrate.core.shared.RasterBase property)</a>
 </li>
@@ -517,14 +524,65 @@
 </li>
       <li><a href="gamma.html#pyrate.core.gamma.manage_headers">manage_headers() (in module pyrate.core.gamma)</a>
 </li>
+      <li><a href="stack.html#pyrate.core.stack.mask_rate">mask_rate() (in module pyrate.core.stack)</a>
+</li>
       <li><a href="algorithm.html#pyrate.core.algorithm.master_slave_ids">master_slave_ids() (in module pyrate.core.algorithm)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="shared.html#pyrate.core.shared.mkdir_p">mkdir_p() (in module pyrate.core.shared)</a>
 </li>
       <li><a href="config.html#pyrate.core.config.mlooked_path">mlooked_path() (in module pyrate.core.config)</a>
 </li>
+      <li>
+    module
+
+      <ul>
+        <li><a href="pyrate.conv2tif.html#module-pyrate.conv2tif">pyrate.conv2tif</a>
+</li>
+        <li><a href="algorithm.html#module-pyrate.core.algorithm">pyrate.core.algorithm</a>
+</li>
+        <li><a href="aps.html#module-pyrate.core.aps">pyrate.core.aps</a>
+</li>
+        <li><a href="config.html#module-pyrate.core.config">pyrate.core.config</a>
+</li>
+        <li><a href="covariance.html#module-pyrate.core.covariance">pyrate.core.covariance</a>
+</li>
+        <li><a href="gamma.html#module-pyrate.core.gamma">pyrate.core.gamma</a>
+</li>
+        <li><a href="gdal_python.html#module-pyrate.core.gdal_python">pyrate.core.gdal_python</a>
+</li>
+        <li><a href="ifgconstants.html#module-pyrate.core.ifgconstants">pyrate.core.ifgconstants</a>
+</li>
+        <li><a href="logger.html#module-pyrate.core.logger">pyrate.core.logger</a>
+</li>
+        <li><a href="mpiops.html#module-pyrate.core.mpiops">pyrate.core.mpiops</a>
+</li>
+        <li><a href="mst.html#module-pyrate.core.mst">pyrate.core.mst</a>
+</li>
+        <li><a href="orbital.html#module-pyrate.core.orbital">pyrate.core.orbital</a>
+</li>
+        <li><a href="prepifg_helper.html#module-pyrate.core.prepifg_helper">pyrate.core.prepifg_helper</a>
+</li>
+        <li><a href="ref_phs_est.html#module-pyrate.core.ref_phs_est">pyrate.core.ref_phs_est</a>
+</li>
+        <li><a href="refpixel.html#module-pyrate.core.refpixel">pyrate.core.refpixel</a>
+</li>
+        <li><a href="roipac.html#module-pyrate.core.roipac">pyrate.core.roipac</a>
+</li>
+        <li><a href="shared.html#module-pyrate.core.shared">pyrate.core.shared</a>
+</li>
+        <li><a href="stack.html#module-pyrate.core.stack">pyrate.core.stack</a>
+</li>
+        <li><a href="timeseries.html#module-pyrate.core.timeseries">pyrate.core.timeseries</a>
+</li>
+        <li><a href="pyrate.merge.html#module-pyrate.merge">pyrate.merge</a>
+</li>
+        <li><a href="pyrate.prepifg.html#module-pyrate.prepifg">pyrate.prepifg</a>
+</li>
+        <li><a href="pyrate.process.html#module-pyrate.process">pyrate.process</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="logger.html#pyrate.core.logger.MPIFileHandler">MPIFileHandler (class in pyrate.core.logger)</a>
 </li>
       <li><a href="mst.html#pyrate.core.mst.mst_boolean_array">mst_boolean_array() (in module pyrate.core.mst)</a>
@@ -649,52 +707,162 @@
 </li>
       <li><a href="config.html#pyrate.core.config.PROCESSOR">PROCESSOR (in module pyrate.core.config)</a>
 </li>
-      <li><a href="pyrate.conv2tif.html#module-pyrate.conv2tif">pyrate.conv2tif (module)</a>
+      <li>
+    pyrate.conv2tif
+
+      <ul>
+        <li><a href="pyrate.conv2tif.html#module-pyrate.conv2tif">module</a>
 </li>
-      <li><a href="algorithm.html#module-pyrate.core.algorithm">pyrate.core.algorithm (module)</a>
+      </ul></li>
+      <li>
+    pyrate.core.algorithm
+
+      <ul>
+        <li><a href="algorithm.html#module-pyrate.core.algorithm">module</a>
 </li>
-      <li><a href="aps.html#module-pyrate.core.aps">pyrate.core.aps (module)</a>
+      </ul></li>
+      <li>
+    pyrate.core.aps
+
+      <ul>
+        <li><a href="aps.html#module-pyrate.core.aps">module</a>
 </li>
+      </ul></li>
+      <li>
+    pyrate.core.config
+
+      <ul>
+        <li><a href="config.html#module-pyrate.core.config">module</a>
+</li>
+      </ul></li>
+      <li>
+    pyrate.core.covariance
+
+      <ul>
+        <li><a href="covariance.html#module-pyrate.core.covariance">module</a>
+</li>
+      </ul></li>
+      <li>
+    pyrate.core.gamma
+
+      <ul>
+        <li><a href="gamma.html#module-pyrate.core.gamma">module</a>
+</li>
+      </ul></li>
+      <li>
+    pyrate.core.gdal_python
+
+      <ul>
+        <li><a href="gdal_python.html#module-pyrate.core.gdal_python">module</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="config.html#module-pyrate.core.config">pyrate.core.config (module)</a>
+      <li>
+    pyrate.core.ifgconstants
+
+      <ul>
+        <li><a href="ifgconstants.html#module-pyrate.core.ifgconstants">module</a>
 </li>
-      <li><a href="covariance.html#module-pyrate.core.covariance">pyrate.core.covariance (module)</a>
+      </ul></li>
+      <li>
+    pyrate.core.logger
+
+      <ul>
+        <li><a href="logger.html#module-pyrate.core.logger">module</a>
 </li>
-      <li><a href="gamma.html#module-pyrate.core.gamma">pyrate.core.gamma (module)</a>
+      </ul></li>
+      <li>
+    pyrate.core.mpiops
+
+      <ul>
+        <li><a href="mpiops.html#module-pyrate.core.mpiops">module</a>
 </li>
-      <li><a href="gdal_python.html#module-pyrate.core.gdal_python">pyrate.core.gdal_python (module)</a>
+      </ul></li>
+      <li>
+    pyrate.core.mst
+
+      <ul>
+        <li><a href="mst.html#module-pyrate.core.mst">module</a>
 </li>
-      <li><a href="ifgconstants.html#module-pyrate.core.ifgconstants">pyrate.core.ifgconstants (module)</a>
+      </ul></li>
+      <li>
+    pyrate.core.orbital
+
+      <ul>
+        <li><a href="orbital.html#module-pyrate.core.orbital">module</a>
 </li>
-      <li><a href="logger.html#module-pyrate.core.logger">pyrate.core.logger (module)</a>
+      </ul></li>
+      <li>
+    pyrate.core.prepifg_helper
+
+      <ul>
+        <li><a href="prepifg_helper.html#module-pyrate.core.prepifg_helper">module</a>
 </li>
-      <li><a href="mpiops.html#module-pyrate.core.mpiops">pyrate.core.mpiops (module)</a>
+      </ul></li>
+      <li>
+    pyrate.core.ref_phs_est
+
+      <ul>
+        <li><a href="ref_phs_est.html#module-pyrate.core.ref_phs_est">module</a>
 </li>
-      <li><a href="mst.html#module-pyrate.core.mst">pyrate.core.mst (module)</a>
+      </ul></li>
+      <li>
+    pyrate.core.refpixel
+
+      <ul>
+        <li><a href="refpixel.html#module-pyrate.core.refpixel">module</a>
 </li>
-      <li><a href="orbital.html#module-pyrate.core.orbital">pyrate.core.orbital (module)</a>
+      </ul></li>
+      <li>
+    pyrate.core.roipac
+
+      <ul>
+        <li><a href="roipac.html#module-pyrate.core.roipac">module</a>
 </li>
-      <li><a href="prepifg_helper.html#module-pyrate.core.prepifg_helper">pyrate.core.prepifg_helper (module)</a>
+      </ul></li>
+      <li>
+    pyrate.core.shared
+
+      <ul>
+        <li><a href="shared.html#module-pyrate.core.shared">module</a>
 </li>
-      <li><a href="ref_phs_est.html#module-pyrate.core.ref_phs_est">pyrate.core.ref_phs_est (module)</a>
+      </ul></li>
+      <li>
+    pyrate.core.stack
+
+      <ul>
+        <li><a href="stack.html#module-pyrate.core.stack">module</a>
 </li>
-      <li><a href="refpixel.html#module-pyrate.core.refpixel">pyrate.core.refpixel (module)</a>
+      </ul></li>
+      <li>
+    pyrate.core.timeseries
+
+      <ul>
+        <li><a href="timeseries.html#module-pyrate.core.timeseries">module</a>
 </li>
-      <li><a href="roipac.html#module-pyrate.core.roipac">pyrate.core.roipac (module)</a>
+      </ul></li>
+      <li>
+    pyrate.merge
+
+      <ul>
+        <li><a href="pyrate.merge.html#module-pyrate.merge">module</a>
 </li>
-      <li><a href="shared.html#module-pyrate.core.shared">pyrate.core.shared (module)</a>
+      </ul></li>
+      <li>
+    pyrate.prepifg
+
+      <ul>
+        <li><a href="pyrate.prepifg.html#module-pyrate.prepifg">module</a>
 </li>
-      <li><a href="stack.html#module-pyrate.core.stack">pyrate.core.stack (module)</a>
+      </ul></li>
+      <li>
+    pyrate.process
+
+      <ul>
+        <li><a href="pyrate.process.html#module-pyrate.process">module</a>
 </li>
-      <li><a href="timeseries.html#module-pyrate.core.timeseries">pyrate.core.timeseries (module)</a>
-</li>
-      <li><a href="pyrate.merge.html#module-pyrate.merge">pyrate.merge (module)</a>
-</li>
-      <li><a href="pyrate.prepifg.html#module-pyrate.prepifg">pyrate.prepifg (module)</a>
-</li>
-      <li><a href="pyrate.process.html#module-pyrate.process">pyrate.process (module)</a>
-</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -773,7 +941,9 @@
 </li>
       <li><a href="aps.html#pyrate.core.aps.spatio_temporal_filter">spatio_temporal_filter() (in module pyrate.core.aps)</a>
 </li>
-      <li><a href="stack.html#pyrate.core.stack.stack_rate">stack_rate() (in module pyrate.core.stack)</a>
+      <li><a href="stack.html#pyrate.core.stack.stack_rate_array">stack_rate_array() (in module pyrate.core.stack)</a>
+</li>
+      <li><a href="stack.html#pyrate.core.stack.stack_rate_pixel">stack_rate_pixel() (in module pyrate.core.stack)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -818,46 +988,16 @@
       <li><a href="algorithm.html#pyrate.core.algorithm.unit_vector">unit_vector() (in module pyrate.core.algorithm)</a>
 </li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="refpixel.html#pyrate.core.refpixel.update_refpix_metadata">update_refpix_metadata() (in module pyrate.core.refpixel)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="config.html#pyrate.core.config.validate_coherence_files">validate_coherence_files() (in module pyrate.core.config)</a>
-</li>
-      <li><a href="config.html#pyrate.core.config.validate_compulsory_parameters">validate_compulsory_parameters() (in module pyrate.core.config)</a>
-</li>
-      <li><a href="config.html#pyrate.core.config.validate_crop_parameters">validate_crop_parameters() (in module pyrate.core.config)</a>
-</li>
-      <li><a href="config.html#pyrate.core.config.validate_epoch_cutoff">validate_epoch_cutoff() (in module pyrate.core.config)</a>
-</li>
-      <li><a href="config.html#pyrate.core.config.validate_epoch_thresholds">validate_epoch_thresholds() (in module pyrate.core.config)</a>
-</li>
-      <li><a href="config.html#pyrate.core.config.validate_epochs">validate_epochs() (in module pyrate.core.config)</a>
-</li>
-      <li><a href="config.html#pyrate.core.config.validate_gamma_headers">validate_gamma_headers() (in module pyrate.core.config)</a>
-</li>
-      <li><a href="config.html#pyrate.core.config.validate_ifgs">validate_ifgs() (in module pyrate.core.config)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="config.html#pyrate.core.config.validate_minimum_epochs">validate_minimum_epochs() (in module pyrate.core.config)</a>
-</li>
-      <li><a href="config.html#pyrate.core.config.validate_multilook_parameters">validate_multilook_parameters() (in module pyrate.core.config)</a>
-</li>
-      <li><a href="config.html#pyrate.core.config.validate_obs_thresholds">validate_obs_thresholds() (in module pyrate.core.config)</a>
-</li>
-      <li><a href="config.html#pyrate.core.config.validate_optional_parameters">validate_optional_parameters() (in module pyrate.core.config)</a>
-</li>
-      <li><a href="config.html#pyrate.core.config.validate_parameters">validate_parameters() (in module pyrate.core.config)</a>
-</li>
-      <li><a href="config.html#pyrate.core.config.validate_prepifg_tifs_exist">validate_prepifg_tifs_exist() (in module pyrate.core.config)</a>
-</li>
-      <li><a href="config.html#pyrate.core.config.validate_reference_pixel_search_windows">validate_reference_pixel_search_windows() (in module pyrate.core.config)</a>
-</li>
-      <li><a href="config.html#pyrate.core.config.validate_slpf_cutoff">validate_slpf_cutoff() (in module pyrate.core.config)</a>
-</li>
-      <li><a href="config.html#pyrate.core.config.validate_tifs_exist">validate_tifs_exist() (in module pyrate.core.config)</a>
+      <li><a href="refpixel.html#pyrate.core.refpixel.validate_supplied_lat_lon">validate_supplied_lat_lon() (in module pyrate.core.refpixel)</a>
 </li>
   </ul></td>
 </tr></table>

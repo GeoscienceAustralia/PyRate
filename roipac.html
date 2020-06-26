@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -147,11 +147,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -231,15 +232,15 @@
   <div class="section" id="module-pyrate.core.roipac">
 <span id="roi-pac-module"></span><h1>ROI_PAC Module<a class="headerlink" href="#module-pyrate.core.roipac" title="Permalink to this headline">¶</a></h1>
 <p>This Python module contains tools for reading ROI_PAC format input data.</p>
-<dl class="exception">
+<dl class="py exception">
 <dt id="pyrate.core.roipac.RoipacException">
 <em class="property">exception </em><code class="sig-prename descclassname">pyrate.core.roipac.</code><code class="sig-name descname">RoipacException</code><a class="reference internal" href="_modules/pyrate/core/roipac.html#RoipacException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.roipac.RoipacException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convenience class for throwing exception</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.roipac.manage_header">
-<code class="sig-prename descclassname">pyrate.core.roipac.</code><code class="sig-name descname">manage_header</code><span class="sig-paren">(</span><em class="sig-param">header_file</em>, <em class="sig-param">projection</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/roipac.html#manage_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.roipac.manage_header" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.roipac.</code><code class="sig-name descname">manage_header</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">header_file</span></em>, <em class="sig-param"><span class="n">projection</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/roipac.html#manage_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.roipac.manage_header" title="Permalink to this definition">¶</a></dt>
 <dd><p>Manage header files for ROI_PAC interferograms and DEM files.
 NB: projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]</p>
 <dl class="field-list simple">
@@ -258,9 +259,9 @@ NB: projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.roipac.parse_date">
-<code class="sig-prename descclassname">pyrate.core.roipac.</code><code class="sig-name descname">parse_date</code><span class="sig-paren">(</span><em class="sig-param">dstr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/roipac.html#parse_date"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.roipac.parse_date" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.roipac.</code><code class="sig-name descname">parse_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dstr</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/roipac.html#parse_date"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.roipac.parse_date" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parses ROI_PAC ‘yymmdd’ or ‘yymmdd-yymmdd’ format string to datetime.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -275,9 +276,9 @@ NB: projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.roipac.parse_header">
-<code class="sig-prename descclassname">pyrate.core.roipac.</code><code class="sig-name descname">parse_header</code><span class="sig-paren">(</span><em class="sig-param">hdr_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/roipac.html#parse_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.roipac.parse_header" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.roipac.</code><code class="sig-name descname">parse_header</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hdr_file</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/roipac.html#parse_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.roipac.parse_header" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parses ROI_PAC header file metadata to a dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -292,9 +293,9 @@ NB: projection = roipac.parse_header(dem_file)[ifc.PYRATE_DATUM]</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.roipac.roipac_header">
-<code class="sig-prename descclassname">pyrate.core.roipac.</code><code class="sig-name descname">roipac_header</code><span class="sig-paren">(</span><em class="sig-param">file_path</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/roipac.html#roipac_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.roipac.roipac_header" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.roipac.</code><code class="sig-name descname">roipac_header</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span></em>, <em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/roipac.html#roipac_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.roipac.roipac_header" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function to obtain a header for roipac interferogram file or converted
 geotiff.</p>
 </dd></dl>

@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -145,11 +145,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -494,9 +495,9 @@
 
 
 <div class="viewcode-block" id="crop_resample_average"><a class="viewcode-back" href="../../../gdal_python.html#pyrate.core.gdal_python.crop_resample_average">[docs]</a><span class="k">def</span> <span class="nf">crop_resample_average</span><span class="p">(</span>
-        <span class="n">input_tif</span><span class="p">,</span> <span class="n">extents</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">],</span> <span class="n">new_res</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span>
-        <span class="n">out_driver_type</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span>
-        <span class="n">match_pyrate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">hdr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">coherence_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">coherence_thresh</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">input_tif</span><span class="p">,</span> <span class="n">extents</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">],</span> <span class="n">new_res</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">hdr</span><span class="p">,</span> <span class="n">out_driver_type</span><span class="o">=</span><span class="s1">&#39;GTiff&#39;</span><span class="p">,</span>
+        <span class="n">match_pyrate</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">coherence_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">coherence_thresh</span><span class="o">=</span><span class="kc">None</span>
+        <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Crop, resample, and average a geotiff image.</span>
 
@@ -543,11 +544,8 @@
     <span class="n">gt</span> <span class="o">=</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">GetGeoTransform</span><span class="p">()</span>
     <span class="n">wkt</span> <span class="o">=</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">GetProjection</span><span class="p">()</span>
 
-    <span class="c1"># TEST HERE IF EXISTING FILE HAS PYRATE METADATA. IF NOT ADD HERE</span>
-    <span class="k">if</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">GetMetadata</span><span class="p">()</span> <span class="ow">and</span> <span class="n">hdr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">md</span> <span class="o">=</span> <span class="n">shared</span><span class="o">.</span><span class="n">collate_metadata</span><span class="p">(</span><span class="n">hdr</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">md</span> <span class="o">=</span> <span class="n">dst_ds</span><span class="o">.</span><span class="n">GetMetadata</span><span class="p">()</span>
+    <span class="c1"># insert metadata from the header</span>
+    <span class="n">md</span> <span class="o">=</span> <span class="n">shared</span><span class="o">.</span><span class="n">collate_metadata</span><span class="p">(</span><span class="n">hdr</span><span class="p">)</span>
 
     <span class="c1"># update metadata for output</span>
 
@@ -560,15 +558,12 @@
                 <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">:</span> <span class="n">ifc</span><span class="o">.</span><span class="n">COHERENCE</span><span class="p">})</span>
             <span class="k">elif</span> <span class="p">(</span><span class="n">v</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">ORIG</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">coherence_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
                 <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">:</span> <span class="n">ifc</span><span class="o">.</span><span class="n">MULTILOOKED</span><span class="p">})</span>
+            <span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">COH</span><span class="p">:</span>
+                <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">:</span> <span class="n">ifc</span><span class="o">.</span><span class="n">MULTILOOKED_COH</span><span class="p">})</span>
             <span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DEM</span><span class="p">:</span>
                 <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">:</span> <span class="n">ifc</span><span class="o">.</span><span class="n">MLOOKED_DEM</span><span class="p">})</span>
             <span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">INCIDENCE</span><span class="p">:</span>
                 <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">:</span> <span class="n">ifc</span><span class="o">.</span><span class="n">MLOOKED_INC</span><span class="p">})</span>
-            <span class="k">elif</span> <span class="p">(</span><span class="n">v</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">COHERENCE</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">coherence_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
-                <span class="c1"># during orbital fit multilooking</span>
-                <span class="k">pass</span>
-            <span class="k">elif</span> <span class="n">v</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">MULTILOOKED</span><span class="p">:</span>
-                <span class="k">pass</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Data Type metadata </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s1"> not recognised&#39;</span><span class="p">)</span>
 

@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -147,11 +147,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -231,15 +232,38 @@
   <div class="section" id="module-pyrate.merge">
 <span id="pyrate-merge-script"></span><h1>PyRate Merge Script<a class="headerlink" href="#module-pyrate.merge" title="Permalink to this headline">¶</a></h1>
 <p>This Python module does post-processing steps to assemble the
-rate and time series outputs and save as geotiff files</p>
-<dl class="function">
-<dt id="pyrate.merge.create_png_from_tif">
-<code class="sig-prename descclassname">pyrate.merge.</code><code class="sig-name descname">create_png_from_tif</code><span class="sig-paren">(</span><em class="sig-param">output_folder_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/merge.html#create_png_from_tif"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.merge.create_png_from_tif" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+stack rate and time series outputs and save as geotiff files</p>
+<dl class="py function">
+<dt id="pyrate.merge.assemble_tiles">
+<code class="sig-prename descclassname">pyrate.merge.</code><code class="sig-name descname">assemble_tiles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">s</span></em>, <em class="sig-param"><span class="n">dir</span></em>, <em class="sig-param"><span class="n">tiles</span></em>, <em class="sig-param"><span class="n">out_type</span></em>, <em class="sig-param"><span class="n">index</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/merge.html#assemble_tiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.merge.assemble_tiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to reassemble tiles from numpy files in to a merged array</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>s</strong> (<em>tuple</em>) – shape for merged array.</p></li>
+<li><p><strong>dir</strong> (<em>str</em>) – path to directory containing numpy tile files.</p></li>
+<li><p><strong>out_type</strong> (<em>str</em>) – product type string, used to construct numpy tile file name.</p></li>
+<li><p><strong>index</strong> (<em>int</em>) – array third dimension index to extract from 3D time series array tiles.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>merged_array: array assembled from all tiles.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
 
-<dl class="function">
+<dl class="py function">
+<dt id="pyrate.merge.create_png_and_kml_from_tif">
+<code class="sig-prename descclassname">pyrate.merge.</code><code class="sig-name descname">create_png_and_kml_from_tif</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_folder_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">output_type</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/pyrate/merge.html#create_png_and_kml_from_tif"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.merge.create_png_and_kml_from_tif" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to create a preview PNG format image from a geotiff, and a KML file</p>
+</dd></dl>
+
+<dl class="py function">
 <dt id="pyrate.merge.main">
-<code class="sig-prename descclassname">pyrate.merge.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/merge.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.merge.main" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.merge.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/merge.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.merge.main" title="Permalink to this definition">¶</a></dt>
 <dd><p>PyRate merge main function. Assembles product tiles in to
 single geotiff files</p>
 </dd></dl>

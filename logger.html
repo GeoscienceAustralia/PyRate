@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -147,11 +147,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -231,19 +232,19 @@
   <div class="section" id="module-pyrate.core.logger">
 <span id="logging-module"></span><h1>Logging Module<a class="headerlink" href="#module-pyrate.core.logger" title="Permalink to this headline">¶</a></h1>
 <p>This Python module contains functions to control PyRate log outputs</p>
-<dl class="class">
+<dl class="py class">
 <dt id="pyrate.core.logger.MPIFileHandler">
 <em class="property">class </em><code class="sig-prename descclassname">pyrate.core.logger.</code><code class="sig-name descname">MPIFileHandler</code><span class="sig-paren">(</span><em class="sig-param">filename</em>, <em class="sig-param">mode=133</em>, <em class="sig-param">encoding='utf-8'</em>, <em class="sig-param">delay=False</em>, <em class="sig-param">comm=&lt;mpi4py.MPI.Intracomm object&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/logger.html#MPIFileHandler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.logger.MPIFileHandler" title="Permalink to this definition">¶</a></dt>
 <dd><p>stolen from: <a class="reference external" href="https://gist.github.com/chengdi123000/42ec8ed2cbef09ee050766c2f25498cb">https://gist.github.com/chengdi123000/42ec8ed2cbef09ee050766c2f25498cb</a></p>
-<dl class="method">
+<dl class="py method">
 <dt id="pyrate.core.logger.MPIFileHandler.close">
 <code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/logger.html#MPIFileHandler.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.logger.MPIFileHandler.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Closes the stream.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="pyrate.core.logger.MPIFileHandler.emit">
-<code class="sig-name descname">emit</code><span class="sig-paren">(</span><em class="sig-param">record</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/logger.html#MPIFileHandler.emit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.logger.MPIFileHandler.emit" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">emit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">record</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/logger.html#MPIFileHandler.emit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.logger.MPIFileHandler.emit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Emit a record.</p>
 <p>If a formatter is specified, it is used to format the record.
 The record is then written to the stream with a trailing newline.  If
@@ -262,9 +263,9 @@ only once in each all of this emit function to keep atomicity.</p>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.logger.warn_with_traceback">
-<code class="sig-prename descclassname">pyrate.core.logger.</code><code class="sig-name descname">warn_with_traceback</code><span class="sig-paren">(</span><em class="sig-param">message</em>, <em class="sig-param">category</em>, <em class="sig-param">filename</em>, <em class="sig-param">lineno</em>, <em class="sig-param">line=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/logger.html#warn_with_traceback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.logger.warn_with_traceback" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.logger.</code><code class="sig-name descname">warn_with_traceback</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em>, <em class="sig-param"><span class="n">category</span></em>, <em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="n">lineno</span></em>, <em class="sig-param"><span class="n">line</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/logger.html#warn_with_traceback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.logger.warn_with_traceback" title="Permalink to this definition">¶</a></dt>
 <dd><p>copied from:
 <a class="reference external" href="http://stackoverflow.com/questions/22373927/get-traceback-of-warnings">http://stackoverflow.com/questions/22373927/get-traceback-of-warnings</a></p>
 </dd></dl>

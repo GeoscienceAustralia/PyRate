@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -145,11 +145,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -245,9 +246,11 @@
 <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">floor</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">basename</span><span class="p">,</span> <span class="n">join</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span> <span class="nn">struct</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">where</span><span class="p">,</span> <span class="n">nan</span><span class="p">,</span> <span class="n">isnan</span><span class="p">,</span> <span class="nb">sum</span> <span class="k">as</span> <span class="n">nsum</span><span class="p">,</span> <span class="n">isclose</span>
 <span class="kn">import</span> <span class="nn">pyproj</span>
@@ -278,6 +281,13 @@
 <span class="n">GDAL_Y_CELLSIZE</span> <span class="o">=</span> <span class="mi">5</span>
 <span class="n">GDAL_X_FIRST</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="n">GDAL_Y_FIRST</span> <span class="o">=</span> <span class="mi">3</span>
+
+
+<div class="viewcode-block" id="InputTypes"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.InputTypes">[docs]</a><span class="k">class</span> <span class="nc">InputTypes</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">IFG</span> <span class="o">=</span> <span class="s1">&#39;_ifg&#39;</span>
+    <span class="n">COH</span> <span class="o">=</span> <span class="s1">&#39;_coh&#39;</span>
+    <span class="n">DEM</span> <span class="o">=</span> <span class="s1">&#39;_dem&#39;</span>
+    <span class="n">HEADER</span> <span class="o">=</span> <span class="s1">&#39;_header&#39;</span></div>
 
 
 <div class="viewcode-block" id="joblib_log_level"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.joblib_log_level">[docs]</a><span class="k">def</span> <span class="nf">joblib_log_level</span><span class="p">(</span><span class="n">level</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -484,12 +494,13 @@
 <span class="sd">    interferometric phase raster band data and related data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># pylint: disable=too-many-instance-attributes</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Interferogram constructor, for 2-band Ifg raster datasets.</span>
 
 <span class="sd">        :param str path: Path to interferogram file</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">Path</span><span class="p">)</span> <span class="k">else</span> <span class="n">path</span>
         <span class="n">RasterBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_phase_band</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_phase_data</span> <span class="o">=</span> <span class="kc">None</span>
@@ -685,7 +696,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">phase_band</span><span class="o">.</span><span class="n">WriteArray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phase_data</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">FlushCache</span><span class="p">()</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">FlushCache</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">add_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_open</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_read_only</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Ifg not open or readonly. Cannot write!&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">FlushCache</span><span class="p">()</span>  <span class="c1"># write to disc</span></div>
 
 
 <div class="viewcode-block" id="IfgPart"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.IfgPart">[docs]</a><span class="k">class</span> <span class="nc">IfgPart</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -900,7 +919,16 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convenience function to determine if file is interferogram</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_WAVELENGTH_METRES</span> <span class="ow">in</span> <span class="n">hdr</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_WAVELENGTH_METRES</span> <span class="ow">in</span> <span class="n">hdr</span><span class="p">)</span> <span class="ow">and</span> \
+           <span class="p">(</span><span class="n">hdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">INPUT_TYPE</span><span class="p">]</span> <span class="o">==</span> <span class="n">InputTypes</span><span class="o">.</span><span class="n">IFG</span> <span class="k">if</span> <span class="n">ifc</span><span class="o">.</span><span class="n">INPUT_TYPE</span> <span class="ow">in</span> <span class="n">hdr</span> <span class="k">else</span> <span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_is_coherence</span><span class="p">(</span><span class="n">hdr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function to determine if file is interferogram</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_WAVELENGTH_METRES</span> <span class="ow">in</span> <span class="n">hdr</span><span class="p">)</span> <span class="ow">and</span> \
+           <span class="p">(</span><span class="n">hdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">INPUT_TYPE</span><span class="p">]</span> <span class="o">==</span> <span class="n">InputTypes</span><span class="o">.</span><span class="n">COH</span> <span class="k">if</span> <span class="n">ifc</span><span class="o">.</span><span class="n">INPUT_TYPE</span> <span class="ow">in</span> <span class="n">hdr</span> <span class="k">else</span> <span class="kc">False</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_is_incidence</span><span class="p">(</span><span class="n">hdr</span><span class="p">):</span>
@@ -946,7 +974,7 @@
         <span class="k">raise</span> <span class="n">GeotiffException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">wkt</span> <span class="o">=</span> <span class="n">srs</span><span class="o">.</span><span class="n">ExportToWkt</span><span class="p">()</span>
-    <span class="n">dtype</span> <span class="o">=</span> <span class="s1">&#39;float32&#39;</span> <span class="k">if</span> <span class="p">(</span><span class="n">_is_interferogram</span><span class="p">(</span><span class="n">header</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_is_incidence</span><span class="p">(</span><span class="n">header</span><span class="p">))</span> <span class="k">else</span> <span class="s1">&#39;int16&#39;</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="s1">&#39;float32&#39;</span> <span class="k">if</span> <span class="p">(</span><span class="n">_is_interferogram</span><span class="p">(</span><span class="n">header</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_is_incidence</span><span class="p">(</span><span class="n">header</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_is_coherence</span><span class="p">(</span><span class="n">header</span><span class="p">))</span> <span class="k">else</span> <span class="s1">&#39;int16&#39;</span>
 
     <span class="c1"># get subset of metadata relevant to PyRate</span>
     <span class="n">md</span> <span class="o">=</span> <span class="n">collate_metadata</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
@@ -1015,19 +1043,27 @@
 <span class="sd">    :return: dict of relevant metadata for PyRate</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">md</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">_is_interferogram</span><span class="p">(</span><span class="n">header</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__common_ifg_coh_update</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">md</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_WAVELENGTH_METRES</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_TIME_SPAN</span><span class="p">,</span>
                   <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INSAR_PROCESSOR</span><span class="p">,</span>
                   <span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">SLAVE_DATE</span><span class="p">,</span>
-                  <span class="n">ifc</span><span class="o">.</span><span class="n">DATA_UNITS</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">]:</span>
+                  <span class="n">ifc</span><span class="o">.</span><span class="n">DATA_UNITS</span><span class="p">]:</span>
             <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="n">k</span><span class="p">])})</span>
         <span class="k">if</span> <span class="n">header</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INSAR_PROCESSOR</span><span class="p">]</span> <span class="o">==</span> <span class="n">GAMMA</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_TIME</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">SLAVE_TIME</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INCIDENCE_DEGREES</span><span class="p">]:</span>
                 <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="n">k</span><span class="p">])})</span>
+
+    <span class="k">if</span> <span class="n">_is_coherence</span><span class="p">(</span><span class="n">header</span><span class="p">):</span>
+        <span class="n">__common_ifg_coh_update</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">md</span><span class="p">)</span>
+        <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">:</span> <span class="n">ifc</span><span class="o">.</span><span class="n">COH</span><span class="p">})</span>
+    <span class="k">elif</span> <span class="n">_is_interferogram</span><span class="p">(</span><span class="n">header</span><span class="p">):</span>
+        <span class="n">__common_ifg_coh_update</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">md</span><span class="p">)</span>
+        <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">:</span> <span class="n">ifc</span><span class="o">.</span><span class="n">ORIG</span><span class="p">})</span>
     <span class="k">elif</span> <span class="n">_is_incidence</span><span class="p">(</span><span class="n">header</span><span class="p">):</span>
-        <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">:</span><span class="n">ifc</span><span class="o">.</span><span class="n">INCIDENCE</span><span class="p">})</span>
-    <span class="k">else</span><span class="p">:</span> <span class="c1"># must be dem</span>
-        <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">:</span><span class="n">ifc</span><span class="o">.</span><span class="n">DEM</span><span class="p">})</span>
+        <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">:</span> <span class="n">ifc</span><span class="o">.</span><span class="n">INCIDENCE</span><span class="p">})</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># must be dem</span>
+        <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">:</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DEM</span><span class="p">})</span>
 
     <span class="k">return</span> <span class="n">md</span></div>
 
@@ -1133,21 +1169,13 @@
 
     <span class="c1"># set other metadata</span>
     <span class="n">ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="s1">&#39;DATA_TYPE&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">md</span><span class="p">[</span><span class="s1">&#39;DATA_TYPE&#39;</span><span class="p">]))</span>
+
     <span class="c1"># sequence position for time series products</span>
-    <span class="k">if</span> <span class="s2">&quot;SEQUENCE_POSITION&quot;</span> <span class="ow">in</span> <span class="n">md</span><span class="p">:</span>
-        <span class="n">ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="s2">&quot;SEQUENCE_POSITION&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">md</span><span class="p">[</span><span class="s2">&quot;SEQUENCE_POSITION&quot;</span><span class="p">]))</span>
-    <span class="k">if</span> <span class="s2">&quot;PYRATE_REFPIX_LAT&quot;</span> <span class="ow">in</span> <span class="n">md</span><span class="p">:</span>
-        <span class="n">ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="s2">&quot;PYRATE_REFPIX_LAT&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">md</span><span class="p">[</span><span class="s2">&quot;PYRATE_REFPIX_LAT&quot;</span><span class="p">]))</span>
-    <span class="k">if</span> <span class="s2">&quot;PYRATE_REFPIX_LON&quot;</span> <span class="ow">in</span> <span class="n">md</span><span class="p">:</span>
-        <span class="n">ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="s2">&quot;PYRATE_REFPIX_LON&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">md</span><span class="p">[</span><span class="s2">&quot;PYRATE_REFPIX_LON&quot;</span><span class="p">]))</span>
-    <span class="k">if</span> <span class="s2">&quot;PYRATE_REFPIX_X&quot;</span> <span class="ow">in</span> <span class="n">md</span><span class="p">:</span>
-        <span class="n">ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="s2">&quot;PYRATE_REFPIX_X&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">md</span><span class="p">[</span><span class="s2">&quot;PYRATE_REFPIX_X&quot;</span><span class="p">]))</span>
-    <span class="k">if</span> <span class="s2">&quot;PYRATE_REFPIX_Y&quot;</span> <span class="ow">in</span> <span class="n">md</span><span class="p">:</span>
-        <span class="n">ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="s2">&quot;PYRATE_REFPIX_Y&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">md</span><span class="p">[</span><span class="s2">&quot;PYRATE_REFPIX_Y&quot;</span><span class="p">]))</span>
-    <span class="k">if</span> <span class="s2">&quot;PYRATE_MEAN_REF_AREA&quot;</span> <span class="ow">in</span> <span class="n">md</span><span class="p">:</span>
-        <span class="n">ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="s2">&quot;PYRATE_MEAN_REF_AREA&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">md</span><span class="p">[</span><span class="s2">&quot;PYRATE_MEAN_REF_AREA&quot;</span><span class="p">]))</span>
-    <span class="k">if</span> <span class="s2">&quot;STANDARD_DEVIATION_REF_AREA&quot;</span> <span class="ow">in</span> <span class="n">md</span><span class="p">:</span>
-        <span class="n">ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="s2">&quot;PYRATE_STANDARD_DEVIATION_REF_AREA&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">md</span><span class="p">[</span><span class="s2">&quot;PYRATE_STANDARD_DEVIATION_REF_AREA&quot;</span><span class="p">]))</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">SEQUENCE_POSITION</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_REFPIX_X</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_REFPIX_Y</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_REFPIX_LAT</span><span class="p">,</span>
+              <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_REFPIX_LON</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_MEAN_REF_AREA</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_STDDEV_REF_AREA</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">md</span><span class="p">:</span>
+            <span class="n">ds</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">md</span><span class="p">[</span><span class="n">k</span><span class="p">]))</span>
 
     <span class="c1"># write data to geotiff</span>
     <span class="n">band</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -1503,13 +1531,13 @@
 
 <span class="k">def</span> <span class="nf">mpi_vs_multiprocess_logging</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Over-ride input options if this is an MPI job</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2"> step using mpi processing. Disabling parallel processing.&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2"> step using MPI processing. Disabling parallel processing.&quot;</span><span class="p">)</span>
         <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PARALLEL</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PARALLEL</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2"> using </span><span class="si">{</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PROCESSES</span><span class="p">]</span><span class="si">}</span><span class="s2"> processes&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2"> step in parallel using </span><span class="si">{</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PROCESSES</span><span class="p">]</span><span class="si">}</span><span class="s2"> processes&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2"> serially&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2"> step in serial&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="dem_or_ifg"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.dem_or_ifg">[docs]</a><span class="k">def</span> <span class="nf">dem_or_ifg</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>

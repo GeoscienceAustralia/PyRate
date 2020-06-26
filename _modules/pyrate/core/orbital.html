@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -145,11 +145,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -286,20 +287,13 @@
 <span class="n">PART_CUBIC</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">PART_CUBIC</span>
 
 
-<div class="viewcode-block" id="remove_orbital_error"><a class="viewcode-back" href="../../../orbital.html#pyrate.core.orbital.remove_orbital_error">[docs]</a><span class="k">def</span> <span class="nf">remove_orbital_error</span><span class="p">(</span><span class="n">ifgs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="remove_orbital_error"><a class="viewcode-back" href="../../../orbital.html#pyrate.core.orbital.remove_orbital_error">[docs]</a><span class="k">def</span> <span class="nf">remove_orbital_error</span><span class="p">(</span><span class="n">ifgs</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">headers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="n">preread_ifgs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wrapper function for PyRate orbital error removal functionality.</span>
 
 <span class="sd">    NB: the ifg data is modified in situ, rather than create intermediate</span>
 <span class="sd">    files. The network method assumes the given ifgs have already been reduced</span>
 <span class="sd">    to a minimum spanning tree network.</span>
-
-<span class="sd">    :param list ifgs: List of interferograms class objects</span>
-<span class="sd">    :param dict params: Dictionary containing configuration parameters</span>
-<span class="sd">    :param dict preread_ifgs: Dictionary containing information specifically</span>
-<span class="sd">        for MPI jobs (optional)</span>
-
-<span class="sd">    :return: None - interferogram phase data is updated and saved to disk</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">ifg_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">data_path</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Ifg</span><span class="p">)</span> <span class="k">else</span> <span class="n">ifgs</span>
@@ -314,7 +308,9 @@
             <span class="n">xlooks</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">ORBITAL_FIT_LOOKS_X</span><span class="p">],</span>
             <span class="n">ylooks</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">ORBITAL_FIT_LOOKS_Y</span><span class="p">],</span>
             <span class="n">thresh</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">NO_DATA_AVERAGING_THRESHOLD</span><span class="p">],</span>
-            <span class="n">write_to_disc</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">write_to_disc</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="n">headers</span>
+        <span class="p">)</span>
         <span class="n">mlooked</span> <span class="o">=</span> <span class="p">[</span><span class="n">Ifg</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mlooked_dataset</span><span class="p">]</span>
 
         <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mlooked</span><span class="p">:</span>

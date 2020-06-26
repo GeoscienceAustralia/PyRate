@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -145,11 +145,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -237,7 +238,6 @@
 <span class="sd">signals.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="c1"># pylint: disable=invalid-name, too-many-locals, too-many-arguments</span>
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
@@ -245,15 +245,14 @@
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">isnan</span>
 <span class="kn">from</span> <span class="nn">scipy.fftpack</span> <span class="kn">import</span> <span class="n">fft2</span><span class="p">,</span> <span class="n">ifft2</span><span class="p">,</span> <span class="n">fftshift</span><span class="p">,</span> <span class="n">ifftshift</span>
 <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">griddata</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.logger</span> <span class="kn">import</span> <span class="n">pyratelogger</span> <span class="k">as</span> <span class="n">log</span>
 
 <span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">shared</span><span class="p">,</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span><span class="p">,</span> <span class="n">mpiops</span><span class="p">,</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.covariance</span> <span class="kn">import</span> <span class="n">cvd_from_phase</span><span class="p">,</span> <span class="n">RDist</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.algorithm</span> <span class="kn">import</span> <span class="n">get_epochs</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">Ifg</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.timeseries</span> <span class="kn">import</span> <span class="n">time_series</span>
-<span class="kn">from</span> <span class="nn">pyrate.merge</span> <span class="kn">import</span> <span class="n">_assemble_tiles</span>
-
-<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pyrate.merge</span> <span class="kn">import</span> <span class="n">assemble_tiles</span>
 
 
 <div class="viewcode-block" id="wrap_spatio_temporal_filter"><a class="viewcode-back" href="../../../aps.html#pyrate.core.aps.wrap_spatio_temporal_filter">[docs]</a><span class="k">def</span> <span class="nf">wrap_spatio_temporal_filter</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">):</span>
@@ -261,8 +260,10 @@
 <span class="sd">    A wrapper for the spatio-temporal filter so it can be tested.</span>
 <span class="sd">    See docstring for spatio_temporal_filter.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">APSEST</span><span class="p">]:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;APS correction not required.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">APSEST</span><span class="p">]:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Doing APS spatio-temporal filtering&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;APS spatio-temporal filtering not required&#39;</span><span class="p">)</span>
         <span class="k">return</span>
 
     <span class="c1"># perform some checks on existing ifgs</span>
@@ -319,16 +320,15 @@
     <span class="n">new_params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_METHOD</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># use SVD method</span>
 
     <span class="n">process_tiles</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">tiles</span><span class="p">)</span>
-    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">]</span>
 
     <span class="n">nvels</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">process_tiles</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Calculating time series for tile </span><span class="si">{}</span><span class="s1"> during APS &#39;</span>
                  <span class="s1">&#39;correction&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
         <span class="n">ifg_parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">shared</span><span class="o">.</span><span class="n">IfgPart</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ifg_paths</span><span class="p">]</span>
-        <span class="n">mst_tile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;mst_mat_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)))</span>
+        <span class="n">mst_tile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="s1">&#39;mst_mat_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)))</span>
         <span class="n">tsincr</span> <span class="o">=</span> <span class="n">time_series</span><span class="p">(</span><span class="n">ifg_parts</span><span class="p">,</span> <span class="n">new_params</span><span class="p">,</span> <span class="n">vcmt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mst</span><span class="o">=</span><span class="n">mst_tile</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;tsincr_aps_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">tsincr</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="s1">&#39;tsincr_aps_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">tsincr</span><span class="p">)</span>
         <span class="n">nvels</span> <span class="o">=</span> <span class="n">tsincr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
 
     <span class="n">nvels</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">nvels</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -343,11 +343,14 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Helper function to reconstruct time series images from tiles</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># pre-allocate dest 3D array</span>
     <span class="n">shape</span> <span class="o">=</span> <span class="n">preread_ifgs</span><span class="p">[</span><span class="n">ifg_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">nvels</span><span class="p">,)</span>
     <span class="n">tsincr_g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="c1"># shape of one 2D time-slice array</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">preread_ifgs</span><span class="p">[</span><span class="n">ifg_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">shape</span>
+    <span class="c1"># loop over the time slices and assemble dest 3D array</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nvels</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tiles</span><span class="p">):</span>
-            <span class="n">_assemble_tiles</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">tsincr_g</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="s1">&#39;tsincr_aps&#39;</span><span class="p">)</span>
+        <span class="n">tsincr_g</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">assemble_tiles</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">out_type</span><span class="o">=</span><span class="s1">&#39;tsincr_aps&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">tsincr_g</span>
 
@@ -402,7 +405,7 @@
 <span class="sd">    :return: ts_hp: filtered time series data of shape (ifg.shape, n_epochs)</span>
 <span class="sd">    :rtype: ndarray</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Applying APS spatial low-pass filter&#39;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Applying spatial low-pass filter&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">SLPF_NANFILL</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">ts_lp</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ts_lp</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># need it here for cvd and fft</span>
     <span class="k">else</span><span class="p">:</span>
@@ -499,7 +502,7 @@
 <span class="sd">    :return: tsfilt_incr: filtered time series data, shape (ifg.shape, nepochs)</span>
 <span class="sd">    :rtype: ndarray</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Applying APS temporal low-pass filter&#39;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Applying temporal low-pass filter&#39;</span><span class="p">)</span>
     <span class="n">nanmat</span> <span class="o">=</span> <span class="o">~</span><span class="n">isnan</span><span class="p">(</span><span class="n">tsincr</span><span class="p">)</span>
     <span class="n">tsfilt_incr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">tsincr</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
     <span class="n">intv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">epochlist</span><span class="o">.</span><span class="n">spans</span><span class="p">)</span>  <span class="c1"># time interval for the neighboring epoch</span>
@@ -516,7 +519,7 @@
         <span class="n">func</span> <span class="o">=</span> <span class="n">mean_filter</span>
 
     <span class="n">_tlpfilter</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">,</span> <span class="n">nanmat</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">tsfilt_incr</span><span class="p">,</span> <span class="n">tsincr</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Finished applying temporal low pass filter&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Finished applying temporal low-pass filter&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">tsfilt_incr</span></div>
 
 <span class="c1"># Throwaway function to define Gaussian filter weights</span>

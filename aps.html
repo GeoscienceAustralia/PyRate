@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -147,11 +147,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -233,9 +234,9 @@
 <p>This Python module implements a spatio-temporal filter method
 for correcting interferograms for atmospheric phase screen (APS)
 signals.</p>
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.aps.spatial_low_pass_filter">
-<code class="sig-prename descclassname">pyrate.core.aps.</code><code class="sig-name descname">spatial_low_pass_filter</code><span class="sig-paren">(</span><em class="sig-param">ts_lp</em>, <em class="sig-param">ifg</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/aps.html#spatial_low_pass_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.aps.spatial_low_pass_filter" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.aps.</code><code class="sig-name descname">spatial_low_pass_filter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ts_lp</span></em>, <em class="sig-param"><span class="n">ifg</span></em>, <em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/aps.html#spatial_low_pass_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.aps.spatial_low_pass_filter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Filter time series data spatially using either a Butterworth or Gaussian
 low pass filter defined by a cut-off distance. If the cut-off distance is
 defined as zero in the parameters dictionary then it is calculated for
@@ -258,9 +259,9 @@ low pass filter operation. shape (ifg.shape, n_epochs)</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.aps.spatio_temporal_filter">
-<code class="sig-prename descclassname">pyrate.core.aps.</code><code class="sig-name descname">spatio_temporal_filter</code><span class="sig-paren">(</span><em class="sig-param">tsincr</em>, <em class="sig-param">ifg</em>, <em class="sig-param">params</em>, <em class="sig-param">preread_ifgs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/aps.html#spatio_temporal_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.aps.spatio_temporal_filter" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.aps.</code><code class="sig-name descname">spatio_temporal_filter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tsincr</span></em>, <em class="sig-param"><span class="n">ifg</span></em>, <em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">preread_ifgs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/aps.html#spatio_temporal_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.aps.spatio_temporal_filter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Applies a spatio-temporal filter to remove the atmospheric phase screen
 (APS) and saves the corrected interferograms. Before performing this step,
 the time series is computed using the SVD method. This function then
@@ -282,9 +283,9 @@ performs temporal and spatial filtering.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.aps.temporal_low_pass_filter">
-<code class="sig-prename descclassname">pyrate.core.aps.</code><code class="sig-name descname">temporal_low_pass_filter</code><span class="sig-paren">(</span><em class="sig-param">tsincr</em>, <em class="sig-param">epochlist</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/aps.html#temporal_low_pass_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.aps.temporal_low_pass_filter" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.aps.</code><code class="sig-name descname">temporal_low_pass_filter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tsincr</span></em>, <em class="sig-param"><span class="n">epochlist</span></em>, <em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/aps.html#temporal_low_pass_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.aps.temporal_low_pass_filter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Filter time series data temporally using either a Gaussian, triangular
 or mean low pass filter defined by a cut-off time period (in years).</p>
 <dl class="field-list simple">
@@ -305,9 +306,9 @@ or mean low pass filter defined by a cut-off time period (in years).</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.aps.wrap_spatio_temporal_filter">
-<code class="sig-prename descclassname">pyrate.core.aps.</code><code class="sig-name descname">wrap_spatio_temporal_filter</code><span class="sig-paren">(</span><em class="sig-param">ifg_paths</em>, <em class="sig-param">params</em>, <em class="sig-param">tiles</em>, <em class="sig-param">preread_ifgs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/aps.html#wrap_spatio_temporal_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.aps.wrap_spatio_temporal_filter" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.aps.</code><code class="sig-name descname">wrap_spatio_temporal_filter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifg_paths</span></em>, <em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">tiles</span></em>, <em class="sig-param"><span class="n">preread_ifgs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/aps.html#wrap_spatio_temporal_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.aps.wrap_spatio_temporal_filter" title="Permalink to this definition">¶</a></dt>
 <dd><p>A wrapper for the spatio-temporal filter so it can be tested.
 See docstring for spatio_temporal_filter.</p>
 </dd></dl>

@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -145,11 +145,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -234,8 +235,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">This Python module contains utilities to parse PyRate configuration</span>
 <span class="sd">files. It also includes numerous general constants relating to options</span>
-<span class="sd">in configuration files. Examples of PyRate configuration files are</span>
-<span class="sd">provided in the configs/ directory</span>
+<span class="sd">in configuration files.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="c1"># coding: utf-8</span>
 <span class="c1"># pylint: disable=invalid-name</span>
@@ -513,7 +513,7 @@
 <span class="n">INT_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="n">APS_CORRECTION</span><span class="p">,</span> <span class="n">APS_METHOD</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="get_config_params"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.get_config_params">[docs]</a><span class="k">def</span> <span class="nf">get_config_params</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="n">CONV2TIF</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<div class="viewcode-block" id="get_config_params"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.get_config_params">[docs]</a><span class="k">def</span> <span class="nf">get_config_params</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reads the parameters file provided by the user and converts it into</span>
 <span class="sd">    a dictionary.</span>
@@ -535,13 +535,13 @@
                     <span class="c1"># create expanded line</span>
                     <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="n">pos</span><span class="p">]</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;HOME&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">line</span><span class="p">[(</span><span class="n">pos</span><span class="o">+</span><span class="mi">1</span><span class="p">):]</span>
             <span class="n">txt</span> <span class="o">+=</span> <span class="n">line</span>
-    <span class="n">params</span> <span class="o">=</span> <span class="n">_parse_conf_file</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">validate</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">_parse_conf_file</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
     <span class="n">params</span><span class="p">[</span><span class="n">TMPDIR</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">OUT_DIR</span><span class="p">]),</span> <span class="s1">&#39;tmpdir&#39;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">params</span></div>
 
 
-<span class="k">def</span> <span class="nf">_parse_conf_file</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="n">CONV2TIF</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_parse_conf_file</span><span class="p">(</span><span class="n">content</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Converts the parameters from their text form into a dictionary.</span>
 
@@ -576,7 +576,7 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">parameters</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">ConfigException</span><span class="p">(</span><span class="s1">&#39;Cannot parse any parameters from config file&#39;</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">_parse_pars</span><span class="p">(</span><span class="n">parameters</span><span class="p">,</span> <span class="n">validate</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_parse_pars</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_handle_extra_parameters</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
@@ -601,7 +601,7 @@
     <span class="k">return</span> <span class="n">params</span>
 
 
-<span class="k">def</span> <span class="nf">_parse_pars</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">validate</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="n">CONV2TIF</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_parse_pars</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Takes dictionary of parameters, converting values to required type</span>
 <span class="sd">    and providing defaults for missing values.</span>
@@ -632,8 +632,6 @@
         <span class="k">if</span> <span class="n">pars</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">pars</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">pars</span><span class="p">[</span><span class="n">OBS_DIR</span><span class="p">]</span>
 
-    <span class="k">if</span> <span class="n">validate</span><span class="p">:</span>
-        <span class="n">validate_parameters</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">pars</span>
 
 
@@ -651,6 +649,7 @@
         <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f_in</span><span class="p">]</span>
     <span class="k">return</span> <span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">lines</span><span class="p">)</span></div>
 
+
 <div class="viewcode-block" id="write_config_file"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.write_config_file">[docs]</a><span class="k">def</span> <span class="nf">write_config_file</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">output_conf_file</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Takes a param object and writes the config file. Reverse of get_conf_params.</span>
@@ -667,6 +666,7 @@
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="s1">&#39;:</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="s1">&#39;:</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span></div>
+
 
 <div class="viewcode-block" id="transform_params"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.transform_params">[docs]</a><span class="k">def</span> <span class="nf">transform_params</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -764,41 +764,6 @@
 
     <span class="k">return</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">dest_mlooked_ifgs</span><span class="p">]</span></div>
 
-
-<div class="viewcode-block" id="get_ifg_paths"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.get_ifg_paths">[docs]</a><span class="k">def</span> <span class="nf">get_ifg_paths</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">CONV2TIF</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Read the configuration file, extract interferogram file list and determine</span>
-<span class="sd">    input and output interferogram path names.</span>
-
-<span class="sd">    :param str config_file: Configuration file path</span>
-
-<span class="sd">    :return: base_unw_paths: List of unwrapped inteferograms</span>
-<span class="sd">    :return: dest_paths: List of multi-looked and cropped geotifs</span>
-<span class="sd">    :return: params: Dictionary corresponding to the config file</span>
-<span class="sd">    :rtype: list</span>
-<span class="sd">    :rtype: list</span>
-<span class="sd">    :rtype: dict</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">params</span> <span class="o">=</span> <span class="n">get_config_params</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
-    <span class="n">ifg_file_list</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">IFG_FILE_LIST</span><span class="p">)</span>
-
-    <span class="n">xlks</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">crop</span> <span class="o">=</span> <span class="n">transform_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
-
-    <span class="c1"># base_unw_paths need to be geotiffed by conv2tif and multilooked by prepifg</span>
-    <span class="n">base_unw_paths</span> <span class="o">=</span> <span class="n">original_ifg_paths</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">OBS_DIR</span><span class="p">])</span>
-
-    <span class="c1"># dest_paths are tifs that have been coherence masked (if enabled),</span>
-    <span class="c1">#  cropped and multilooked</span>
-
-    <span class="k">if</span> <span class="s2">&quot;tif&quot;</span> <span class="ow">in</span> <span class="n">base_unw_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]:</span>
-
-        <span class="n">dest_paths</span> <span class="o">=</span> <span class="n">get_dest_paths</span><span class="p">(</span><span class="n">base_unw_paths</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">xlks</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">dest_path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dest_paths</span><span class="p">):</span>
-            <span class="n">dest_paths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">dest_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_tif&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">dest_paths</span> <span class="o">=</span> <span class="n">get_dest_paths</span><span class="p">(</span><span class="n">base_unw_paths</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">xlks</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">base_unw_paths</span><span class="p">,</span> <span class="n">dest_paths</span><span class="p">,</span> <span class="n">params</span></div>
 
 <span class="c1"># ==== PARAMETER VALIDATION ==== #</span>
 
@@ -1036,832 +1001,7 @@
         <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">REF_EST_METHOD</span><span class="si">}</span><span class="s2">&#39;: must select option 1 or 2.&quot;</span>
     <span class="p">),</span>
 <span class="p">}</span>
-<span class="sd">&quot;&quot;&quot;dict: basic validation functions for reference pixel search parameters.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="convert_geographic_coordinate_to_pixel_value"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.convert_geographic_coordinate_to_pixel_value">[docs]</a><span class="k">def</span> <span class="nf">convert_geographic_coordinate_to_pixel_value</span><span class="p">(</span><span class="n">refpx</span><span class="p">,</span> <span class="n">refpy</span><span class="p">,</span> <span class="n">transform</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Converts a lat/long coordinate to a pixel coordinate given the </span>
-<span class="sd">    geotransform of the image.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        refpx: The longitude of the coordinate.</span>
-<span class="sd">        refpx: The latitude of the coordinate.</span>
-<span class="sd">        transform: The geotransform array of the image.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Tuple of refpx, refpy in pixel values.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># transform = ifg.dataset.GetGeoTransform()</span>
-
-    <span class="n">xOrigin</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">yOrigin</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
-    <span class="n">pixelWidth</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">pixelHeight</span> <span class="o">=</span> <span class="o">-</span><span class="n">transform</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
-
-    <span class="n">refpx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">refpx</span> <span class="o">-</span> <span class="n">xOrigin</span><span class="p">)</span> <span class="o">/</span> <span class="n">pixelWidth</span><span class="p">)</span>
-    <span class="n">refpy</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">yOrigin</span> <span class="o">-</span> <span class="n">refpy</span><span class="p">)</span> <span class="o">/</span> <span class="n">pixelHeight</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">refpx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refpy</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="validate_parameters"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_parameters">[docs]</a><span class="k">def</span> <span class="nf">validate_parameters</span><span class="p">(</span><span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="n">CONV2TIF</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Main validation function. Calls validation subfunctions and gathers</span>
-<span class="sd">    some required variables for performing validation.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        pars: The parameters dictionary.</span>
-<span class="sd">        step: The current step of the PyRate workflow. Determines what </span>
-<span class="sd">            parameters to validate and what resources are available in</span>
-<span class="sd">            terms of geotiffs.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If errors occur during parameter validation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">is_GAMMA</span> <span class="o">=</span> <span class="n">pars</span><span class="p">[</span><span class="n">PROCESSOR</span><span class="p">]</span> <span class="o">==</span> <span class="n">GAMMA</span>
-    <span class="n">ifl</span> <span class="o">=</span> <span class="n">pars</span><span class="p">[</span><span class="n">IFG_FILE_LIST</span><span class="p">]</span>
-
-    <span class="c1"># TODO: Call bounds checking functions based on the current step</span>
-    <span class="c1"># Call basic bounds checking functions for all parameters.</span>
-    <span class="n">validate_compulsory_parameters</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
-    <span class="n">validate_optional_parameters</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
-    
-    <span class="c1"># Validate that provided filenames contain correct epochs and that</span>
-    <span class="c1">#  the files exist.</span>
-    <span class="k">if</span> <span class="n">is_GAMMA</span><span class="p">:</span>
-        <span class="n">validate_epochs</span><span class="p">(</span><span class="n">ifl</span><span class="p">,</span> <span class="n">SIXTEEN_DIGIT_EPOCH_PAIR</span><span class="p">)</span>
-        <span class="n">validate_epochs</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">HDR_FILE_LIST</span><span class="p">],</span> <span class="n">EIGHT_DIGIT_EPOCH</span><span class="p">)</span>
-        <span class="n">validate_gamma_headers</span><span class="p">(</span><span class="n">ifl</span><span class="p">,</span> <span class="n">pars</span><span class="p">[</span><span class="n">HDR_FILE_LIST</span><span class="p">])</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">validate_epochs</span><span class="p">(</span><span class="n">ifl</span><span class="p">,</span> <span class="n">TWELVE_DIGIT_EPOCH_PAIR</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">step</span> <span class="o">==</span> <span class="n">CONV2TIF</span><span class="p">:</span>   
-        <span class="c1"># Check that unwrapped interferograms exist.</span>
-        <span class="n">validate_ifgs</span><span class="p">(</span><span class="n">ifl</span><span class="p">)</span>
-
-    <span class="k">elif</span> <span class="n">step</span> <span class="o">==</span> <span class="n">PREPIFG</span><span class="p">:</span> 
-        <span class="c1"># Check full res geotiffs exist before continuing.</span>
-        <span class="n">validate_tifs_exist</span><span class="p">(</span><span class="n">ifl</span><span class="p">,</span> <span class="n">pars</span><span class="p">[</span><span class="n">OUT_DIR</span><span class="p">])</span>
-
-        <span class="c1"># Check the minimum number of epochs.</span>
-        <span class="n">n_epochs</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ifl</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">list_of_epoches</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
-
-                <span class="n">PTN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\d</span><span class="si">{8}</span><span class="s1">&#39;</span><span class="p">)</span>  <span class="c1"># match 8 digits for the dates</span>
-
-                <span class="c1"># if ROI_PAC</span>
-                <span class="k">if</span> <span class="mi">0</span> <span class="o">==</span> <span class="n">pars</span><span class="p">[</span><span class="s2">&quot;processor&quot;</span><span class="p">]:</span>
-                    <span class="n">PTN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\d</span><span class="si">{6}</span><span class="s1">&#39;</span><span class="p">)</span>  <span class="c1"># match 8 digits for the dates</span>
-
-                <span class="n">epochs</span> <span class="o">=</span> <span class="n">PTN</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-                <span class="n">list_of_epoches</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">epochs</span><span class="p">)</span>
-
-        <span class="n">list_of_epoches</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">list_of_epoches</span><span class="p">)</span>
-        <span class="n">n_epochs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">list_of_epoches</span><span class="p">)</span>
-        <span class="n">validate_minimum_epochs</span><span class="p">(</span><span class="n">n_epochs</span><span class="p">,</span> <span class="n">MINIMUM_NUMBER_EPOCHS</span><span class="p">)</span>
-
-        <span class="c1"># validate</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ifl</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="c1"># validate params for each geotiff</span>
-            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
-                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.tif&#39;</span><span class="p">):</span>
-                    <span class="n">tif_file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">OUT_DIR</span><span class="p">])</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-                    <span class="n">base</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">stem</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">suffix</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
-                    <span class="n">tif_file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">OUT_DIR</span><span class="p">])</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">base</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">ext</span> <span class="o">+</span> <span class="s2">&quot;.tif&quot;</span><span class="p">)</span>
-
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">tif_file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;GeoTiff: &quot;</span> <span class="o">+</span> <span class="n">tif_file_path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot; not found.&quot;</span><span class="p">)</span>
-
-                <span class="n">raster</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tif_file_path</span><span class="p">)</span>
-                <span class="n">gtif</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">raster</span><span class="p">)</span>
-
-                <span class="n">latitudes</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="n">longitudes</span> <span class="o">=</span> <span class="p">[]</span>
-
-                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Info</span><span class="p">(</span><span class="n">gtif</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="s2">&quot;Size is&quot;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
-                        <span class="n">x_size</span><span class="p">,</span> <span class="n">y_size</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;Size is&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
-                        <span class="n">x_size</span><span class="p">,</span> <span class="n">y_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x_size</span><span class="o">.</span><span class="n">strip</span><span class="p">()),</span> <span class="nb">int</span><span class="p">(</span><span class="n">y_size</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
-
-                    <span class="k">for</span> <span class="n">line_tag</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;Upper Left&quot;</span><span class="p">,</span> <span class="s2">&quot;Lower Left&quot;</span><span class="p">,</span> <span class="s2">&quot;Upper Right&quot;</span><span class="p">,</span> <span class="s2">&quot;Lower Right&quot;</span><span class="p">]:</span>
-                        <span class="k">if</span> <span class="n">line_tag</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
-                            <span class="n">latitude</span><span class="p">,</span> <span class="n">longitude</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;)&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
-                            <span class="n">latitudes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">latitude</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
-                            <span class="n">longitudes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">longitude</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
-
-                <span class="c1"># validate multi-look parameters</span>
-                <span class="k">if</span> <span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifglksx&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifglksx&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">x_size</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Value of ifglksx: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifglksx&quot;</span><span class="p">])</span><span class="o">+</span><span class="s2">&quot; out of bounds: [0,&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">x_size</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;]&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifglksy&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifglksy&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">x_size</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Value of ifglksy: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifglksy&quot;</span><span class="p">])</span><span class="o">+</span><span class="s2">&quot; out of bounds: [0,&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">x_size</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;]&quot;</span><span class="p">)</span>
-
-                <span class="c1"># validate crop parameters</span>
-                <span class="k">if</span> <span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifgxfirst&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="nb">min</span><span class="p">(</span><span class="n">latitudes</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifgxfirst&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nb">max</span><span class="p">(</span><span class="n">latitudes</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                        <span class="s2">&quot;ifgxfirst: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifgxfirst&quot;</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot; not with in range {&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span>
-                            <span class="nb">min</span><span class="p">(</span><span class="n">latitudes</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">latitudes</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span>
-                    <span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifgxlast&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="nb">min</span><span class="p">(</span><span class="n">latitudes</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifgxlast&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nb">max</span><span class="p">(</span><span class="n">latitudes</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                        <span class="s2">&quot;ifgxlast: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifgxlast&quot;</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot; not with in range {&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">latitudes</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span>
-                            <span class="nb">max</span><span class="p">(</span><span class="n">latitudes</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span>
-                    <span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifgyfirst&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="nb">min</span><span class="p">(</span><span class="n">longitudes</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifgyfirst&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nb">max</span><span class="p">(</span><span class="n">longitudes</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                        <span class="s2">&quot;ifgyfirst: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifgyfirst&quot;</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot; not with in range {&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span>
-                            <span class="nb">min</span><span class="p">(</span><span class="n">longitudes</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">longitudes</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span>
-                    <span class="p">)</span>
-
-                <span class="k">if</span> <span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifgylast&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="nb">min</span><span class="p">(</span><span class="n">longitudes</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifgylast&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nb">max</span><span class="p">(</span><span class="n">longitudes</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                        <span class="s2">&quot;ifgylast: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="s2">&quot;ifgylast&quot;</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot; not with in range {&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span>
-                            <span class="nb">min</span><span class="p">(</span><span class="n">longitudes</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">longitudes</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span>
-                    <span class="p">)</span>
-
-                <span class="k">del</span> <span class="n">gtif</span>  <span class="c1"># manually close raster</span>
-
-        <span class="c1"># Check coherence masking if enabled</span>
-        <span class="k">if</span> <span class="n">pars</span><span class="p">[</span><span class="n">COH_MASK</span><span class="p">]:</span>
-            <span class="n">validate_epochs</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">COH_FILE_LIST</span><span class="p">],</span> <span class="n">SIXTEEN_DIGIT_EPOCH_PAIR</span><span class="p">)</span>
-            <span class="n">validate_coherence_files</span><span class="p">(</span><span class="n">ifl</span><span class="p">,</span> <span class="n">pars</span><span class="p">)</span>
-
-    <span class="k">elif</span> <span class="n">step</span> <span class="o">==</span> <span class="n">PROCESS</span><span class="p">:</span>
-
-        <span class="n">tmp_ifg_list</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="s2">&quot;tmpIfgList&quot;</span><span class="p">)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tmp_ifg_list</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fileHandler</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">Path</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">OUT_DIR</span><span class="p">])</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*rlks_*cr.tif&quot;</span><span class="p">):</span>
-                <span class="k">if</span> <span class="s2">&quot;dem&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
-                    <span class="n">fileHandler</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="c1"># Check that cropped/subsampled tifs exist.</span>
-        <span class="n">validate_prepifg_tifs_exist</span><span class="p">(</span><span class="n">tmp_ifg_list</span><span class="p">,</span> <span class="n">pars</span><span class="p">[</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">pars</span><span class="p">)</span>
-
-        <span class="c1"># Check the minimum number of epochs.</span>
-        <span class="n">n_epochs</span><span class="p">,</span> <span class="n">max_span</span> <span class="o">=</span> <span class="n">_get_temporal_info</span><span class="p">(</span><span class="n">tmp_ifg_list</span><span class="p">,</span> <span class="n">pars</span><span class="p">[</span><span class="n">OBS_DIR</span><span class="p">])</span>
-        <span class="n">validate_minimum_epochs</span><span class="p">(</span><span class="n">n_epochs</span><span class="p">,</span> <span class="n">MINIMUM_NUMBER_EPOCHS</span><span class="p">)</span>
-
-        <span class="c1"># Get spatial information from tifs.</span>
-
-        <span class="n">extents</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">,</span> <span class="n">n_rows</span><span class="p">,</span> <span class="n">transform</span> <span class="o">=</span> <span class="n">_get_prepifg_info</span><span class="p">(</span><span class="n">tmp_ifg_list</span><span class="p">,</span> <span class="n">pars</span><span class="p">[</span><span class="n">OBS_DIR</span><span class="p">],</span> <span class="n">pars</span><span class="p">)</span>
-
-        <span class="c1"># test if refx/y already set to default value of -1</span>
-        <span class="k">if</span> <span class="n">pars</span><span class="p">[</span><span class="n">REFX</span><span class="p">]</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">pars</span><span class="p">[</span><span class="n">REFY</span><span class="p">]</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-
-            <span class="c1"># Convert refx/refy from lat/long to pixel and validate...</span>
-            <span class="k">if</span> <span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">REFX</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">180</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">REFX</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mi">180</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">REFY</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mi">90</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">REFY</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">90</span><span class="p">):</span>
-
-                <span class="n">pars</span><span class="p">[</span><span class="n">REFX</span><span class="p">],</span> <span class="n">pars</span><span class="p">[</span><span class="n">REFY</span><span class="p">]</span> <span class="o">=</span> <span class="n">convert_geographic_coordinate_to_pixel_value</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">REFX</span><span class="p">],</span> <span class="n">pars</span><span class="p">[</span><span class="n">REFY</span><span class="p">],</span> <span class="n">transform</span><span class="p">)</span>
-                <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;converted pars[REFX], pars[REFY] to: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">REFX</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">REFY</span><span class="p">]))</span>
-
-                <span class="k">if</span> <span class="n">pars</span><span class="p">[</span><span class="n">REFX</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">pars</span><span class="p">[</span><span class="n">REFX</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">n_cols</span><span class="p">:</span>
-                    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;converted pars[REFX] out of range&quot;</span><span class="p">)</span>
-                    <span class="n">pars</span><span class="p">[</span><span class="n">REFX</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-                <span class="k">if</span> <span class="n">pars</span><span class="p">[</span><span class="n">REFY</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">pars</span><span class="p">[</span><span class="n">REFY</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">n_rows</span><span class="p">:</span>
-                    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;converted pars[REFY] out of range&quot;</span><span class="p">)</span>
-                    <span class="n">pars</span><span class="p">[</span><span class="n">REFY</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-
-            <span class="c1"># otherwise we need to search for the pixel so validate the search parameters.</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;given pars[REFX] or pars[REFY] out of range&quot;</span><span class="p">)</span>
-                <span class="n">pars</span><span class="p">[</span><span class="n">REFX</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-                <span class="n">pars</span><span class="p">[</span><span class="n">REFY</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-                <span class="c1"># TODO fix tests when below validation is included</span>
-                <span class="c1"># validate_reference_pixel_search_windows(n_cols, n_rows, pars)</span>
-
-        <span class="n">validate_multilook_parameters</span><span class="p">(</span><span class="n">n_cols</span><span class="p">,</span> <span class="n">n_rows</span><span class="p">,</span> <span class="n">ORBITAL_FIT_LOOKS_X</span><span class="p">,</span> <span class="n">ORBITAL_FIT_LOOKS_Y</span><span class="p">,</span> <span class="n">pars</span><span class="p">)</span>
-        <span class="n">validate_slpf_cutoff</span><span class="p">(</span><span class="n">extents</span><span class="p">,</span> <span class="n">pars</span><span class="p">)</span>
-        <span class="n">validate_epoch_thresholds</span><span class="p">(</span><span class="n">n_epochs</span><span class="p">,</span> <span class="n">pars</span><span class="p">)</span>
-        <span class="n">validate_epoch_cutoff</span><span class="p">(</span><span class="n">max_span</span><span class="p">,</span> <span class="n">TLPF_CUTOFF</span><span class="p">,</span> <span class="n">pars</span><span class="p">)</span>
-        <span class="n">validate_obs_thresholds</span><span class="p">(</span><span class="n">tmp_ifg_list</span><span class="p">,</span> <span class="n">pars</span><span class="p">)</span>
-
-    <span class="k">elif</span> <span class="n">step</span> <span class="o">==</span> <span class="n">MERGE</span><span class="p">:</span>
-        <span class="n">validate_prepifg_tifs_exist</span><span class="p">(</span><span class="n">ifl</span><span class="p">,</span> <span class="n">pars</span><span class="p">[</span><span class="n">OBS_DIR</span><span class="p">],</span> <span class="n">pars</span><span class="p">)</span></div>
-
-
-<span class="k">def</span> <span class="nf">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convenience function for raising an exception with errors.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">errors</span><span class="p">:</span>
-        <span class="n">errors</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;invalid parameters&quot;</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="n">ConfigException</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">errors</span><span class="p">))</span>
-    <span class="k">return</span> <span class="kc">True</span>
-
-<div class="viewcode-block" id="validate_compulsory_parameters"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_compulsory_parameters">[docs]</a><span class="k">def</span> <span class="nf">validate_compulsory_parameters</span><span class="p">(</span><span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calls the validators for compulsory (always used) parameters.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        pars: The parameters dictionary.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        True if validation is successful.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If validation fails.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">pars</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="n">validator</span> <span class="o">=</span> <span class="n">_PARAM_VALIDATION</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">validator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># _logger.debug(f&quot;No validator implemented for &#39;{k}&#39;.&quot;)</span>
-            <span class="k">continue</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">validator</span><span class="p">[</span><span class="mi">0</span><span class="p">](</span><span class="n">pars</span><span class="p">[</span><span class="n">k</span><span class="p">]):</span>
-            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">validator</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-
-    <span class="k">return</span> <span class="n">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="validate_optional_parameters"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_optional_parameters">[docs]</a><span class="k">def</span> <span class="nf">validate_optional_parameters</span><span class="p">(</span><span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calls the validators for optional parameters.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        pars: The parameters dictionary.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        True if validation successful.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If validation fails.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">on</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">validators</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Convenience method for calling validators.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            on: Determines whether to call the validators.</span>
-<span class="sd">            validators: A dictionary of validator functions.</span>
-<span class="sd">            pars: Parameters dictionary.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            A list of errors.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">if</span> <span class="n">on</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">validator</span> <span class="ow">in</span> <span class="n">validators</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">validator</span><span class="p">[</span><span class="mi">0</span><span class="p">](</span><span class="n">pars</span><span class="p">[</span><span class="n">k</span><span class="p">]):</span>
-                    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">validator</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="k">return</span> <span class="n">errors</span>
-
-    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">validate</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">COH_MASK</span><span class="p">],</span> <span class="n">_COHERENCE_VALIDATION</span><span class="p">,</span> <span class="n">pars</span><span class="p">))</span>
-    <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">validate</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">APSEST</span><span class="p">],</span> <span class="n">_APSEST_VALIDATION</span><span class="p">,</span> <span class="n">pars</span><span class="p">))</span>
-    <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">validate</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">TIME_SERIES_CAL</span><span class="p">],</span> <span class="n">_TIME_SERIES_VALIDATION</span><span class="p">,</span> <span class="n">pars</span><span class="p">))</span>
-    <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">validate</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">ORBITAL_FIT</span><span class="p">],</span> <span class="n">_ORBITAL_FIT_VALIDATION</span><span class="p">,</span> <span class="n">pars</span><span class="p">))</span>
-    <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">validate</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">PROCESSOR</span><span class="p">]</span> <span class="o">==</span> <span class="n">GAMMA</span><span class="p">,</span> <span class="n">_GAMMA_VALIDATION</span><span class="p">,</span> <span class="n">pars</span><span class="p">))</span>
-    <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">validate</span><span class="p">(</span><span class="n">pars</span><span class="p">[</span><span class="n">IFG_CROP_OPT</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="n">_CUSTOM_CROP_VALIDATION</span><span class="p">,</span> <span class="n">pars</span><span class="p">))</span>
-    <span class="c1"># errors.extend(validate(pars[REFX] &gt; 0 and pars[REFY] &gt; 0, _REFERENCE_PIXEL_VALIDATION, pars))</span>
-
-    <span class="k">return</span> <span class="n">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="validate_minimum_epochs"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_minimum_epochs">[docs]</a><span class="k">def</span> <span class="nf">validate_minimum_epochs</span><span class="p">(</span><span class="n">n_epochs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">min_epochs</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validates the minimum number of epochs required for PyRate to produce</span>
-<span class="sd">    good results.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        n_epochs: The number of unique epochs in the collection of interferograms</span>
-<span class="sd">            provided as input.</span>
-<span class="sd">        min_epochs: The minimum number of epochs PyRate requires.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        True if there are enough epochs to satisfy minimum epochs.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If there are not enough epochs to satisfy min epochs.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">n_epochs</span> <span class="o">&lt;</span> <span class="n">min_epochs</span><span class="p">:</span>
-        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">IFG_FILE_LIST</span><span class="si">}</span><span class="s2">&#39;: total number of epochs given is </span><span class="si">{</span><span class="n">n_epochs</span><span class="si">}</span><span class="s2">.&quot;</span>
-                      <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">min_epochs</span><span class="si">}</span><span class="s2"> or more unique epochs are required by PyRate.&quot;</span><span class="p">)</span>
-    <span class="n">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="validate_epochs"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_epochs">[docs]</a><span class="k">def</span> <span class="nf">validate_epochs</span><span class="p">(</span><span class="n">file_list</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate that user provided file names contain the correct pattern of</span>
-<span class="sd">    epochs.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        file_list: Path to the list of files to validate.</span>
-<span class="sd">        pattern: Regex string for finding the epoch(s).</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        True if all names in file list contain the epoch pattern *once*.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If not all names in the file list don&#39;t contain</span>
-<span class="sd">            the epoch pattern or contain it more than once.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">PTN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
-    <span class="n">filenames</span> <span class="o">=</span> <span class="n">parse_namelist</span><span class="p">(</span><span class="n">file_list</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
-        <span class="n">epochs</span> <span class="o">=</span> <span class="n">PTN</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">epochs</span><span class="p">:</span>
-            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">file_list</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">fn</span><span class="si">}</span><span class="s2"> does not contain an epoch of &quot;</span>
-                          <span class="sa">f</span><span class="s2">&quot;format </span><span class="si">{</span><span class="n">pattern</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">epochs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">file_list</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">fn</span><span class="si">}</span><span class="s2"> does contains more than &quot;</span>
-                          <span class="sa">f</span><span class="s2">&quot;one epoch of </span><span class="si">{</span><span class="n">pattern</span><span class="si">}</span><span class="s2">. There must be only one &quot;</span>
-                          <span class="sa">f</span><span class="s2">&quot;epoch in the filename.&quot;</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="validate_epoch_cutoff"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_epoch_cutoff">[docs]</a><span class="k">def</span> <span class="nf">validate_epoch_cutoff</span><span class="p">(</span><span class="n">max_span</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">cutoff</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate cutoff parameters that rely on the data timespan.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        max_span: The maximum temporal span of the provided data in years.</span>
-<span class="sd">        cutoff: The key of the cutoff parameter.</span>
-<span class="sd">        pars: The parameters dictionary.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        True if the cutoff is less than the maximum data timespan.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If the cutoff is greater than the max data timespan.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">if</span> <span class="n">pars</span><span class="p">[</span><span class="n">cutoff</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">max_span</span><span class="p">:</span>
-        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="si">{cutoff}</span><span class="s2">&#39;: must be less than max time span of &quot;</span>
-                      <span class="s2">&quot;data in years (</span><span class="si">{max_span}</span><span class="s2">).&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="validate_prepifg_tifs_exist"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_prepifg_tifs_exist">[docs]</a><span class="k">def</span> <span class="nf">validate_prepifg_tifs_exist</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">obs_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validates that cropped and multilooked interferograms exist in geotiff</span>
-<span class="sd">    format.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        ifg_file_list: Path to file containing interfergram file names.</span>
-<span class="sd">        obs_dir: Path to observations directory.</span>
-<span class="sd">        pars: Parameters dictionary.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        True if all interferograms exist in geotiff format.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If not all intergerograms exist in geotiff format.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">base_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">obs_dir</span><span class="p">,</span> <span class="n">ifg</span><span class="p">)</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">parse_namelist</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">)]</span>
-    <span class="n">ifg_paths</span> <span class="o">=</span> <span class="n">get_dest_paths</span><span class="p">(</span><span class="n">base_paths</span><span class="p">,</span> <span class="n">pars</span><span class="p">[</span><span class="n">IFG_CROP_OPT</span><span class="p">],</span> <span class="n">pars</span><span class="p">,</span> <span class="n">pars</span><span class="p">[</span><span class="n">IFG_LKSX</span><span class="p">])</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">):</span>
-        <span class="n">ifg_paths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">ifg_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_tif&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">ifg_paths</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-            <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">IFG_FILE_LIST</span><span class="si">}</span><span class="s2">&#39;: interferogram &#39;</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">&#39; is &quot;</span>
-                          <span class="sa">f</span><span class="s2">&quot;required as a cropped and subsampled geotiff but &quot;</span>
-                          <span class="sa">f</span><span class="s2">&quot;could not be found. Make sure &#39;prepifg&#39; has been &quot;</span>
-                          <span class="sa">f</span><span class="s2">&quot;run and ensure the &#39;</span><span class="si">{</span><span class="n">IFG_LKSX</span><span class="si">}</span><span class="s2">&#39; and &#39;</span><span class="si">{</span><span class="n">IFG_CROP_OPT</span><span class="si">}</span><span class="s2">&#39; &quot;</span>
-                          <span class="sa">f</span><span class="s2">&quot;parameters have not been changed since &#39;prepifg&#39; was run.&quot;</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="validate_tifs_exist"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_tifs_exist">[docs]</a><span class="k">def</span> <span class="nf">validate_tifs_exist</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">obs_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validates that provided interferograms exist in geotiff format.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        ifg_file_list: Path to file containing interfergram file names.</span>
-<span class="sd">        obs_dir: Path to observations directory.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        True if all interferograms exist in geotiff format.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If not all intergerograms exist in geotiff format.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">output_tiff_filename</span>
-
-    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">ifgs</span> <span class="o">=</span> <span class="n">parse_namelist</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">)</span>
-    <span class="n">ifg_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">obs_dir</span><span class="p">,</span> <span class="n">ifg</span><span class="p">)</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span>
-    <span class="n">gtiff_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">output_tiff_filename</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">obs_dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">ifg_paths</span><span class="p">]</span>
-    <span class="k">for</span> <span class="n">gtp</span> <span class="ow">in</span> <span class="n">gtiff_paths</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">gtp</span><span class="p">):</span>
-            <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">gtp</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">IFG_FILE_LIST</span><span class="si">}</span><span class="s2">&#39;: interferogram &#39;</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">&#39; is &quot;</span>
-                          <span class="s2">&quot;required in geotiff format but no geotiff file &quot;</span>
-                          <span class="s2">&quot;could be found.&quot;</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="validate_ifgs"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_ifgs">[docs]</a><span class="k">def</span> <span class="nf">validate_ifgs</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validates that provided interferograms exist.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        ifg_file_list: Path to file containing interferogram file names.</span>
-<span class="sd">        obs_dir: Path to observations directory.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        True if all interferograms exist.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If not all interferograms exist.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">ifgs</span> <span class="o">=</span> <span class="n">parse_namelist</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-            <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">IFG_FILE_LIST</span><span class="si">}</span><span class="s2">&#39;: interferogram &#39;</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">&#39; does not exist.&quot;</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="validate_obs_thresholds"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_obs_thresholds">[docs]</a><span class="k">def</span> <span class="nf">validate_obs_thresholds</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validates parameters that specify an observations threshold.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        ifg_file_list: Path to the file containing interferogram file names.</span>
-<span class="sd">        pars: Parameters dictionary.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        True if there are enough interferograms to satisfy all observation thresholds.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If there not enough interferograms to satisfy all observation</span>
-<span class="sd">            thresholds.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
-        <span class="n">thresh</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">thresh</span> <span class="o">&gt;</span> <span class="n">n</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&#39;: not enough interferograms have been specified &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">) to satisfy threshold (</span><span class="si">{</span><span class="n">thresh</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="p">[]</span>
-
-    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">n_ifgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">parse_namelist</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">)))</span>
-    <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">validate</span><span class="p">(</span><span class="n">n_ifgs</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">TIME_SERIES_PTHRESH</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">pars</span><span class="p">[</span><span class="n">APSEST</span><span class="p">]:</span>
-        <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">validate</span><span class="p">(</span><span class="n">n_ifgs</span><span class="p">,</span> <span class="n">pars</span><span class="p">,</span> <span class="n">TLPF_PTHR</span><span class="p">))</span>
-
-    <span class="k">return</span> <span class="n">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="validate_epoch_thresholds"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_epoch_thresholds">[docs]</a><span class="k">def</span> <span class="nf">validate_epoch_thresholds</span><span class="p">(</span><span class="n">n_epochs</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validates threshold paramters that rely on the number of epochs</span>
-<span class="sd">    available.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        n_epochs: The number of unique epochs in the collection of interferograms</span>
-<span class="sd">            provided as input.</span>
-<span class="sd">        pars: Parameters dictionary.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        True if there are enough epochs to satisfy all epoch thresholds.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If there are not enough epochs to satisfy all epoch thresholds.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">thresh</span> <span class="o">=</span> <span class="n">pars</span><span class="p">[</span><span class="n">LR_PTHRESH</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">n_epochs</span> <span class="o">&lt;</span> <span class="n">thresh</span><span class="p">:</span>
-        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">LR_PTHRESH</span><span class="si">}</span><span class="s2">&#39;: not enough epochs have been specified &quot;</span>
-                      <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">n_epochs</span><span class="si">}</span><span class="s2">) to satisfy threshold (</span><span class="si">{</span><span class="n">thresh</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="validate_crop_parameters"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_crop_parameters">[docs]</a><span class="k">def</span> <span class="nf">validate_crop_parameters</span><span class="p">(</span><span class="n">min_extents</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
-                             <span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validates IFG crop parameters by ensuring user provided crop coordinates</span>
-<span class="sd">    are within the *minimum* (intersecting) bounds of the interferogram stack.</span>
-<span class="sd">    </span>
-<span class="sd">    Args:</span>
-<span class="sd">        min_extents: The minimum extents of the interferogram stack. The</span>
-<span class="sd">            crop coordinates must be within these extents.</span>
-<span class="sd">        pars: Parameters dictionary.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        True if validation is successful.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If validation fails.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">min_xmin</span><span class="p">,</span> <span class="n">min_ymin</span><span class="p">,</span> <span class="n">min_xmax</span><span class="p">,</span> <span class="n">min_ymax</span> <span class="o">=</span> <span class="n">min_extents</span>
-    <span class="n">x_dim_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;(xmin: </span><span class="si">{</span><span class="n">min_xmin</span><span class="si">}</span><span class="s2">, xmax: </span><span class="si">{</span><span class="n">min_xmax</span><span class="si">}</span><span class="s2">)&quot;</span>
-    <span class="n">y_dim_string</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;(ymin: </span><span class="si">{</span><span class="n">min_ymin</span><span class="si">}</span><span class="s2">, ymax: </span><span class="si">{</span><span class="n">min_ymax</span><span class="si">}</span><span class="s2">)&quot;</span>
-
-    <span class="c1"># Check crop coordinates within scene.</span>
-    <span class="k">def</span> <span class="nf">_validate_crop_coord</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">dim_min</span><span class="p">,</span> <span class="n">dim_max</span><span class="p">,</span> <span class="n">dim_string</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">dim_min</span> <span class="o">&lt;</span> <span class="n">pars</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">dim_max</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&#39;: crop coordinate (</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span><span class="si">}</span><span class="s2">) &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;is outside bounds of scene </span><span class="si">{</span><span class="n">dim_string</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">]</span>
-
-        <span class="k">return</span> <span class="p">[]</span>
-    
-    <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_validate_crop_coord</span><span class="p">(</span><span class="n">IFG_XFIRST</span><span class="p">,</span> <span class="n">min_xmin</span><span class="p">,</span> <span class="n">min_xmax</span><span class="p">,</span> <span class="n">x_dim_string</span><span class="p">))</span>
-    <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_validate_crop_coord</span><span class="p">(</span><span class="n">IFG_YFIRST</span><span class="p">,</span> <span class="n">min_ymin</span><span class="p">,</span> <span class="n">min_ymax</span><span class="p">,</span> <span class="n">y_dim_string</span><span class="p">))</span>
-    <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_validate_crop_coord</span><span class="p">(</span><span class="n">IFG_XLAST</span><span class="p">,</span> <span class="n">min_xmin</span><span class="p">,</span> <span class="n">min_xmax</span><span class="p">,</span> <span class="n">x_dim_string</span><span class="p">))</span>
-    <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_validate_crop_coord</span><span class="p">(</span><span class="n">IFG_YLAST</span><span class="p">,</span> <span class="n">min_ymin</span><span class="p">,</span> <span class="n">min_ymax</span><span class="p">,</span> <span class="n">y_dim_string</span><span class="p">))</span>
-    
-    <span class="k">return</span> <span class="n">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="validate_slpf_cutoff"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_slpf_cutoff">[docs]</a><span class="k">def</span> <span class="nf">validate_slpf_cutoff</span><span class="p">(</span><span class="n">extents</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> 
-                               <span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate SLPF_CUTOFF is within the bounds of the scene being processed</span>
-<span class="sd">    (after prepifg cropping/subsampling has occurred).</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        extents : Tuple of (xmin, xmax, ymin, ymax) describing the extents</span>
-<span class="sd">            of the scene, after cropping &amp; multisampling, in degrees.</span>
-<span class="sd">        pars: Parameters dictionary.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        True if validation is successful.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If validation fails.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="n">extents</span>
-    <span class="c1"># Check SLPF_CUTOFF within scene *in kilometeres*.</span>
-    <span class="n">DEG_TO_KM</span> <span class="o">=</span> <span class="mf">111.32</span> <span class="c1"># km per degree</span>
-    <span class="n">x_extent</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">xmin</span> <span class="o">-</span> <span class="n">xmax</span><span class="p">)</span>
-    <span class="n">y_extent</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">ymin</span> <span class="o">-</span> <span class="n">ymax</span><span class="p">)</span>
-    <span class="n">x_extent_km</span> <span class="o">=</span> <span class="n">x_extent</span> <span class="o">*</span>  <span class="n">DEG_TO_KM</span>
-    <span class="n">y_extent_km</span> <span class="o">=</span> <span class="n">y_extent</span> <span class="o">*</span>  <span class="n">DEG_TO_KM</span>
-    <span class="k">if</span> <span class="n">pars</span><span class="p">[</span><span class="n">SLPF_CUTOFF</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nb">max</span><span class="p">(</span><span class="n">x_extent_km</span><span class="p">,</span> <span class="n">y_extent_km</span><span class="p">):</span>
-        <span class="n">errors</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">SLPF_CUTOFF</span><span class="si">}</span><span class="s2">&#39;: cutoff is out of bounds, must be &quot;</span>
-                  <span class="s2">&quot;less than max scene bound (in km) &quot;</span>
-                  <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">x_extent_km</span><span class="p">,</span> <span class="n">y_extent_km</span><span class="p">)</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">return</span> <span class="n">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="validate_multilook_parameters"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_multilook_parameters">[docs]</a><span class="k">def</span> <span class="nf">validate_multilook_parameters</span><span class="p">(</span><span class="n">cols</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> 
-                                 <span class="n">xlks_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ylks_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
-                                 <span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate multilook parameters by ensuring resulting resolution will be</span>
-<span class="sd">    at least 1 pixel and less than the current resolution.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        cols: Number of pixel columns (X) in the scene.</span>
-<span class="sd">        rows: Number of pixel rows (Y) in the scene.</span>
-<span class="sd">        xlks_name: Key for looking up the X looks factor.</span>
-<span class="sd">        ylks_name: Key for looking up the Y looks factor.</span>
-<span class="sd">        pars: Parameters dictionary.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        True if validation is successful.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If validation fails.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">def</span> <span class="nf">_validate_mlook</span><span class="p">(</span><span class="n">var_name</span><span class="p">,</span> <span class="n">dim_val</span><span class="p">,</span> <span class="n">dim_str</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">pars</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">dim_val</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&#39;: the multilook factor (</span><span class="si">{</span><span class="n">pars</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span><span class="si">}</span><span class="s2">) &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;must be less than the number of pixels on the </span><span class="si">{</span><span class="n">dim_str</span><span class="si">}</span><span class="s2"> &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;axis (</span><span class="si">{</span><span class="n">dim_val</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="p">[]</span>
-
-    <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_validate_mlook</span><span class="p">(</span><span class="n">xlks_name</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">))</span>
-    <span class="n">errors</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_validate_mlook</span><span class="p">(</span><span class="n">ylks_name</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="validate_reference_pixel_search_windows"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_reference_pixel_search_windows">[docs]</a><span class="k">def</span> <span class="nf">validate_reference_pixel_search_windows</span><span class="p">(</span><span class="n">n_cols</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">n_rows</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-                                            <span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validates that the reference pixel search windows provided by user</span>
-<span class="sd">    fit within the scene being processed.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        n_cols: Number of pixel columns (X) in the scene.</span>
-<span class="sd">        n_rows: Number of pixel rows (Y) in the scene.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        True if the scene can accomodate the search windows (no overlap).</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If the scene cannot accomodate the search windows.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">floor</span>
-
-    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">refnx</span> <span class="o">=</span> <span class="n">pars</span><span class="p">[</span><span class="n">REFNX</span><span class="p">]</span>
-    <span class="n">refny</span> <span class="o">=</span> <span class="n">pars</span><span class="p">[</span><span class="n">REFNY</span><span class="p">]</span>
-    <span class="n">chip_size</span> <span class="o">=</span> <span class="n">pars</span><span class="p">[</span><span class="n">REF_CHIP_SIZE</span><span class="p">]</span>
-
-    <span class="n">x_windows</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">n_cols</span><span class="o">/</span><span class="n">chip_size</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">refnx</span> <span class="o">&gt;</span> <span class="n">x_windows</span><span class="p">:</span>
-        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">REFNX</span><span class="si">}</span><span class="s2">&#39; &amp; &#39;</span><span class="si">{</span><span class="n">REF_CHIP_SIZE</span><span class="si">}</span><span class="s2">&#39;: search windows do not &quot;</span>
-                      <span class="sa">f</span><span class="s2">&quot;fit in scene on X axis (number of columns: </span><span class="si">{</span><span class="n">n_cols</span><span class="si">}</span><span class="s2">). &quot;</span>
-                      <span class="sa">f</span><span class="s2">&quot;Reduce </span><span class="si">{</span><span class="n">REF_CHIP_SIZE</span><span class="si">}</span><span class="s2"> or </span><span class="si">{</span><span class="n">REFNX</span><span class="si">}</span><span class="s2"> so that </span><span class="si">{</span><span class="n">REFNX</span><span class="si">}</span><span class="s2"> &quot;</span>
-                      <span class="sa">f</span><span class="s2">&quot;is less than or equal to (columns / </span><span class="si">{</span><span class="n">REF_CHIP_SIZE</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
-    <span class="n">y_windows</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">n_rows</span><span class="o">/</span><span class="n">chip_size</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">refny</span> <span class="o">&gt;</span> <span class="n">y_windows</span><span class="p">:</span>
-        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">REFNY</span><span class="si">}</span><span class="s2">&#39; &amp; &#39;</span><span class="si">{</span><span class="n">REF_CHIP_SIZE</span><span class="si">}</span><span class="s2">&#39;: search windows do not &quot;</span>
-                      <span class="sa">f</span><span class="s2">&quot;fit in scene on Y axis (number of rows: </span><span class="si">{</span><span class="n">n_rows</span><span class="si">}</span><span class="s2">). &quot;</span>
-                      <span class="sa">f</span><span class="s2">&quot;Reduce </span><span class="si">{</span><span class="n">REF_CHIP_SIZE</span><span class="si">}</span><span class="s2"> or </span><span class="si">{</span><span class="n">REFNY</span><span class="si">}</span><span class="s2"> so that </span><span class="si">{</span><span class="n">REFNY</span><span class="si">}</span><span class="s2"> &quot;</span>
-                      <span class="sa">f</span><span class="s2">&quot;is less than or equal to (rows / </span><span class="si">{</span><span class="n">REF_CHIP_SIZE</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="validate_gamma_headers"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_gamma_headers">[docs]</a><span class="k">def</span> <span class="nf">validate_gamma_headers</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">slc_file_list</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validates that a pair of GAMMA headers exist for each provided</span>
-<span class="sd">    GAMMA interferogram.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        ifg_file_list: Path to the file listing filenames of interferograms.</span>
-<span class="sd">        slc_file_list: Path to the file listing filenames of GAMMA headers.</span>
-<span class="sd">        slc_dir: Path to directory containing GAMMA headers.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        True if there are exactly 2 headers for each interogram (one for</span>
-<span class="sd">        each epoch).</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If there are 0 or more than 2 matching headers</span>
-<span class="sd">            for an interferogram.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">pyrate.core.gamma</span> <span class="kn">import</span> <span class="n">get_header_paths</span>
-    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">parse_namelist</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">):</span>
-        <span class="n">headers</span> <span class="o">=</span> <span class="n">get_header_paths</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">slc_file_list</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">SLC_DIR</span><span class="si">}</span><span class="s2">&#39;: Headers not found for interferogram &#39;</span><span class="si">{</span><span class="n">ifg</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="validate_coherence_files"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.validate_coherence_files">[docs]</a><span class="k">def</span> <span class="nf">validate_coherence_files</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validates that there is a matching coherence file for each provided</span>
-<span class="sd">    interferogram.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        ifg_file_list: Path to file listing interferogram names.</span>
-<span class="sd">        pars: The parameters dictionary.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        True if there is exactly 1 coherence file for each interferogram.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ConfigException: If there are 0 or more than 1 matching coherence</span>
-<span class="sd">            files for an interferogram.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">parse_namelist</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">):</span>
-        <span class="n">paths</span> <span class="o">=</span> <span class="n">coherence_paths_for</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">pars</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">paths</span><span class="p">:</span>
-            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">COH_FILE_DIR</span><span class="si">}</span><span class="s2">&#39;: no coherence files found for intergerogram &#39;</span><span class="si">{</span><span class="n">ifg</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">_raise_errors</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span></div>
-
-
-<span class="k">def</span> <span class="nf">_get_temporal_info</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">obs_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Retrieves the number of unique epochs and maximum time span of the </span>
-<span class="sd">    dataset.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        ifg_file_list: Path to file containing list of interferogram file names.</span>
-<span class="sd">        obs_dir: Path to observations directory.</span>
-<span class="sd">    </span>
-<span class="sd">    Returns:</span>
-<span class="sd">        Tuple containing the number of unique epochs and the maximum timespan.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">pyrate.core.algorithm</span> <span class="kn">import</span> <span class="n">get_epochs</span>
-    <span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">Ifg</span><span class="p">,</span> <span class="n">output_tiff_filename</span>
-
-    <span class="n">ifg_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">obs_dir</span><span class="p">,</span> <span class="n">ifg</span><span class="p">)</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">parse_namelist</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">)]</span>
-    <span class="n">rasters</span> <span class="o">=</span> <span class="p">[</span><span class="n">Ifg</span><span class="p">(</span><span class="n">output_tiff_filename</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">obs_dir</span><span class="p">))</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">ifg_paths</span><span class="p">]</span>
-
-    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rasters</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">is_open</span><span class="p">:</span>
-            <span class="n">r</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">readonly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="c1"># extents = xmin, ymin, xmax, ymax</span>
-    <span class="n">epoch_list</span> <span class="o">=</span> <span class="n">get_epochs</span><span class="p">(</span><span class="n">rasters</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">n_epochs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">epoch_list</span><span class="o">.</span><span class="n">dates</span><span class="p">)</span>
-    <span class="n">max_span</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">epoch_list</span><span class="o">.</span><span class="n">spans</span><span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rasters</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">is_open</span><span class="p">:</span>
-            <span class="n">r</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
-    <span class="k">return</span> <span class="n">n_epochs</span><span class="p">,</span> <span class="n">max_span</span>
-
-
-<span class="k">def</span> <span class="nf">_get_prepifg_info</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">obs_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pars</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Retrives spatial information from prepifg interferograms (images that</span>
-<span class="sd">    have been cropped and multilooked).</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        ifg_file_list: Path to file containing list of interferogram file names.</span>
-<span class="sd">        obs_dir: Path to observations directory.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">Ifg</span>
-    <span class="n">base_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">obs_dir</span><span class="p">,</span> <span class="n">ifg</span><span class="p">)</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">parse_namelist</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">)]</span>
-    <span class="n">ifg_paths</span> <span class="o">=</span> <span class="n">get_dest_paths</span><span class="p">(</span><span class="n">base_paths</span><span class="p">,</span> <span class="n">pars</span><span class="p">[</span><span class="n">IFG_CROP_OPT</span><span class="p">],</span> <span class="n">pars</span><span class="p">,</span> <span class="n">pars</span><span class="p">[</span><span class="n">IFG_LKSX</span><span class="p">])</span>
-
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">):</span>
-        <span class="n">ifg_paths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">ifg_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_tif&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-
-    <span class="c1"># This function assumes the stack of interferograms now have the same</span>
-    <span class="c1"># bounds and resolution after going through prepifg.</span>
-    <span class="n">raster</span> <span class="o">=</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">raster</span><span class="o">.</span><span class="n">is_open</span><span class="p">:</span>
-        <span class="n">raster</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">readonly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="n">n_cols</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">ncols</span>
-    <span class="n">n_rows</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">nrows</span>
-    <span class="n">extents</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">x_first</span><span class="p">,</span> <span class="n">raster</span><span class="o">.</span><span class="n">y_first</span><span class="p">,</span> <span class="n">raster</span><span class="o">.</span><span class="n">x_last</span><span class="p">,</span> <span class="n">raster</span><span class="o">.</span><span class="n">y_last</span>
-    <span class="n">transform</span> <span class="o">=</span> <span class="n">raster</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">GetGeoTransform</span><span class="p">()</span>
-
-    <span class="n">raster</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
-    <span class="k">return</span> <span class="n">extents</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">,</span> <span class="n">n_rows</span><span class="p">,</span> <span class="n">transform</span>
-
-
-<span class="k">def</span> <span class="nf">_get_fullres_info</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">crop_opts</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Retrieves spatial information from the provided interferograms.</span>
-<span class="sd">    Requires the interferograms to exist in geotiff format.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        ifg_file_list: Path to file containing list of interferogram file names.</span>
-<span class="sd">        out_dir: Path to observations directory.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Tuple containing extents (xmin, ymin, xmax, ymax), number of pixel</span>
-<span class="sd">        columns, number of pixel rows, number of unique epochs and maximum</span>
-<span class="sd">        time span of the data.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">pyrate.core.prepifg_helper</span> <span class="kn">import</span> <span class="n">_min_bounds</span><span class="p">,</span> <span class="n">_get_extents</span>
-    <span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">Ifg</span><span class="p">,</span> <span class="n">output_tiff_filename</span>
-
-    <span class="n">ifg_paths</span> <span class="o">=</span> <span class="n">parse_namelist</span><span class="p">(</span><span class="n">ifg_file_list</span><span class="p">)</span>
-    <span class="n">rasters</span> <span class="o">=</span> <span class="p">[</span><span class="n">Ifg</span><span class="p">(</span><span class="n">output_tiff_filename</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">))</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">ifg_paths</span><span class="p">]</span>
-
-    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rasters</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">is_open</span><span class="p">:</span>
-            <span class="n">r</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">readonly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="c1"># extents = xmin, ymin, xmax, ymax</span>
-    <span class="n">min_extents</span> <span class="o">=</span> <span class="n">_min_bounds</span><span class="p">(</span><span class="n">rasters</span><span class="p">)</span>
-    <span class="n">post_crop_extents</span> <span class="o">=</span> <span class="n">_get_extents</span><span class="p">(</span><span class="n">rasters</span><span class="p">,</span> <span class="n">crop_opts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">user_exts</span><span class="o">=</span><span class="n">crop_opts</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-    <span class="n">x_step</span> <span class="o">=</span> <span class="n">rasters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">x_step</span>
-    <span class="n">y_step</span> <span class="o">=</span> <span class="n">rasters</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">y_step</span>
-    <span class="c1"># Get the pixel bounds. Ifg/Raster objects do have &#39;ncols&#39;/&#39;nrows&#39;</span>
-    <span class="c1"># properties, but we&#39;ll calculate it off the extents we got above</span>
-    <span class="c1"># because these take into account the chosen cropping option (until</span>
-    <span class="c1"># the stack of interferograms is cropped it&#39;s not known what the</span>
-    <span class="c1"># pixel dimensions will be).</span>
-    <span class="n">n_cols</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">post_crop_extents</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">post_crop_extents</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="n">x_step</span><span class="p">))</span>
-    <span class="n">n_rows</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">post_crop_extents</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">post_crop_extents</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">/</span> <span class="n">y_step</span><span class="p">))</span>
-
-    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rasters</span><span class="p">:</span>
-        <span class="n">r</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
-    <span class="k">return</span> <span class="n">min_extents</span><span class="p">,</span> <span class="n">n_cols</span><span class="p">,</span> <span class="n">n_rows</span>
-
-<span class="k">def</span> <span class="nf">_crop_opts</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convenience function for getting crop options from parameters.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">pyrate.core.prepifg_helper</span> <span class="kn">import</span> <span class="n">CustomExts</span>
-
-    <span class="n">crop_opt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">IFG_CROP_OPT</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">crop_opt</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-        <span class="n">xfirst</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">IFG_XFIRST</span><span class="p">]</span>
-        <span class="n">yfirst</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">IFG_YFIRST</span><span class="p">]</span>
-        <span class="n">xlast</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">IFG_XLAST</span><span class="p">]</span>
-        <span class="n">ylast</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">IFG_YLAST</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">crop_opt</span><span class="p">,</span> <span class="n">CustomExts</span><span class="p">(</span><span class="n">xfirst</span><span class="p">,</span> <span class="n">yfirst</span><span class="p">,</span> <span class="n">xlast</span><span class="p">,</span> <span class="n">ylast</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">crop_opt</span><span class="p">,</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="ConfigException"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.ConfigException">[docs]</a><span class="k">class</span> <span class="nc">ConfigException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>

@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -147,11 +147,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -231,15 +232,15 @@
   <div class="section" id="module-pyrate.core.orbital">
 <span id="orbital-error-correction-module"></span><h1>Orbital Error Correction Module<a class="headerlink" href="#module-pyrate.core.orbital" title="Permalink to this headline">¶</a></h1>
 <p>This Python module implements residual orbital corrections for interferograms.</p>
-<dl class="exception">
+<dl class="py exception">
 <dt id="pyrate.core.orbital.OrbitalError">
 <em class="property">exception </em><code class="sig-prename descclassname">pyrate.core.orbital.</code><code class="sig-name descname">OrbitalError</code><a class="reference internal" href="_modules/pyrate/core/orbital.html#OrbitalError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.orbital.OrbitalError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generic class for errors in orbital correction.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.orbital.get_design_matrix">
-<code class="sig-prename descclassname">pyrate.core.orbital.</code><code class="sig-name descname">get_design_matrix</code><span class="sig-paren">(</span><em class="sig-param">ifg</em>, <em class="sig-param">degree</em>, <em class="sig-param">offset</em>, <em class="sig-param">scale=100.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/orbital.html#get_design_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.orbital.get_design_matrix" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.orbital.</code><code class="sig-name descname">get_design_matrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifg</span></em>, <em class="sig-param"><span class="n">degree</span></em>, <em class="sig-param"><span class="n">offset</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">100.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/orbital.html#get_design_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.orbital.get_design_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns orbital error design matrix with columns for model parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -260,9 +261,9 @@ improve inversion robustness</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.orbital.get_network_design_matrix">
-<code class="sig-prename descclassname">pyrate.core.orbital.</code><code class="sig-name descname">get_network_design_matrix</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">degree</em>, <em class="sig-param">offset</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/orbital.html#get_network_design_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.orbital.get_network_design_matrix" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.orbital.</code><code class="sig-name descname">get_network_design_matrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifgs</span></em>, <em class="sig-param"><span class="n">degree</span></em>, <em class="sig-param"><span class="n">offset</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/orbital.html#get_network_design_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.orbital.get_network_design_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns larger-format design matrix for network error correction. The
 network design matrix includes rows which relate to those of NaN cells.</p>
 <dl class="field-list simple">
@@ -282,9 +283,9 @@ network design matrix includes rows which relate to those of NaN cells.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.orbital.independent_orbital_correction">
-<code class="sig-prename descclassname">pyrate.core.orbital.</code><code class="sig-name descname">independent_orbital_correction</code><span class="sig-paren">(</span><em class="sig-param">ifg</em>, <em class="sig-param">degree</em>, <em class="sig-param">offset</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/orbital.html#independent_orbital_correction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.orbital.independent_orbital_correction" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.orbital.</code><code class="sig-name descname">independent_orbital_correction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifg</span></em>, <em class="sig-param"><span class="n">degree</span></em>, <em class="sig-param"><span class="n">offset</span></em>, <em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/orbital.html#independent_orbital_correction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.orbital.independent_orbital_correction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates and removes an orbital error surface from a single independent
 interferogram.</p>
 <p>Warning: This will write orbital error corrected phase_data to the ifg.</p>
@@ -303,9 +304,9 @@ interferogram.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.orbital.network_orbital_correction">
-<code class="sig-prename descclassname">pyrate.core.orbital.</code><code class="sig-name descname">network_orbital_correction</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">degree</em>, <em class="sig-param">offset</em>, <em class="sig-param">params</em>, <em class="sig-param">m_ifgs: Optional[List] = None</em>, <em class="sig-param">preread_ifgs: Optional[Dict] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/orbital.html#network_orbital_correction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.orbital.network_orbital_correction" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.orbital.</code><code class="sig-name descname">network_orbital_correction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifgs</span></em>, <em class="sig-param"><span class="n">degree</span></em>, <em class="sig-param"><span class="n">offset</span></em>, <em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">m_ifgs</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">preread_ifgs</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/orbital.html#network_orbital_correction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.orbital.network_orbital_correction" title="Permalink to this definition">¶</a></dt>
 <dd><p>This algorithm implements a network inversion to determine orbital
 corrections for a set of interferograms forming a connected network.</p>
 <p>Warning: This will write orbital error corrected phase_data to the ifgs.</p>
@@ -329,26 +330,13 @@ for MPI jobs (optional)</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.orbital.remove_orbital_error">
-<code class="sig-prename descclassname">pyrate.core.orbital.</code><code class="sig-name descname">remove_orbital_error</code><span class="sig-paren">(</span><em class="sig-param">ifgs: Iterable</em>, <em class="sig-param">params: dict</em>, <em class="sig-param">preread_ifgs=None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/pyrate/core/orbital.html#remove_orbital_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.orbital.remove_orbital_error" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.orbital.</code><code class="sig-name descname">remove_orbital_error</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifgs</span><span class="p">:</span> <span class="n">Iterable</span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">headers</span><span class="p">:</span> <span class="n">List<span class="p">[</span>dict<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">preread_ifgs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/pyrate/core/orbital.html#remove_orbital_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.orbital.remove_orbital_error" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper function for PyRate orbital error removal functionality.</p>
 <p>NB: the ifg data is modified in situ, rather than create intermediate
 files. The network method assumes the given ifgs have already been reduced
 to a minimum spanning tree network.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifgs</strong> (<em>list</em>) – List of interferograms class objects</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Dictionary containing configuration parameters</p></li>
-<li><p><strong>preread_ifgs</strong> (<em>dict</em>) – Dictionary containing information specifically
-for MPI jobs (optional)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>None - interferogram phase data is updated and saved to disk</p>
-</dd>
-</dl>
 </dd></dl>
 
 </div>

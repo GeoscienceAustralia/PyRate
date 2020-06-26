@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -147,11 +147,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -232,15 +233,15 @@
 <span id="covariance-module"></span><h1>Covariance Module<a class="headerlink" href="#module-pyrate.core.covariance" title="Permalink to this headline">¶</a></h1>
 <p>This Python module implements covariance calculation and
 Variance/Covariance matrix functionality.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="pyrate.core.covariance.RDist">
-<em class="property">class </em><code class="sig-prename descclassname">pyrate.core.covariance.</code><code class="sig-name descname">RDist</code><span class="sig-paren">(</span><em class="sig-param">ifg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/covariance.html#RDist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.covariance.RDist" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pyrate.core.covariance.</code><code class="sig-name descname">RDist</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifg</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/covariance.html#RDist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.covariance.RDist" title="Permalink to this definition">¶</a></dt>
 <dd><p>RDist class used for caching r_dist during maxvar/alpha computation</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.covariance.cvd">
-<code class="sig-prename descclassname">pyrate.core.covariance.</code><code class="sig-name descname">cvd</code><span class="sig-paren">(</span><em class="sig-param">ifg_path</em>, <em class="sig-param">params</em>, <em class="sig-param">r_dist</em>, <em class="sig-param">calc_alpha=False</em>, <em class="sig-param">write_vals=False</em>, <em class="sig-param">save_acg=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/covariance.html#cvd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.covariance.cvd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.covariance.</code><code class="sig-name descname">cvd</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifg_path</span></em>, <em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">r_dist</span></em>, <em class="sig-param"><span class="n">calc_alpha</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">write_vals</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">save_acg</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/covariance.html#cvd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.covariance.cvd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the 1D covariance function of an entire interferogram as the
 radial average of its 2D autocorrelation.</p>
 <dl class="field-list simple">
@@ -273,9 +274,9 @@ data to numpy array file on disk</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.covariance.cvd_from_phase">
-<code class="sig-prename descclassname">pyrate.core.covariance.</code><code class="sig-name descname">cvd_from_phase</code><span class="sig-paren">(</span><em class="sig-param">phase</em>, <em class="sig-param">ifg</em>, <em class="sig-param">r_dist</em>, <em class="sig-param">calc_alpha</em>, <em class="sig-param">save_acg=False</em>, <em class="sig-param">params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/covariance.html#cvd_from_phase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.covariance.cvd_from_phase" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.covariance.</code><code class="sig-name descname">cvd_from_phase</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">phase</span></em>, <em class="sig-param"><span class="n">ifg</span></em>, <em class="sig-param"><span class="n">r_dist</span></em>, <em class="sig-param"><span class="n">calc_alpha</span></em>, <em class="sig-param"><span class="n">save_acg</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/covariance.html#cvd_from_phase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.covariance.cvd_from_phase" title="Permalink to this definition">¶</a></dt>
 <dd><p>A convenience function used to compute radial autocovariance from phase
 data</p>
 <dl class="field-list simple">
@@ -307,9 +308,9 @@ Must be provided if save_acg=True</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.covariance.get_vcmt">
-<code class="sig-prename descclassname">pyrate.core.covariance.</code><code class="sig-name descname">get_vcmt</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">maxvar</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/covariance.html#get_vcmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.covariance.get_vcmt" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.covariance.</code><code class="sig-name descname">get_vcmt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifgs</span></em>, <em class="sig-param"><span class="n">maxvar</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/covariance.html#get_vcmt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.covariance.get_vcmt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assembles a temporal variance/covariance matrix using the method
 described by Biggs et al., Geophys. J. Int, 2007. Matrix elements are
 evaluated according to sig_i * sig_j * C_ij where i and j are two

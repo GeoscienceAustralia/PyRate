@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -147,11 +147,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -232,15 +233,15 @@
 <span id="time-series-module"></span><h1>Time Series Module<a class="headerlink" href="#module-pyrate.core.timeseries" title="Permalink to this headline">¶</a></h1>
 <p>This Python module contains functions for computing a time series
 inversion in PyRate.</p>
-<dl class="exception">
+<dl class="py exception">
 <dt id="pyrate.core.timeseries.TimeSeriesError">
 <em class="property">exception </em><code class="sig-prename descclassname">pyrate.core.timeseries.</code><code class="sig-name descname">TimeSeriesError</code><a class="reference internal" href="_modules/pyrate/core/timeseries.html#TimeSeriesError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.timeseries.TimeSeriesError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generic exception for time series errors.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.timeseries.time_series">
-<code class="sig-prename descclassname">pyrate.core.timeseries.</code><code class="sig-name descname">time_series</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">params</em>, <em class="sig-param">vcmt=None</em>, <em class="sig-param">mst=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/timeseries.html#time_series"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.timeseries.time_series" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.timeseries.</code><code class="sig-name descname">time_series</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifgs</span></em>, <em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">vcmt</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mst</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/timeseries.html#time_series"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.timeseries.time_series" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the displacement time series from the given interferogram
 network. Solves the linear least squares system using either the SVD
 method (similar to the SBAS method implemented by Berardino et al. 2002)

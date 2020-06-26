@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -147,11 +147,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -232,9 +233,8 @@
 <span id="config-module"></span><h1>Config Module<a class="headerlink" href="#module-pyrate.core.config" title="Permalink to this headline">¶</a></h1>
 <p>This Python module contains utilities to parse PyRate configuration
 files. It also includes numerous general constants relating to options
-in configuration files. Examples of PyRate configuration files are
-provided in the configs/ directory</p>
-<dl class="data">
+in configuration files.</p>
+<dl class="py data">
 <dt id="pyrate.core.config.APSEST">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">APSEST</code><em class="property"> = 'apsest'</em><a class="headerlink" href="#pyrate.core.config.APSEST" title="Permalink to this definition">¶</a></dt>
 <dd><p>no)</p>
@@ -248,19 +248,19 @@ provided in the configs/ directory</p>
 </dl>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.COH_FILE_DIR">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">COH_FILE_DIR</code><em class="property"> = 'cohfiledir'</em><a class="headerlink" href="#pyrate.core.config.COH_FILE_DIR" title="Permalink to this definition">¶</a></dt>
 <dd><p>STR; Directory containing coherence files; defaults to OBS_DIR if not provided</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.COH_FILE_LIST">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">COH_FILE_LIST</code><em class="property"> = 'cohfilelist'</em><a class="headerlink" href="#pyrate.core.config.COH_FILE_LIST" title="Permalink to this definition">¶</a></dt>
 <dd><p>STR; Name of the file list containing the pool of available coherence files</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.COH_MASK">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">COH_MASK</code><em class="property"> = 'cohmask'</em><a class="headerlink" href="#pyrate.core.config.COH_MASK" title="Permalink to this definition">¶</a></dt>
 <dd><p>no)</p>
@@ -274,103 +274,103 @@ provided in the configs/ directory</p>
 </dl>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.COH_THRESH">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">COH_THRESH</code><em class="property"> = 'cohthresh'</em><a class="headerlink" href="#pyrate.core.config.COH_THRESH" title="Permalink to this definition">¶</a></dt>
 <dd><p>FLOAT; Coherence threshold for masking</p>
 </dd></dl>
 
-<dl class="exception">
+<dl class="py exception">
 <dt id="pyrate.core.config.ConfigException">
 <em class="property">exception </em><code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">ConfigException</code><a class="reference internal" href="_modules/pyrate/core/config.html#ConfigException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.ConfigException" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default exception class for configuration errors.</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.DEM_FILE">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">DEM_FILE</code><em class="property"> = 'demfile'</em><a class="headerlink" href="#pyrate.core.config.DEM_FILE" title="Permalink to this definition">¶</a></dt>
 <dd><p>STR; Name of Digital Elevation Model file</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.DEM_HEADER_FILE">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">DEM_HEADER_FILE</code><em class="property"> = 'demHeaderFile'</em><a class="headerlink" href="#pyrate.core.config.DEM_HEADER_FILE" title="Permalink to this definition">¶</a></dt>
 <dd><p>STR; Name of the DEM header file</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.HDR_FILE_LIST">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">HDR_FILE_LIST</code><em class="property"> = 'hdrfilelist'</em><a class="headerlink" href="#pyrate.core.config.HDR_FILE_LIST" title="Permalink to this definition">¶</a></dt>
 <dd><p>STR; Name of the file list containing the pool of available header files</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.IFG_CROP_OPT">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">IFG_CROP_OPT</code><em class="property"> = 'ifgcropopt'</em><a class="headerlink" href="#pyrate.core.config.IFG_CROP_OPT" title="Permalink to this definition">¶</a></dt>
 <dd><p>BOOL (1/2/3/4); Method for cropping interferograms, 1 = minimum overlapping area (intersection), 2 = maximum area (union), 3 = customised area, 4 = all ifgs already same size</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.IFG_FILE_LIST">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">IFG_FILE_LIST</code><em class="property"> = 'ifgfilelist'</em><a class="headerlink" href="#pyrate.core.config.IFG_FILE_LIST" title="Permalink to this definition">¶</a></dt>
 <dd><p>STR; Name of input interferogram list file</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.IFG_LKSX">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">IFG_LKSX</code><em class="property"> = 'ifglksx'</em><a class="headerlink" href="#pyrate.core.config.IFG_LKSX" title="Permalink to this definition">¶</a></dt>
 <dd><p>INT; Multi look factor for interferogram preparation in x dimension</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.IFG_LKSY">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">IFG_LKSY</code><em class="property"> = 'ifglksy'</em><a class="headerlink" href="#pyrate.core.config.IFG_LKSY" title="Permalink to this definition">¶</a></dt>
 <dd><p>INT; Multi look factor for interferogram preparation in y dimension</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.IFG_XFIRST">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">IFG_XFIRST</code><em class="property"> = 'ifgxfirst'</em><a class="headerlink" href="#pyrate.core.config.IFG_XFIRST" title="Permalink to this definition">¶</a></dt>
 <dd><p>FLOAT; Minimum longitude for cropping with method 3</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.IFG_XLAST">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">IFG_XLAST</code><em class="property"> = 'ifgxlast'</em><a class="headerlink" href="#pyrate.core.config.IFG_XLAST" title="Permalink to this definition">¶</a></dt>
 <dd><p>FLOAT; Maximum longitude for cropping with method 3</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.IFG_YFIRST">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">IFG_YFIRST</code><em class="property"> = 'ifgyfirst'</em><a class="headerlink" href="#pyrate.core.config.IFG_YFIRST" title="Permalink to this definition">¶</a></dt>
 <dd><p>FLOAT; Minimum latitude for cropping with method 3</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.IFG_YLAST">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">IFG_YLAST</code><em class="property"> = 'ifgylast'</em><a class="headerlink" href="#pyrate.core.config.IFG_YLAST" title="Permalink to this definition">¶</a></dt>
 <dd><p>FLOAT; Maximum latitude for cropping with method 3</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.LR_MAXSIG">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">LR_MAXSIG</code><em class="property"> = 'maxsig'</em><a class="headerlink" href="#pyrate.core.config.LR_MAXSIG" title="Permalink to this definition">¶</a></dt>
 <dd><p>FLOAT; Maximum allowable standard error for pixels in stacking</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.LR_NSIG">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">LR_NSIG</code><em class="property"> = 'nsig'</em><a class="headerlink" href="#pyrate.core.config.LR_NSIG" title="Permalink to this definition">¶</a></dt>
 <dd><p>FLOAT; Threshold ratio between ‘model minus observation’ residuals and a-priori observation standard deviations for stacking estimate acceptance (otherwise remove furthest outlier and re-iterate)</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.LR_PTHRESH">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">LR_PTHRESH</code><em class="property"> = 'pthr'</em><a class="headerlink" href="#pyrate.core.config.LR_PTHRESH" title="Permalink to this definition">¶</a></dt>
 <dd><p>INT; Number of required observations per pixel for stacking to occur</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.NAN_CONVERSION">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">NAN_CONVERSION</code><em class="property"> = 'nan_conversion'</em><a class="headerlink" href="#pyrate.core.config.NAN_CONVERSION" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert no data values to Nan</p>
@@ -381,25 +381,25 @@ provided in the configs/ directory</p>
 </dl>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.NO_DATA_AVERAGING_THRESHOLD">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">NO_DATA_AVERAGING_THRESHOLD</code><em class="property"> = 'noDataAveragingThreshold'</em><a class="headerlink" href="#pyrate.core.config.NO_DATA_AVERAGING_THRESHOLD" title="Permalink to this definition">¶</a></dt>
 <dd><p>FLOAT; No data averaging threshold for prepifg</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.NO_DATA_VALUE">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">NO_DATA_VALUE</code><em class="property"> = 'noDataValue'</em><a class="headerlink" href="#pyrate.core.config.NO_DATA_VALUE" title="Permalink to this definition">¶</a></dt>
 <dd><p>FLOAT; The no data value in the interferogram files.</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.OBS_DIR">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">OBS_DIR</code><em class="property"> = 'obsdir'</em><a class="headerlink" href="#pyrate.core.config.OBS_DIR" title="Permalink to this definition">¶</a></dt>
 <dd><p>STR; Name of directory containing input interferograms.</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.ORBITAL_FIT">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">ORBITAL_FIT</code><em class="property"> = 'orbfit'</em><a class="headerlink" href="#pyrate.core.config.ORBITAL_FIT" title="Permalink to this definition">¶</a></dt>
 <dd><p>no)</p>
@@ -413,7 +413,7 @@ provided in the configs/ directory</p>
 </dl>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.ORBITAL_FIT_DEGREE">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">ORBITAL_FIT_DEGREE</code><em class="property"> = 'orbfitdegrees'</em><a class="headerlink" href="#pyrate.core.config.ORBITAL_FIT_DEGREE" title="Permalink to this definition">¶</a></dt>
 <dd><p>quadratic in x and y - 5 parameter model, 3: quadratic in x and cubic in y - part-cubic 6 parameter model)</p>
@@ -427,19 +427,19 @@ provided in the configs/ directory</p>
 </dl>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.ORBITAL_FIT_LOOKS_X">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">ORBITAL_FIT_LOOKS_X</code><em class="property"> = 'orbfitlksx'</em><a class="headerlink" href="#pyrate.core.config.ORBITAL_FIT_LOOKS_X" title="Permalink to this definition">¶</a></dt>
 <dd><p>INT; Multi look factor for orbital error calculation in x dimension</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.ORBITAL_FIT_LOOKS_Y">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">ORBITAL_FIT_LOOKS_Y</code><em class="property"> = 'orbfitlksy'</em><a class="headerlink" href="#pyrate.core.config.ORBITAL_FIT_LOOKS_Y" title="Permalink to this definition">¶</a></dt>
 <dd><p>INT; Multi look factor for orbital error calculation in y dimension</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.ORBITAL_FIT_METHOD">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">ORBITAL_FIT_METHOD</code><em class="property"> = 'orbfitmethod'</em><a class="headerlink" href="#pyrate.core.config.ORBITAL_FIT_METHOD" title="Permalink to this definition">¶</a></dt>
 <dd><p>network)</p>
@@ -453,13 +453,13 @@ provided in the configs/ directory</p>
 </dl>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.OUT_DIR">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">OUT_DIR</code><em class="property"> = 'outdir'</em><a class="headerlink" href="#pyrate.core.config.OUT_DIR" title="Permalink to this definition">¶</a></dt>
 <dd><p>STR; Name of directory for saving output products</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.PARALLEL">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">PARALLEL</code><em class="property"> = 'parallel'</em><a class="headerlink" href="#pyrate.core.config.PARALLEL" title="Permalink to this definition">¶</a></dt>
 <dd><p>in parallel by rows, 2: in parallel by pixel)</p>
@@ -473,13 +473,13 @@ provided in the configs/ directory</p>
 </dl>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.PROCESSES">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">PROCESSES</code><em class="property"> = 'processes'</em><a class="headerlink" href="#pyrate.core.config.PROCESSES" title="Permalink to this definition">¶</a></dt>
 <dd><p>INT; Number of processes for multi-threading</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.PROCESSOR">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">PROCESSOR</code><em class="property"> = 'processor'</em><a class="headerlink" href="#pyrate.core.config.PROCESSOR" title="Permalink to this definition">¶</a></dt>
 <dd><p>GEOTIF)</p>
@@ -490,37 +490,37 @@ provided in the configs/ directory</p>
 </dl>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.REFNX">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">REFNX</code><em class="property"> = 'refnx'</em><a class="headerlink" href="#pyrate.core.config.REFNX" title="Permalink to this definition">¶</a></dt>
 <dd><p>INT; Number of reference pixel grid search nodes in x dimension</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.REFNY">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">REFNY</code><em class="property"> = 'refny'</em><a class="headerlink" href="#pyrate.core.config.REFNY" title="Permalink to this definition">¶</a></dt>
 <dd><p>INT; Number of reference pixel grid search nodes in y dimension</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.REFX">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">REFX</code><em class="property"> = 'refx'</em><a class="headerlink" href="#pyrate.core.config.REFX" title="Permalink to this definition">¶</a></dt>
 <dd><p>INT; Longitude (decimal degrees) of reference pixel, or if left blank a search will be performed</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.REFY">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">REFY</code><em class="property"> = 'refy'</em><a class="headerlink" href="#pyrate.core.config.REFY" title="Permalink to this definition">¶</a></dt>
 <dd><p>INT; Latitude (decimal degrees) of reference pixel, or if left blank a search will be performed</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.REF_CHIP_SIZE">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">REF_CHIP_SIZE</code><em class="property"> = 'refchipsize'</em><a class="headerlink" href="#pyrate.core.config.REF_CHIP_SIZE" title="Permalink to this definition">¶</a></dt>
 <dd><p>INT; Dimension of reference pixel search window (in number of pixels)</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.REF_EST_METHOD">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">REF_EST_METHOD</code><em class="property"> = 'refest'</em><a class="headerlink" href="#pyrate.core.config.REF_EST_METHOD" title="Permalink to this definition">¶</a></dt>
 <dd><p>median within the window surrounding the reference pixel)</p>
@@ -534,25 +534,25 @@ provided in the configs/ directory</p>
 </dl>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.REF_MIN_FRAC">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">REF_MIN_FRAC</code><em class="property"> = 'refminfrac'</em><a class="headerlink" href="#pyrate.core.config.REF_MIN_FRAC" title="Permalink to this definition">¶</a></dt>
 <dd><p>FLOAT; Minimum fraction of observations required in search window for pixel to be a viable reference pixel</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.SLC_DIR">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">SLC_DIR</code><em class="property"> = 'slcFileDir'</em><a class="headerlink" href="#pyrate.core.config.SLC_DIR" title="Permalink to this definition">¶</a></dt>
 <dd><p>STR; Name of directory containing GAMMA SLC header files</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.SLPF_CUTOFF">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">SLPF_CUTOFF</code><em class="property"> = 'slpfcutoff'</em><a class="headerlink" href="#pyrate.core.config.SLPF_CUTOFF" title="Permalink to this definition">¶</a></dt>
 <dd><p>FLOAT; Cutoff  value for both butterworth and gaussian filters in km</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.SLPF_METHOD">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">SLPF_METHOD</code><em class="property"> = 'slpfmethod'</em><a class="headerlink" href="#pyrate.core.config.SLPF_METHOD" title="Permalink to this definition">¶</a></dt>
 <dd><p>gaussian)</p>
@@ -566,13 +566,13 @@ provided in the configs/ directory</p>
 </dl>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.SLPF_NANFILL">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">SLPF_NANFILL</code><em class="property"> = 'slpnanfill'</em><a class="headerlink" href="#pyrate.core.config.SLPF_NANFILL" title="Permalink to this definition">¶</a></dt>
 <dd><p>INT (1/0); Do spatial interpolation at NaN locations (1 for interpolation, 0 for zero fill)</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.SLPF_NANFILL_METHOD">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">SLPF_NANFILL_METHOD</code><em class="property"> = 'slpnanfill_method'</em><a class="headerlink" href="#pyrate.core.config.SLPF_NANFILL_METHOD" title="Permalink to this definition">¶</a></dt>
 <dd><p>linear, nearest, cubic), only used when slpnanfill=1</p>
@@ -586,13 +586,13 @@ provided in the configs/ directory</p>
 </dl>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.SLPF_ORDER">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">SLPF_ORDER</code><em class="property"> = 'slpforder'</em><a class="headerlink" href="#pyrate.core.config.SLPF_ORDER" title="Permalink to this definition">¶</a></dt>
 <dd><p>INT; Order of butterworth filter (default 1)</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.TIME_SERIES_CAL">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">TIME_SERIES_CAL</code><em class="property"> = 'tscal'</em><a class="headerlink" href="#pyrate.core.config.TIME_SERIES_CAL" title="Permalink to this definition">¶</a></dt>
 <dd><p>no)</p>
@@ -606,7 +606,7 @@ provided in the configs/ directory</p>
 </dl>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.TIME_SERIES_METHOD">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">TIME_SERIES_METHOD</code><em class="property"> = 'tsmethod'</em><a class="headerlink" href="#pyrate.core.config.TIME_SERIES_METHOD" title="Permalink to this definition">¶</a></dt>
 <dd><p>SVD)</p>
@@ -620,31 +620,31 @@ provided in the configs/ directory</p>
 </dl>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.TIME_SERIES_PTHRESH">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">TIME_SERIES_PTHRESH</code><em class="property"> = 'ts_pthr'</em><a class="headerlink" href="#pyrate.core.config.TIME_SERIES_PTHRESH" title="Permalink to this definition">¶</a></dt>
 <dd><p>INT; Number of required input observations per pixel for time series inversion</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.TIME_SERIES_SM_FACTOR">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">TIME_SERIES_SM_FACTOR</code><em class="property"> = 'smfactor'</em><a class="headerlink" href="#pyrate.core.config.TIME_SERIES_SM_FACTOR" title="Permalink to this definition">¶</a></dt>
 <dd><p>FLOAT; Laplacian smoothing factor (values used is 10**smfactor)</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.TIME_SERIES_SM_ORDER">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">TIME_SERIES_SM_ORDER</code><em class="property"> = 'smorder'</em><a class="headerlink" href="#pyrate.core.config.TIME_SERIES_SM_ORDER" title="Permalink to this definition">¶</a></dt>
 <dd><p>INT (1/2); Order of Laplacian smoothing operator, first or second order</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.TLPF_CUTOFF">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">TLPF_CUTOFF</code><em class="property"> = 'tlpfcutoff'</em><a class="headerlink" href="#pyrate.core.config.TLPF_CUTOFF" title="Permalink to this definition">¶</a></dt>
 <dd><p>FLOAT; Cutoff time for gaussian filter in years;</p>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.TLPF_METHOD">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">TLPF_METHOD</code><em class="property"> = 'tlpfmethod'</em><a class="headerlink" href="#pyrate.core.config.TLPF_METHOD" title="Permalink to this definition">¶</a></dt>
 <dd><p>Triangular, 3: Mean filter)</p>
@@ -658,15 +658,15 @@ provided in the configs/ directory</p>
 </dl>
 </dd></dl>
 
-<dl class="data">
+<dl class="py data">
 <dt id="pyrate.core.config.TLPF_PTHR">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">TLPF_PTHR</code><em class="property"> = 'tlpfpthr'</em><a class="headerlink" href="#pyrate.core.config.TLPF_PTHR" title="Permalink to this definition">¶</a></dt>
 <dd><p>INT; Number of required input observations per pixel for temporal filtering</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.config.coherence_paths_for">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">coherence_paths_for</code><span class="sig-paren">(</span><em class="sig-param">path: str</em>, <em class="sig-param">params: dict</em>, <em class="sig-param">tif=False</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/pyrate/core/config.html#coherence_paths_for"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.coherence_paths_for" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">coherence_paths_for</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em>, <em class="sig-param"><span class="n">tif</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/pyrate/core/config.html#coherence_paths_for"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.coherence_paths_for" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns path to coherence file for given interferogram. Pattern matches
 based on epoch in filename.</p>
 <p class="rubric">Example</p>
@@ -686,28 +686,9 @@ Date pair is the epoch.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyrate.core.config.convert_geographic_coordinate_to_pixel_value">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">convert_geographic_coordinate_to_pixel_value</code><span class="sig-paren">(</span><em class="sig-param">refpx</em>, <em class="sig-param">refpy</em>, <em class="sig-param">transform</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#convert_geographic_coordinate_to_pixel_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.convert_geographic_coordinate_to_pixel_value" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts a lat/long coordinate to a pixel coordinate given the
-geotransform of the image.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>refpx</strong> – The longitude of the coordinate.</p></li>
-<li><p><strong>refpx</strong> – The latitude of the coordinate.</p></li>
-<li><p><strong>transform</strong> – The geotransform array of the image.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Tuple of refpx, refpy in pixel values.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.config.get_config_params">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">get_config_params</code><span class="sig-paren">(</span><em class="sig-param">path: str</em>, <em class="sig-param">validate: bool = True</em>, <em class="sig-param">step: str = 'conv2tif'</em><span class="sig-paren">)</span> &#x2192; Dict<a class="reference internal" href="_modules/pyrate/core/config.html#get_config_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.get_config_params" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">get_config_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; Dict<a class="reference internal" href="_modules/pyrate/core/config.html#get_config_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.get_config_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reads the parameters file provided by the user and converts it into
 a dictionary.</p>
 <dl class="field-list simple">
@@ -724,9 +705,9 @@ a dictionary.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.config.get_dest_paths">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">get_dest_paths</code><span class="sig-paren">(</span><em class="sig-param">base_paths</em>, <em class="sig-param">crop</em>, <em class="sig-param">params</em>, <em class="sig-param">looks</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#get_dest_paths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.get_dest_paths" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">get_dest_paths</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_paths</span></em>, <em class="sig-param"><span class="n">crop</span></em>, <em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">looks</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#get_dest_paths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.get_dest_paths" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determines the full path names for the destination multilooked files</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -746,39 +727,9 @@ a dictionary.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyrate.core.config.get_ifg_paths">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">get_ifg_paths</code><span class="sig-paren">(</span><em class="sig-param">config_file</em>, <em class="sig-param">step='conv2tif'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#get_ifg_paths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.get_ifg_paths" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read the configuration file, extract interferogram file list and determine
-input and output interferogram path names.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>config_file</strong> (<em>str</em>) – Configuration file path</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>base_unw_paths: List of unwrapped inteferograms</p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>dest_paths: List of multi-looked and cropped geotifs</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>params: Dictionary corresponding to the config file</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>list</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.config.mlooked_path">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">mlooked_path</code><span class="sig-paren">(</span><em class="sig-param">path</em>, <em class="sig-param">looks</em>, <em class="sig-param">crop_out</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#mlooked_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.mlooked_path" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">mlooked_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">looks</span></em>, <em class="sig-param"><span class="n">crop_out</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#mlooked_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.mlooked_path" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds suffix to ifg path, for creating a new path for multilooked files.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -797,9 +748,9 @@ input and output interferogram path names.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.config.original_ifg_paths">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">original_ifg_paths</code><span class="sig-paren">(</span><em class="sig-param">ifglist_path</em>, <em class="sig-param">obs_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#original_ifg_paths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.original_ifg_paths" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">original_ifg_paths</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifglist_path</span></em>, <em class="sig-param"><span class="n">obs_dir</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#original_ifg_paths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.original_ifg_paths" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns sequence of paths to files in given ifglist file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -817,9 +768,9 @@ input and output interferogram path names.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.config.parse_namelist">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">parse_namelist</code><span class="sig-paren">(</span><em class="sig-param">nml</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#parse_namelist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.parse_namelist" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">parse_namelist</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nml</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#parse_namelist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.parse_namelist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parses name list file into array of paths</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -834,9 +785,9 @@ input and output interferogram path names.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.config.transform_params">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">transform_params</code><span class="sig-paren">(</span><em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#transform_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.transform_params" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">transform_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#transform_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.transform_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns subset of all parameters for cropping and multilooking.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -851,368 +802,9 @@ input and output interferogram path names.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
-<dt id="pyrate.core.config.validate_coherence_files">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_coherence_files</code><span class="sig-paren">(</span><em class="sig-param">ifg_file_list: str</em>, <em class="sig-param">pars: Dict</em><span class="sig-paren">)</span> &#x2192; Optional[bool]<a class="reference internal" href="_modules/pyrate/core/config.html#validate_coherence_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_coherence_files" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates that there is a matching coherence file for each provided
-interferogram.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifg_file_list</strong> – Path to file listing interferogram names.</p></li>
-<li><p><strong>pars</strong> – The parameters dictionary.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if there is exactly 1 coherence file for each interferogram.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If there are 0 or more than 1 matching coherence
-    files for an interferogram.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.config.validate_compulsory_parameters">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_compulsory_parameters</code><span class="sig-paren">(</span><em class="sig-param">pars: Dict</em><span class="sig-paren">)</span> &#x2192; Optional[bool]<a class="reference internal" href="_modules/pyrate/core/config.html#validate_compulsory_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_compulsory_parameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calls the validators for compulsory (always used) parameters.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>pars</strong> – The parameters dictionary.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if validation is successful.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If validation fails.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.config.validate_crop_parameters">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_crop_parameters</code><span class="sig-paren">(</span><em class="sig-param">min_extents: Tuple[float, float, float, float], pars: Dict</em><span class="sig-paren">)</span> &#x2192; Optional[bool]<a class="reference internal" href="_modules/pyrate/core/config.html#validate_crop_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_crop_parameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates IFG crop parameters by ensuring user provided crop coordinates
-are within the <em>minimum</em> (intersecting) bounds of the interferogram stack.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>min_extents</strong> – The minimum extents of the interferogram stack. The
-crop coordinates must be within these extents.</p></li>
-<li><p><strong>pars</strong> – Parameters dictionary.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if validation is successful.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If validation fails.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.config.validate_epoch_cutoff">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_epoch_cutoff</code><span class="sig-paren">(</span><em class="sig-param">max_span: float</em>, <em class="sig-param">cutoff: str</em>, <em class="sig-param">pars: Dict</em><span class="sig-paren">)</span> &#x2192; Optional[bool]<a class="reference internal" href="_modules/pyrate/core/config.html#validate_epoch_cutoff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_epoch_cutoff" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validate cutoff parameters that rely on the data timespan.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>max_span</strong> – The maximum temporal span of the provided data in years.</p></li>
-<li><p><strong>cutoff</strong> – The key of the cutoff parameter.</p></li>
-<li><p><strong>pars</strong> – The parameters dictionary.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if the cutoff is less than the maximum data timespan.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If the cutoff is greater than the max data timespan.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.config.validate_epoch_thresholds">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_epoch_thresholds</code><span class="sig-paren">(</span><em class="sig-param">n_epochs: int</em>, <em class="sig-param">pars: Dict</em><span class="sig-paren">)</span> &#x2192; Optional[bool]<a class="reference internal" href="_modules/pyrate/core/config.html#validate_epoch_thresholds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_epoch_thresholds" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates threshold paramters that rely on the number of epochs
-available.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n_epochs</strong> – The number of unique epochs in the collection of interferograms
-provided as input.</p></li>
-<li><p><strong>pars</strong> – Parameters dictionary.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if there are enough epochs to satisfy all epoch thresholds.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If there are not enough epochs to satisfy all epoch thresholds.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.config.validate_epochs">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_epochs</code><span class="sig-paren">(</span><em class="sig-param">file_list: str</em>, <em class="sig-param">pattern: str</em><span class="sig-paren">)</span> &#x2192; Optional[bool]<a class="reference internal" href="_modules/pyrate/core/config.html#validate_epochs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_epochs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validate that user provided file names contain the correct pattern of
-epochs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>file_list</strong> – Path to the list of files to validate.</p></li>
-<li><p><strong>pattern</strong> – Regex string for finding the epoch(s).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if all names in file list contain the epoch pattern <em>once</em>.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If not all names in the file list don’t contain
-    the epoch pattern or contain it more than once.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.config.validate_gamma_headers">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_gamma_headers</code><span class="sig-paren">(</span><em class="sig-param">ifg_file_list: str</em>, <em class="sig-param">slc_file_list: str</em><span class="sig-paren">)</span> &#x2192; Optional[bool]<a class="reference internal" href="_modules/pyrate/core/config.html#validate_gamma_headers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_gamma_headers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates that a pair of GAMMA headers exist for each provided
-GAMMA interferogram.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifg_file_list</strong> – Path to the file listing filenames of interferograms.</p></li>
-<li><p><strong>slc_file_list</strong> – Path to the file listing filenames of GAMMA headers.</p></li>
-<li><p><strong>slc_dir</strong> – Path to directory containing GAMMA headers.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if there are exactly 2 headers for each interogram (one for
-each epoch).</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If there are 0 or more than 2 matching headers
-    for an interferogram.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.config.validate_ifgs">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_ifgs</code><span class="sig-paren">(</span><em class="sig-param">ifg_file_list: str</em><span class="sig-paren">)</span> &#x2192; Optional[bool]<a class="reference internal" href="_modules/pyrate/core/config.html#validate_ifgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_ifgs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates that provided interferograms exist.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifg_file_list</strong> – Path to file containing interferogram file names.</p></li>
-<li><p><strong>obs_dir</strong> – Path to observations directory.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if all interferograms exist.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If not all interferograms exist.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.config.validate_minimum_epochs">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_minimum_epochs</code><span class="sig-paren">(</span><em class="sig-param">n_epochs: int</em>, <em class="sig-param">min_epochs: int</em><span class="sig-paren">)</span> &#x2192; Optional[bool]<a class="reference internal" href="_modules/pyrate/core/config.html#validate_minimum_epochs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_minimum_epochs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates the minimum number of epochs required for PyRate to produce
-good results.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n_epochs</strong> – The number of unique epochs in the collection of interferograms
-provided as input.</p></li>
-<li><p><strong>min_epochs</strong> – The minimum number of epochs PyRate requires.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if there are enough epochs to satisfy minimum epochs.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If there are not enough epochs to satisfy min epochs.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.config.validate_multilook_parameters">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_multilook_parameters</code><span class="sig-paren">(</span><em class="sig-param">cols: int</em>, <em class="sig-param">rows: int</em>, <em class="sig-param">xlks_name: str</em>, <em class="sig-param">ylks_name: str</em>, <em class="sig-param">pars: Dict</em><span class="sig-paren">)</span> &#x2192; Optional[bool]<a class="reference internal" href="_modules/pyrate/core/config.html#validate_multilook_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_multilook_parameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validate multilook parameters by ensuring resulting resolution will be
-at least 1 pixel and less than the current resolution.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>cols</strong> – Number of pixel columns (X) in the scene.</p></li>
-<li><p><strong>rows</strong> – Number of pixel rows (Y) in the scene.</p></li>
-<li><p><strong>xlks_name</strong> – Key for looking up the X looks factor.</p></li>
-<li><p><strong>ylks_name</strong> – Key for looking up the Y looks factor.</p></li>
-<li><p><strong>pars</strong> – Parameters dictionary.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if validation is successful.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If validation fails.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.config.validate_obs_thresholds">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_obs_thresholds</code><span class="sig-paren">(</span><em class="sig-param">ifg_file_list: str</em>, <em class="sig-param">pars: Dict</em><span class="sig-paren">)</span> &#x2192; Optional[bool]<a class="reference internal" href="_modules/pyrate/core/config.html#validate_obs_thresholds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_obs_thresholds" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates parameters that specify an observations threshold.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifg_file_list</strong> – Path to the file containing interferogram file names.</p></li>
-<li><p><strong>pars</strong> – Parameters dictionary.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if there are enough interferograms to satisfy all observation thresholds.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If there not enough interferograms to satisfy all observation
-    thresholds.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.config.validate_optional_parameters">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_optional_parameters</code><span class="sig-paren">(</span><em class="sig-param">pars: Dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#validate_optional_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_optional_parameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calls the validators for optional parameters.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>pars</strong> – The parameters dictionary.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if validation successful.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If validation fails.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.config.validate_parameters">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_parameters</code><span class="sig-paren">(</span><em class="sig-param">pars: Dict</em>, <em class="sig-param">step: str = 'conv2tif'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#validate_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_parameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>Main validation function. Calls validation subfunctions and gathers
-some required variables for performing validation.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>pars</strong> – The parameters dictionary.</p></li>
-<li><p><strong>step</strong> – The current step of the PyRate workflow. Determines what
-parameters to validate and what resources are available in
-terms of geotiffs.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If errors occur during parameter validation.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.config.validate_prepifg_tifs_exist">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_prepifg_tifs_exist</code><span class="sig-paren">(</span><em class="sig-param">ifg_file_list: str</em>, <em class="sig-param">obs_dir: str</em>, <em class="sig-param">pars: Dict</em><span class="sig-paren">)</span> &#x2192; Optional[bool]<a class="reference internal" href="_modules/pyrate/core/config.html#validate_prepifg_tifs_exist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_prepifg_tifs_exist" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates that cropped and multilooked interferograms exist in geotiff
-format.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifg_file_list</strong> – Path to file containing interfergram file names.</p></li>
-<li><p><strong>obs_dir</strong> – Path to observations directory.</p></li>
-<li><p><strong>pars</strong> – Parameters dictionary.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if all interferograms exist in geotiff format.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If not all intergerograms exist in geotiff format.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.config.validate_reference_pixel_search_windows">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_reference_pixel_search_windows</code><span class="sig-paren">(</span><em class="sig-param">n_cols: int</em>, <em class="sig-param">n_rows: int</em>, <em class="sig-param">pars: Dict</em><span class="sig-paren">)</span> &#x2192; Optional[bool]<a class="reference internal" href="_modules/pyrate/core/config.html#validate_reference_pixel_search_windows"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_reference_pixel_search_windows" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates that the reference pixel search windows provided by user
-fit within the scene being processed.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n_cols</strong> – Number of pixel columns (X) in the scene.</p></li>
-<li><p><strong>n_rows</strong> – Number of pixel rows (Y) in the scene.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if the scene can accomodate the search windows (no overlap).</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If the scene cannot accomodate the search windows.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.config.validate_slpf_cutoff">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_slpf_cutoff</code><span class="sig-paren">(</span><em class="sig-param">extents: Tuple[float, float, float, float], pars: Dict</em><span class="sig-paren">)</span> &#x2192; Optional[bool]<a class="reference internal" href="_modules/pyrate/core/config.html#validate_slpf_cutoff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_slpf_cutoff" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validate SLPF_CUTOFF is within the bounds of the scene being processed
-(after prepifg cropping/subsampling has occurred).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>extents</strong> – Tuple of (xmin, xmax, ymin, ymax) describing the extents
-of the scene, after cropping &amp; multisampling, in degrees.</p></li>
-<li><p><strong>pars</strong> – Parameters dictionary.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if validation is successful.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If validation fails.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pyrate.core.config.validate_tifs_exist">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">validate_tifs_exist</code><span class="sig-paren">(</span><em class="sig-param">ifg_file_list: str</em>, <em class="sig-param">obs_dir: str</em><span class="sig-paren">)</span> &#x2192; Optional[bool]<a class="reference internal" href="_modules/pyrate/core/config.html#validate_tifs_exist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.validate_tifs_exist" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates that provided interferograms exist in geotiff format.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifg_file_list</strong> – Path to file containing interfergram file names.</p></li>
-<li><p><strong>obs_dir</strong> – Path to observations directory.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if all interferograms exist in geotiff format.</p>
-</dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyrate.core.config.ConfigException" title="pyrate.core.config.ConfigException"><strong>ConfigException</strong></a> – If not all intergerograms exist in geotiff format.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.config.write_config_file">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">write_config_file</code><span class="sig-paren">(</span><em class="sig-param">params</em>, <em class="sig-param">output_conf_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#write_config_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.write_config_file" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">write_config_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">output_conf_file</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#write_config_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.write_config_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Takes a param object and writes the config file. Reverse of get_conf_params.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

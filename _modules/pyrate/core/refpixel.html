@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -145,11 +145,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -243,10 +244,103 @@
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">isnan</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="nb">sum</span> <span class="k">as</span> <span class="n">nsum</span>
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
 
+<span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span>
+
 <span class="kn">import</span> <span class="nn">pyrate.core.config</span> <span class="k">as</span> <span class="nn">cf</span>
+<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span>
+<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">mpiops</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">Ifg</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">joblib_log_level</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.logger</span> <span class="kn">import</span> <span class="n">pyratelogger</span> <span class="k">as</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">prepifg_helper</span>
+
+
+<div class="viewcode-block" id="update_refpix_metadata"><a class="viewcode-back" href="../../../refpixel.html#pyrate.core.refpixel.update_refpix_metadata">[docs]</a><span class="k">def</span> <span class="nf">update_refpix_metadata</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function that adds metadata about the chosen reference pixel to each interferogram.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">pyrate_refpix_lon</span><span class="p">,</span> <span class="n">pyrate_refpix_lat</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">convert_pixel_value_to_geographic_coordinate</span><span class="p">,</span>
+                                                           <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
+
+    <span class="n">process_ifgs_paths</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ifg_file</span> <span class="ow">in</span> <span class="n">process_ifgs_paths</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Updating metadata for: &quot;</span><span class="o">+</span><span class="n">ifg_file</span><span class="p">)</span>
+        <span class="n">ifg</span> <span class="o">=</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">ifg_file</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Open dataset&quot;</span><span class="p">)</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">readonly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Set no data value&quot;</span><span class="p">)</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">nodata_value</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;noDataValue&quot;</span><span class="p">]</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Update no data values in dataset&quot;</span><span class="p">)</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">convert_to_nans</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Convert mm&quot;</span><span class="p">)</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">convert_to_mm</span><span class="p">()</span>
+        <span class="n">half_patch_size</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;refchipsize&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Extract reference pixel windows&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">phase_data</span><span class="p">[</span><span class="n">y</span> <span class="o">-</span> <span class="n">half_patch_size</span><span class="p">:</span> <span class="n">y</span> <span class="o">+</span> <span class="n">half_patch_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                              <span class="n">x</span> <span class="o">-</span> <span class="n">half_patch_size</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">half_patch_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculate standard deviation for reference window&quot;</span><span class="p">)</span>
+        <span class="n">stddev_ref_area</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculate mean for reference window&quot;</span><span class="p">)</span>
+        <span class="n">mean_ref_area</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">add_metadata</span><span class="p">(</span><span class="o">**</span><span class="p">{</span>
+            <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_REFPIX_X</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span>
+            <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_REFPIX_Y</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">refy</span><span class="p">),</span>
+            <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_REFPIX_LAT</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">pyrate_refpix_lat</span><span class="p">),</span>
+            <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_REFPIX_LON</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">pyrate_refpix_lon</span><span class="p">),</span>
+            <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_MEAN_REF_AREA</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">mean_ref_area</span><span class="p">),</span>
+            <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_STDDEV_REF_AREA</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">stddev_ref_area</span><span class="p">)</span>
+        <span class="p">})</span>
+
+        <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="convert_pixel_value_to_geographic_coordinate"><a class="viewcode-back" href="../../../refpixel.html#pyrate.core.refpixel.convert_pixel_value_to_geographic_coordinate">[docs]</a><span class="k">def</span> <span class="nf">convert_pixel_value_to_geographic_coordinate</span><span class="p">(</span><span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">,</span> <span class="n">transform</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a pixel coordinate to a latitude/longitude coordinate given the</span>
+<span class="sd">    geotransform of the image.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        refx: The pixel x coordinate.</span>
+<span class="sd">        refy: The pixel ye coordinate.</span>
+<span class="sd">        transform: The geotransform array of the image.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple of lon, lat geographic coordinate.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">xOrigin</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">yOrigin</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">pixelWidth</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pixelHeight</span> <span class="o">=</span> <span class="o">-</span><span class="n">transform</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">refx</span><span class="o">*</span><span class="n">pixelWidth</span> <span class="o">+</span> <span class="n">xOrigin</span>
+    <span class="n">lat</span> <span class="o">=</span> <span class="n">yOrigin</span> <span class="o">-</span> <span class="n">refy</span><span class="o">*</span><span class="n">pixelHeight</span>
+
+    <span class="k">return</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span></div>
+
+
+<div class="viewcode-block" id="convert_geographic_coordinate_to_pixel_value"><a class="viewcode-back" href="../../../refpixel.html#pyrate.core.refpixel.convert_geographic_coordinate_to_pixel_value">[docs]</a><span class="k">def</span> <span class="nf">convert_geographic_coordinate_to_pixel_value</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">transform</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a latitude/longitude coordinate to a pixel coordinate given the</span>
+<span class="sd">    geotransform of the image.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        lon: Pixel longitude.</span>
+<span class="sd">        lat: Pixel latitude.</span>
+<span class="sd">        transform: The geotransform array of the image.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple of refx, refy pixel coordinates.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">xOrigin</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">yOrigin</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">pixelWidth</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pixelHeight</span> <span class="o">=</span> <span class="o">-</span><span class="n">transform</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+
+    <span class="n">refx</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">lon</span> <span class="o">-</span> <span class="n">xOrigin</span><span class="p">)</span> <span class="o">/</span> <span class="n">pixelWidth</span><span class="p">)</span>
+    <span class="n">refy</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">yOrigin</span> <span class="o">-</span> <span class="n">lat</span><span class="p">)</span> <span class="o">/</span> <span class="n">pixelHeight</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span></div>
 
 
 <span class="c1"># TODO: move error checking to config step (for fail fast)</span>
@@ -284,8 +378,8 @@
             <span class="n">mean_sds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_ref_pixel_multi</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">half_patch_size</span><span class="p">,</span> <span class="n">phase_data</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">params</span><span class="p">))</span>
         <span class="n">refxy</span> <span class="o">=</span> <span class="n">find_min_mean</span><span class="p">(</span><span class="n">mean_sds</span><span class="p">,</span> <span class="n">grid</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">refxy</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Refpixel calculation not possible!&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">refxy</span><span class="p">,</span> <span class="n">RefPixelError</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">RefPixelError</span><span class="p">(</span><span class="s1">&#39;Refpixel calculation not possible!&#39;</span><span class="p">)</span>
 
     <span class="n">refy</span><span class="p">,</span> <span class="n">refx</span> <span class="o">=</span> <span class="n">refxy</span>
 
@@ -310,7 +404,7 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="n">refp_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanargmin</span><span class="p">(</span><span class="n">mean_sds</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">grid</span><span class="p">[</span><span class="n">refp_index</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">v</span><span class="p">:</span>
+    <span class="k">except</span> <span class="n">RefPixelError</span> <span class="k">as</span> <span class="n">v</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">v</span></div>
 
@@ -468,7 +562,7 @@
 
     <span class="k">if</span> <span class="n">chipsize</span> <span class="o">&lt;</span> <span class="mi">3</span> <span class="ow">or</span> <span class="n">chipsize</span> <span class="o">&gt;</span> <span class="n">head</span><span class="o">.</span><span class="n">ncols</span> <span class="ow">or</span> <span class="p">(</span><span class="n">chipsize</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Chipsize setting must be &gt;=3 and at least &lt;= grid width&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">RefPixelError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Chipsize validation successful&#39;</span><span class="p">)</span>
 
 
@@ -480,7 +574,7 @@
         <span class="k">raise</span> <span class="n">cf</span><span class="o">.</span><span class="n">ConfigException</span><span class="p">(</span><span class="s1">&#39;Minimum fraction is None&#39;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">min_frac</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">min_frac</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Minimum fraction setting must be &gt;= 0.0 and &lt;= 1.0 &quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">RefPixelError</span><span class="p">(</span><span class="s2">&quot;Minimum fraction setting must be &gt;= 0.0 and &lt;= 1.0 &quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_validate_search_win</span><span class="p">(</span><span class="n">refnx</span><span class="p">,</span> <span class="n">refny</span><span class="p">,</span> <span class="n">chipsize</span><span class="p">,</span> <span class="n">head</span><span class="p">):</span>
@@ -493,7 +587,7 @@
     <span class="n">max_width</span> <span class="o">=</span> <span class="p">(</span><span class="n">head</span><span class="o">.</span><span class="n">ncols</span> <span class="o">-</span> <span class="p">(</span><span class="n">chipsize</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">refnx</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">refnx</span> <span class="o">&gt;</span> <span class="n">max_width</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Invalid refnx setting, must be &gt; 0 and &lt;= </span><span class="si">%s</span><span class="s2">&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="n">max_width</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">RefPixelError</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="n">max_width</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">refny</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">cf</span><span class="o">.</span><span class="n">ConfigException</span><span class="p">(</span><span class="s1">&#39;refny is None&#39;</span><span class="p">)</span>
@@ -501,13 +595,36 @@
     <span class="n">max_rows</span> <span class="o">=</span> <span class="p">(</span><span class="n">head</span><span class="o">.</span><span class="n">nrows</span> <span class="o">-</span> <span class="p">(</span><span class="n">chipsize</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">refny</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">refny</span> <span class="o">&gt;</span> <span class="n">max_rows</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Invalid refny setting, must be &gt; 0 and &lt;= </span><span class="si">%s</span><span class="s2">&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="n">max_rows</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">RefPixelError</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="n">max_rows</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="validate_supplied_lat_lon"><a class="viewcode-back" href="../../../refpixel.html#pyrate.core.refpixel.validate_supplied_lat_lon">[docs]</a><span class="k">def</span> <span class="nf">validate_supplied_lat_lon</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to validate that the user supplied lat/lon values sit within image bounds</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFX</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFY</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">lon</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">lat</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="n">prepifg_helper</span><span class="o">.</span><span class="n">get_analysis_extent</span><span class="p">(</span>
+        <span class="n">crop_opt</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_CROP_OPT</span><span class="p">],</span>
+        <span class="n">rasters</span><span class="o">=</span><span class="p">[</span><span class="n">prepifg_helper</span><span class="o">.</span><span class="n">dem_or_ifg</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">sampled_path</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">INTERFEROGRAM_FILES</span><span class="p">]],</span>
+        <span class="n">xlooks</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_LKSX</span><span class="p">],</span> <span class="n">ylooks</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_LKSY</span><span class="p">],</span>
+        <span class="n">user_exts</span><span class="o">=</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_XFIRST</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_YFIRST</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_XLAST</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_YLAST</span><span class="p">])</span>
+    <span class="p">)</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Supplied </span><span class="si">{}</span><span class="s2"> value is outside the bounds of the interferogram data&quot;</span>
+    <span class="n">lat_lon_txt</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">lon</span> <span class="o">&lt;</span> <span class="n">xmin</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">lon</span> <span class="o">&gt;</span> <span class="n">xmax</span><span class="p">):</span>
+        <span class="n">lat_lon_txt</span> <span class="o">+=</span> <span class="s1">&#39;longitude&#39;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">lat</span> <span class="o">&lt;</span> <span class="n">ymin</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">lat</span> <span class="o">&gt;</span> <span class="n">ymax</span><span class="p">):</span>
+        <span class="n">lat_lon_txt</span> <span class="o">+=</span> <span class="s1">&#39; and latitude&#39;</span> <span class="k">if</span> <span class="n">lat_lon_txt</span> <span class="k">else</span> <span class="s1">&#39;latitude&#39;</span>
+    <span class="k">if</span> <span class="n">lat_lon_txt</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RefPixelError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lat_lon_txt</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="RefPixelError"><a class="viewcode-back" href="../../../refpixel.html#pyrate.core.refpixel.RefPixelError">[docs]</a><span class="k">class</span> <span class="nc">RefPixelError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generic exception for reference pixel errors.</span>
-<span class="sd">    &#39;&#39;&#39;</span></div>
+<span class="sd">    &quot;&quot;&quot;</span></div>
 </pre></div>
 
            </div>

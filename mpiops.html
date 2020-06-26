@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -147,11 +147,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -231,9 +232,9 @@
   <div class="section" id="module-pyrate.core.mpiops">
 <span id="mpi-operations-module"></span><h1>MPI operations Module<a class="headerlink" href="#module-pyrate.core.mpiops" title="Permalink to this headline">¶</a></h1>
 <p>This Python module contains MPI convenience functions for PyRate</p>
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.mpiops.array_split">
-<code class="sig-prename descclassname">pyrate.core.mpiops.</code><code class="sig-name descname">array_split</code><span class="sig-paren">(</span><em class="sig-param">arr: Iterable</em>, <em class="sig-param">process: int = None</em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/pyrate/core/mpiops.html#array_split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.mpiops.array_split" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.mpiops.</code><code class="sig-name descname">array_split</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arr</span><span class="p">:</span> <span class="n">Iterable</span></em>, <em class="sig-param"><span class="n">process</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="_modules/pyrate/core/mpiops.html#array_split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.mpiops.array_split" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convenience function for splitting array elements across MPI processes</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -248,9 +249,9 @@ If None, MPI.comm.rank is used instead. (optional)</p></li>
 :rtype: list</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.mpiops.run_once">
-<code class="sig-prename descclassname">pyrate.core.mpiops.</code><code class="sig-name descname">run_once</code><span class="sig-paren">(</span><em class="sig-param">f: Callable</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="_modules/pyrate/core/mpiops.html#run_once"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.mpiops.run_once" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.mpiops.</code><code class="sig-name descname">run_once</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span><span class="p">:</span> <span class="n">Callable</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="_modules/pyrate/core/mpiops.html#run_once"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.mpiops.run_once" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run a function on one node and then broadcast result to all.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

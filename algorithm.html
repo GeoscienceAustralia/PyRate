@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -147,11 +147,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -231,9 +232,9 @@
   <div class="section" id="module-pyrate.core.algorithm">
 <span id="algorithm-module"></span><h1>Algorithm Module<a class="headerlink" href="#module-pyrate.core.algorithm" title="Permalink to this headline">¶</a></h1>
 <p>This Python module contains a collection of generic algorithms used in PyRate</p>
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.algorithm.factorise_integer">
-<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">factorise_integer</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">memo={}</em>, <em class="sig-param">left=2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#factorise_integer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.factorise_integer" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">factorise_integer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">memo</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">left</span><span class="o">=</span><span class="default_value">2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#factorise_integer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.factorise_integer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns two factors a and b of a supplied number n such that a * b = n.
 The two factors are evaluated to be as close to each other in size as possible</p>
 <dl class="field-list simple">
@@ -259,9 +260,9 @@ The two factors are evaluated to be as close to each other in size as possible</
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.algorithm.get_all_epochs">
-<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">get_all_epochs</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#get_all_epochs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.get_all_epochs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">get_all_epochs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifgs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#get_all_epochs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.get_all_epochs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a sequence of all master and slave dates in given interferograms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -276,9 +277,9 @@ The two factors are evaluated to be as close to each other in size as possible</
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.algorithm.get_epochs">
-<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">get_epochs</code><span class="sig-paren">(</span><em class="sig-param">ifgs: Union[Iterable, Dict]</em><span class="sig-paren">)</span> &#x2192; Tuple[pyrate.core.shared.EpochList, int]<a class="reference internal" href="_modules/pyrate/core/algorithm.html#get_epochs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.get_epochs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">get_epochs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifgs</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>Iterable<span class="p">, </span>Dict<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span><a class="reference internal" href="shared.html#pyrate.core.shared.EpochList" title="pyrate.core.shared.EpochList">pyrate.core.shared.EpochList</a><span class="p">, </span>int<span class="p">]</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#get_epochs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.get_epochs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an EpochList derived from the given interferograms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -293,9 +294,9 @@ The two factors are evaluated to be as close to each other in size as possible</
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.algorithm.ifg_date_index_lookup">
-<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">ifg_date_index_lookup</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">date_pair</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#ifg_date_index_lookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.ifg_date_index_lookup" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">ifg_date_index_lookup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifgs</span></em>, <em class="sig-param"><span class="n">date_pair</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#ifg_date_index_lookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.ifg_date_index_lookup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the Interferogram index which has the master and slave dates
 given in ‘date_pair’.</p>
 <dl class="field-list simple">
@@ -314,9 +315,9 @@ given in ‘date_pair’.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.algorithm.ifg_date_lookup">
-<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">ifg_date_lookup</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">date_pair</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#ifg_date_lookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.ifg_date_lookup" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">ifg_date_lookup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifgs</span></em>, <em class="sig-param"><span class="n">date_pair</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#ifg_date_lookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.ifg_date_lookup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the Interferogram which has the master and slave dates given
 in ‘date_pair’.</p>
 <dl class="field-list simple">
@@ -335,9 +336,9 @@ in ‘date_pair’.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.algorithm.is_square">
-<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">is_square</code><span class="sig-paren">(</span><em class="sig-param">arr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#is_square"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.is_square" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">is_square</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arr</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#is_square"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.is_square" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determines whether an array is square or not.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -352,9 +353,9 @@ in ‘date_pair’.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.algorithm.least_squares_covariance">
-<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">least_squares_covariance</code><span class="sig-paren">(</span><em class="sig-param">A</em>, <em class="sig-param">b</em>, <em class="sig-param">v</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#least_squares_covariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.least_squares_covariance" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">least_squares_covariance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">A</span></em>, <em class="sig-param"><span class="n">b</span></em>, <em class="sig-param"><span class="n">v</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#least_squares_covariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.least_squares_covariance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Least squares solution in the presence of known covariance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -373,9 +374,9 @@ in ‘date_pair’.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.algorithm.los_conversion">
-<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">los_conversion</code><span class="sig-paren">(</span><em class="sig-param">phase_data</em>, <em class="sig-param">unit_vec</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#los_conversion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.los_conversion" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">los_conversion</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">phase_data</span></em>, <em class="sig-param"><span class="n">unit_vec</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#los_conversion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.los_conversion" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts phase from line-of-sight (LOS) to horizontal/vertical components.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -393,9 +394,9 @@ in ‘date_pair’.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.algorithm.master_slave_ids">
-<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">master_slave_ids</code><span class="sig-paren">(</span><em class="sig-param">dates</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#master_slave_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.master_slave_ids" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">master_slave_ids</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dates</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#master_slave_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.master_slave_ids" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a dictionary of ‘date:unique ID’ for each date in ‘dates’.
 IDs are ordered from oldest to newest, starting at 0.</p>
 <dl class="field-list simple">
@@ -411,9 +412,9 @@ IDs are ordered from oldest to newest, starting at 0.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.algorithm.unit_vector">
-<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">unit_vector</code><span class="sig-paren">(</span><em class="sig-param">incidence</em>, <em class="sig-param">azimuth</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#unit_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.unit_vector" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">unit_vector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">incidence</span></em>, <em class="sig-param"><span class="n">azimuth</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#unit_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.unit_vector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns unit vector tuple (east_west, north_south, vertical).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

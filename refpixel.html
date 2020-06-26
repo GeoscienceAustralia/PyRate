@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -147,11 +147,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -232,15 +233,45 @@
 <span id="reference-pixel-calculation-module"></span><h1>Reference Pixel Calculation Module<a class="headerlink" href="#module-pyrate.core.refpixel" title="Permalink to this headline">¶</a></h1>
 <p>This Python module implements an algorithm to search for the location
 of the interferometric reference pixel</p>
-<dl class="exception">
+<dl class="py exception">
 <dt id="pyrate.core.refpixel.RefPixelError">
 <em class="property">exception </em><code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">RefPixelError</code><a class="reference internal" href="_modules/pyrate/core/refpixel.html#RefPixelError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.RefPixelError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generic exception for reference pixel errors.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
+<dt id="pyrate.core.refpixel.convert_geographic_coordinate_to_pixel_value">
+<code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">convert_geographic_coordinate_to_pixel_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lon</span></em>, <em class="sig-param"><span class="n">lat</span></em>, <em class="sig-param"><span class="n">transform</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/refpixel.html#convert_geographic_coordinate_to_pixel_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.convert_geographic_coordinate_to_pixel_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a latitude/longitude coordinate to a pixel coordinate given the
+geotransform of the image.
+:param lon: Pixel longitude.
+:param lat: Pixel latitude.
+:param transform: The geotransform array of the image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Tuple of refx, refy pixel coordinates.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyrate.core.refpixel.convert_pixel_value_to_geographic_coordinate">
+<code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">convert_pixel_value_to_geographic_coordinate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">refx</span></em>, <em class="sig-param"><span class="n">refy</span></em>, <em class="sig-param"><span class="n">transform</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/refpixel.html#convert_pixel_value_to_geographic_coordinate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.convert_pixel_value_to_geographic_coordinate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a pixel coordinate to a latitude/longitude coordinate given the
+geotransform of the image.
+:param refx: The pixel x coordinate.
+:param refy: The pixel ye coordinate.
+:param transform: The geotransform array of the image.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Tuple of lon, lat geographic coordinate.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt id="pyrate.core.refpixel.find_min_mean">
-<code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">find_min_mean</code><span class="sig-paren">(</span><em class="sig-param">mean_sds</em>, <em class="sig-param">grid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/refpixel.html#find_min_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.find_min_mean" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">find_min_mean</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mean_sds</span></em>, <em class="sig-param"><span class="n">grid</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/refpixel.html#find_min_mean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.find_min_mean" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the ref pixel block with minimum mean value</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -259,9 +290,9 @@ reference pixel grid</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.refpixel.ref_pixel">
-<code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">ref_pixel</code><span class="sig-paren">(</span><em class="sig-param">ifgs</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/refpixel.html#ref_pixel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.ref_pixel" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">ref_pixel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifgs</span></em>, <em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/refpixel.html#ref_pixel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.ref_pixel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determines the most appropriate reference pixel coordinate by conducting
 a grid search and calculating the mean standard deviation with patches
 around candidate pixels from the given interferograms.</p>
@@ -285,9 +316,9 @@ the upper bounds cause an exception.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.refpixel.ref_pixel_setup">
-<code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">ref_pixel_setup</code><span class="sig-paren">(</span><em class="sig-param">ifgs_or_paths</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/refpixel.html#ref_pixel_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.ref_pixel_setup" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">ref_pixel_setup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifgs_or_paths</span></em>, <em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/refpixel.html#ref_pixel_setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.ref_pixel_setup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets up the grid for reference pixel computation and saves numpy files
 to disk for later use during ref pixel computation.</p>
 <dl class="field-list simple">
@@ -318,9 +349,9 @@ to disk for later use during ref pixel computation.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.refpixel.save_ref_pixel_blocks">
-<code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">save_ref_pixel_blocks</code><span class="sig-paren">(</span><em class="sig-param">grid</em>, <em class="sig-param">half_patch_size</em>, <em class="sig-param">ifg_paths</em>, <em class="sig-param">params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/refpixel.html#save_ref_pixel_blocks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.save_ref_pixel_blocks" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">save_ref_pixel_blocks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">grid</span></em>, <em class="sig-param"><span class="n">half_patch_size</span></em>, <em class="sig-param"><span class="n">ifg_paths</span></em>, <em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/refpixel.html#save_ref_pixel_blocks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.save_ref_pixel_blocks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save reference pixel grid blocks to numpy array files on disk</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -335,6 +366,18 @@ to disk for later use during ref pixel computation.</p>
 <dd class="field-even"><p>None, file saved to disk</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyrate.core.refpixel.update_refpix_metadata">
+<code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">update_refpix_metadata</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifg_paths</span></em>, <em class="sig-param"><span class="n">refx</span></em>, <em class="sig-param"><span class="n">refy</span></em>, <em class="sig-param"><span class="n">transform</span></em>, <em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/refpixel.html#update_refpix_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.update_refpix_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that adds metadata about the chosen reference pixel to each interferogram.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyrate.core.refpixel.validate_supplied_lat_lon">
+<code class="sig-prename descclassname">pyrate.core.refpixel.</code><code class="sig-name descname">validate_supplied_lat_lon</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/pyrate/core/refpixel.html#validate_supplied_lat_lon"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.refpixel.validate_supplied_lat_lon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to validate that the user supplied lat/lon values sit within image bounds</p>
 </dd></dl>
 
 </div>

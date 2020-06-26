@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -145,11 +145,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +240,7 @@
 <span class="kn">import</span> <span class="nn">itertools</span>
 
 <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">solve</span><span class="p">,</span> <span class="n">cholesky</span><span class="p">,</span> <span class="n">qr</span><span class="p">,</span> <span class="n">inv</span>
-<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">nan</span><span class="p">,</span> <span class="n">isnan</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">diag</span><span class="p">,</span> <span class="n">delete</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">float32</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">nan</span><span class="p">,</span> <span class="n">isnan</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">diag</span><span class="p">,</span> <span class="n">delete</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">float32</span><span class="p">,</span> <span class="n">size</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
 <span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span>
@@ -247,12 +248,13 @@
 <span class="kn">from</span> <span class="nn">pyrate.core.logger</span> <span class="kn">import</span> <span class="n">pyratelogger</span> <span class="k">as</span> <span class="n">log</span>
 
 
-<div class="viewcode-block" id="stack_rate"><a class="viewcode-back" href="../../../stack.html#pyrate.core.stack.stack_rate">[docs]</a><span class="k">def</span> <span class="nf">stack_rate</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">mst</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="stack_rate_array"><a class="viewcode-back" href="../../../stack.html#pyrate.core.stack.stack_rate_array">[docs]</a><span class="k">def</span> <span class="nf">stack_rate_array</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">mst</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Pixel-by-pixel rate (velocity) estimation using iterative</span>
-<span class="sd">    weighted least-squares stacking method.</span>
+<span class="sd">    This function loops over all interferogram pixels in a 3-dimensional array and estimates</span>
+<span class="sd">    the pixel rate (velocity) by applying the iterative weighted least-squares stacking</span>
+<span class="sd">    algorithm &#39;pyrate.core.stack.stack_rate_pixel&#39;.</span>
 
-<span class="sd">    :param Ifg.object ifgs: Sequence of interferogram objects from which to extract observations</span>
+<span class="sd">    :param Ifg.object ifgs: Sequence of objects containing the interferometric observations</span>
 <span class="sd">    :param dict params: Configuration parameters</span>
 <span class="sd">    :param ndarray vcmt: Derived positive definite temporal variance covariance matrix</span>
 <span class="sd">    :param ndarray mst: Pixel-wise matrix describing the minimum spanning tree network</span>
@@ -261,17 +263,17 @@
 <span class="sd">    :rtype: ndarray</span>
 <span class="sd">    :return: error: Standard deviation of the rate map</span>
 <span class="sd">    :rtype: ndarray</span>
-<span class="sd">    :return: samples: Number of observations used in rate calculation per pixel</span>
+<span class="sd">    :return: samples: Number of observations used in rate calculation for each pixel</span>
 <span class="sd">    :rtype: ndarray</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">maxsig</span><span class="p">,</span> <span class="n">nsig</span><span class="p">,</span> <span class="n">pthresh</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">parallel</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">rate</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">span</span> <span class="o">=</span> <span class="n">_stack_setup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="n">nsig</span><span class="p">,</span> <span class="n">pthresh</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">parallel</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">rate</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">span</span> <span class="o">=</span> <span class="n">_stack_setup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
 
     <span class="c1"># pixel-by-pixel calculation.</span>
     <span class="c1"># nested loops to loop over the 2 image dimensions</span>
     <span class="k">if</span> <span class="n">parallel</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating stack rate in parallel&#39;</span><span class="p">)</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PROCESSES</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="n">joblib_log_level</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">LOG_LEVEL</span><span class="p">))(</span>
-            <span class="n">delayed</span><span class="p">(</span><span class="n">_stack_rate_by_pixel</span><span class="p">)(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">nsig</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">pthresh</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">rows</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">cols</span><span class="p">))</span>
+            <span class="n">delayed</span><span class="p">(</span><span class="n">stack_rate_pixel</span><span class="p">)(</span><span class="n">obs</span><span class="p">[:,</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">],</span> <span class="n">mst</span><span class="p">[:,</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">],</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">nsig</span><span class="p">,</span> <span class="n">pthresh</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">rows</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">cols</span><span class="p">))</span>
         <span class="p">)</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
 
@@ -282,61 +284,70 @@
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating stack rate in serial&#39;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cols</span><span class="p">):</span>
-                <span class="n">rate</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">error</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">_stack_rate_by_pixel</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">nsig</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">pthresh</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">)</span>
-
-    <span class="c1"># overwrite the data whose error is larger than the</span>
-    <span class="c1"># maximum sigma user threshold</span>
-    <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">isnan</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
-    <span class="n">mask</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">&amp;=</span> <span class="n">error</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">maxsig</span>
-    <span class="n">rate</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">nan</span>
-    <span class="n">error</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">nan</span>
-    <span class="c1"># samples[mask] = nan # should we also mask the samples?</span>
+                <span class="n">rate</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">error</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">stack_rate_pixel</span><span class="p">(</span><span class="n">obs</span><span class="p">[:,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">mst</span><span class="p">[:,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">nsig</span><span class="p">,</span> <span class="n">pthresh</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">rate</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">samples</span></div>
 
 
-<span class="k">def</span> <span class="nf">_stack_setup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<div class="viewcode-block" id="mask_rate"><a class="viewcode-back" href="../../../stack.html#pyrate.core.stack.mask_rate">[docs]</a><span class="k">def</span> <span class="nf">mask_rate</span><span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">maxsig</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convenience function for stack rate setup</span>
+<span class="sd">    Function to mask pixels in the rate and error arrays when the error</span>
+<span class="sd">    is greater than the error threshold &#39;maxsig&#39;.</span>
+
+<span class="sd">    :param ndarray rate: array of pixel rates derived by stacking</span>
+<span class="sd">    :param ndarray error: array of errors for the pixel rates</span>
+<span class="sd">    :param int maxsig: error threshold for masking (in millimetres).</span>
+
+<span class="sd">    :return: rate: Masked rate (velocity) map</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    :return: error: Masked error (standard deviation) map</span>
+<span class="sd">    :rtype: ndarray</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># MULTIPROCESSING parameters</span>
-    <span class="n">parallel</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PARALLEL</span><span class="p">]</span>
-    <span class="n">processes</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PROCESSES</span><span class="p">]</span>
-    <span class="c1"># stack rate parameters from config file</span>
-    <span class="c1"># n-sigma ratio used to threshold &#39;model minus observation&#39; residuals</span>
-    <span class="n">nsig</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">LR_NSIG</span><span class="p">]</span>
-    <span class="c1"># Threshold for maximum allowable standard error</span>
-    <span class="n">maxsig</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">LR_MAXSIG</span><span class="p">]</span>
-    <span class="c1"># Pixel threshold; minimum number of coherent observations for a pixel</span>
-    <span class="n">pthresh</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">LR_PTHRESH</span><span class="p">]</span>
-    <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">phase_data</span><span class="o">.</span><span class="n">shape</span>
-    <span class="c1"># make 3D block of observations</span>
-    <span class="n">obs</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">isnan</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">phase_data</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">phase_data</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">])</span>
-    <span class="n">span</span> <span class="o">=</span> <span class="n">array</span><span class="p">([[</span><span class="n">x</span><span class="o">.</span><span class="n">time_span</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]])</span>
-    <span class="c1"># Update MST in case additional NaNs generated by APS filtering</span>
-    <span class="k">if</span> <span class="n">mst</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># dummy mst if none is passed in</span>
-        <span class="n">mst</span> <span class="o">=</span> <span class="o">~</span><span class="n">isnan</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">mst</span><span class="p">[</span><span class="n">isnan</span><span class="p">(</span><span class="n">obs</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Masking stack rate and error maps where sigma is greater than </span><span class="si">{}</span><span class="s1"> millimetres&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">maxsig</span><span class="p">))</span>
+    <span class="c1"># initialise mask array with existing NaNs</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">isnan</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+    <span class="c1"># original Nan count</span>
+    <span class="n">orig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+    <span class="c1"># determine where error is larger than the maximum sigma threshold</span>
+    <span class="n">mask</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">&amp;=</span> <span class="n">error</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">maxsig</span>
+    <span class="c1"># replace values with NaNs</span>
+    <span class="n">rate</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">nan</span>
+    <span class="n">error</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">nan</span>
+    <span class="c1"># calculate percentage of masked pixels</span>
+    <span class="n">nummasked</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span><span class="o">/</span><span class="n">orig</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Percentage of pixels masked = </span><span class="si">{}</span><span class="s1">%&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nummasked</span><span class="p">))</span>
 
-    <span class="c1"># preallocate empty arrays. No need to preallocation NaNs with new code</span>
-    <span class="n">error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
-    <span class="n">rate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
-    <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">maxsig</span><span class="p">,</span> <span class="n">nsig</span><span class="p">,</span> <span class="n">pthresh</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">parallel</span><span class="p">,</span> <span class="n">processes</span><span class="p">,</span> <span class="n">rate</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">span</span>
+    <span class="k">return</span> <span class="n">rate</span><span class="p">,</span> <span class="n">error</span></div>
 
 
-<span class="k">def</span> <span class="nf">_stack_rate_by_pixel</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">nsig</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">pthresh</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;helper function for computing stack rate for one pixel&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="stack_rate_pixel"><a class="viewcode-back" href="../../../stack.html#pyrate.core.stack.stack_rate_pixel">[docs]</a><span class="k">def</span> <span class="nf">stack_rate_pixel</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">nsig</span><span class="p">,</span> <span class="n">pthresh</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Algorithm to estimate the rate (velocity) for a single pixel using iterative</span>
+<span class="sd">    weighted least-squares stacking method.</span>
 
-    <span class="c1"># find the indices of independent ifgs for given pixel from MST</span>
-    <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">mst</span><span class="p">[:,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># only True&#39;s in mst are chosen</span>
+<span class="sd">    :param ndarray obs: Vector of interferometric phase observations for the pixel</span>
+<span class="sd">    :param ndarray mst: Vector describing the minimum spanning tree network for the pixel</span>
+<span class="sd">    :param ndarray vcmt: Derived positive definite temporal variance covariance matrix</span>
+<span class="sd">    :param ndarray span: Vector of interferometric time spans</span>
+<span class="sd">    :param int nsig: Threshold for iterative removal of interferometric observations</span>
+<span class="sd">    :param int pthresh: Threshold for minimum number of observations for the pixel</span>
+
+<span class="sd">    :return: rate: Estimated rate (velocity) for the pixel</span>
+<span class="sd">    :rtype: float64</span>
+<span class="sd">    :return: error: Standard deviation of the observations with respect to the estimated rate</span>
+<span class="sd">    :rtype: float64</span>
+<span class="sd">    :return: samples: Number of observations used in the rate estimation for the pixel</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># find the indices of independent ifgs from MST</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">mst</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># only True&#39;s in mst are chosen</span>
     <span class="c1"># iterative loop to calculate &#39;robust&#39; velocity for pixel</span>
     <span class="n">default_no_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span>
 
     <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">pthresh</span><span class="p">:</span>
-        <span class="c1"># make vector of selected ifg observations</span>
-        <span class="n">ifgv</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span>
+        <span class="c1"># select ifg observations</span>
+        <span class="n">ifgv</span> <span class="o">=</span> <span class="n">obs</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
 
         <span class="c1"># form design matrix from appropriate ifg time spans</span>
         <span class="n">B</span> <span class="o">=</span> <span class="n">span</span><span class="p">[:,</span> <span class="n">ind</span><span class="p">]</span>
@@ -382,7 +393,36 @@
             <span class="c1"># if no, save estimate, exit the while loop and go to next pixel</span>
             <span class="k">return</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">err</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ifgv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="c1"># dummy return for no change</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">default_no_samples</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">default_no_samples</span></div>
+
+
+<span class="k">def</span> <span class="nf">_stack_setup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function for stack rate setup</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># MULTIPROCESSING parameters</span>
+    <span class="n">parallel</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PARALLEL</span><span class="p">]</span>
+    <span class="n">processes</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PROCESSES</span><span class="p">]</span>
+    <span class="c1"># stack rate parameters from config file</span>
+    <span class="c1"># n-sigma ratio used to threshold &#39;model minus observation&#39; residuals</span>
+    <span class="n">nsig</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">LR_NSIG</span><span class="p">]</span>
+    <span class="c1"># Pixel threshold; minimum number of observations for a pixel</span>
+    <span class="n">pthresh</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">LR_PTHRESH</span><span class="p">]</span>
+    <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">phase_data</span><span class="o">.</span><span class="n">shape</span>
+    <span class="c1"># make 3D block of observations</span>
+    <span class="n">obs</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">isnan</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">phase_data</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">phase_data</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">])</span>
+    <span class="n">span</span> <span class="o">=</span> <span class="n">array</span><span class="p">([[</span><span class="n">x</span><span class="o">.</span><span class="n">time_span</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]])</span>
+    <span class="c1"># Update MST in case additional NaNs generated by APS filtering</span>
+    <span class="k">if</span> <span class="n">mst</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># dummy mst if none is passed in</span>
+        <span class="n">mst</span> <span class="o">=</span> <span class="o">~</span><span class="n">isnan</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mst</span><span class="p">[</span><span class="n">isnan</span><span class="p">(</span><span class="n">obs</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># preallocate empty arrays (no need to preallocate NaNs)</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">nsig</span><span class="p">,</span> <span class="n">pthresh</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">parallel</span><span class="p">,</span> <span class="n">processes</span><span class="p">,</span> <span class="n">rate</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">span</span>
 </pre></div>
 
            </div>

@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -147,11 +147,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -231,9 +232,9 @@
   <div class="section" id="module-pyrate.core.gdal_python">
 <span id="gdal-python-bindings-module"></span><h1>GDAL-Python Bindings Module<a class="headerlink" href="#module-pyrate.core.gdal_python" title="Permalink to this headline">¶</a></h1>
 <p>This Python module contains bindings for the GDAL library</p>
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.gdal_python.coherence_masking">
-<code class="sig-prename descclassname">pyrate.core.gdal_python.</code><code class="sig-name descname">coherence_masking</code><span class="sig-paren">(</span><em class="sig-param">input_gdal_dataset: osgeo.gdal.Dataset</em>, <em class="sig-param">coherence_file_path: str</em>, <em class="sig-param">coherence_thresh: float</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/pyrate/core/gdal_python.html#coherence_masking"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.gdal_python.coherence_masking" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.gdal_python.</code><code class="sig-name descname">coherence_masking</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_gdal_dataset</span><span class="p">:</span> <span class="n">osgeo.gdal.Dataset</span></em>, <em class="sig-param"><span class="n">coherence_file_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">coherence_thresh</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/pyrate/core/gdal_python.html#coherence_masking"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.gdal_python.coherence_masking" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform coherence masking on raster in-place.</p>
 <p>Based on gdal_calc formula provided by Nahidul:
 gdal_calc.py -A 20151127-20151209_VV_8rlks_flat_eqa.cc.tif</p>
@@ -244,9 +245,9 @@ gdal_calc.py -A 20151127-20151209_VV_8rlks_flat_eqa.cc.tif</p>
 </div></blockquote>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.gdal_python.crop">
-<code class="sig-prename descclassname">pyrate.core.gdal_python.</code><code class="sig-name descname">crop</code><span class="sig-paren">(</span><em class="sig-param">input_file</em>, <em class="sig-param">extents</em>, <em class="sig-param">geo_trans=None</em>, <em class="sig-param">nodata=nan</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#crop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.gdal_python.crop" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.gdal_python.</code><code class="sig-name descname">crop</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_file</span></em>, <em class="sig-param"><span class="n">extents</span></em>, <em class="sig-param"><span class="n">geo_trans</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">nan</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#crop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.gdal_python.crop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adapted from <a class="reference external" href="http://karthur.org/2015/clipping-rasters-in-python.html">http://karthur.org/2015/clipping-rasters-in-python.html</a></p>
 <p>Clips a raster (given as either a gdal.Dataset or as a numpy.array
 instance) to a polygon layer provided by a Shapefile (or other vector
@@ -283,9 +284,9 @@ must be a dissolved, single-part geometry (not multi-part). Modified from:</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.gdal_python.crop_resample_average">
-<code class="sig-prename descclassname">pyrate.core.gdal_python.</code><code class="sig-name descname">crop_resample_average</code><span class="sig-paren">(</span><em class="sig-param">input_tif, extents: Union[List, Tuple], new_res, output_file, thresh, out_driver_type='GTiff', match_pyrate=False, hdr=None, coherence_path=None, coherence_thresh=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#crop_resample_average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.gdal_python.crop_resample_average" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.gdal_python.</code><code class="sig-name descname">crop_resample_average</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_tif</span></em>, <em class="sig-param"><span class="n">extents</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>List<span class="p">, </span>Tuple<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">new_res</span></em>, <em class="sig-param"><span class="n">output_file</span></em>, <em class="sig-param"><span class="n">thresh</span></em>, <em class="sig-param"><span class="n">hdr</span></em>, <em class="sig-param"><span class="n">out_driver_type</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">match_pyrate</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">coherence_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">coherence_thresh</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#crop_resample_average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.gdal_python.crop_resample_average" title="Permalink to this definition">¶</a></dt>
 <dd><p>Crop, resample, and average a geotiff image.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -315,9 +316,9 @@ must be a dissolved, single-part geometry (not multi-part). Modified from:</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.gdal_python.gdal_average">
-<code class="sig-prename descclassname">pyrate.core.gdal_python.</code><code class="sig-name descname">gdal_average</code><span class="sig-paren">(</span><em class="sig-param">dst_ds</em>, <em class="sig-param">src_ds</em>, <em class="sig-param">src_ds_mem</em>, <em class="sig-param">thresh</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#gdal_average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.gdal_python.gdal_average" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.gdal_python.</code><code class="sig-name descname">gdal_average</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dst_ds</span></em>, <em class="sig-param"><span class="n">src_ds</span></em>, <em class="sig-param"><span class="n">src_ds_mem</span></em>, <em class="sig-param"><span class="n">thresh</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#gdal_average"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.gdal_python.gdal_average" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform subsampling of an image by averaging values</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -345,9 +346,9 @@ computational efficiency</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.gdal_python.resample_nearest_neighbour">
-<code class="sig-prename descclassname">pyrate.core.gdal_python.</code><code class="sig-name descname">resample_nearest_neighbour</code><span class="sig-paren">(</span><em class="sig-param">input_tif</em>, <em class="sig-param">extents</em>, <em class="sig-param">new_res</em>, <em class="sig-param">output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#resample_nearest_neighbour"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.gdal_python.resample_nearest_neighbour" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.gdal_python.</code><code class="sig-name descname">resample_nearest_neighbour</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_tif</span></em>, <em class="sig-param"><span class="n">extents</span></em>, <em class="sig-param"><span class="n">new_res</span></em>, <em class="sig-param"><span class="n">output_file</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#resample_nearest_neighbour"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.gdal_python.resample_nearest_neighbour" title="Permalink to this definition">¶</a></dt>
 <dd><p>Nearest neighbor resampling and cropping of an image.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -367,9 +368,9 @@ computational efficiency</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.gdal_python.world_to_pixel">
-<code class="sig-prename descclassname">pyrate.core.gdal_python.</code><code class="sig-name descname">world_to_pixel</code><span class="sig-paren">(</span><em class="sig-param">geo_transform</em>, <em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#world_to_pixel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.gdal_python.world_to_pixel" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.gdal_python.</code><code class="sig-name descname">world_to_pixel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">geo_transform</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#world_to_pixel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.gdal_python.world_to_pixel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate
 the pixel location of a geospatial coordinate;
 see: <a class="reference external" href="http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html">http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html</a></p>

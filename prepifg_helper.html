@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -147,11 +147,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id11">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -234,21 +235,21 @@
 format with PyRate specific metadata headers. The module also implements
 multilooking/downsampling and cropping operations to reduce the size of
 the computational problem.</p>
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="pyrate.core.prepifg_helper.CustomExts">
 <code class="sig-prename descclassname">pyrate.core.prepifg_helper.</code><code class="sig-name descname">CustomExts</code><a class="headerlink" href="#pyrate.core.prepifg_helper.CustomExts" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">pyrate.core.prepifg_helper.CustExtents</span></code></p>
 </dd></dl>
 
-<dl class="exception">
+<dl class="py exception">
 <dt id="pyrate.core.prepifg_helper.PreprocessError">
 <em class="property">exception </em><code class="sig-prename descclassname">pyrate.core.prepifg_helper.</code><code class="sig-name descname">PreprocessError</code><a class="reference internal" href="_modules/pyrate/core/prepifg_helper.html#PreprocessError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.prepifg_helper.PreprocessError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Preprocess exception</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.prepifg_helper.get_analysis_extent">
-<code class="sig-prename descclassname">pyrate.core.prepifg_helper.</code><code class="sig-name descname">get_analysis_extent</code><span class="sig-paren">(</span><em class="sig-param">crop_opt</em>, <em class="sig-param">rasters</em>, <em class="sig-param">xlooks</em>, <em class="sig-param">ylooks</em>, <em class="sig-param">user_exts</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/prepifg_helper.html#get_analysis_extent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.prepifg_helper.get_analysis_extent" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.prepifg_helper.</code><code class="sig-name descname">get_analysis_extent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">crop_opt</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">rasters</span><span class="p">:</span> <span class="n">List<span class="p">[</span>Union<span class="p">[</span><a class="reference internal" href="shared.html#pyrate.core.shared.Ifg" title="pyrate.core.shared.Ifg">pyrate.core.shared.Ifg</a><span class="p">, </span><a class="reference internal" href="shared.html#pyrate.core.shared.DEM" title="pyrate.core.shared.DEM">pyrate.core.shared.DEM</a><span class="p">]</span><span class="p">]</span></span></em>, <em class="sig-param"><span class="n">xlooks</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">ylooks</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">user_exts</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">, </span>float<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; Tuple<span class="p">[</span>float<span class="p">, </span>float<span class="p">, </span>float<span class="p">, </span>float<span class="p">]</span><a class="reference internal" href="_modules/pyrate/core/prepifg_helper.html#get_analysis_extent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.prepifg_helper.get_analysis_extent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function checks prepifg parameters and returns extents/bounding box.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -269,9 +270,9 @@ the computational problem.</p>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.prepifg_helper.prepare_ifg">
-<code class="sig-prename descclassname">pyrate.core.prepifg_helper.</code><code class="sig-name descname">prepare_ifg</code><span class="sig-paren">(</span><em class="sig-param">raster_path</em>, <em class="sig-param">xlooks</em>, <em class="sig-param">ylooks</em>, <em class="sig-param">exts</em>, <em class="sig-param">thresh</em>, <em class="sig-param">crop_opt</em>, <em class="sig-param">write_to_disk=True</em>, <em class="sig-param">out_path=None</em>, <em class="sig-param">header=None</em>, <em class="sig-param">coherence_path=None</em>, <em class="sig-param">coherence_thresh=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/prepifg_helper.html#prepare_ifg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.prepifg_helper.prepare_ifg" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.prepifg_helper.</code><code class="sig-name descname">prepare_ifg</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">raster_path</span></em>, <em class="sig-param"><span class="n">xlooks</span></em>, <em class="sig-param"><span class="n">ylooks</span></em>, <em class="sig-param"><span class="n">exts</span></em>, <em class="sig-param"><span class="n">thresh</span></em>, <em class="sig-param"><span class="n">crop_opt</span></em>, <em class="sig-param"><span class="n">header</span></em>, <em class="sig-param"><span class="n">write_to_disk</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">coherence_path</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">coherence_thresh</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/prepifg_helper.html#prepare_ifg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.prepifg_helper.prepare_ifg" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open, resample, crop and optionally save to disk an interferogram or DEM.
 Returns are only given if write_to_disk=False</p>
 <dl class="field-list simple">
@@ -305,9 +306,9 @@ new file: (xfirst, yfirst, xlast, ylast)cropping coordinates</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="pyrate.core.prepifg_helper.prepare_ifgs">
-<code class="sig-prename descclassname">pyrate.core.prepifg_helper.</code><code class="sig-name descname">prepare_ifgs</code><span class="sig-paren">(</span><em class="sig-param">raster_data_paths</em>, <em class="sig-param">crop_opt</em>, <em class="sig-param">xlooks</em>, <em class="sig-param">ylooks</em>, <em class="sig-param">thresh=0.5</em>, <em class="sig-param">user_exts=None</em>, <em class="sig-param">write_to_disc=True</em>, <em class="sig-param">out_path=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/prepifg_helper.html#prepare_ifgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.prepifg_helper.prepare_ifgs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.prepifg_helper.</code><code class="sig-name descname">prepare_ifgs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">raster_data_paths</span></em>, <em class="sig-param"><span class="n">crop_opt</span></em>, <em class="sig-param"><span class="n">xlooks</span></em>, <em class="sig-param"><span class="n">ylooks</span></em>, <em class="sig-param"><span class="n">headers</span></em>, <em class="sig-param"><span class="n">thresh</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">user_exts</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">write_to_disc</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">out_path</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/prepifg_helper.html#prepare_ifgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.prepifg_helper.prepare_ifgs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper function to prepare a sequence of interferogram files for
 PyRate analysis. See prepifg.prepare_ifg() for full description of
 inputs and returns.</p>
@@ -335,7 +336,7 @@ new file: (xfirst, yfirst, xlast, ylast)cropping coordinates</p></li>
 <dd class="field-even"><p>out_ds: destination gdal dataset object</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>gdal.Dataset</p>
+<dd class="field-odd"><p>List[gdal.Dataset]</p>
 </dd>
 </dl>
 </dd></dl>
