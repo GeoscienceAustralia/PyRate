@@ -161,14 +161,7 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
         params[cf.REF_EST_METHOD] = 1
         params[cf.PARALLEL] = False
 
-        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
-        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-        params[cf.INTERFEROGRAM_FILES] = params[cf.INTERFEROGRAM_FILES][:-2]
-        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                      for c in params[cf.INTERFEROGRAM_FILES]]
-
-        for p, d in zip(params[cf.INTERFEROGRAM_FILES], dest_paths):  # hack
-            p.sampled_path = d
+        dest_paths, headers = common.repair_params_for_process_tests(cls.temp_out_dir, params)
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
@@ -261,14 +254,8 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
         params[cf.REF_EST_METHOD] = 1
         params[cf.PARALLEL] = True
 
-        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
-        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-        params[cf.INTERFEROGRAM_FILES] = params[cf.INTERFEROGRAM_FILES][:-2]
-        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                      for c in params[cf.INTERFEROGRAM_FILES]]
+        dest_paths, headers = common.repair_params_for_process_tests(cls.temp_out_dir, params)
 
-        for p, d in zip(params[cf.INTERFEROGRAM_FILES], dest_paths):  # hack
-            p.sampled_path = d
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
@@ -359,14 +346,7 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
         params[cf.REF_EST_METHOD] = 2
         params[cf.PARALLEL] = False
 
-        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
-        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-        params[cf.INTERFEROGRAM_FILES] = params[cf.INTERFEROGRAM_FILES][:-2]
-        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                      for c in params[cf.INTERFEROGRAM_FILES]]
-
-        for p, d in zip(params[cf.INTERFEROGRAM_FILES], dest_paths):  # hack
-            p.sampled_path = d
+        dest_paths, headers = common.repair_params_for_process_tests(cls.temp_out_dir, params)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -456,16 +436,7 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
         params[cf.REF_EST_METHOD] = 2
         params[cf.PARALLEL] = 1
 
-        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
-        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-
-        params[cf.INTERFEROGRAM_FILES] = params[cf.INTERFEROGRAM_FILES][:-2]
-        # leave 2 out due to conv2tif and prepifg dems
-        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                      for c in params[cf.INTERFEROGRAM_FILES]]
-
-        for p, d in zip(params[cf.INTERFEROGRAM_FILES], dest_paths):  # hack
-            p.sampled_path = d
+        dest_paths, headers = common.repair_params_for_process_tests(cls.temp_out_dir, params)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)

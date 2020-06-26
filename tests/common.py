@@ -34,8 +34,9 @@ from osgeo import gdal
 from pyrate.core import algorithm, ifgconstants as ifc, config as cf, timeseries, mst, stack
 from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info,
                                 write_output_geotiff, dem_or_ifg)
+from pyrate.core import roipac
 from pyrate.constants import PYRATEPATH
-from pyrate.configuration import Configuration
+
 
 TRAVIS = True if 'TRAVIS' in os.environ else False
 PYTHON3P6 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.6') else False
@@ -488,6 +489,17 @@ def copytree(src, dst, symlinks=False, ignore=None):
             copytree(s, d, symlinks, ignore)
         else:
             shutil.copy2(s, d)
+
+
+def repair_params_for_process_tests(out_dir, params):
+        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
+        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
+        params[cf.INTERFEROGRAM_FILES] = params[cf.INTERFEROGRAM_FILES][:-2]
+        dest_paths = [Path(out_dir).joinpath(Path(c.sampled_path).name).as_posix()
+                      for c in params[cf.INTERFEROGRAM_FILES]]
+        for p, d in zip(params[cf.INTERFEROGRAM_FILES], dest_paths):  # hack
+            p.sampled_path = d
+        return dest_paths, headers
 
 
 def pre_prepare_ifgs(ifg_paths, params):

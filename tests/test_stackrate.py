@@ -29,10 +29,11 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 import pyrate.core.orbital
 import tests.common
-from pyrate.core import shared, ref_phs_est as rpe, config as cf, covariance as vcm_module, roipac
-from pyrate.core.stack import stack_rate_array, stack_rate_pixel, mask_rate
+from pyrate.core import shared, config as cf, covariance as vcm_module
+from pyrate.core.stack import stack_rate_pixel, mask_rate
 from pyrate import process, prepifg, conv2tif
 from pyrate.configuration import Configuration
+from tests import common
 from tests.common import (SML_TEST_DIR, prepare_ifgs_without_phase,
     TEST_CONF_ROIPAC, pre_prepare_ifgs, remove_tifs)
 
@@ -122,22 +123,20 @@ class LegacyEqualityTest(unittest.TestCase):
 
         xlks, _, crop = cf.transform_params(params)
 
-        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
-        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
+        dest_paths, headers = common.repair_params_for_process_tests(cls.temp_out_dir, params)
+
         # start run_pyrate copy
         ifgs = pre_prepare_ifgs(dest_paths, params)
         mst_grid = tests.common.mst_calculation(dest_paths, params)
 
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(params)
 
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
-        _, ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+        _, ifgs = process._ref_phase_estimation(params, refx, refy)
         ifgs[0].open()
         r_dist = vcm_module.RDist(ifgs[0])()
         ifgs[0].close()
