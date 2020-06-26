@@ -127,8 +127,6 @@ class RefPhsTests(unittest.TestCase):
 
         # correct reference phase for some of the ifgs
         process._ref_phase_estimation(self.params, self.refpx, self.refpy)
-        for i in self.params[cf.INTERFEROGRAM_FILES]:
-            print(i)
         for ifg in self.ifgs:
             ifg.open()
 
@@ -155,7 +153,6 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
         shutil.rmtree(params[cf.OUT_DIR])
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
         params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.TMPDIR] = cls.temp_out_dir
         conv2tif.main(params)
@@ -166,10 +163,12 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
 
         base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
         headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
+        params[cf.INTERFEROGRAM_FILES] = params[cf.INTERFEROGRAM_FILES][:-2]
         dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
+                      for c in params[cf.INTERFEROGRAM_FILES]]
 
+        for p, d in zip(params[cf.INTERFEROGRAM_FILES], dest_paths):  # hack
+            p.sampled_path = d
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
@@ -262,18 +261,19 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
         params[cf.REF_EST_METHOD] = 1
         params[cf.PARALLEL] = True
 
-        xlks, ylks, crop = cf.transform_params(params)
-
         base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
         headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
+        params[cf.INTERFEROGRAM_FILES] = params[cf.INTERFEROGRAM_FILES][:-2]
         dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
+                      for c in params[cf.INTERFEROGRAM_FILES]]
 
+        for p, d in zip(params[cf.INTERFEROGRAM_FILES], dest_paths):  # hack
+            p.sampled_path = d
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(params)
 
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
@@ -286,7 +286,7 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
         for i in ifgs:
             i.close()
 
-        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(params, refx, refy)
 
         # end run_pyrate copy
 
@@ -361,13 +361,18 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
 
         base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
         headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
+        params[cf.INTERFEROGRAM_FILES] = params[cf.INTERFEROGRAM_FILES][:-2]
         dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
+                      for c in params[cf.INTERFEROGRAM_FILES]]
+
+        for p, d in zip(params[cf.INTERFEROGRAM_FILES], dest_paths):  # hack
+            p.sampled_path = d
+
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(params)
 
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
@@ -380,7 +385,7 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
         for i in ifgs:
             i.close()
 
-        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(params, refx, refy)
 
     @classmethod
     def tearDownClass(cls):
@@ -454,14 +459,18 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
         base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
         headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
 
+        params[cf.INTERFEROGRAM_FILES] = params[cf.INTERFEROGRAM_FILES][:-2]
         # leave 2 out due to conv2tif and prepifg dems
         dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
+                      for c in params[cf.INTERFEROGRAM_FILES]]
+
+        for p, d in zip(params[cf.INTERFEROGRAM_FILES], dest_paths):  # hack
+            p.sampled_path = d
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
+        refx, refy = process._ref_pixel_calc(params)
 
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
@@ -474,7 +483,7 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
         for i in ifgs:
             i.close()
 
-        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(params, refx, refy)
 
     @classmethod
     def tearDownClass(cls):
