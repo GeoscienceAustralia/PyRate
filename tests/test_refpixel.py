@@ -247,31 +247,34 @@ class LegacyEqualityTest(unittest.TestCase):
         self.params_all_1s[cf.REFNY] = 1
         self.params_all_1s[cf.REF_MIN_FRAC] = 0.7
 
+        for p, q in zip(self.params[cf.INTERFEROGRAM_FILES], self.ifg_paths):  # hack
+            p.sampled_path = q
+
     def tearDown(self):
         shutil.rmtree(self.params[cf.OUT_DIR])
 
     def test_small_test_data_ref_pixel_lat_lon_provided(self):
         self.params[cf.REFX], self.params[cf.REFY] = 150.941666654, -34.218333314
-        refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params)
+        refx, refy = process._ref_pixel_calc(self.params)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_pixel(self):
-        refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params)
+        refx, refy = process._ref_pixel_calc(self.params)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_chipsize_15(self):
 
-        refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_chipsize_15)
+        refx, refy = process._ref_pixel_calc(self.params_chipsize_15)
         self.assertEqual(refx, 7)
         self.assertEqual(refy, 7)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
     def test_metadata(self):
-        refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_chipsize_15)
+        refx, refy = process._ref_pixel_calc(self.params_chipsize_15)
         for i in self.ifg_paths:
             ifg = shared.Ifg(i)
             ifg.open(readonly=True)
@@ -284,7 +287,7 @@ class LegacyEqualityTest(unittest.TestCase):
             ifg.close()
 
     def test_small_test_data_ref_all_1(self):
-        refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_all_1s)
+        refx, refy = process._ref_pixel_calc(self.params_all_1s)
         self.assertAlmostEqual(0.7, self.params_all_1s[cf.REF_MIN_FRAC])
         self.assertEqual(1, self.params_all_1s[cf.REFNX])
         self.assertEqual(1, self.params_all_1s[cf.REFNY])
@@ -296,8 +299,11 @@ class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
 
     def setUp(self):
         self.params = cf.get_config_params(TEST_CONF_ROIPAC)
-        self.params[cf.PARALLEL] = True
+        self.params[cf.PARALLEL] = 1
         self.params[cf.OUT_DIR], self.ifg_paths = copy_small_ifg_file_list()
+        conf_file = Path(self.params[cf.OUT_DIR], 'conf_file.conf')
+        cf.write_config_file(params=self.params, output_conf_file=conf_file)
+        self.params = Configuration(conf_file).__dict__
         self.params_alt_ref_frac = copy.copy(self.params)
         self.params_alt_ref_frac[cf.REF_MIN_FRAC] = 0.5
         self.params_all_2s = copy.copy(self.params)
@@ -310,40 +316,42 @@ class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
         self.params_all_1s[cf.REFNY] = 1
         self.params_all_1s[cf.REF_MIN_FRAC] = 0.7
 
+        for p, q in zip(self.params[cf.INTERFEROGRAM_FILES], self.ifg_paths):  # hack
+            p.sampled_path = q
+
     def tearDown(self):
         shutil.rmtree(self.params[cf.OUT_DIR])
 
     def test_small_test_data_ref_pixel(self):
-        refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params)
+        refx, refy = process._ref_pixel_calc(self.params)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
 
     def test_more_small_test_data_ref_pixel(self):
 
-        refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_alt_ref_frac)
+        refx, refy = process._ref_pixel_calc(self.params_alt_ref_frac)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_pixel_all_2(self):
 
-        refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_all_2s)
+        refx, refy = process._ref_pixel_calc(self.params_all_2s)
         self.assertEqual(refx, 25)
         self.assertEqual(refy, 2)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_chipsize_15(self):
 
-        refx, refy = process._ref_pixel_calc(self.ifg_paths,
-                                             self.params_chipsize_15)
+        refx, refy = process._ref_pixel_calc(self.params_chipsize_15)
         self.assertEqual(refx, 7)
         self.assertEqual(refy, 7)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_all_1(self):
 
-        refx, refy = process._ref_pixel_calc(self.ifg_paths, self.params_all_1s)
+        refx, refy = process._ref_pixel_calc(self.params_all_1s)
 
         self.assertAlmostEqual(0.7, self.params_all_1s[cf.REF_MIN_FRAC])
         self.assertEqual(1, self.params_all_1s[cf.REFNX])
