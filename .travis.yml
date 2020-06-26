@@ -58,7 +58,7 @@ install:
 
 
 script:
-  - travis_wait 20 pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/
+  - travis_wait 30 pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/
 
 
 after_success:
