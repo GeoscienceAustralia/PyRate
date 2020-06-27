@@ -51,6 +51,7 @@ def _create_ifg_dict(params):
     2. Save the preread_ifgs dict with information about the ifgs that are
     later used for fast loading of Ifg files in IfgPart class
 
+    :param list dest_tifs: List of destination tifs
     :param dict params: Config dictionary
     :param list tiles: List of all Tile instances
 
@@ -60,6 +61,7 @@ def _create_ifg_dict(params):
     """
     dest_tifs = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     ifgs_dict = {}
+    nifgs = len(dest_tifs)
     process_tifs = mpiops.array_split(dest_tifs)
     for d in process_tifs:
         ifg = shared._prep_ifg(d, params)
@@ -225,7 +227,7 @@ def _ref_phase_estimation(params, refpx, refpy):
         )
 
     if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_REF_PHASE):
-        log.debug('Finished reference phase estimation')
+        log.debug('Finished reference phase correction')
         return
 
     if params[cf.REF_EST_METHOD] == 1:
@@ -250,7 +252,7 @@ def _ref_phase_estimation(params, refpx, refpy):
         np.save(file=ref_phs_file, arr=collected_ref_phs)
     else:
         mpiops.comm.Send(ref_phs, dest=MASTER_PROCESS, tag=mpiops.rank)
-    log.debug('Finished reference phase estimation')
+    log.debug('Finished reference phase correction')
 
     # Preserve old return value so tests don't break.
     if isinstance(ifg_paths[0], Ifg):
@@ -364,10 +366,11 @@ def _timeseries_calc(params, vcmt, preread_ifgs):
         log.debug("Calculating time series for tile "+str(t.index)+" out of "+str(total_tiles))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_tile = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
-        res = timeseries.time_series(ifg_parts, params, vcmt, mst_tile)
-        tsincr, tscum, _ = res
-        np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)), arr=tsincr)
-        np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)), arr=tscum)
+        tsincr, tscuml, _ = timeseries.time_series(ifg_parts, params, vcmt, mst_tile)
+        np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)), arr=tscuml)
+        # optional save of tsincr npy tiles
+        if params["savetsincr"] == 1:
+            np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)), arr=tsincr)
     mpiops.comm.barrier()
     log.debug("Finished timeseries calc!")
 
