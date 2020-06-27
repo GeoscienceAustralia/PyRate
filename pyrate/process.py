@@ -208,6 +208,7 @@ def _orb_fit_calc(params, preread_ifgs=None) -> None:
             headers = [find_header(p, params) for p in multi_paths]
             orbital.remove_orbital_error(ifg_paths, params, headers, preread_ifgs=preread_ifgs)
     mpiops.comm.barrier()
+    shared.save_numpy_phase(ifg_paths, params)
     log.debug('Finished Orbital error correction')
 
 
@@ -371,7 +372,7 @@ def _timeseries_calc(params, vcmt, preread_ifgs):
     log.debug("Finished timeseries calc!")
 
 
-def __update_params_with_tiles(params: dict) -> None:
+def _update_params_with_tiles(params: dict) -> None:
     ifg_path = params[cf.INTERFEROGRAM_FILES][0].sampled_path
     rows, cols = params["rows"], params["cols"]
     tiles = mpiops.run_once(get_tiles, ifg_path, rows, cols)
@@ -380,7 +381,7 @@ def __update_params_with_tiles(params: dict) -> None:
 
 
 process_steps = {
-    'tiles': lambda params, preread_ifgs, refpx, refpy, vcmt: __update_params_with_tiles(params),
+    'tiles': lambda params, preread_ifgs, refpx, refpy, vcmt: _update_params_with_tiles(params),
     'refpixel': lambda params, preread_ifgs, refpx, refpy, vcmt: _ref_pixel_calc(params),
     'orbfit': lambda params, preread_ifgs, refpx, refpy, vcmt: _orb_fit_calc(params, preread_ifgs),
     'refphase': lambda params, preread_ifgs, refpx, refpy, vcmt: _ref_phase_estimation(params, refpx, refpy),
@@ -412,7 +413,7 @@ def process_ifgs(params: dict):
     if not os.path.exists(tmpdir):
         shared.mkdir_p(tmpdir)
 
-    __update_params_with_tiles(params)
+    _update_params_with_tiles(params)
 
     preread_ifgs = _create_ifg_dict(params=params)
 

@@ -48,6 +48,7 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, roipac_or_gamma_conf):
     params[cf.INTERFEROGRAM_FILES].pop()
     prepifg.main(params)
     params[cf.INTERFEROGRAM_FILES].pop()
+    process._update_params_with_tiles(params)
     preread_ifgs = process._create_ifg_dict(params=params)
     refpx, refpy = process._ref_pixel_calc(params)
     process._orb_fit_calc(params)

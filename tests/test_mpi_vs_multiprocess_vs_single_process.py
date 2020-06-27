@@ -55,7 +55,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
         params[cf.REF_EST_METHOD] = ref_est_method
         params["rows"], params["cols"] = 3, 2
         params["savenpy"] = 1
-        params["tiles"] = params["rows"] * params["cols"]
+        params["notiles"] = params["rows"] * params["cols"]  # number of tiles
 
         print(params)
         # write new temp config
@@ -117,17 +117,17 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
     # 2 x because of aps files
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "tsincr_*.npy",
-                               params['tiles'] * 2)
+                               params['notiles'] * 2)
 
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "tscuml_*.npy",
-                               params['tiles'])
+                               params['notiles'])
 
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "stack_rate_*.npy",
-                               params['tiles'])
+                               params['notiles'])
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "stack_error_*.npy",
-                               params['tiles'])
+                               params['notiles'])
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "stack_samples_*.npy",
-                               params['tiles'])
+                               params['notiles'])
 
     # compare merge step
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.tif", 3)
@@ -176,7 +176,7 @@ def modified_config_short(tempdir, local_crop, get_lks, coh_mask, ref_pixel):
         params[cf.REF_EST_METHOD] = ref_est_method
         params["rows"], params["cols"] = 3, 2
         params["savenpy"] = 1
-        params["tiles"] = params["rows"] * params["cols"]
+        params["notiles"] = params["rows"] * params["cols"]  # number of tiles
 
         print(params)
         # write new temp config
@@ -249,11 +249,11 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
         assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
 
     # ifg phase checking in the previous step checks the process pipeline upto APS correction
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tsincr_*.npy", params['tiles'] * 2)
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tscuml_*.npy", params['tiles'])
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_rate_*.npy", params['tiles'])
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_error_*.npy", params['tiles'])
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_samples_*.npy", params['tiles'])
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tsincr_*.npy", params['notiles'] * 2)
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tscuml_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_rate_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_error_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_samples_*.npy", params['notiles'])
 
     # compare merge step
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.tif", 3)
