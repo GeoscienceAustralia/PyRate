@@ -50,8 +50,7 @@ def test_png_creation(create_stack_output):
 
     output_folder_path = params[cf.OUT_DIR]
 
-    rows, cols = params["rows"], params["cols"]
-    _merge_stack(rows, cols, params)
+    _merge_stack(params)
     _create_png_from_tif(output_folder_path)
 
     # check if color map is created

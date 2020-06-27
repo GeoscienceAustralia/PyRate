@@ -27,6 +27,7 @@ import numpy as np
 from numpy import isnan
 from scipy.fftpack import fft2, ifft2, fftshift, ifftshift
 from scipy.interpolate import griddata
+from pyrate.core.logger import pyratelogger as log
 
 from pyrate.core import shared, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.covariance import cvd_from_phase, RDist
@@ -35,19 +36,19 @@ from pyrate.core.shared import Ifg
 from pyrate.core.timeseries import time_series
 from pyrate.merge import assemble_tiles
 
-log = logging.getLogger(__name__)
-
 
 def wrap_spatio_temporal_filter(params, preread_ifgs):
     """
     A wrapper for the spatio-temporal filter so it can be tested.
     See docstring for spatio_temporal_filter.
     """
+    if params[cf.APSEST]:
+        log.info('Doing APS spatio-temporal filtering')
+    else:
+        log.info('APS spatio-temporal filtering not required')
+        return
     tiles = params['tiles']
     ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
-    if not params[cf.APSEST]:
-        log.info('APS correction not required.')
-        return
 
     # perform some checks on existing ifgs
     log.debug('Checking APS correction status')
@@ -188,7 +189,7 @@ def spatial_low_pass_filter(ts_lp, ifg, params):
     :return: ts_hp: filtered time series data of shape (ifg.shape, n_epochs)
     :rtype: ndarray
     """
-    log.info('Applying APS spatial low-pass filter')
+    log.info('Applying spatial low-pass filter')
     if params[cf.SLPF_NANFILL] == 0:
         ts_lp[np.isnan(ts_lp)] = 0  # need it here for cvd and fft
     else:
@@ -285,7 +286,7 @@ def temporal_low_pass_filter(tsincr, epochlist, params):
     :return: tsfilt_incr: filtered time series data, shape (ifg.shape, nepochs)
     :rtype: ndarray
     """
-    log.info('Applying APS temporal low-pass filter')
+    log.info('Applying temporal low-pass filter')
     nanmat = ~isnan(tsincr)
     tsfilt_incr = np.empty_like(tsincr, dtype=np.float32) * np.nan
     intv = np.diff(epochlist.spans)  # time interval for the neighboring epoch
@@ -302,7 +303,7 @@ def temporal_low_pass_filter(tsincr, epochlist, params):
         func = mean_filter
 
     _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr, tsincr, func)
-    log.debug("Finished applying temporal low pass filter")
+    log.debug("Finished applying temporal low-pass filter")
     return tsfilt_incr
 
 # Throwaway function to define Gaussian filter weights
