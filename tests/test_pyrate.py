@@ -231,7 +231,6 @@ class ParallelPyRateTests(unittest.TestCase):
         tiles = pyrate.core.shared.get_tiles(cls.sampled_paths[0], rows, cols)
         ifgs = common.small_data_setup()
         params[cf.INTERFEROGRAM_FILES] = multi_paths
-        params["rows"], params["cols"] = rows, cols
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = process.process_ifgs(params)
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         cls.rate_p, cls.error_p, cls.samples_p = \
@@ -254,7 +253,7 @@ class ParallelPyRateTests(unittest.TestCase):
         conv2tif.main(params)
         prepifg.main(orig_params)
         params[cf.INTERFEROGRAM_FILES] = multi_paths
-        params["rows"], params["cols"] = rows, cols
+        params[cf.REFX], params[cf.REFY] = -1, -1
         cls.refpixel, cls.maxvar, cls.vcmt = process.process_ifgs(params)
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         cls.rate, cls.error, cls.samples = \

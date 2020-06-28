@@ -221,6 +221,13 @@ def _ref_phase_estimation(params):
     Wrapper for reference phase estimation.
     """
     refpx, refpy = params[cf.REFX], params[cf.REFY]
+    return _ref_phase_estimation_wrapper(params, refpx, refpy)
+
+
+def _ref_phase_estimation_wrapper(params, refpx, refpy):
+    """
+    Wrapper for reference phase estimation.
+    """
     ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     log.info("Calculating reference phase")
     if len(ifg_paths) < 2:

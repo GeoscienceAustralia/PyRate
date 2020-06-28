@@ -94,6 +94,10 @@ class RefPhsTests(unittest.TestCase):
             p.sampled_path = p.converted_path
         for ifg in self.ifgs:
             ifg.close()
+
+        self.params[cf.REFX], self.params[cf.REFY] = 38, 58
+        self.params['rows'], self.params['cols'] = 3, 2
+        process._update_params_with_tiles(self.params)
        
     def tearDown(self):
         try:
@@ -108,11 +112,11 @@ class RefPhsTests(unittest.TestCase):
         self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs[:1]]
         for p in self.params[cf.INTERFEROGRAM_FILES]:  # hack
             p.sampled_path = p.converted_path
-        self.assertRaises(ReferencePhaseError, process._ref_phase_estimation,
-                          self.params, self.refpx, self.refpy)
+        self.assertRaises(ReferencePhaseError, process._ref_phase_estimation_wrapper, self.params, self.refpy,
+                          self.refpy)
 
     def test_metadata(self):
-        process._ref_phase_estimation(self.params, self.refpx, self.refpy)
+        process._ref_phase_estimation_wrapper(self.params, self.refpx, self.refpy)
         for ifg in self.ifgs:
             ifg.open()
             self.assertEqual(ifg.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE),
@@ -126,7 +130,7 @@ class RefPhsTests(unittest.TestCase):
             p.sampled_path = p.converted_path
 
         # correct reference phase for some of the ifgs
-        process._ref_phase_estimation(self.params, self.refpx, self.refpy)
+        process._ref_phase_estimation_wrapper(self.params, self.refpx, self.refpy)
         for ifg in self.ifgs:
             ifg.open()
 
@@ -136,7 +140,7 @@ class RefPhsTests(unittest.TestCase):
             p.sampled_path = p.converted_path
 
         # now it should raise exception if we want to correct refernece phase again on all of them
-        self.assertRaises(CorrectionStatusError, process._ref_phase_estimation,
+        self.assertRaises(CorrectionStatusError, process._ref_phase_estimation_wrapper,
                           self.params, self.refpx, self.refpy)
         
 
@@ -179,7 +183,10 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
         for ifg in ifgs:
             ifg.close()
 
-        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(params, refx, refy)
+        params[cf.REFX], params[cf.REFY] = 38, 58
+        params['rows'], params['cols'] = 3, 2
+        process._update_params_with_tiles(params)
+        cls.ref_phs, cls.ifgs = process._ref_phase_estimation_wrapper(params, refx, refy)
 
     @classmethod
     def tearDownClass(cls):
@@ -273,7 +280,10 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
         for i in ifgs:
             i.close()
 
-        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(params, refx, refy)
+        params[cf.REFX], params[cf.REFY] = 38, 58
+        params['rows'], params['cols'] = 3, 2
+        process._update_params_with_tiles(params)
+        cls.ref_phs, cls.ifgs = process._ref_phase_estimation_wrapper(params, refx, refy)
 
         # end run_pyrate copy
 
@@ -365,7 +375,11 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
         for i in ifgs:
             i.close()
 
-        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(params, refx, refy)
+        params[cf.REFX], params[cf.REFY] = 38, 58
+        params['rows'], params['cols'] = 3, 2
+        process._update_params_with_tiles(params)
+
+        cls.ref_phs, cls.ifgs = process._ref_phase_estimation_wrapper(params, refx, refy)
 
     @classmethod
     def tearDownClass(cls):
@@ -454,7 +468,10 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
         for i in ifgs:
             i.close()
 
-        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(params, refx, refy)
+        params[cf.REFX], params[cf.REFY] = 38, 58
+        params['rows'], params['cols'] = 3, 2
+        process._update_params_with_tiles(params)
+        cls.ref_phs, cls.ifgs = process._ref_phase_estimation_wrapper(params, refx, refy)
 
     @classmethod
     def tearDownClass(cls):
