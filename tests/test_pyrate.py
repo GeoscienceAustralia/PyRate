@@ -212,9 +212,7 @@ class ParallelPyRateTests(unittest.TestCase):
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
         rows, cols = params["rows"], params["cols"]
 
-        # xlks, ylks, crop = cf.transform_params(params)
-
-        # base_unw_paths need to be geotiffed by converttogeotif 
+        # base_unw_paths need to be geotiffed by converttogeotif
         #  and multilooked by run_prepifg
         base_unw_paths = list(cf.parse_namelist(params[cf.IFG_FILE_LIST]))
 

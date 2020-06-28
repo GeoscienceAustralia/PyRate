@@ -77,12 +77,16 @@ def _create_ifg_dict(params):
 
     ifgs_dict = mpiops.run_once(__save_ifgs_dict_with_headers_and_epochs, dest_tifs, ifgs_dict, params, process_tifs)
 
-    params['preread_ifgs'] = ifgs_dict
+    params[cf.PREREAD_IFGS] = ifgs_dict
     log.debug('Finished converting phase_data to numpy in process {}'.format(mpiops.rank))
     return ifgs_dict
 
 
 def __save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, process_tifs):
+    tmpdir = params[cf.TMPDIR]
+    if not os.path.exists(tmpdir):
+        shared.mkdir_p(tmpdir)
+
     preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
     nifgs = len(dest_tifs)
     # add some extra information that's also useful later
@@ -401,7 +405,6 @@ def _update_params_with_tiles(params: dict) -> None:
 
 
 process_steps = {
-    'refpixel': _ref_pixel_calc,
     'orbfit': _orb_fit_calc,
     'refphase': _ref_phase_estimation,
     'mst': _mst_calc,
@@ -426,32 +429,11 @@ def process_ifgs(params: dict):
 
     if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
-    tmpdir = params[cf.TMPDIR]
-    if not os.path.exists(tmpdir):
-        shared.mkdir_p(tmpdir)
     _update_params_with_tiles(params)
-    _create_ifg_dict(params=params)
+    _create_ifg_dict(params)
     refpx, refpy = _ref_pixel_calc(params)
 
-    # import IPython; IPython.embed(); import sys; sys.exit()
-    # for step in params['process']:
-    #     process_steps[step](ifg_paths, tiles, params, preread_ifgs)
-
-    _orb_fit_calc(params)
-
-    _ref_phase_estimation(params)
-
-    _mst_calc(params)
-
-    # spatio-temporal aps filter
-    wrap_spatio_temporal_filter(params)
-
-    maxvar, vcmt = _maxvar_vcm_calc(params)
-    # save phase data tiles as numpy array for timeseries and stackrate calc
-
-    _timeseries_calc(params)
-
-    _stack_calc(params)
-
+    for step in process_steps:
+        process_steps[step](params)
     log.info('PyRate workflow completed')
-    return (refpx, refpy), maxvar, vcmt
+    return (refpx, refpy), params[cf.MAXVAR], params[cf.VCMT]
