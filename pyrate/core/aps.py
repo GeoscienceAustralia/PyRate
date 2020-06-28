@@ -37,7 +37,7 @@ from pyrate.core.timeseries import time_series
 from pyrate.merge import assemble_tiles
 
 
-def wrap_spatio_temporal_filter(params, preread_ifgs):
+def wrap_spatio_temporal_filter(params):
     """
     A wrapper for the spatio-temporal filter so it can be tested.
     See docstring for spatio_temporal_filter.
@@ -48,6 +48,7 @@ def wrap_spatio_temporal_filter(params, preread_ifgs):
         log.info('APS spatio-temporal filtering not required')
         return
     tiles = params['tiles']
+    preread_ifgs = params['preread_ifgs']
     ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
 
     # perform some checks on existing ifgs
@@ -64,6 +65,8 @@ def wrap_spatio_temporal_filter(params, preread_ifgs):
     spatio_temporal_filter(tsincr, ifg, params, preread_ifgs)
     ifg.close()
     mpiops.comm.barrier()
+
+    shared.save_numpy_phase(ifg_paths, params)
 
 
 def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):

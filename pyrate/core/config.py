@@ -107,6 +107,12 @@ REF_MIN_FRAC = 'refminfrac'
 #: BOOL (1/2); Reference phase estimation method (1: median of the whole interferogram, 2: median within the window surrounding the reference pixel)
 REF_EST_METHOD = 'refest'
 
+
+MAXVAR = 'maxvar'
+VCMT = 'vcmt'
+PREREAD_IFGS = 'preread_ifgs'
+TILES = 'tiles'
+
 # coherence masking parameters
 #: BOOL (0/1); Perform coherence masking (1: yes, 0: no)
 COH_MASK = 'cohmask'
