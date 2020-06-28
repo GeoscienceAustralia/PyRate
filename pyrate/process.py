@@ -290,6 +290,8 @@ def main(params):
     :rtype: ndarray
     """
     mpi_vs_multiprocess_logging("process", params)
+    if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
+        params[cf.PARALLEL] = False
 
     return process_ifgs(params)
 
@@ -401,7 +403,7 @@ def _update_params_with_tiles(params: dict) -> None:
     rows, cols = params["rows"], params["cols"]
     tiles = mpiops.run_once(get_tiles, ifg_path, rows, cols)
     # add tiles to params
-    params['tiles'] = tiles
+    params[cf.TILES] = tiles
 
 
 process_steps = {
@@ -427,13 +429,14 @@ def process_ifgs(params: dict):
     :rtype: ndarray
     """
 
-    if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
-        params[cf.PARALLEL] = False
+    # house keeping
     _update_params_with_tiles(params)
     _create_ifg_dict(params)
     refpx, refpy = _ref_pixel_calc(params)
 
-    for step in process_steps:
+    # run through the process steps in user specified sequence
+    for step in params['process']:
         process_steps[step](params)
+
     log.info('PyRate workflow completed')
     return (refpx, refpy), params[cf.MAXVAR], params[cf.VCMT]

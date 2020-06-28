@@ -132,6 +132,7 @@ class PyRateTests(unittest.TestCase):
             # Turn off validation because we're in a different working dir
             #  and relative paths in config won't be work.
             params = config.get_config_params(common.TEST_CONF_ROIPAC)
+            params['process'] = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack']
             params[cf.OUT_DIR] = cls.BASE_OUT_DIR
             params[cf.PROCESSOR] = 0  # roipac
             params[cf.APS_CORRECTION] = 0

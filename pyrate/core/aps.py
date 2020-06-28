@@ -47,8 +47,8 @@ def wrap_spatio_temporal_filter(params):
     else:
         log.info('APS spatio-temporal filtering not required')
         return
-    tiles = params['tiles']
-    preread_ifgs = params['preread_ifgs']
+    tiles = params[cf.TILES]
+    preread_ifgs = params[cf.PREREAD_IFGS]
     ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
 
     # perform some checks on existing ifgs

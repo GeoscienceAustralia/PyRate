@@ -127,6 +127,16 @@ class Configuration:
         # custom process sequence if 'process' section is provided in config
         if 'process' in parser and 'steps' in parser['process']:
             self.__dict__['process'] = list(filter(None, parser['process'].get('steps').splitlines()))
+        else:
+            self.__dict__['process'] = [
+                'orbfit',
+                'refphase',
+                'mst',
+                'apscorrect',
+                'maxvar',
+                'timeseries',
+                'stack'
+            ]
 
         # Validate required parameters exist.
 
