@@ -27,6 +27,7 @@ from pyrate.core import (shared, algorithm, orbital, ref_phs_est as rpe,
                          ifgconstants as ifc, mpiops, config as cf, 
                          timeseries, mst, covariance as vcm_module, 
                          stack, refpixel)
+from pyrate.core.config import ConfigException
 from pyrate.core.aps import wrap_spatio_temporal_filter
 from pyrate.core.shared import Ifg, PrereadIfg, get_tiles, mpi_vs_multiprocess_logging
 from pyrate.core.logger import pyratelogger as log
@@ -429,6 +430,8 @@ def process_ifgs(params: dict):
     :rtype: ndarray
     """
 
+    __validate_process_steps(params)
+
     # house keeping
     _update_params_with_tiles(params)
     _create_ifg_dict(params)
@@ -440,3 +443,10 @@ def process_ifgs(params: dict):
 
     log.info('PyRate workflow completed')
     return (refpx, refpy), params[cf.MAXVAR], params[cf.VCMT]
+
+
+def __validate_process_steps(params):
+    for step in params['process']:
+        if step not in process_steps.keys():
+            raise ConfigException(f"{step} is not a supported process step. \n"
+                                  f"Supported steps are {process_steps.keys()}")
