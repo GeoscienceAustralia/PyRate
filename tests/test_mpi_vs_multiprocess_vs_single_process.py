@@ -67,7 +67,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(REGRESSION or PYTHON3P8 or PYTHON3P6, reason="Skip if not python3.7 and gdal=3.0.4")
+@pytest.mark.skipif(REGRESSION or PYTHON3P6, reason="Only run in REGRESSION2 and Python3.8 env")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
     if np.random.randint(0, 1000) > 149:  # skip 85% of tests randomly
@@ -211,7 +211,7 @@ def create_mpi_files():
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(PYTHON3P6 or PYTHON3P7, reason="Skip if not python3.7 and gdal=3.0.4")
+@pytest.mark.skipif(PYTHON3P6 or PYTHON3P8 or REGRESSION2, reason="Only run in REGRESSION env")
 def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_conf, create_mpi_files, parallel):
     """
     Checks performed:
