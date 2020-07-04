@@ -110,7 +110,7 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
     else:
         # 17 ifgs + 1 dem
         assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
-                               f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
+                                   f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
 
     # prepifg + process steps that overwrite tifs test
     # ifg phase checking in the previous step checks the process pipeline upto APS correction
@@ -211,7 +211,7 @@ def create_mpi_files():
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(PYTHON3P8 or PYTHON3P7, reason="Skip if not python3.7 and gdal=3.0.4")
+@pytest.mark.skipif(PYTHON3P6 or PYTHON3P7, reason="Skip if not python3.7 and gdal=3.0.4")
 def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_conf, create_mpi_files, parallel):
     """
     Checks performed:

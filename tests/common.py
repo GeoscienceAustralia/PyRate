@@ -36,6 +36,7 @@ from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info
                                 write_output_geotiff, dem_or_ifg)
 from pyrate.core import roipac
 from pyrate.constants import PYRATEPATH
+from pyrate.configuration import Configuration
 
 
 TRAVIS = True if 'TRAVIS' in os.environ else False
@@ -548,7 +549,7 @@ def assert_same_files_produced(dir1, dir2, dir3, ext, num_files=None):
 
 
 def manipulate_test_conf(conf_file, temp_obs_dir):
-    params = cf.get_config_params(conf_file)
+    params = Configuration(conf_file).__dict__
     copytree(params[cf.OBS_DIR], temp_obs_dir)
     # manipulate params
     params[cf.OBS_DIR] = temp_obs_dir.as_posix()
@@ -561,6 +562,5 @@ def manipulate_test_conf(conf_file, temp_obs_dir):
     params[cf.SLC_DIR] = temp_obs_dir.as_posix()
     params[cf.IFG_FILE_LIST] = temp_obs_dir.joinpath(Path(params[cf.IFG_FILE_LIST]).name).as_posix()
     params[cf.COH_FILE_DIR] = temp_obs_dir.as_posix()
-    params[cf.APS_INCIDENCE_MAP] = temp_obs_dir.joinpath(Path(params[cf.APS_INCIDENCE_MAP]).name).as_posix()
     params[cf.TMPDIR] = temp_obs_dir.joinpath(Path(params[cf.TMPDIR]).name).as_posix()
     return params

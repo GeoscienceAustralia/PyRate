@@ -446,7 +446,15 @@ def write_config_file(params, output_conf_file):
     with open(output_conf_file, 'w') as f:
         for k, v in params.items():
             if v is not None:
-                f.write(''.join([k, ':\t', str(v), '\n']))
+                if k == 'process':
+                    f.write(''.join([k, ':\t', '', '\n']))
+                    f.write(''.join(['steps = ', '\n']))
+                    for vv in v:
+                        f.write(''.join(['\t' + str(vv), '\n']))
+                elif isinstance(v, list):
+                    continue
+                else:
+                    f.write(''.join([k, ':\t', str(v), '\n']))
             else:
                 f.write(''.join([k, ':\t', '', '\n']))
 
