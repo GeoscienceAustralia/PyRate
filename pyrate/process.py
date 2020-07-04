@@ -411,7 +411,7 @@ process_steps = {
 }
 
 
-def process_ifgs(params: dict):
+def process_ifgs(params: dict) -> None:
     """
     Top level function to perform PyRate workflow on given interferograms
     :param dict params: Dictionary of configuration parameters
@@ -435,7 +435,6 @@ def process_ifgs(params: dict):
         process_steps[step](params)
 
     log.info('PyRate workflow completed')
-    return (refpx, refpy), params[cf.MAXVAR], params[cf.VCMT]
 
 
 def __validate_process_steps(params):
