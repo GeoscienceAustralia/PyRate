@@ -221,18 +221,11 @@ def _orb_fit_calc(params: dict) -> None:
     log.debug('Finished Orbital error correction')
 
 
-def _ref_phase_estimation(params):
+def _ref_phase_est_wrapper(params):
     """
     Wrapper for reference phase estimation.
     """
     refpx, refpy = params[cf.REFX], params[cf.REFY]
-    return _ref_phase_estimation_wrapper(params, refpx, refpy)
-
-
-def _ref_phase_estimation_wrapper(params, refpx, refpy):
-    """
-    Wrapper for reference phase estimation.
-    """
     ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     log.info("Calculating reference phase")
     if len(ifg_paths) < 2:
@@ -409,7 +402,7 @@ def _update_params_with_tiles(params: dict) -> None:
 
 process_steps = {
     'orbfit': _orb_fit_calc,
-    'refphase': _ref_phase_estimation,
+    'refphase': _ref_phase_est_wrapper,
     'mst': _mst_calc,
     'apscorrect': wrap_spatio_temporal_filter,
     'maxvar': _maxvar_vcm_calc,

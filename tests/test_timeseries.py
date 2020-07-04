@@ -126,13 +126,15 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         refx, refy = process._ref_pixel_calc(params)
+        params[cf.REFX] = refx
+        params[cf.REFY] = refy
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
         ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
         process._update_params_with_tiles(params)
-        _, ifgs = process._ref_phase_estimation_wrapper(params, refx, refy)
+        _, ifgs = process._ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = covariance.RDist(ifgs[0])()
         ifgs[0].close()
@@ -217,6 +219,8 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         mst_grid = common.mst_calculation(dest_paths, params)
 
         refx, refy = process._ref_pixel_calc(params)
+        params[cf.REFX] = refx
+        params[cf.REFY] = refy
 
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
@@ -225,7 +229,7 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
             ifg.close()
 
         process._update_params_with_tiles(params)
-        _, ifgs = process._ref_phase_estimation_wrapper(params, refx, refy)
+        _, ifgs = process._ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = covariance.RDist(ifgs[0])()
         ifgs[0].close()

@@ -130,6 +130,8 @@ class LegacyEqualityTest(unittest.TestCase):
         mst_grid = tests.common.mst_calculation(dest_paths, params)
 
         refx, refy = process._ref_pixel_calc(params)
+        params[cf.REFX] = refx
+        params[cf.REFY] = refy
 
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
@@ -137,7 +139,7 @@ class LegacyEqualityTest(unittest.TestCase):
         for ifg in ifgs:
             ifg.close()
         process._update_params_with_tiles(params)
-        _, ifgs = process._ref_phase_estimation_wrapper(params, refx, refy)
+        _, ifgs = process._ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = vcm_module.RDist(ifgs[0])()
         ifgs[0].close()

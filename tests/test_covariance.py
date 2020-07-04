@@ -213,7 +213,7 @@ class LegacyEqualityTest(unittest.TestCase):
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
-        _, cls.ifgs = process._ref_phase_estimation(params)
+        _, cls.ifgs = process._ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = RDist(ifgs[0])()
         ifgs[0].close()

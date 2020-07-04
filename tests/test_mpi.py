@@ -52,7 +52,7 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, roipac_or_gamma_conf):
     process._create_ifg_dict(params=params)
     process._ref_pixel_calc(params)
     process._orb_fit_calc(params)
-    process._ref_phase_estimation(params)
+    process._ref_phase_est_wrapper(params)
 
     maxvar, vcmt = process._maxvar_vcm_calc(params)
 
