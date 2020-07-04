@@ -384,9 +384,10 @@ interferometry softwares. `PyRate` will determine the input format from the
 Each `GAMMA` geocoded unwrapped interferogram requires three header files
 to extract metadata required for data formatting: a geocoded DEM header
 file (``demHeaderFile`` keyword in the configuration file) and the relevant
-master and slave epoch SLC header files (``*slc.par``) found in the ``hdrfilelist``.
-SLC header files for a particular interferogram are found automatically by
-date-string pattern matching based on date epochs given in the filenames.
+SLC image header files (``*slc.par``) found in the ``hdrfilelist``.
+The header files for the first and second SLC images used in the formation
+of a particular interferogram are found automatically by date-string pattern
+matching based on date epochs given in the filenames.
 A DEM with matching size and geometry to the interferograms can also be processed.
 The DEM absolute path and filename are set with the ``demfile`` parameter.
 
