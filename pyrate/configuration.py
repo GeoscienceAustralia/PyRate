@@ -19,6 +19,7 @@ parsed in a PyRate configuration file.
 """
 from configparser import ConfigParser
 from pathlib import Path, PurePath
+from typing import Union
 from pyrate.constants import NO_OF_PARALLEL_PROCESSES
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
@@ -95,11 +96,16 @@ class MultiplePaths:
         self.converted_path = converted_path.as_posix()
 
     def __str__(self):  # pragma: no cover
-        return"""
-            unwrapped_path = """ + self.unwrapped_path+""" 
+        st = ""
+        if self.unwrapped_path is not None:
+            st += """\nunwrapped_path = """ + self.unwrapped_path
+        else:
+            st += """\nunwrapped_path = None"""
+        st += """
             converted_path = """ + self.converted_path+""" 
             sampled_path = """ + self.sampled_path+"""    
             """
+        return st
 
 
 class Configuration:
@@ -112,11 +118,25 @@ class Configuration:
         with open(config_file_path) as stream:
             parser.read_string("[root]\n" + stream.read())
 
-        for key, value in parser._sections["root"].items():
+        for key, value in parser["root"].items():
             self.__dict__[key] = value
 
         # make output path, if not provided will error
         Path(self.outdir).mkdir(exist_ok=True, parents=True)
+
+        # custom process sequence if 'process' section is provided in config
+        if 'process' in parser and 'steps' in parser['process']:
+            self.__dict__['process'] = list(filter(None, parser['process'].get('steps').splitlines()))
+        else:
+            self.__dict__['process'] = [
+                'orbfit',
+                'refphase',
+                'mst',
+                'apscorrect',
+                'maxvar',
+                'timeseries',
+                'stack'
+            ]
 
         # Validate required parameters exist.
 
@@ -195,3 +215,9 @@ class Configuration:
         val = self.__getattribute__(attr)
         files = parse_namelist(val)
         return [MultiplePaths(self.outdir, p, self.ifglksx, self.ifgcropopt, input_type=input_type) for p in files]
+
+
+def write_config_parser_file(conf: ConfigParser, output_conf_file: Union[str, Path]):
+    """replacement function for write_config_file which uses dict instead of a ConfigParser instance"""
+    with open(output_conf_file, 'w') as configfile:
+        conf.write(configfile)

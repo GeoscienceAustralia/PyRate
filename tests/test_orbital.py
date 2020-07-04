@@ -715,7 +715,12 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
         multi_paths = [MultiplePaths(self.BASE_DIR, p) for p in self.ifg_paths]
         for m in multi_paths:  # cheat
             m.sampled_path = m.converted_path
-        process._orb_fit_calc(multi_paths, self.params)
+
+        self.params[cf.INTERFEROGRAM_FILES] = multi_paths
+        self.params['rows'], self.params['cols'] = 2, 3
+        process._update_params_with_tiles(self.params)
+        process._create_ifg_dict(self.params)
+        process._orb_fit_calc(self.params)
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
             if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))

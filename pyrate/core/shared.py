@@ -1029,25 +1029,6 @@ def create_tiles(shape, nrows=2, ncols=2):
     return [Tile(i, (r[0], c[0]), (r[-1]+1, c[-1]+1)) for i, (r, c) in enumerate(product(row_arr, col_arr))]
 
 
-def get_tiles(ifg_path, rows, cols):
-    """
-    Break up the interferograms into smaller tiles based on user supplied
-    rows and columns.
-
-    :param list ifg_path: List of destination geotiff file names
-    :param int rows: Number of rows to break each interferogram into
-    :param int cols: Number of columns to break each interferogram into
-
-    :return: tiles: List of shared.Tile instances
-    :rtype: list
-    """
-    ifg = Ifg(ifg_path)
-    ifg.open(readonly=True)
-    tiles = create_tiles(ifg.shape, nrows=rows, ncols=cols)
-    ifg.close()
-    return tiles
-
-
 class Tile():
     """
     Tile class for containing a sub-part of an interferogram
@@ -1072,6 +1053,25 @@ class Tile():
 
     def __str__(self):
         return "Convenience Tile class containing tile co-ordinates"
+
+
+def get_tiles(ifg_path, rows, cols) -> List[Tile]:
+    """
+    Break up the interferograms into smaller tiles based on user supplied
+    rows and columns.
+
+    :param list ifg_path: List of destination geotiff file names
+    :param int rows: Number of rows to break each interferogram into
+    :param int cols: Number of columns to break each interferogram into
+
+    :return: tiles: List of shared.Tile instances
+    :rtype: list
+    """
+    ifg = Ifg(ifg_path)
+    ifg.open(readonly=True)
+    tiles = create_tiles(ifg.shape, nrows=rows, ncols=cols)
+    ifg.close()
+    return tiles
 
 
 def nan_and_mm_convert(ifg, params):
@@ -1168,7 +1168,7 @@ def _prep_ifg(ifg_path, params):
     return ifg
 
 
-def save_numpy_phase(ifg_paths, tiles, params):
+def save_numpy_phase(ifg_paths, params):
     """
     Save interferogram phase data as numpy array file on disk.
 
@@ -1178,6 +1178,7 @@ def save_numpy_phase(ifg_paths, tiles, params):
 
     :return: None, file saved to disk
     """
+    tiles = params['tiles']
     process_ifgs = mpiops.array_split(ifg_paths)
     outdir = params[cf.TMPDIR]
     if not os.path.exists(outdir):
@@ -1266,7 +1267,7 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
     :return: True if correction has been performed, otherwise False
     :rtype: bool
     """
-    def close_all(ifgs):    
+    def close_all(ifgs):
         for ifg in ifgs:
             ifg.close()
     

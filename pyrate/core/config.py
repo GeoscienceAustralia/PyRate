@@ -23,17 +23,13 @@ in configuration files.
 # pylint: disable=W1203
 # pylint: disable=too-many-locals
 # pylint: disable=trailing-whitespace
-from typing import List, Tuple, Dict, Optional
+from typing import Dict
 import os
 from os.path import splitext, split
 import re
-from pathlib import Path
-from osgeo import gdal
 
 from pyrate.core.ifgconstants import YEARS_PER_DAY
-from pyrate.constants import CONV2TIF, PREPIFG, PROCESS, MERGE
-from pyrate.constants import SIXTEEN_DIGIT_EPOCH_PAIR, TWELVE_DIGIT_EPOCH_PAIR, EIGHT_DIGIT_EPOCH, \
-    sixteen_digits_pattern
+from pyrate.constants import sixteen_digits_pattern
 from pyrate.core.logger import pyratelogger as _logger
 
 # general constants
@@ -110,6 +106,12 @@ REF_CHIP_SIZE = 'refchipsize'
 REF_MIN_FRAC = 'refminfrac'
 #: BOOL (1/2); Reference phase estimation method (1: median of the whole interferogram, 2: median within the window surrounding the reference pixel)
 REF_EST_METHOD = 'refest'
+
+
+MAXVAR = 'maxvar'
+VCMT = 'vcmt'
+PREREAD_IFGS = 'preread_ifgs'
+TILES = 'tiles'
 
 # coherence masking parameters
 #: BOOL (0/1); Perform coherence masking (1: yes, 0: no)
@@ -444,7 +446,15 @@ def write_config_file(params, output_conf_file):
     with open(output_conf_file, 'w') as f:
         for k, v in params.items():
             if v is not None:
-                f.write(''.join([k, ':\t', str(v), '\n']))
+                if k == 'process':
+                    f.write(''.join([k, ':\t', '', '\n']))
+                    f.write(''.join(['steps = ', '\n']))
+                    for vv in v:
+                        f.write(''.join(['\t' + str(vv), '\n']))
+                elif isinstance(v, list):
+                    continue
+                else:
+                    f.write(''.join([k, ':\t', str(v), '\n']))
             else:
                 f.write(''.join([k, ':\t', '', '\n']))
 

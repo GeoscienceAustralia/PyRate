@@ -19,6 +19,7 @@ for correcting interferograms for atmospheric phase screen (APS)
 signals.
 """
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
+import logging
 import os
 from copy import deepcopy
 from collections import OrderedDict
@@ -36,7 +37,7 @@ from pyrate.core.timeseries import time_series
 from pyrate.merge import assemble_tiles
 
 
-def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
+def wrap_spatio_temporal_filter(params):
     """
     A wrapper for the spatio-temporal filter so it can be tested.
     See docstring for spatio_temporal_filter.
@@ -46,6 +47,9 @@ def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     else:
         log.info('APS spatio-temporal filtering not required')
         return
+    tiles = params[cf.TILES]
+    preread_ifgs = params[cf.PREREAD_IFGS]
+    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
 
     # perform some checks on existing ifgs
     log.debug('Checking APS correction status')
@@ -61,6 +65,8 @@ def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     spatio_temporal_filter(tsincr, ifg, params, preread_ifgs)
     ifg.close()
     mpiops.comm.barrier()
+
+    shared.save_numpy_phase(ifg_paths, params)
 
 
 def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):

@@ -49,7 +49,7 @@ def modified_config_short(tempdir, local_crop, get_lks, coh_mask):
         params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
         params[cf.REF_EST_METHOD] = ref_est_method
         params["rows"], params["cols"] = 3, 2
-        params["tiles"] = params["rows"] * params["cols"]
+        params["notiles"] = params["rows"] * params["cols"]  # number of tiles
 
         print(params)
         # write new temp config
@@ -100,7 +100,7 @@ def modified_config_largetifs(tempdir, local_crop, get_lks, coh_mask):
         params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
         params[cf.REF_EST_METHOD] = ref_est_method
         params["rows"], params["cols"] = 3, 2
-        params["tiles"] = params["rows"] * params["cols"]
+        params["notiles"] = params["rows"] * params["cols"]  # number of tiles
 
         print(params)
         # write new temp config

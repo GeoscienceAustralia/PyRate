@@ -23,16 +23,10 @@ import shutil
 import tempfile
 import unittest
 from os.path import join
-
-import pytest
-
 from tests.common import SML_TEST_CONF, SML_TEST_TIF
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
 from pyrate.core import config
-from pyrate.core.config import write_config_file
 
-from pyrate.constants import SIXTEEN_DIGIT_EPOCH_PAIR, TWELVE_DIGIT_EPOCH_PAIR, EIGHT_DIGIT_EPOCH
-from pyrate.core import config as cf
 
 from pyrate.core.config import (
     _COHERENCE_VALIDATION,

@@ -29,13 +29,17 @@ from numpy.testing import assert_array_almost_equal
 from pyrate.core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
 from pyrate import process, prepifg, conv2tif
 from pyrate.core.covariance import cvd, get_vcmt, RDist
-from pyrate.configuration import Configuration
+from pyrate.configuration import Configuration, MultiplePaths
 import pyrate.core.orbital
 from pyrate.core import roipac
-from pyrate.core.config import parse_namelist
 from tests import common
-from tests.common import (small5_mock_ifgs, small5_ifgs, TEST_CONF_ROIPAC,
-    small_data_setup, prepare_ifgs_without_phase)
+from tests.common import (
+    small5_mock_ifgs,
+    small5_ifgs,
+    TEST_CONF_ROIPAC,
+    small_data_setup,
+    prepare_ifgs_without_phase
+)
 
 
 class CovarianceTests(unittest.TestCase):
@@ -195,16 +199,21 @@ class LegacyEqualityTest(unittest.TestCase):
         base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
         dest_paths = [c.converted_path for c in params[cf.INTERFEROGRAM_FILES]]
         dest_paths = dest_paths[:-2]
+        params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(cls.temp_out_dir, d) for d in dest_paths]
+        for p in params[cf.INTERFEROGRAM_FILES]:  # hack
+            p.sampled_path = p.converted_path
+
         for i in dest_paths:
             Path(i).chmod(0o664)  # assign write permission as conv2tif output is readonly
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
+        process._update_params_with_tiles(params)
+        process._ref_pixel_calc(params)
         headers = [roipac.roipac_header(i, cls.params) for i in base_ifg_paths]
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
-        _, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+        _, cls.ifgs = process._ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = RDist(ifgs[0])()
         ifgs[0].close()
@@ -247,6 +256,3 @@ class LegacyEqualityTest(unittest.TestCase):
             data_file = join(self.params[cf.TMPDIR],
                              'cvd_data_{b}.npy'.format(b=basename(ifg.data_path).split('.')[0]))
             assert isfile(data_file)
-
-if __name__ == "__main__":
-    unittest.main()

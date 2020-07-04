@@ -132,15 +132,18 @@ class PyRateTests(unittest.TestCase):
             # Turn off validation because we're in a different working dir
             #  and relative paths in config won't be work.
             params = config.get_config_params(common.TEST_CONF_ROIPAC)
+            params['process'] = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack']
             params[cf.OUT_DIR] = cls.BASE_OUT_DIR
             params[cf.PROCESSOR] = 0  # roipac
             params[cf.APS_CORRECTION] = 0
             paths = glob.glob(join(cls.BASE_OUT_DIR, 'geo_*-*.tif'))
+            paths = sorted(paths)
             params[cf.PARALLEL] = False
             params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(cls.BASE_OUT_DIR, p) for p in paths]
             for p in params[cf.INTERFEROGRAM_FILES]:  # cheat
                 p.sampled_path = p.converted_path
-            process.process_ifgs(sorted(paths), params, 2, 2)
+            params["rows"], params["cols"] = 2, 2
+            process.process_ifgs(params)
 
             if not hasattr(cls, 'ifgs'):
                 cls.ifgs = get_ifgs(out_dir=cls.BASE_OUT_DIR)
@@ -210,9 +213,7 @@ class ParallelPyRateTests(unittest.TestCase):
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
         rows, cols = params["rows"], params["cols"]
 
-        # xlks, ylks, crop = cf.transform_params(params)
-
-        # base_unw_paths need to be geotiffed by converttogeotif 
+        # base_unw_paths need to be geotiffed by converttogeotif
         #  and multilooked by run_prepifg
         base_unw_paths = list(cf.parse_namelist(params[cf.IFG_FILE_LIST]))
 
@@ -229,8 +230,7 @@ class ParallelPyRateTests(unittest.TestCase):
         tiles = pyrate.core.shared.get_tiles(cls.sampled_paths[0], rows, cols)
         ifgs = common.small_data_setup()
         params[cf.INTERFEROGRAM_FILES] = multi_paths
-
-        cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = process.process_ifgs(cls.sampled_paths, params, rows, cols)
+        cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = process.process_ifgs(params)
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         cls.rate_p, cls.error_p, cls.samples_p = \
             [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
@@ -252,7 +252,8 @@ class ParallelPyRateTests(unittest.TestCase):
         conv2tif.main(params)
         prepifg.main(orig_params)
         params[cf.INTERFEROGRAM_FILES] = multi_paths
-        cls.refpixel, cls.maxvar, cls.vcmt = process.process_ifgs(cls.sampled_paths_s, params, rows, cols)
+        params[cf.REFX], params[cf.REFY] = -1, -1
+        cls.refpixel, cls.maxvar, cls.vcmt = process.process_ifgs(params)
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         cls.rate, cls.error, cls.samples = \
             [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]

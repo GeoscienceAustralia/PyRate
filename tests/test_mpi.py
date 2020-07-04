@@ -42,18 +42,19 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, roipac_or_gamma_conf):
     cf.write_config_file(params=params, output_conf_file=output_conf)
     params = configuration.Configuration(output_conf).__dict__
 
-    dest_paths = [p.sampled_path for p in params[cf.INTERFEROGRAM_FILES]]
+    # dest_paths = [p.sampled_path for p in params[cf.INTERFEROGRAM_FILES]]
     # run conv2tif and prepifg, create the dest_paths files
     conv2tif.main(params)
     params[cf.INTERFEROGRAM_FILES].pop()
     prepifg.main(params)
     params[cf.INTERFEROGRAM_FILES].pop()
-    preread_ifgs = process._create_ifg_dict(dest_paths, params=params)
-    refpx, refpy = process._ref_pixel_calc(dest_paths, params)
-    process._orb_fit_calc(params[cf.INTERFEROGRAM_FILES], params)
-    process._ref_phase_estimation(dest_paths, params, refpx, refpy)
+    process._update_params_with_tiles(params)
+    process._create_ifg_dict(params=params)
+    process._ref_pixel_calc(params)
+    process._orb_fit_calc(params)
+    process._ref_phase_est_wrapper(params)
 
-    maxvar, vcmt = process._maxvar_vcm_calc(dest_paths, params, preread_ifgs)
+    maxvar, vcmt = process._maxvar_vcm_calc(params)
 
     # phase data after ref pixel has changed due to commit bf2f7ebd
     # Legacy tests won't match anymore
