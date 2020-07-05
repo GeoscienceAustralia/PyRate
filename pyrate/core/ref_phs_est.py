@@ -27,7 +27,7 @@ from pyrate.core import mpiops
 from pyrate.core.logger import pyratelogger as log
 
 
-MASTER_PROCESS = 0
+PRIMARY_PROCESS = 0
 
 
 def est_ref_phase_method2(ifg_paths, params, refpx, refpy):

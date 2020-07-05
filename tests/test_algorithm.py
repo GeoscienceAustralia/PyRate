@@ -32,7 +32,7 @@ from pyrate.core.algorithm import (least_squares_covariance,
                                    ifg_date_lookup,
                                    get_all_epochs,
                                    get_epochs,
-                                   master_slave_ids,
+                                   unique_date_ids,
                                    factorise_integer,
                                    )
 
@@ -148,7 +148,7 @@ class DateLookupTests(TestCase):
         self.ifgs = small5_mock_ifgs()
 
     def test_ifg_date_lookup(self):
-        # check reverse lookup of ifg given a master and slave date tuple
+        # check reverse lookup of ifg given a first and second epoch date tuple
         date_pair = (date(2006, 8, 28), date(2006, 12, 11))
         i = ifg_date_lookup(self.ifgs, date_pair)
         self.assertEqual(self.ifgs[0], i)
@@ -227,7 +227,7 @@ class EpochsTests(TestCase):
     def test_get_epoch_count(self):
         self.assertEqual(6, len(set(get_all_epochs(small5_mock_ifgs()))))
 
-    def test_master_slave_ids(self):
+    def test_unique_date_ids(self):
         d0 = date(2006, 6, 19)
         d1 = date(2006, 8, 28)
         d2 = date(2006, 10, 2)
@@ -235,9 +235,8 @@ class EpochsTests(TestCase):
         exp = {d0: 0, d1: 1, d2: 2, d3: 3}
 
         # test unordered and with duplicates
-        self.assertEqual(exp, master_slave_ids([d3, d0, d2, d1]))
-        self.assertEqual(exp,
-                         master_slave_ids([d3, d0, d2, d1, d3, d0]))
+        self.assertEqual(exp, unique_date_ids([d3, d0, d2, d1]))
+        self.assertEqual(exp, unique_date_ids([d3, d0, d2, d1, d3, d0]))
 
 if __name__ == "__main__":
     unittest.main()

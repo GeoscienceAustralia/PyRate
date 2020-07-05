@@ -528,13 +528,13 @@ class SameSizeTests(unittest.TestCase):
         self.ys = -self.xs
         self.headers = [
             {'NCOLS': 47, 'NROWS': 72, 'LAT': -34.17, 'LONG': 150.91, 'X_STEP': 0.000833333, 'Y_STEP': -0.000833333,
-             'WAVELENGTH_METRES': 0.0562356424, 'MASTER_DATE': datetime.date(2007, 3, 26),
-             'SLAVE_DATE': datetime.date(2007, 9, 17), 'TIME_SPAN_YEAR': 0.4791238877481177,
+             'WAVELENGTH_METRES': 0.0562356424, 'FIRST_DATE': datetime.date(2007, 3, 26),
+             'SECOND_DATE': datetime.date(2007, 9, 17), 'TIME_SPAN_YEAR': 0.4791238877481177,
              'DATA_UNITS': 'RADIANS', 'INSAR_PROCESSOR': 'ROIPAC', 'X_LAST': 150.94916665099998,
              'Y_LAST': -34.229999976, 'DATUM': 'WGS84', 'DATA_TYPE': 'ORIGINAL_IFG'},
             {'NCOLS': 47, 'NROWS': 72, 'LAT': -34.17, 'LONG': 150.91, 'X_STEP': 0.000833333, 'Y_STEP': -0.000833333,
-             'WAVELENGTH_METRES': 0.0562356424, 'MASTER_DATE': datetime.date(2007, 3, 26),
-             'SLAVE_DATE': datetime.date(2007, 9, 17), 'TIME_SPAN_YEAR': 0.4791238877481177,
+             'WAVELENGTH_METRES': 0.0562356424, 'FIRST_DATE': datetime.date(2007, 3, 26),
+             'SECOND_DATE': datetime.date(2007, 9, 17), 'TIME_SPAN_YEAR': 0.4791238877481177,
              'DATA_UNITS': 'RADIANS', 'INSAR_PROCESSOR': 'ROIPAC', 'X_LAST': 150.94916665099998,
              'Y_LAST': -34.229999976, 'DATUM': 'WGS84', 'DATA_TYPE': 'ORIGINAL_IFG'}
         ]

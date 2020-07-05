@@ -64,10 +64,10 @@ shared.write_unw_from_data_or_geotiff(geotif_or_data=elevation_data,
 
 header.update(dem_header)
 header[ifc.PYRATE_TIME_SPAN] = 0
-header[ifc.SLAVE_DATE] = 0
+header[ifc.SECOND_DATE] = 0
 header[ifc.DATA_UNITS] = 'degrees'
 header[ifc.DATA_TYPE] = ifc.INCIDENCE
-header[ifc.SLAVE_TIME] = 0
+header[ifc.SECOND_TIME] = 0
 shared.write_geotiff(header=header, data_path=elevation_file,
                      dest=dest_lv_theta, nodata=np.nan)
 

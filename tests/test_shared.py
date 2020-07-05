@@ -58,7 +58,7 @@ class IfgTests(unittest.TestCase):
 
     def test_headers_as_attr(self):
         for a in ['ncols', 'nrows', 'x_first', 'x_step',
-                  'y_first', 'y_step', 'wavelength', 'master', 'slave']:
+                  'y_first', 'y_step', 'wavelength', 'first', 'second']:
             self.assertTrue(getattr(self.ifg, a) is not None)
 
     def test_convert_to_nans(self):
@@ -390,10 +390,10 @@ class WriteUnwTest(unittest.TestCase):
         # insert some dummy data so we are the dem in write_fullres_geotiff is not
         # not activated and ifg write_fullres_geotiff operation works
         header[ifc.PYRATE_TIME_SPAN] = 0
-        header[ifc.SLAVE_DATE] = 0
+        header[ifc.SECOND_DATE] = 0
         header[ifc.DATA_UNITS] = 'degrees'
         header[ifc.DATA_TYPE] = ifc.ORIG
-        header[ifc.SLAVE_TIME] = time(10)
+        header[ifc.SECOND_TIME] = time(10)
 
         # now create aritrary data
         data = np.random.rand(dem_header[ifc.PYRATE_NROWS],

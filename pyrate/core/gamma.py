@@ -100,8 +100,8 @@ def _parse_date_time(lookup):
         msg = "Date and time information not complete in GAMMA headers"
         raise GammaException(msg)
 
-    subset[ifc.MASTER_DATE] = date(year, month, day)
-    subset[ifc.MASTER_TIME] = time(hour, min, sec)
+    subset[ifc.FIRST_DATE] = date(year, month, day)
+    subset[ifc.FIRST_TIME] = time(hour, min, sec)
 
     return subset
 
@@ -145,11 +145,11 @@ def _frequency_to_wavelength(freq):
 
 def combine_headers(hdr0, hdr1, dem_hdr):
     """
-    Combines metadata for master and slave epochs and DEM into a single
-    dictionary for an interferogram.
+    Combines metadata for first and second image epochs and DEM into a
+    single dictionary for an interferogram.
 
-    :param dict hdr0: Metadata for the master image
-    :param dict hdr1: Metadata for the slave image
+    :param dict hdr0: Metadata for the first image
+    :param dict hdr1: Metadata for the second image
     :param dict dem_hdr: Metadata for the DEM
 
     :return: chdr: combined metadata
@@ -158,21 +158,21 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr]]):
         raise GammaException('Header args need to be dicts')
 
-    date0, date1 = hdr0[ifc.MASTER_DATE], hdr1[ifc.MASTER_DATE]
+    date0, date1 = hdr0[ifc.FIRST_DATE], hdr1[ifc.FIRST_DATE]
     if date0 == date1:
         raise GammaException("Can't combine headers for the same day")
     elif date1 < date0:
         raise GammaException("Wrong date order")
 
     chdr = {ifc.PYRATE_TIME_SPAN: (date1 - date0).days / ifc.DAYS_PER_YEAR,
-            ifc.MASTER_DATE: date0,
-            ifc.MASTER_TIME: hdr0[ifc.MASTER_TIME],
-            ifc.SLAVE_DATE: date1,
-            ifc.SLAVE_TIME: hdr1[ifc.MASTER_TIME],
+            ifc.FIRST_DATE: date0,
+            ifc.FIRST_TIME: hdr0[ifc.FIRST_TIME],
+            ifc.SECOND_DATE: date1,
+            ifc.SECOND_TIME: hdr1[ifc.FIRST_TIME],
             ifc.DATA_UNITS: RADIANS,
             ifc.PYRATE_INSAR_PROCESSOR: GAMMA}
 
-    # set incidence angle to mean of master and slave
+    # set incidence angle to mean of first amd second image values
     inc_ang = hdr0[ifc.PYRATE_INCIDENCE_DEGREES]
     if np.isclose(inc_ang, hdr1[ifc.PYRATE_INCIDENCE_DEGREES], atol=1e-1):
         chdr[ifc.PYRATE_INCIDENCE_DEGREES] = (hdr0[ifc.PYRATE_INCIDENCE_DEGREES] + hdr1[
@@ -185,7 +185,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     if np.isclose(wavelen, hdr1[ifc.PYRATE_WAVELENGTH_METRES], atol=1e-6):
         chdr[ifc.PYRATE_WAVELENGTH_METRES] = wavelen
     else:
-        args = (chdr[ifc.MASTER_DATE], chdr[ifc.SLAVE_DATE])
+        args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
         msg = "Wavelength mismatch, check both header files for %s & %s"
         raise GammaException(msg % args)
     # non-cropped, non-multilooked geotif process step information added
@@ -201,7 +201,7 @@ def manage_headers(dem_header_file, header_paths):
     incidence files
 
     :param str dem_header_file: DEM header path
-    :param list header_paths: List of master/slave header paths
+    :param list header_paths: List of first/second image header paths
 
     :return: combined_header: Combined metadata dictionary
     :rtype: dict

@@ -59,7 +59,7 @@ def mst_from_ifgs(ifgs):
     :rtype: list
     """
 
-    edges_with_weights_for_networkx = [(i.master, i.slave, i.nan_fraction)
+    edges_with_weights_for_networkx = [(i.first, i.second, i.nan_fraction)
                                        for i in ifgs]
     g_nx = _build_graph_networkx(edges_with_weights_for_networkx)
     mst = nx.minimum_spanning_tree(g_nx)
@@ -130,7 +130,7 @@ def mst_multiprocessing(tile, ifgs_or_paths, preread_ifgs=None, params=None):
     """
     #The memory requirement during MPI MST computation is determined by the
     #number of interferograms times size of IfgPart. Note that we need all
-    #interferogram header information (like masters/slave dates) for MST
+    #interferogram header information (like first/second image dates) for MST
     #computation. To manage memory we need smaller tiles (IfgPart) as number
     #of interferograms increases
 
@@ -221,7 +221,7 @@ def mst_matrix_networkx(ifgs):
     :rtype: list
     """
     # make default MST to optimise result when no Ifg cells in a stack are nans
-    edges_with_weights = [(i.master, i.slave, i.nan_fraction) for i in ifgs]
+    edges_with_weights = [(i.first, i.second, i.nan_fraction) for i in ifgs]
     edges, g_nx = _minimum_spanning_edges_from_mst(edges_with_weights)
     # TODO: memory efficiencies can be achieved here with tiling
 

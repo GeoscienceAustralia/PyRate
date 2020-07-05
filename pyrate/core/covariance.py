@@ -29,7 +29,7 @@ from scipy.optimize import fmin
 
 from pyrate.core import shared, ifgconstants as ifc, config as cf
 from pyrate.core.shared import PrereadIfg
-from pyrate.core.algorithm import master_slave_ids
+from pyrate.core.algorithm import unique_date_ids
 from pyrate.core.logger import pyratelogger as log
 
 # pylint: disable=too-many-arguments
@@ -279,9 +279,9 @@ def get_vcmt(ifgs, maxvar):
     evaluated according to sig_i * sig_j * C_ij where i and j are two
     interferograms and C is a matrix of coefficients:
 
-    C = 1 if the master and slave epochs of i and j are equal
-    C = 0.5 if have i and j share either a common master or slave epoch
-    C = -0.5 if the master of i or j equals the slave of the other
+    C = 1 if the first and second epochs of i and j are equal
+    C = 0.5 if have i and j share either a common first or second epoch
+    C = -0.5 if the first epoch of i or j equals the second epoch of the other
     C = 0 otherwise
 
     :param list ifgs: A list of pyrate.shared.Ifg class objects.
@@ -292,8 +292,8 @@ def get_vcmt(ifgs, maxvar):
     :rtype: ndarray
     """
     # pylint: disable=too-many-locals
-    # c=0.5 for common master or slave; c=-0.5 if master
-    # of one matches slave of another
+    # c=0.5 for common first or second epoch; c=-0.5 if first epoch
+    # of one matches second epoch of another
 
     if isinstance(ifgs, dict):
         from collections import OrderedDict
@@ -305,21 +305,21 @@ def get_vcmt(ifgs, maxvar):
     nifgs = len(ifgs)
     vcm_pat = zeros((nifgs, nifgs))
 
-    dates = [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
-    ids = master_slave_ids(dates)
+    dates = [ifg.first for ifg in ifgs] + [ifg.second for ifg in ifgs]
+    ids = unique_date_ids(dates)
 
     for i, ifg in enumerate(ifgs):
-        mas1, slv1 = ids[ifg.master], ids[ifg.slave]
+        first1, second1 = ids[ifg.first], ids[ifg.second]
 
         for j, ifg2 in enumerate(ifgs):
-            mas2, slv2 = ids[ifg2.master], ids[ifg2.slave]
-            if mas1 == mas2 or slv1 == slv2:
+            first2, second2 = ids[ifg2.first], ids[ifg2.second]
+            if first1 == first2 or second1 == second2:
                 vcm_pat[i, j] = 0.5
 
-            if mas1 == slv2 or slv1 == mas2:
+            if first1 == second2 or second1 == first2:
                 vcm_pat[i, j] = -0.5
 
-            if mas1 == mas2 and slv1 == slv2:
+            if first1 == first2 and second1 == second2:
                 vcm_pat[i, j] = 1.0  # diagonal elements
 
     # make covariance matrix in time domain
