@@ -129,7 +129,7 @@ Changed
 +++++++
 - Requirements now managed by ``requirements.txt`` file, parsed by ``setup.py``.
 - Requirements now split across base ``requirements.txt`` and separate files
-  for dev (``requirements-dev.txt``) and testing ('requirements-test.txt').
+  for dev (``requirements-dev.txt``) and testing (``requirements-test.txt``).
 - Moved default config files to top level source directory.
 - Pinned Python dependencies to specific versions.
 - Travis build now installs GDAL from apt.

@@ -56,8 +56,8 @@ PROJECTION = "PROJECTION"
 DATUM = "DATUM"
 
 # custom header aliases
-MASTER = "MASTER"
-SLAVE = "SLAVE"
+FIRST = "FIRST"
+SECOND = "SECOND"
 X_LAST = "X_LAST"
 Y_LAST = "Y_LAST"
 RADIANS = "RADIANS"
@@ -143,13 +143,13 @@ def parse_header(hdr_file):
     else:
         subset[ifc.PYRATE_WAVELENGTH_METRES] = headers[WAVELENGTH]
 
-        # grab master/slave dates from header, or the filename
+        # grab first/second dates from header, or the filename
         has_dates = True if DATE in headers and DATE12 in headers else False
         dates = headers[DATE12] if has_dates else _parse_dates_from(hdr_file)
-        subset[ifc.MASTER_DATE], subset[ifc.SLAVE_DATE] = dates
+        subset[ifc.FIRST_DATE], subset[ifc.SECOND_DATE] = dates
 
-        # replace time span as ROIPAC is ~4 hours different to (slave - master)
-        timespan = (subset[ifc.SLAVE_DATE] - subset[ifc.MASTER_DATE]).days / ifc.DAYS_PER_YEAR
+        # replace time span as ROIPAC is ~4 hours different to (second minus first)
+        timespan = (subset[ifc.SECOND_DATE] - subset[ifc.FIRST_DATE]).days / ifc.DAYS_PER_YEAR
         subset[ifc.PYRATE_TIME_SPAN] = timespan
 
         # Add data units of interferogram
@@ -178,7 +178,7 @@ def _parse_dates_from(filename):
         if len(s) == min_date_len:
             return parse_date(s)
     else:  # pragma: no cover
-        msg = "Filename does not include master/slave dates: %s"
+        msg = "Filename does not include first/second image dates: %s"
         raise RoipacException(msg % filename)
 
 

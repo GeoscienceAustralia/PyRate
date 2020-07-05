@@ -142,8 +142,8 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         date1 = date(2006, 6, 19)
         date2 = date(2006, 10, 2)
         diff = (date2 - date1).days
-        self.assertTrue(md[ifc.MASTER_DATE] == str(date1))
-        self.assertTrue(md[ifc.SLAVE_DATE] == str(date2))
+        self.assertTrue(md[ifc.FIRST_DATE] == str(date1))
+        self.assertTrue(md[ifc.SECOND_DATE] == str(date2))
         self.assertTrue(md[ifc.PYRATE_TIME_SPAN] == str(diff / ifc.DAYS_PER_YEAR))
 
         wavelen = float(md[ifc.PYRATE_WAVELENGTH_METRES])
@@ -231,9 +231,9 @@ class HeaderParsingTests(unittest.TestCase):
         self.assertIn(roipac.TIME_SPAN_YEAR, hdrs.keys())
 
         # check time span calc
-        master = date(2006, 6, 19)
-        slave = date(2006, 10, 2)
-        diff = (slave - master).days / ifc.DAYS_PER_YEAR
+        first = date(2006, 6, 19)
+        second = date(2006, 10, 2)
+        diff = (second - first).days / ifc.DAYS_PER_YEAR
         self.assertEqual(diff, hdrs[roipac.TIME_SPAN_YEAR])
 
     # long format header tests
@@ -244,8 +244,8 @@ class HeaderParsingTests(unittest.TestCase):
         # check DATE/ DATE12 fields are parsed correctly
         date0 = date(2006, 6, 19) # from "DATE 060619" header
         date2 = date(2006, 8, 28) # from DATE12 060619-060828
-        self.assertEqual(hdrs[ifc.MASTER_DATE], date0)
-        self.assertEqual(hdrs[ifc.SLAVE_DATE], date2)
+        self.assertEqual(hdrs[ifc.FIRST_DATE], date0)
+        self.assertEqual(hdrs[ifc.SECOND_DATE], date2)
 
     def test_read_full_roipac_header2(self):
         # Tests header from cropped original dataset is parsed correctly

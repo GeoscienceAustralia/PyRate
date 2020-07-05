@@ -125,7 +125,7 @@ def unit_vector(incidence, azimuth):
 
 def ifg_date_lookup(ifgs, date_pair):
     """
-    Returns the Interferogram which has the master and slave dates given
+    Returns the Interferogram which has the first and second dates given
     in 'date_pair'.
 
     :param list ifgs: List of interferogram objects to search
@@ -136,10 +136,10 @@ def ifg_date_lookup(ifgs, date_pair):
     """
 
     if len(date_pair) != 2:
-        msg = "Need (datetime.date, datetime.date) master/slave pair"
+        msg = "Need (datetime.date, datetime.date) first/second image pair"
         raise IfgException(msg)
 
-    # check master/slave dates are in order
+    # check first/second dates are in order
     try:
         # TODO: Clarify: Is the comparison here for a different date?
         # Then it should be written in a more pythonic way
@@ -151,17 +151,17 @@ def ifg_date_lookup(ifgs, date_pair):
         raise ValueError("Bad date_pair arg to ifg_date_lookup()")
 
     for i in ifgs:
-        if date_pair == (i.master, i.slave):
+        if date_pair == (i.first, i.second):
             return i
 
-    raise ValueError("Cannot find Ifg with "
-                     "master/slave of %s" % str(date_pair))
+    raise ValueError("Cannot find Ifg with first/second"
+                     "image dates of %s" % str(date_pair))
 
 
 def ifg_date_index_lookup(ifgs, date_pair):
     """
-    Returns the Interferogram index which has the master and slave dates
-    given in 'date_pair'.
+    Returns the Interferogram index which has the first and second image
+    dates given in 'date_pair'.
 
     :param list ifgs: List of interferogram objects to search
     :param tuple date_pair: A (datetime.date, datetime.date)
@@ -171,10 +171,10 @@ def ifg_date_index_lookup(ifgs, date_pair):
     """
 
     if len(date_pair) != 2:
-        msg = "Need (datetime.date, datetime.date) master/slave pair"
+        msg = "Need (datetime.date, datetime.date) first/second image date pair"
         raise IfgException(msg)
 
-    # check master/slave dates are in order
+    # check first/second image dates are in order
     try:
         if date_pair[0] > date_pair[1]:
             date_pair = date_pair[1], date_pair[0]
@@ -182,10 +182,10 @@ def ifg_date_index_lookup(ifgs, date_pair):
         raise ValueError("Bad date_pair arg to ifg_date_lookup()")
 
     for i, _ in enumerate(ifgs):
-        if date_pair == (ifgs[i].master, ifgs[i].slave):
+        if date_pair == (ifgs[i].first, ifgs[i].second):
             return i
 
-    raise ValueError("Cannot find Ifg with master/slave of %s" % str(date_pair))
+    raise ValueError("Cannot find Ifg with first/second image dates of %s" % str(date_pair))
 
 
 def get_epochs(ifgs: Union[Iterable, Dict]) -> Tuple[EpochList, int]:
@@ -211,18 +211,18 @@ def get_epochs(ifgs: Union[Iterable, Dict]) -> Tuple[EpochList, int]:
 
 def get_all_epochs(ifgs):
     """
-    Returns a sequence of all master and slave dates in given interferograms.
+    Returns a sequence of all image dates used to form given interferograms.
 
     :param list ifgs: List of interferogram objects
 
-    :return: master and slave dates
+    :return: list of all image dates
     :rtype: list
     """
 
-    return [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
+    return [ifg.first for ifg in ifgs] + [ifg.second for ifg in ifgs]
 
 
-def master_slave_ids(dates):
+def unique_date_ids(dates):
     """
     Returns a dictionary of 'date:unique ID' for each date in 'dates'.
     IDs are ordered from oldest to newest, starting at 0.

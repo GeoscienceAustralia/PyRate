@@ -33,7 +33,7 @@ from pyrate.core.shared import Ifg, PrereadIfg, get_tiles, mpi_vs_multiprocess_l
 from pyrate.core.logger import pyratelogger as log
 from pyrate.prepifg import find_header
 
-MASTER_PROCESS = 0
+PRIMARY_PROCESS = 0
 
 
 def _join_dicts(dicts):
@@ -67,8 +67,8 @@ def _create_ifg_dict(params):
         ifg = shared._prep_ifg(d, params)
         ifgs_dict[d] = PrereadIfg(path=d,
                                   nan_fraction=ifg.nan_fraction,
-                                  master=ifg.master,
-                                  slave=ifg.slave,
+                                  first=ifg.first,
+                                  second=ifg.second,
                                   time_span=ifg.time_span,
                                   nrows=ifg.nrows,
                                   ncols=ifg.ncols,
@@ -154,7 +154,7 @@ def _ref_pixel_calc(params: dict) -> Tuple[int, int]:
         refpixel.save_ref_pixel_blocks(process_grid, half_patch_size, ifg_paths, params)
         mean_sds = refpixel._ref_pixel_mpi(process_grid, half_patch_size, ifg_paths, thresh, params)
         mean_sds = mpiops.comm.gather(mean_sds, root=0)
-        if mpiops.rank == MASTER_PROCESS:
+        if mpiops.rank == PRIMARY_PROCESS:
             mean_sds = np.hstack(mean_sds)
 
         refpixel_returned = mpiops.run_once(refpixel.find_min_mean, mean_sds, grid)
@@ -213,7 +213,7 @@ def _orb_fit_calc(params: dict) -> None:
         # remove_orbital_error step
         # A performance comparison should be made for saving multilooked
         # files on disc vs in memory single process multilooking
-        if mpiops.rank == MASTER_PROCESS:
+        if mpiops.rank == PRIMARY_PROCESS:
             headers = [find_header(p, params) for p in multi_paths]
             orbital.remove_orbital_error(ifg_paths, params, headers, preread_ifgs=preread_ifgs)
     mpiops.comm.barrier()
@@ -247,7 +247,7 @@ def _ref_phase_est_wrapper(params):
 
     # Save reference phase numpy arrays to disk.
     ref_phs_file = os.path.join(params[cf.TMPDIR], 'ref_phs.npy')
-    if mpiops.rank == MASTER_PROCESS:
+    if mpiops.rank == PRIMARY_PROCESS:
         collected_ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
         process_indices = mpiops.array_split(range(len(ifg_paths)))
         collected_ref_phs[process_indices] = ref_phs
@@ -259,7 +259,7 @@ def _ref_phase_est_wrapper(params):
             collected_ref_phs[process_indices] = this_process_ref_phs
         np.save(file=ref_phs_file, arr=collected_ref_phs)
     else:
-        mpiops.comm.Send(ref_phs, dest=MASTER_PROCESS, tag=mpiops.rank)
+        mpiops.comm.Send(ref_phs, dest=PRIMARY_PROCESS, tag=mpiops.rank)
     log.debug('Finished reference phase correction')
 
     # Preserve old return value so tests don't break.
@@ -339,7 +339,7 @@ def _maxvar_vcm_calc(params):
     for n, i in enumerate(prcs_ifgs):
         log.debug('Calculating maxvar for {} of process ifgs {} of total {}'.format(n+1, len(prcs_ifgs), len(ifg_paths)))
         process_maxvar.append(vcm_module.cvd(i, params, r_dist, calc_alpha=True, write_vals=True, save_acg=True)[0])
-    if mpiops.rank == MASTER_PROCESS:
+    if mpiops.rank == PRIMARY_PROCESS:
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
         maxvar[process_indices] = process_maxvar
         for i in range(1, mpiops.size):  # pragma: no cover
@@ -349,7 +349,7 @@ def _maxvar_vcm_calc(params):
             maxvar[rank_indices] = this_process_ref_phs
     else:  # pragma: no cover
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
-        mpiops.comm.Send(np.array(process_maxvar, dtype=np.float64), dest=MASTER_PROCESS, tag=mpiops.rank)
+        mpiops.comm.Send(np.array(process_maxvar, dtype=np.float64), dest=PRIMARY_PROCESS, tag=mpiops.rank)
 
     mpiops.comm.barrier()
     maxvar = mpiops.comm.bcast(maxvar, root=0)

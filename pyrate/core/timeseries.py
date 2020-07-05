@@ -28,7 +28,7 @@ import numpy as np
 from scipy.linalg import qr
 from joblib import Parallel, delayed
 from pyrate.core.shared import joblib_log_level
-from pyrate.core.algorithm import master_slave_ids, get_epochs
+from pyrate.core.algorithm import unique_date_ids, get_epochs
 from pyrate.core import config as cf, mst as mst_module
 from pyrate.core.config import ConfigException
 from pyrate.core.logger import pyratelogger as log
@@ -60,17 +60,17 @@ def _time_series_setup(ifgs, mst, params):
     nepoch = len(epochlist.dates)  # epoch number
     nvelpar = nepoch - 1  # velocity parameters number
     # nlap = nvelpar - smorder  # Laplacian observations number
-    mast_slave_ids = master_slave_ids(epochlist.dates)
-    imaster = [mast_slave_ids[ifg.master] for ifg in ifgs]
-    islave = [mast_slave_ids[ifg.slave] for ifg in ifgs]
-    imaster = min(imaster, islave)
-    islave = max(imaster, islave)
+    img_ids = unique_date_ids(epochlist.dates)
+    ifirst = [img_ids[ifg.first] for ifg in ifgs]
+    isecond = [img_ids[ifg.second] for ifg in ifgs]
+    ifirst = min(ifirst, isecond)
+    isecond = max(ifirst, isecond)
     b0_mat = zeros((nifgs, nvelpar))
     for i in range(nifgs):
-        b0_mat[i, imaster[i]:islave[i]] = span[imaster[i]:islave[i]]
+        b0_mat[i, ifirst[i]:isecond[i]] = span[ifirst[i]:isecond[i]]
 
-    # change the sign if slave is earlier than master
-    isign = where(np.atleast_1d(imaster) > np.atleast_1d(islave))
+    # change the sign if second image is earlier than first
+    isign = where(np.atleast_1d(ifirst) > np.atleast_1d(isecond))
     b0_mat[isign[0], :] = -b0_mat[isign[0], :]
     tsvel_matrix = np.empty(shape=(nrows, ncols, nvelpar),
                             dtype=float32)

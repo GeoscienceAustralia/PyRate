@@ -32,7 +32,8 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.linalg import lstsq
 
 from tests.common import small5_mock_ifgs, MockIfg
-from pyrate.core import algorithm, config as cf
+from pyrate.core import config as cf
+from pyrate.core.algorithm import unique_date_ids
 from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
     QUADRATIC, PART_CUBIC
 from pyrate.core.orbital import OrbitalError, _orbital_correction
@@ -376,13 +377,13 @@ class NetworkDesignMatrixTests(unittest.TestCase):
             self.assertEqual(exp.shape, (ifg.num_cells, ncoef))
 
             ib1, ib2 = [x * self.ncells for x in (i, i+1)] # row start/end
-            jbm = ncoef * self.date_ids[ifg.master] # starting col index for master
-            jbs = ncoef * self.date_ids[ifg.slave] # col start for slave
+            jbm = ncoef * self.date_ids[ifg.first] # starting col index for first image
+            jbs = ncoef * self.date_ids[ifg.second] # col start for second image
             assert_array_almost_equal(-exp, dm[ib1:ib2, jbm:jbm+ncoef])
             assert_array_almost_equal( exp, dm[ib1:ib2, jbs:jbs+ncoef])
 
             # ensure remaining rows/cols are zero for this ifg NOT inc offsets
-            assert_array_equal(0, dm[ib1:ib2, :jbm]) # all cols leading up to master
+            assert_array_equal(0, dm[ib1:ib2, :jbm]) # all cols leading up to first image
             assert_array_equal(0, dm[ib1:ib2, jbm + ncoef:jbs]) # cols btwn mas/slv
             assert_array_equal(0, dm[ib1:ib2, jbs + ncoef:np]) # to end of non offsets
 
@@ -439,8 +440,8 @@ def _expand_corrections(ifgs, dm, params, ncoef, offsets):
 
     corrections = []
     for ifg in ifgs:
-        jbm = date_ids[ifg.master] * ncoef # starting row index for master
-        jbs = date_ids[ifg.slave] * ncoef # row start for slave
+        jbm = date_ids[ifg.first] * ncoef # starting row index for first image
+        jbs = date_ids[ifg.second] * ncoef # row start for second image
         par = params[jbs:jbs + ncoef] - params[jbm:jbm + ncoef]
 
         # estimate orbital correction effects
@@ -660,13 +661,13 @@ def unittest_dm(ifg, method, degree, offset=False, scale=100.0):
 
 def get_date_ids(ifgs):
     '''
-    Returns unique master/slave date IDs from the given Ifgs.
+    Returns unique epoch date IDs from the given Ifgs.
     '''
 
     dates = []
     for ifg in ifgs:
-        dates += [ifg.master, ifg.slave]
-    return algorithm.master_slave_ids(dates)
+        dates += [ifg.first, ifg.second]
+    return unique_date_ids(dates)
 
 
 def _add_nodata(ifgs):
