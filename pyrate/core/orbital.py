@@ -189,24 +189,35 @@ def independent_orbital_correction(ifg, degree, offset, params):
     :return: None - interferogram phase data is updated and saved to disk
     """
     ifg = shared.Ifg(ifg) if isinstance(ifg, str) else ifg
+    orbfit_on_disc = Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR,
+                          Path(ifg.data_path).with_suffix('.orbfit.npy').name)
     if not ifg.is_open:
         ifg.open()
-    shared.nan_and_mm_convert(ifg, params)
-    # vectorise, keeping NODATA
-    vphase = reshape(ifg.phase_data, ifg.num_cells)
-    dm = get_design_matrix(ifg, degree, offset)
 
-    # filter NaNs out before getting model
-    clean_dm = dm[~isnan(vphase)]
-    data = vphase[~isnan(vphase)]
-    model = lstsq(clean_dm, data)[0]  # first arg is the model params
-
-    # calculate forward model & morph back to 2D
-    if offset:
-        fullorb = np.reshape(np.dot(dm[:, :-1], model[:-1]),
-                             ifg.phase_data.shape)
+    if orbfit_on_disc.exists():
+        log.info(f'Reusing already computed orbital fit correction for {ifg.data_path}')
+        return
     else:
-        fullorb = np.reshape(np.dot(dm, model), ifg.phase_data.shape)
+        shared.nan_and_mm_convert(ifg, params)
+        # vectorise, keeping NODATA
+        vphase = reshape(ifg.phase_data, ifg.num_cells)
+        dm = get_design_matrix(ifg, degree, offset)
+
+        # filter NaNs out before getting model
+        clean_dm = dm[~isnan(vphase)]
+        data = vphase[~isnan(vphase)]
+        model = lstsq(clean_dm, data)[0]  # first arg is the model params
+
+        # calculate forward model & morph back to 2D
+        if offset:
+            fullorb = np.reshape(np.dot(dm[:, :-1], model[:-1]),
+                                 ifg.phase_data.shape)
+        else:
+            fullorb = np.reshape(np.dot(dm, model), ifg.phase_data.shape)
+
+        # dump to disc
+        np.save(file=orbfit_on_disc, arr=fullorb)
+
     offset_removal = nanmedian(np.ravel(ifg.phase_data - fullorb))
     # subtract orbital error from the ifg
     ifg.phase_data -= (fullorb - offset_removal)

@@ -19,6 +19,7 @@ This Python module runs the main PyRate processing workflow
 """
 import os
 from os.path import join
+from pathlib import Path
 import pickle as cp
 from typing import List, Tuple
 import numpy as np
@@ -111,8 +112,8 @@ def _mst_calc(params):
     """
     MPI wrapper function for MST calculation
     """
-    tiles = params['tiles']
-    preread_ifgs = params['preread_ifgs']
+    tiles = params[cf.TILES]
+    preread_ifgs = params[cf.PREREAD_IFGS]
     dest_tifs = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     process_tiles = mpiops.array_split(tiles)
     log.info('Calculating minimum spanning tree matrix')
@@ -145,7 +146,17 @@ def _ref_pixel_calc(params: dict) -> Tuple[int, int]:
     # assume all interferograms have same projection and will share the same transform
     transform = ifg.dataset.GetGeoTransform()
 
+    ref_pixel_file = Path(params[cf.OUT_DIR]).joinpath(cf.REF_PIXEL_FILE)
+
     if lon == -1 or lat == -1:
+
+        if ref_pixel_file.exists():
+            # read and return
+            refx, refy = np.load(ref_pixel_file)
+            log.info('Reusing pre-calculated ref-pixel values: ({}, {}) from file {}'.format(
+                refx, refy, ref_pixel_file.as_posix()))
+            log.warn("Reusing pre-calculated ref-pixel values!!!")
+            return refx, refy
 
         log.info('Searching for best reference pixel location')
 
@@ -169,6 +180,7 @@ def _ref_pixel_calc(params: dict) -> Tuple[int, int]:
         log.info('Selected reference pixel coordinate (x, y): ({}, {})'.format(refx, refy))
         lon, lat = refpixel.convert_pixel_value_to_geographic_coordinate(refx, refy, transform)
         log.info('Selected reference pixel coordinate (lon, lat): ({}, {})'.format(lon, lat))
+        np.save(file=ref_pixel_file, arr=[int(refx), int(refy)])
 
     else:
         log.info('Using reference pixel from config file (lon, lat): ({}, {})'.format(lon, lat))
@@ -188,7 +200,7 @@ def _orb_fit_calc(params: dict) -> None:
     """
     MPI wrapper for orbital fit correction
     """
-    preread_ifgs = params['preread_ifgs']
+    preread_ifgs = params[cf.PREREAD_IFGS]
     multi_paths = params[cf.INTERFEROGRAM_FILES]
     if not params[cf.ORBITAL_FIT]:
         log.info('Orbital correction not required!')
@@ -428,7 +440,7 @@ def process_ifgs(params: dict) -> None:
     # house keeping
     _update_params_with_tiles(params)
     _create_ifg_dict(params)
-    refpx, refpy = _ref_pixel_calc(params)
+    _ref_pixel_calc(params)
 
     # run through the process steps in user specified sequence
     for step in params['process']:
