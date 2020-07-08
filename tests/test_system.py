@@ -59,3 +59,12 @@ def test_single_workflow(gamma_conf):
     assert ref_pixel_file.exists()
     ref_pixel = np.load(ref_pixel_file)
     np.testing.assert_array_equal(ref_pixel, [38, 58])
+
+    # assert orbfit exists on disc
+    from pyrate.core import shared
+    looked_files = [p.sampled_path for p in params[cf.INTERFEROGRAM_FILES]]
+    ifgs = [shared.Ifg(ifg) for ifg in looked_files]
+    orbfits_on_disc = [Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR,
+                          Path(ifg.data_path).with_suffix('.orbfit.npy').name)
+                       for ifg in ifgs]
+    assert all(orbfits_on_disc)

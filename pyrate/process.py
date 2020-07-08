@@ -186,6 +186,7 @@ def _ref_pixel_calc(params: dict) -> Tuple[int, int]:
         log.info('Using reference pixel from config file (lon, lat): ({}, {})'.format(lon, lat))
         log.warning("Ensure user supplied reference pixel values are in lon/lat")
         refx, refy = refpixel.convert_geographic_coordinate_to_pixel_value(lon, lat, transform)
+        np.save(file=ref_pixel_file, arr=[int(refx), int(refy)])
         log.info('Converted reference pixel coordinate (x, y): ({}, {})'.format(refx, refy))
 
     refpixel.update_refpix_metadata(ifg_paths, refx, refy, transform, params)

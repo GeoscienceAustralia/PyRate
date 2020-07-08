@@ -215,6 +215,8 @@ def independent_orbital_correction(ifg, degree, offset, params):
         else:
             fullorb = np.reshape(np.dot(dm, model), ifg.phase_data.shape)
 
+        if not orbfit_on_disc.parent.exists():
+            shared.mkdir_p(orbfit_on_disc.parent)
         # dump to disc
         np.save(file=orbfit_on_disc, arr=fullorb)
 
