@@ -208,6 +208,7 @@ class IndependentCorrectionTests(unittest.TestCase):
         params[cf.PARALLEL] = False
         params[cf.NO_DATA_VALUE] = 0
         params[cf.NAN_CONVERSION] = False
+        params[cf.OUT_DIR] = tempfile.mkdtemp()
         for i in self.ifgs:
             i.mm_converted = True
         _orbital_correction(self.ifgs, params, None, offset)
