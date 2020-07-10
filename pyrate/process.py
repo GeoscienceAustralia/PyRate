@@ -18,6 +18,7 @@
 This Python module runs the main PyRate processing workflow
 """
 import os
+import shutil
 from os.path import join
 from pathlib import Path
 import pickle as cp
@@ -210,7 +211,7 @@ def _orb_fit_calc(params: dict) -> None:
     log.info('Calculating orbital correction')
 
     ifg_paths = [p.sampled_path for p in multi_paths]
-    if preread_ifgs:  # don't check except for mpi tests
+    if preread_ifgs:
         # perform some general error/sanity checks
         log.debug('Checking Orbital error correction status')
         if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_ORBITAL_ERROR):
@@ -285,6 +286,14 @@ def _ref_phase_est_wrapper(params):
     return ref_phs, ifgs
 
 
+def __copy_mlooked(params):
+    log.info("copying mlooked files into tempdir for manipulation")
+    mpaths = params[cf.INTERFEROGRAM_FILES]
+    process_mpaths = mpiops.array_split(mpaths)
+    for p in process_mpaths:
+        shutil.copy(p.sampled_path, p.tmp_sampled_path)
+
+
 def main(params):
     """
     Top level function to perform PyRate workflow on given interferograms
@@ -297,8 +306,12 @@ def main(params):
     :rtype: ndarray
     """
     mpi_vs_multiprocess_logging("process", params)
+
     if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
+
+    # Make a copy of the multi-looked files for manipulation during process steps
+    __copy_mlooked(params)
 
     return process_ifgs(params)
 

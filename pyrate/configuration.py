@@ -79,20 +79,24 @@ def validate_file_list_values(file_list, no_of_epochs):
 
 class MultiplePaths:
     def __init__(self, out_dir: str, file_name: str, ifglksx: int = 1, ifgcropopt: int = 1,
-                 input_type: InputTypes = InputTypes.IFG):
+                 input_type: InputTypes = InputTypes.IFG,  tempdir: Union[Path, str] = 'tmpdir'):
         self.input_type = input_type
         b = Path(file_name)
         if b.suffix == ".tif":
             self.unwrapped_path = None
             converted_path = b  # original file
             self.sampled_path = Path(out_dir).joinpath(
-                b.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif").as_posix()
+                b.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif")
         else:
             self.unwrapped_path = b.as_posix()
             converted_path = Path(out_dir).joinpath(
                 b.stem.split('.')[0] + '_' + b.suffix[1:] + input_type.value).with_suffix('.tif')
             self.sampled_path = converted_path.with_name(
-                converted_path.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif").as_posix()
+                converted_path.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif")
+        if not isinstance(tempdir, Path):
+            tempdir = Path(out_dir).joinpath(tempdir)
+        self.tmp_sampled_path = tempdir.joinpath(self.sampled_path.name).as_posix()
+        self.sampled_path = self.sampled_path.as_posix()
         self.converted_path = converted_path.as_posix()
 
     def __str__(self):  # pragma: no cover
@@ -214,7 +218,10 @@ class Configuration:
     def __get_files_from_attr(self, attr, input_type=InputTypes.IFG):
         val = self.__getattribute__(attr)
         files = parse_namelist(val)
-        return [MultiplePaths(self.outdir, p, self.ifglksx, self.ifgcropopt, input_type=input_type) for p in files]
+        return [
+            MultiplePaths(self.outdir, p, self.ifglksx, self.ifgcropopt, input_type=input_type, tempdir=self.tmpdir)
+            for p in files
+        ]
 
 
 def write_config_parser_file(conf: ConfigParser, output_conf_file: Union[str, Path]):
