@@ -196,7 +196,7 @@ def independent_orbital_correction(ifg, degree, offset, params):
 
     if orbfit_on_disc.exists():
         log.info(f'Reusing already computed orbital fit correction for {ifg.data_path}')
-        return
+        fullorb = np.load(file=orbfit_on_disc)
     else:
         shared.nan_and_mm_convert(ifg, params)
         # vectorise, keeping NODATA
@@ -305,6 +305,7 @@ def _remove_network_orb_error(coefs, dm, ifg, ids, offset):
     ifg.phase_data -= orb
     # set orbfit meta tag and save phase to file
     _save_orbital_error_corrected_phase(ifg)
+
 
 
 def _save_orbital_error_corrected_phase(ifg):

@@ -315,7 +315,7 @@ def _step(dim, ref, radius):
 
     :param int dim: Total length of the grid dimension
     :param int ref: The desired number of steps
-    :param float radius: The number of cells from the centre of the chip eg.
+    :param int radius: The number of cells from the centre of the chip eg.
         (chipsize / 2)
 
     :return: range object of axis indices
