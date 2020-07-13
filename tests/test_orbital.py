@@ -25,6 +25,7 @@ from itertools import product
 from numpy import empty, dot, concatenate, float32
 from numpy import nan, isnan, array
 from os.path import join
+from pathlib import Path
 
 import numpy as np
 from numpy.linalg import pinv, inv
@@ -38,7 +39,7 @@ from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
 from pyrate.core.orbital import OrbitalError, _orbital_correction
 from pyrate.core.orbital import get_design_matrix, get_network_design_matrix
 from pyrate.core.orbital import _get_num_params, remove_orbital_error
-from pyrate.core.shared import Ifg
+from pyrate.core.shared import Ifg, mkdir_p
 from pyrate.core.shared import nanmedian
 from pyrate.core import roipac
 from pyrate.configuration import Configuration
@@ -544,6 +545,8 @@ class NetworkCorrectionTests(unittest.TestCase):
         params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
         params[cf.ORBITAL_FIT_DEGREE] = deg
         params[cf.PARALLEL] = False
+        params[cf.OUT_DIR] = tempfile.mkdtemp()
+        mkdir_p(Path(params[cf.OUT_DIR]).joinpath(cf.ORB_ERROR_DIR))
         _orbital_correction(ifgs, params, None, offset)
         act = [i.phase_data for i in ifgs]
         assert_array_almost_equal(act, exp, decimal=5)
@@ -607,6 +610,8 @@ class NetworkCorrectionTestsMultilooking(unittest.TestCase):
         params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
         params[cf.ORBITAL_FIT_DEGREE] = deg
         params[cf.PARALLEL] = False
+        params[cf.OUT_DIR] = tempfile.mkdtemp()
+        mkdir_p(Path(params[cf.OUT_DIR]).joinpath(cf.ORB_ERROR_DIR))
         _orbital_correction(ifgs, params, self.ml_ifgs, offset)
         act = [i.phase_data for i in ifgs]
         assert_array_almost_equal(act, exp, decimal=4)
@@ -672,11 +677,11 @@ def get_date_ids(ifgs):
 
 def _add_nodata(ifgs):
     """Adds some NODATA/nan cells to the small mock ifgs"""
-    ifgs[0].phase_data[0, :] = nan # 3 error cells
-    ifgs[1].phase_data[2, 1:3] = nan # 2 error cells
-    ifgs[2].phase_data[3, 2:3] = nan # 1 err
-    ifgs[3].phase_data[1, 2] = nan # 1 err
-    ifgs[4].phase_data[1, 1:3] = nan # 2 err
+    ifgs[0].phase_data[0, :] = nan  # 3 error cells
+    ifgs[1].phase_data[2, 1:3] = nan  # 2 error cells
+    ifgs[2].phase_data[3, 2:3] = nan  # 1 err
+    ifgs[3].phase_data[1, 2] = nan  # 1 err
+    ifgs[4].phase_data[1, 1:3] = nan  # 2 err
 
 
 class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
@@ -738,8 +743,7 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
                         '_orb_planar_1lks_method1_')[1].split('.')[0]:
                     count += 1
                     # all numbers equal
-                    np.testing.assert_array_almost_equal(ifg_data,
-                        ifg.phase_data, decimal=2)
+                    np.testing.assert_array_almost_equal(ifg_data, ifg.phase_data, decimal=2)
 
                     # means must also be equal
                     self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(ifg.phase_data), places=2)
