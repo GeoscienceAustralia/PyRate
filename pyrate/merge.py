@@ -42,6 +42,7 @@ def main(params: dict) -> None:
 
     if params[cf.TIME_SERIES_CAL]:
         _merge_timeseries(params, 'tscuml')
+        _merge_linrate(params)
         # optional save of merged tsincr products
         if params["savetsincr"] == 1: _merge_timeseries(params, 'tsincr')
 
@@ -67,6 +68,25 @@ def _merge_stack(params: dict) -> None:
 
     # save geotiff and numpy array files
     for out, ot in zip([rate, error, samples], ['stack_rate', 'stack_error', 'stack_samples']):
+        _save_merged_files(ifgs_dict, params[cf.OUT_DIR], out, ot, savenpy=params["savenpy"])
+
+
+def _merge_linrate(params: dict) -> None:
+    """
+    Merge linear rate outputs
+    """
+    shape, tiles, ifgs_dict = _merge_setup(params)
+
+    log.info('Merging and writing Linear Rate product geotiffs')
+
+    # read and assemble tile outputs
+    rate = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='linear_rate')
+    rsq = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='linear_rsquared')
+    error = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='linear_error')
+    samples = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='linear_samples')
+
+    # save geotiff and numpy array files
+    for out, ot in zip([rate, rsq, error, samples], ['linear_rate', 'linear_rsquared', 'linear_error', 'linear_samples']):
         _save_merged_files(ifgs_dict, params[cf.OUT_DIR], out, ot, savenpy=params["savenpy"])
 
 
