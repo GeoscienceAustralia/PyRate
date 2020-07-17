@@ -39,6 +39,7 @@ from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
 from pyrate.core.orbital import OrbitalError, _orbital_correction
 from pyrate.core.orbital import get_design_matrix, get_network_design_matrix
 from pyrate.core.orbital import _get_num_params, remove_orbital_error
+from pyrate.core.orbital import network_orbital_correction
 from pyrate.core.shared import Ifg, mkdir_p
 from pyrate.core.shared import nanmedian
 from pyrate.core import roipac
@@ -801,7 +802,8 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
         shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_legacy_equality_orbfit_method_2(self):
-        remove_orbital_error(self.ifgs, self.params, headers=self.headers)
+        degree = self.params[cf.ORBITAL_FIT_DEGREE]
+        network_orbital_correction(self.ifgs, degree, True, self.params)
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
                      if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))

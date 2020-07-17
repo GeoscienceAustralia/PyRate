@@ -84,6 +84,7 @@ def remove_orbital_error(ifgs: Iterable, params: dict, headers: List[dict], prer
     # can use multiple procesing if write_to_disc=True
     if params[cf.ORBITAL_FIT_METHOD] == NETWORK_METHOD:
         mlooked_dataset = prepifg_helper.prepare_ifgs(
+
             ifg_paths,
             crop_opt=prepifg_helper.ALREADY_SAME_SIZE,
             xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
@@ -252,7 +253,7 @@ def network_orbital_correction(ifg_paths, degree, offset, params, m_ifgs: Option
     # pylint: disable=too-many-locals, too-many-arguments
 
     # all orbit corrections available?
-    if not isinstance(ifg_paths[0], Ifg):
+    if isinstance(ifg_paths[0], str):
         saved_orb_err_paths = [
             Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR, Path(ifg_path).with_suffix('.orbfit.npy').name)
             for ifg_path in ifg_paths
@@ -308,15 +309,16 @@ def network_orbital_correction(ifg_paths, degree, offset, params, m_ifgs: Option
         temp_ifg.close()
     else:
         ifg = ifgs[0]
-        ifg.open(readonly=True)
         dm = get_design_matrix(ifg, degree, offset=False)
 
     for i in ifg_paths:
         # open if not Ifg instance
-        ifg = Ifg(i)
-        ifg.open(readonly=False)
-        shared.nan_and_mm_convert(ifg, params)
-        _remove_network_orb_error(coefs, dm, ifg, ids, offset, params)
+        if isinstance(i, str):  # pragma: no cover
+            # are paths
+            i = Ifg(i)
+            i.open(readonly=False)
+            shared.nan_and_mm_convert(i, params)
+        _remove_network_orb_error(coefs, dm, i, ids, offset, params)
 
 
 def _remove_network_orb_error(coefs, dm, ifg, ids, offset, params):
