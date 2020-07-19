@@ -32,6 +32,7 @@ from numpy.linalg import pinv, inv
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.linalg import lstsq
 
+import pyrate.core.orbital
 from tests.common import small5_mock_ifgs, MockIfg
 from pyrate.core import algorithm, config as cf
 from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
@@ -725,7 +726,7 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
         self.params['rows'], self.params['cols'] = 2, 3
         process._update_params_with_tiles(self.params)
         process._create_ifg_dict(self.params)
-        process._orb_fit_calc(self.params)
+        pyrate.core.orbital.orb_fit_calc_wrapper(self.params)
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
             if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))

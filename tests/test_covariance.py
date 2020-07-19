@@ -26,6 +26,8 @@ from numpy import array
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
+import pyrate.core.ref_phs_est
+import pyrate.core.refpixel
 from pyrate.core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
 from pyrate import process, prepifg, conv2tif
 from pyrate.core.covariance import cvd, get_vcmt, RDist
@@ -207,13 +209,13 @@ class LegacyEqualityTest(unittest.TestCase):
             Path(i).chmod(0o664)  # assign write permission as conv2tif output is readonly
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         process._update_params_with_tiles(params)
-        process._ref_pixel_calc(params)
+        pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
         headers = [roipac.roipac_header(i, cls.params) for i in base_ifg_paths]
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
-        _, cls.ifgs = process._ref_phase_est_wrapper(params)
+        _, cls.ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = RDist(ifgs[0])()
         ifgs[0].close()

@@ -29,6 +29,8 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 import pyrate.core.orbital
+import pyrate.core.ref_phs_est
+import pyrate.core.refpixel
 import tests.common as common
 from pyrate.core import config as cf, mst, covariance, roipac
 from pyrate import process, prepifg, conv2tif
@@ -125,7 +127,7 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
-        refx, refy = process._ref_pixel_calc(params)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
         params[cf.REFX] = refx
         params[cf.REFY] = refy
         # Estimate and remove orbit errors
@@ -134,7 +136,7 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
         for ifg in ifgs:
             ifg.close()
         process._update_params_with_tiles(params)
-        _, ifgs = process._ref_phase_est_wrapper(params)
+        _, ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = covariance.RDist(ifgs[0])()
         ifgs[0].close()
@@ -218,7 +220,7 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
 
-        refx, refy = process._ref_pixel_calc(params)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
         params[cf.REFX] = refx
         params[cf.REFY] = refy
 
@@ -229,7 +231,7 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
             ifg.close()
 
         process._update_params_with_tiles(params)
-        _, ifgs = process._ref_phase_est_wrapper(params)
+        _, ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = covariance.RDist(ifgs[0])()
         ifgs[0].close()

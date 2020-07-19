@@ -17,15 +17,14 @@
 """
 This Python module implements a reference phase estimation algorithm.
 """
+import os
 from joblib import Parallel, delayed
 import numpy as np
 
-from pyrate.core import ifgconstants as ifc, config as cf
+from pyrate.core import ifgconstants as ifc, config as cf, mpiops, shared
 from pyrate.core.shared import joblib_log_level, nanmedian, Ifg
 from pyrate.core import mpiops
-
 from pyrate.core.logger import pyratelogger as log
-
 
 MASTER_PROCESS = 0
 
@@ -190,3 +189,54 @@ class ReferencePhaseError(Exception):
     Generic class for errors in reference phase estimation.
     """
     pass
+
+
+def ref_phase_est_wrapper(params):
+    """
+    Wrapper for reference phase estimation.
+    """
+    refpx, refpy = params[cf.REFX], params[cf.REFY]
+    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    log.info("Calculating reference phase")
+    if len(ifg_paths) < 2:
+        raise ReferencePhaseError(
+            "At least two interferograms required for reference phase correction ({len_ifg_paths} "
+            "provided).".format(len_ifg_paths=len(ifg_paths))
+        )
+
+    if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_REF_PHASE):
+        log.debug('Finished reference phase correction')
+        return
+
+    if params[cf.REF_EST_METHOD] == 1:
+        ref_phs = est_ref_phase_method1(ifg_paths, params)
+    elif params[cf.REF_EST_METHOD] == 2:
+        ref_phs = est_ref_phase_method2(ifg_paths, params, refpx, refpy)
+    else:
+        raise ReferencePhaseError("No such option, use '1' or '2'.")
+
+    # Save reference phase numpy arrays to disk.
+    ref_phs_file = os.path.join(params[cf.TMPDIR], 'ref_phs.npy')
+    if mpiops.rank == MASTER_PROCESS:
+        collected_ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
+        process_indices = mpiops.array_split(range(len(ifg_paths)))
+        collected_ref_phs[process_indices] = ref_phs
+        for r in range(1, mpiops.size):
+            process_indices = mpiops.array_split(range(len(ifg_paths)), r)
+            this_process_ref_phs = np.zeros(shape=len(process_indices),
+                                            dtype=np.float64)
+            mpiops.comm.Recv(this_process_ref_phs, source=r, tag=r)
+            collected_ref_phs[process_indices] = this_process_ref_phs
+        np.save(file=ref_phs_file, arr=collected_ref_phs)
+    else:
+        mpiops.comm.Send(ref_phs, dest=MASTER_PROCESS, tag=mpiops.rank)
+    log.debug('Finished reference phase correction')
+
+    # Preserve old return value so tests don't break.
+    if isinstance(ifg_paths[0], Ifg):
+        ifgs = ifg_paths
+    else:
+        ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
+    mpiops.comm.barrier()
+    shared.save_numpy_phase(ifg_paths, params)
+    return ref_phs, ifgs

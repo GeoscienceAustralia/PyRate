@@ -18,13 +18,15 @@ This Python module implements pixel-by-pixel rate
 (velocity) estimation using an iterative weighted least-squares
 stacking method.
 """
+import os
+
 import itertools
 
 from scipy.linalg import solve, cholesky, qr, inv
 from numpy import nan, isnan, sqrt, diag, delete, array, float32, size
 import numpy as np
 from joblib import Parallel, delayed
-from pyrate.core import config as cf
+from pyrate.core import config as cf, mpiops, shared
 from pyrate.core.shared import joblib_log_level
 from pyrate.core.logger import pyratelogger as log
 
@@ -204,3 +206,27 @@ def _stack_setup(ifgs, mst, params):
     rate = np.empty([rows, cols], dtype=float32)
     samples = np.empty([rows, cols], dtype=np.float32)
     return nsig, pthresh, cols, error, mst, obs, parallel, processes, rate, rows, samples, span
+
+
+def stack_calc_wrapper(params):
+    """
+    MPI wrapper for stacking calculation
+    """
+    tiles = params[cf.TILES]
+    preread_ifgs = params[cf.PREREAD_IFGS]
+    vcmt = params[cf.VCMT]
+    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    process_tiles = mpiops.array_split(tiles)
+    log.info('Calculating rate map from stacking')
+    output_dir = params[cf.TMPDIR]
+    for t in process_tiles:
+        log.info('Stacking of tile {}'.format(t.index))
+        ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
+        mst_grid_n = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
+        rate, error, samples = stack_rate_array(ifg_parts, params, vcmt, mst_grid_n)
+        # declare file names
+        np.save(file=os.path.join(output_dir, 'stack_rate_{}.npy'.format(t.index)), arr=rate)
+        np.save(file=os.path.join(output_dir, 'stack_error_{}.npy'.format(t.index)), arr=error)
+        np.save(file=os.path.join(output_dir, 'stack_samples_{}.npy'.format(t.index)), arr=samples)
+    mpiops.comm.barrier()
+    log.debug("Finished stack rate calc!")

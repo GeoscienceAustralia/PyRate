@@ -27,6 +27,8 @@ import unittest
 import numpy as np
 
 import pyrate.core.orbital
+import pyrate.core.ref_phs_est
+import pyrate.core.refpixel
 from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.ref_phs_est import ReferencePhaseError
 from pyrate.core.shared import CorrectionStatusError
@@ -111,10 +113,10 @@ class RefPhsTests(unittest.TestCase):
         self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs[:1]]
         for p in self.params[cf.INTERFEROGRAM_FILES]:
             p.sampled_path = p.converted_path
-        self.assertRaises(ReferencePhaseError, process._ref_phase_est_wrapper, self.params)
+        self.assertRaises(ReferencePhaseError, pyrate.core.ref_phs_est.ref_phase_est_wrapper, self.params)
 
     def test_metadata(self):
-        process._ref_phase_est_wrapper(self.params)
+        pyrate.core.ref_phs_est.ref_phase_est_wrapper(self.params)
         for ifg in self.ifgs:
             ifg.open()
             self.assertEqual(ifg.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE),
@@ -128,7 +130,7 @@ class RefPhsTests(unittest.TestCase):
             p.sampled_path = p.converted_path
 
         # correct reference phase for some of the ifgs
-        process._ref_phase_est_wrapper(self.params)
+        pyrate.core.ref_phs_est.ref_phase_est_wrapper(self.params)
         for ifg in self.ifgs:
             ifg.open()
 
@@ -138,7 +140,7 @@ class RefPhsTests(unittest.TestCase):
             p.sampled_path = p.converted_path
 
         # now it should raise exception if we want to correct refernece phase again on all of them
-        self.assertRaises(CorrectionStatusError, process._ref_phase_est_wrapper, self.params)
+        self.assertRaises(CorrectionStatusError, pyrate.core.ref_phs_est.ref_phase_est_wrapper, self.params)
         
 
 class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
@@ -167,7 +169,7 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = process._ref_pixel_calc(params)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
 
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
@@ -183,7 +185,7 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
         process._update_params_with_tiles(params)
-        cls.ref_phs, cls.ifgs = process._ref_phase_est_wrapper(params)
+        cls.ref_phs, cls.ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
 
     @classmethod
     def tearDownClass(cls):
@@ -264,7 +266,7 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = process._ref_pixel_calc(params)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
 
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
@@ -280,7 +282,7 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
         process._update_params_with_tiles(params)
-        cls.ref_phs, cls.ifgs = process._ref_phase_est_wrapper(params)
+        cls.ref_phs, cls.ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
 
         # end run_pyrate copy
 
@@ -359,7 +361,7 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = process._ref_pixel_calc(params)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
 
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
@@ -376,7 +378,7 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
         params['rows'], params['cols'] = 3, 2
         process._update_params_with_tiles(params)
 
-        cls.ref_phs, cls.ifgs = process._ref_phase_est_wrapper(params)
+        cls.ref_phs, cls.ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
 
     @classmethod
     def tearDownClass(cls):
@@ -452,7 +454,7 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = process._ref_pixel_calc(params)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
 
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
@@ -468,7 +470,7 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
         process._update_params_with_tiles(params)
-        cls.ref_phs, cls.ifgs = process._ref_phase_est_wrapper(params)
+        cls.ref_phs, cls.ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
 
     @classmethod
     def tearDownClass(cls):

@@ -19,21 +19,23 @@ of the interferometric reference pixel
 """
 import os
 from os.path import join
+from pathlib import Path
+from typing import Tuple
+
 from itertools import product
 
 import numpy as np
 from numpy import isnan, std, mean, sum as nsum
 from joblib import Parallel, delayed
 
-from osgeo import gdal
-
-import pyrate.core.config as cf
-from pyrate.core import ifgconstants as ifc
+from pyrate.core import ifgconstants as ifc, config as cf, mpiops
 from pyrate.core import mpiops
 from pyrate.core.shared import Ifg
 from pyrate.core.shared import joblib_log_level
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core import prepifg_helper
+
+MASTER_PROCESS = 0
 
 
 def update_refpix_metadata(ifg_paths, refx, refy, transform, params):
@@ -406,3 +408,66 @@ class RefPixelError(Exception):
     """
     Generic exception for reference pixel errors.
     """
+
+
+def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
+    """
+    Wrapper for reference pixel calculation
+    """
+    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    lon = params[cf.REFX]
+    lat = params[cf.REFY]
+
+    ifg = Ifg(ifg_paths[0])
+    ifg.open(readonly=True)
+    # assume all interferograms have same projection and will share the same transform
+    transform = ifg.dataset.GetGeoTransform()
+
+    ref_pixel_file = Path(params[cf.OUT_DIR]).joinpath(cf.REF_PIXEL_FILE)
+
+    if lon == -1 or lat == -1:
+
+        if ref_pixel_file.exists():
+            # read and return
+            refx, refy = np.load(ref_pixel_file)
+            log.info('Reusing pre-calculated ref-pixel values: ({}, {}) from file {}'.format(
+                refx, refy, ref_pixel_file.as_posix()))
+            log.warn("Reusing pre-calculated ref-pixel values!!!")
+            return refx, refy
+
+        log.info('Searching for best reference pixel location')
+
+        half_patch_size, thresh, grid = ref_pixel_setup(ifg_paths, params)
+        process_grid = mpiops.array_split(grid)
+        save_ref_pixel_blocks(process_grid, half_patch_size, ifg_paths, params)
+        mean_sds = _ref_pixel_mpi(process_grid, half_patch_size, ifg_paths, thresh, params)
+        mean_sds = mpiops.comm.gather(mean_sds, root=0)
+        if mpiops.rank == MASTER_PROCESS:
+            mean_sds = np.hstack(mean_sds)
+
+        refpixel_returned = mpiops.run_once(find_min_mean, mean_sds, grid)
+
+        if isinstance(refpixel_returned, ValueError):
+            raise RefPixelError(
+                "Reference pixel calculation returned an all nan slice!\n"
+                "Cannot continue downstream computation. Please change reference pixel algorithm used before "
+                "continuing.")
+        refy, refx = refpixel_returned   # row first means first value is latitude
+        log.info('Selected reference pixel coordinate (x, y): ({}, {})'.format(refx, refy))
+        lon, lat = convert_pixel_value_to_geographic_coordinate(refx, refy, transform)
+        log.info('Selected reference pixel coordinate (lon, lat): ({}, {})'.format(lon, lat))
+        np.save(file=ref_pixel_file, arr=[int(refx), int(refy)])
+
+    else:
+        log.info('Using reference pixel from config file (lon, lat): ({}, {})'.format(lon, lat))
+        log.warning("Ensure user supplied reference pixel values are in lon/lat")
+        refx, refy = convert_geographic_coordinate_to_pixel_value(lon, lat, transform)
+        np.save(file=ref_pixel_file, arr=[int(refx), int(refy)])
+        log.info('Converted reference pixel coordinate (x, y): ({}, {})'.format(refx, refy))
+
+    update_refpix_metadata(ifg_paths, refx, refy, transform, params)
+
+    log.debug("refpx, refpy: "+str(refx) + " " + str(refy))
+    ifg.close()
+    params[cf.REFX], params[cf.REFY] = int(refx), int(refy)
+    return int(refx), int(refy)

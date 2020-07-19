@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 from numpy import nan, mean, std, isnan
 
+import pyrate.core.refpixel
 from pyrate.core import config as cf
 from pyrate.core.refpixel import ref_pixel, _step, RefPixelError
 from pyrate.core import shared, ifgconstants as ifc
@@ -255,26 +256,26 @@ class LegacyEqualityTest(unittest.TestCase):
 
     def test_small_test_data_ref_pixel_lat_lon_provided(self):
         self.params[cf.REFX], self.params[cf.REFY] = 150.941666654, -34.218333314
-        refx, refy = process._ref_pixel_calc(self.params)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_pixel(self):
-        refx, refy = process._ref_pixel_calc(self.params)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_chipsize_15(self):
 
-        refx, refy = process._ref_pixel_calc(self.params_chipsize_15)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params_chipsize_15)
         self.assertEqual(refx, 7)
         self.assertEqual(refy, 7)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
     def test_metadata(self):
-        refx, refy = process._ref_pixel_calc(self.params_chipsize_15)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params_chipsize_15)
         for i in self.ifg_paths:
             ifg = shared.Ifg(i)
             ifg.open(readonly=True)
@@ -287,7 +288,7 @@ class LegacyEqualityTest(unittest.TestCase):
             ifg.close()
 
     def test_small_test_data_ref_all_1(self):
-        refx, refy = process._ref_pixel_calc(self.params_all_1s)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params_all_1s)
         self.assertAlmostEqual(0.7, self.params_all_1s[cf.REF_MIN_FRAC])
         self.assertEqual(1, self.params_all_1s[cf.REFNX])
         self.assertEqual(1, self.params_all_1s[cf.REFNY])
@@ -323,35 +324,35 @@ class LegacyEqualityTestMultiprocessParallel(unittest.TestCase):
         shutil.rmtree(self.params[cf.OUT_DIR])
 
     def test_small_test_data_ref_pixel(self):
-        refx, refy = process._ref_pixel_calc(self.params)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.8, self.params[cf.REF_MIN_FRAC])
 
     def test_more_small_test_data_ref_pixel(self):
 
-        refx, refy = process._ref_pixel_calc(self.params_alt_ref_frac)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params_alt_ref_frac)
         self.assertEqual(refx, 38)
         self.assertEqual(refy, 58)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_pixel_all_2(self):
 
-        refx, refy = process._ref_pixel_calc(self.params_all_2s)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params_all_2s)
         self.assertEqual(refx, 25)
         self.assertEqual(refy, 2)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_chipsize_15(self):
 
-        refx, refy = process._ref_pixel_calc(self.params_chipsize_15)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params_chipsize_15)
         self.assertEqual(refx, 7)
         self.assertEqual(refy, 7)
         self.assertAlmostEqual(0.5, self.params_alt_ref_frac[cf.REF_MIN_FRAC])
 
     def test_small_test_data_ref_all_1(self):
 
-        refx, refy = process._ref_pixel_calc(self.params_all_1s)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params_all_1s)
 
         self.assertAlmostEqual(0.7, self.params_all_1s[cf.REF_MIN_FRAC])
         self.assertEqual(1, self.params_all_1s[cf.REFNX])

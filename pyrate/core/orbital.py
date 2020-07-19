@@ -24,14 +24,13 @@ from numpy import empty, isnan, reshape, float32, squeeze
 from numpy import dot, vstack, zeros, meshgrid
 import numpy as np
 from numpy.linalg import pinv
-# from joblib import Parallel, delayed
 from scipy.linalg import lstsq
 
 from pyrate.core.algorithm import master_slave_ids, get_all_epochs
-from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, mst
+from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, mst, mpiops
 from pyrate.core.shared import nanmedian, Ifg
-
 from pyrate.core.logger import pyratelogger as log
+from pyrate.prepifg import find_header
 # Orbital correction tasks
 #
 # TODO: options for multilooking
@@ -58,6 +57,8 @@ from pyrate.core.logger import pyratelogger as log
 # smaller DMs to prevent unwanted cols being inserted. This is why some funcs
 # appear to ignore the offset parameter in the networked method. Network DM
 # offsets are cols of 1s in a diagonal line on the LHS of the sparse array.
+
+MASTER_PROCESS = 0
 
 # ORBITAL ERROR correction constants
 INDEPENDENT_METHOD = cf.INDEPENDENT_METHOD
@@ -464,3 +465,40 @@ class OrbitalError(Exception):
     """
     Generic class for errors in orbital correction.
     """
+
+
+def orb_fit_calc_wrapper(params: dict) -> None:
+    """
+    MPI wrapper for orbital fit correction
+    """
+    preread_ifgs = params[cf.PREREAD_IFGS]
+    multi_paths = params[cf.INTERFEROGRAM_FILES]
+    if not params[cf.ORBITAL_FIT]:
+        log.info('Orbital correction not required!')
+        print('Orbital correction not required!')
+        return
+    log.info('Calculating orbital correction')
+
+    ifg_paths = [p.sampled_path for p in multi_paths]
+    if preread_ifgs:
+        # perform some general error/sanity checks
+        log.debug('Checking Orbital error correction status')
+        if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_ORBITAL_ERROR):
+            log.debug('Orbital error correction not required as all ifgs are already corrected!')
+            return  # return if True condition returned
+
+    if params[cf.ORBITAL_FIT_METHOD] == 1:
+        prcs_ifgs = mpiops.array_split(ifg_paths)
+        remove_orbital_error(prcs_ifgs, params, preread_ifgs)
+    else:
+        # Here we do all the multilooking in one process, but in memory
+        # can use multiple processes if we write data to disc during
+        # remove_orbital_error step
+        # A performance comparison should be made for saving multilooked
+        # files on disc vs in memory single process multilooking
+        if mpiops.rank == MASTER_PROCESS:
+            headers = [find_header(p, params) for p in multi_paths]
+            remove_orbital_error(ifg_paths, params, headers, preread_ifgs=preread_ifgs)
+    mpiops.comm.barrier()
+    shared.save_numpy_phase(ifg_paths, params)
+    log.debug('Finished Orbital error correction')

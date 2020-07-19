@@ -10,13 +10,7 @@ from tests.common import (
     TRAVIS,
     PYTHON3P6,
     PYTHON3P7,
-    GDAL_VERSION
 )
-# python3.7 and gdal3.0.4
-REGRESSION = PYTHON3P7 and (GDAL_VERSION == '3.0.4')
-# python3.7 and gdal3.0.2
-REGRESSION2 = PYTHON3P7 and (GDAL_VERSION == '3.0.2')
-
 
 @pytest.fixture(params=[1, 2, 3, 4])
 def local_crop(request):
