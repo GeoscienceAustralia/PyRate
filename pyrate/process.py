@@ -106,7 +106,7 @@ def __save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, proce
     return ifgs_dict
 
 
-def __copy_mlooked(params):
+def _copy_mlooked(params):
     log.info("copying mlooked files into tempdir for manipulation")
     mpaths = params[cf.INTERFEROGRAM_FILES]
     process_mpaths = mpiops.array_split(mpaths)
@@ -131,7 +131,7 @@ def main(params):
         params[cf.PARALLEL] = False
 
     # Make a copy of the multi-looked files for manipulation during process steps
-    __copy_mlooked(params)
+    _copy_mlooked(params)
 
     return process_ifgs(params)
 

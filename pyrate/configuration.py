@@ -24,7 +24,7 @@ from pyrate.constants import NO_OF_PARALLEL_PROCESSES
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
 from pyrate.core.shared import extract_epochs_from_filename, InputTypes
-from pyrate.core.config import parse_namelist, ConfigException, ORB_ERROR_DIR
+from pyrate.core.config import parse_namelist, ConfigException, ORB_ERROR_DIR, TEMP_MLOOKED_DIR
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
@@ -108,6 +108,7 @@ class MultiplePaths:
         st += """
             converted_path = """ + self.converted_path+""" 
             sampled_path = """ + self.sampled_path+"""    
+            tmp_sampled_path = """ + self.tmp_sampled_path+"""
             """
         return st
 
@@ -185,8 +186,14 @@ class Configuration:
             self.tmpdir = Path(self.tmpdir)
 
         self.tmpdir.mkdir(parents=True, exist_ok=True)
+
+        # create orbfit error dir
         self.orb_error_dir = Path(self.outdir).joinpath(ORB_ERROR_DIR)
         self.orb_error_dir.mkdir(parents=True, exist_ok=True)
+
+        # create temp multilooked files dir
+        self.temp_mlooked_dir = Path(self.outdir).joinpath(TEMP_MLOOKED_DIR)
+        self.temp_mlooked_dir.mkdir(parents=True, exist_ok=True)
 
         # var no longer used
         self.APS_ELEVATION_EXT = None
@@ -221,8 +228,8 @@ class Configuration:
         val = self.__getattribute__(attr)
         files = parse_namelist(val)
         return [
-            MultiplePaths(self.outdir, p, self.ifglksx, self.ifgcropopt, input_type=input_type, tempdir=self.tmpdir)
-            for p in files
+            MultiplePaths(self.outdir, p, self.ifglksx, self.ifgcropopt, input_type=input_type,
+                          tempdir=self.temp_mlooked_dir) for p in files
         ]
 
 

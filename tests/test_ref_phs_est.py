@@ -93,6 +93,7 @@ class RefPhsTests(unittest.TestCase):
         self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs]
         for p in self.params[cf.INTERFEROGRAM_FILES]:
             p.sampled_path = p.converted_path
+            p.tmp_sampled_path = p.sampled_path
         for ifg in self.ifgs:
             ifg.close()
 
@@ -113,6 +114,7 @@ class RefPhsTests(unittest.TestCase):
         self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs[:1]]
         for p in self.params[cf.INTERFEROGRAM_FILES]:
             p.sampled_path = p.converted_path
+            p.tmp_sampled_path = p.sampled_path
         self.assertRaises(ReferencePhaseError, pyrate.core.ref_phs_est.ref_phase_est_wrapper, self.params)
 
     def test_metadata(self):
@@ -128,6 +130,7 @@ class RefPhsTests(unittest.TestCase):
         self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs[:5]]
         for p in self.params[cf.INTERFEROGRAM_FILES]:
             p.sampled_path = p.converted_path
+            p.tmp_sampled_path = p.sampled_path
 
         # correct reference phase for some of the ifgs
         pyrate.core.ref_phs_est.ref_phase_est_wrapper(self.params)
@@ -138,6 +141,7 @@ class RefPhsTests(unittest.TestCase):
         self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs]
         for p in self.params[cf.INTERFEROGRAM_FILES]:
             p.sampled_path = p.converted_path
+            p.tmp_sampled_path = p.sampled_path
 
         # now it should raise exception if we want to correct refernece phase again on all of them
         self.assertRaises(CorrectionStatusError, pyrate.core.ref_phs_est.ref_phase_est_wrapper, self.params)
@@ -182,6 +186,8 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
         for ifg in ifgs:
             ifg.close()
 
+        for p in params[cf.INTERFEROGRAM_FILES]:
+            p.tmp_sampled_path = p.sampled_path
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
         process._update_params_with_tiles(params)
@@ -278,7 +284,8 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
 
         for i in ifgs:
             i.close()
-
+        for p in params[cf.INTERFEROGRAM_FILES]:
+            p.tmp_sampled_path = p.sampled_path
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
         process._update_params_with_tiles(params)
@@ -373,7 +380,8 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
         
         for i in ifgs:
             i.close()
-
+        for p in params[cf.INTERFEROGRAM_FILES]:
+            p.tmp_sampled_path = p.sampled_path
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
         process._update_params_with_tiles(params)
@@ -467,6 +475,8 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
         for i in ifgs:
             i.close()
 
+        for p in params[cf.INTERFEROGRAM_FILES]:
+            p.tmp_sampled_path = p.sampled_path
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
         process._update_params_with_tiles(params)

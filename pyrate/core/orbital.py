@@ -479,7 +479,7 @@ def orb_fit_calc_wrapper(params: dict) -> None:
         return
     log.info('Calculating orbital correction')
 
-    ifg_paths = [p.sampled_path for p in multi_paths]
+    ifg_paths = [p.tmp_sampled_path for p in multi_paths]
     if preread_ifgs:
         # perform some general error/sanity checks
         log.debug('Checking Orbital error correction status')

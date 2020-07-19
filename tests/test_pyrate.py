@@ -142,6 +142,7 @@ class PyRateTests(unittest.TestCase):
             params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(cls.BASE_OUT_DIR, p) for p in paths]
             for p in params[cf.INTERFEROGRAM_FILES]:  # cheat
                 p.sampled_path = p.converted_path
+                p.tmp_sampled_path = p.converted_path
             params["rows"], params["cols"] = 2, 2
             process.process_ifgs(params)
 
@@ -230,6 +231,8 @@ class ParallelPyRateTests(unittest.TestCase):
         tiles = pyrate.core.shared.get_tiles(cls.sampled_paths[0], rows, cols)
         ifgs = common.small_data_setup()
         params[cf.INTERFEROGRAM_FILES] = multi_paths
+        for p in params[cf.INTERFEROGRAM_FILES]:  # hack
+            p.tmp_sampled_path = p.sampled_path
         process.process_ifgs(params)
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
@@ -254,6 +257,8 @@ class ParallelPyRateTests(unittest.TestCase):
         conv2tif.main(params)
         prepifg.main(orig_params)
         params[cf.INTERFEROGRAM_FILES] = multi_paths
+        for p in params[cf.INTERFEROGRAM_FILES]:  # hack
+            p.tmp_sampled_path = p.sampled_path
         params[cf.REFX], params[cf.REFY] = -1, -1
         process.process_ifgs(params)
         cls.refpixel, cls.maxvar, cls.vcmt = \

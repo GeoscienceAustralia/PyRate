@@ -132,6 +132,10 @@ class LegacyEqualityTest(unittest.TestCase):
         mst_grid = tests.common.mst_calculation(dest_paths, params)
 
         refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
+
+        for p in params[cf.INTERFEROGRAM_FILES]:
+            p.tmp_sampled_path = p.sampled_path
+
         params[cf.REFX] = refx
         params[cf.REFY] = refy
 

@@ -334,7 +334,7 @@ def maxvar_vcm_calc_wrapper(params):
     MPI wrapper for maxvar and vcmt computation
     """
     preread_ifgs = params[cf.PREREAD_IFGS]
-    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     log.info('Calculating the temporal variance-covariance matrix')
     process_indices = mpiops.array_split(range(len(ifg_paths)))
 

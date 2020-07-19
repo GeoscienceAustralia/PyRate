@@ -55,6 +55,7 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, roipac_or_gamma_conf):
     params[cf.INTERFEROGRAM_FILES].pop()
     process._update_params_with_tiles(params)
     process._create_ifg_dict(params=params)
+    process._copy_mlooked(params=params)
     pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
     pyrate.core.orbital.orb_fit_calc_wrapper(params)
     pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)

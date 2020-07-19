@@ -128,6 +128,10 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
+
+        for p in params[cf.INTERFEROGRAM_FILES]:
+            p.tmp_sampled_path = p.sampled_path
+
         params[cf.REFX] = refx
         params[cf.REFY] = refy
         # Estimate and remove orbit errors
@@ -221,6 +225,8 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
         mst_grid = common.mst_calculation(dest_paths, params)
 
         refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
+        for p in params[cf.INTERFEROGRAM_FILES]:
+            p.tmp_sampled_path = p.sampled_path
         params[cf.REFX] = refx
         params[cf.REFY] = refy
 

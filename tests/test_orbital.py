@@ -724,8 +724,10 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
 
         self.params[cf.INTERFEROGRAM_FILES] = multi_paths
         self.params['rows'], self.params['cols'] = 2, 3
+        Path(self.BASE_DIR).joinpath('tmpdir').mkdir(exist_ok=True, parents=True)
         process._update_params_with_tiles(self.params)
         process._create_ifg_dict(self.params)
+        process._copy_mlooked(self.params)
         pyrate.core.orbital.orb_fit_calc_wrapper(self.params)
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
@@ -734,12 +736,12 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
 
         count = 0
         for i, f in enumerate(onlyfiles):
-            ifg_data = np.genfromtxt(os.path.join(
-                SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=',')
-            for k, j in enumerate(self.ifg_paths):
+            ifg_data = np.genfromtxt(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=',')
+            for k, j in enumerate([m.tmp_sampled_path for m in multi_paths]):
+                print(k, j)
                 ifg = Ifg(j)
                 ifg.open()
-                if os.path.basename(j).split('_unw.')[0] == os.path.basename(f).split(
+                if os.path.basename(j).split('_unw_1rlks_1cr.')[0] == os.path.basename(f).split(
                         '_orb_planar_1lks_method1_')[1].split('.')[0]:
                     count += 1
                     # all numbers equal
@@ -755,6 +757,9 @@ class LegacyComparisonTestsOrbfitMethod1(unittest.TestCase):
 
         # ensure that we have expected number of matches
         self.assertEqual(count, len(self.ifg_paths))
+
+    def test_orbfit_treats_process_inputs_as_read_only(self):
+        pass
 
 
 class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):

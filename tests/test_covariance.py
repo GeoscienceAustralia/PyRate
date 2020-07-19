@@ -215,6 +215,9 @@ class LegacyEqualityTest(unittest.TestCase):
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
+
+        for p in params[cf.INTERFEROGRAM_FILES]:  # hack
+            p.tmp_sampled_path = p.sampled_path
         _, cls.ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = RDist(ifgs[0])()

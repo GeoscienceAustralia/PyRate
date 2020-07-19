@@ -298,6 +298,7 @@ INT_KEYS = [APS_CORRECTION, APS_METHOD]
 # filenames reused in  many parts of the program
 REF_PIXEL_FILE = 'ref_pixel.npy'
 ORB_ERROR_DIR = 'orb_error'
+TEMP_MLOOKED_DIR = 'temp_mlooked'
 
 
 def get_config_params(path: str) -> Dict:
