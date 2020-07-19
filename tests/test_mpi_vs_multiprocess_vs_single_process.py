@@ -67,7 +67,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(REGRESSION or PYTHON3P6, reason="Only run in REGRESSION2 and Python3.8 env")
+@pytest.mark.skipif(REGRESSION or PYTHON3P6 or PYTHON3P8, reason="Only run in REGRESSION2 and Python3.8 env")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
     if np.random.randint(0, 1000) > 149:  # skip 85% of tests randomly

@@ -24,7 +24,7 @@ from pyrate.constants import NO_OF_PARALLEL_PROCESSES
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
 from pyrate.core.shared import extract_epochs_from_filename, InputTypes
-from pyrate.core.config import parse_namelist, ConfigException
+from pyrate.core.config import parse_namelist, ConfigException, ORB_ERROR_DIR
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
@@ -185,6 +185,8 @@ class Configuration:
             self.tmpdir = Path(self.tmpdir)
 
         self.tmpdir.mkdir(parents=True, exist_ok=True)
+        self.orb_error_dir = Path(self.outdir).joinpath(ORB_ERROR_DIR)
+        self.orb_error_dir.mkdir(parents=True, exist_ok=True)
 
         # var no longer used
         self.APS_ELEVATION_EXT = None
