@@ -216,14 +216,19 @@ def small_data_setup_gamma_unws():
 
 def small5_ifgs():
     """Convenience func to return a subset of 5 linked Ifgs from the testdata"""
+    new_data_paths = small5_ifg_paths()
+
+    return [Ifg(p) for p in new_data_paths]
+
+
+def small5_ifg_paths():
     BASE_DIR = tempfile.mkdtemp()
     data_paths = [os.path.join(SML_TEST_TIF, p) for p in IFMS5.split()]
     new_data_paths = [os.path.join(BASE_DIR, os.path.basename(d))
                       for d in data_paths]
     for d in data_paths:
         shutil.copy(d, os.path.join(BASE_DIR, os.path.basename(d)))
-
-    return [Ifg(p) for p in new_data_paths]
+    return new_data_paths
 
 
 def small5_mock_ifgs(xs=3, ys=4):

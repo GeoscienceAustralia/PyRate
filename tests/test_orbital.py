@@ -39,11 +39,12 @@ from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
 from pyrate.core.orbital import OrbitalError, _orbital_correction
 from pyrate.core.orbital import get_design_matrix, get_network_design_matrix
 from pyrate.core.orbital import _get_num_params, remove_orbital_error
-from pyrate.core.orbital import network_orbital_correction
 from pyrate.core.shared import Ifg, mkdir_p
 from pyrate.core.shared import nanmedian
 from pyrate.core import roipac
-from pyrate.configuration import Configuration
+from pyrate.process import _create_ifg_dict
+from pyrate.configuration import Configuration, MultiplePaths
+from pyrate.core.config import ORB_ERROR_DIR
 from tests import common
 from tests.common import TEST_CONF_ROIPAC, IFMS16
 from tests.common import SML_TEST_LEGACY_ORBITAL_DIR
@@ -98,7 +99,6 @@ class SingleDesignMatrixTests(unittest.TestCase):
         exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, offset)
         assert_array_almost_equal(act, exp)
 
-
     # tests for quadratic model
 
     def test_create_quadratic_dm(self):
@@ -123,7 +123,6 @@ class SingleDesignMatrixTests(unittest.TestCase):
         self.assertEqual(act.shape, (self.m.num_cells, 6))
         exp = unittest_dm(self.m, INDEPENDENT_METHOD, PART_CUBIC, offset)
         assert_array_equal(act, exp)
-
 
     def test_create_partcubic_dm_offsets(self):
         offset = True
@@ -190,8 +189,7 @@ class IndependentCorrectionTests(unittest.TestCase):
         dm2 = get_design_matrix(ifg, deg, offset)
 
         if offset:
-            fullorb = np.reshape(np.dot(dm2[:, :-1], orbparams[:-1]),
-                             ifg.phase_data.shape)
+            fullorb = np.reshape(np.dot(dm2[:, :-1], orbparams[:-1]), ifg.phase_data.shape)
         else:
             fullorb = np.reshape(np.dot(dm2, orbparams), ifg.phase_data.shape)
 
@@ -776,34 +774,29 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
         self.params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 1
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 1
+        self.params[cf.OUT_DIR] = self.BASE_DIR
         data_paths = [os.path.join(SML_TEST_TIF, p) for p in small_ifg_file_list()]
         self.new_data_paths = [os.path.join(self.BASE_DIR, os.path.basename(d)) for d in data_paths]
+        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(out_dir=self.BASE_DIR, file_name=d) for d in data_paths]
+        for p in self.params[cf.INTERFEROGRAM_FILES]:
+            p.sampled_path = p.converted_path
+
+        # copy the files from the dir into temp dir
         for d in data_paths:
             d_copy = os.path.join(self.BASE_DIR, os.path.basename(d))
             shutil.copy(d, d_copy)
             os.chmod(d_copy, 0o660)
 
-        self.ifgs = small_data_setup(datafiles=self.new_data_paths)
-        self.headers = [roipac.roipac_header(i.data_path, self.params) for i in self.ifgs]
-
-        for i in self.ifgs:
-            if not i.is_open:
-                i.open()
-            if not i.nan_converted:
-                i.convert_to_nans()
-
-            if not i.mm_converted:
-                i.convert_to_mm()
-                i.write_modified_phase()
+        self.headers = [roipac.roipac_header(i, self.params) for i in self.new_data_paths]
+        self.orb_error_dir = Path(self.params[cf.OUT_DIR]).joinpath(ORB_ERROR_DIR)
+        self.orb_error_dir.mkdir(parents=True, exist_ok=True)
 
     def tearDown(self):
-        for i in self.ifgs:
-            i.close()
         shutil.rmtree(self.BASE_DIR)
 
     def test_orbital_correction_legacy_equality_orbfit_method_2(self):
-        degree = self.params[cf.ORBITAL_FIT_DEGREE]
-        network_orbital_correction(self.ifgs, degree, True, self.params)
+        _create_ifg_dict(self.params)
+        remove_orbital_error(self.new_data_paths, self.params, self.headers, preread_ifgs=self.params[cf.PREREAD_IFGS])
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
                      if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))
@@ -813,19 +806,20 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
         for i, f in enumerate(onlyfiles):
             legacy_phase_data = np.genfromtxt(os.path.join(
                 SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=',')
-            for k, j in enumerate(self.ifgs):
-                if os.path.basename(j.data_path).split('_unw.')[0] == \
+            for k, j in enumerate(self.new_data_paths):
+                if os.path.basename(j).split('_unw.')[0] == \
                         os.path.basename(f).split('_method2_')[1].split('.')[0]:
                     count += 1
+                    ifg = Ifg(j)
+                    ifg.open()
                     # all numbers equal
                     # Note this changed as the nodata mask in the gdal_python.gdal_average changed to nan from 0
-                    # np.testing.assert_array_almost_equal(legacy_phase_data, j.phase_data, decimal=3)
-
+                    # np.testing.assert_array_almost_equal(legacy_phase_data, ifg.phase_data, decimal=3)
                     # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(legacy_phase_data)), np.sum(np.isnan(j.phase_data)))
+                    self.assertEqual(np.sum(np.isnan(legacy_phase_data)), np.sum(np.isnan(ifg.phase_data)))
 
         # ensure that we have expected number of matches
-        self.assertEqual(count, len(self.ifgs))
+        self.assertEqual(count, len(self.new_data_paths))
 
     def test_orbital_error_method2_dummy(self):
         """
@@ -835,8 +829,8 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
         self.params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
-
-        remove_orbital_error(self.ifgs, self.params, self.headers)
+        _create_ifg_dict(self.params)
+        remove_orbital_error(self.new_data_paths, self.params, self.headers, preread_ifgs=self.params[cf.PREREAD_IFGS])
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
                      if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))
@@ -846,22 +840,21 @@ class LegacyComparisonTestsOrbfitMethod2(unittest.TestCase):
         for i, f in enumerate(onlyfiles):
             legacy_phase_data = np.genfromtxt(os.path.join(
                 SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=',')
-            for k, j in enumerate(self.ifgs):
-                if os.path.basename(j.data_path).split('_unw.')[0] == \
+            for k, j in enumerate(self.new_data_paths):
+                if os.path.basename(j).split('_unw.')[0] == \
                         os.path.basename(f).split(
                             '_method2_')[1].split('.')[0]:
                     count += 1
+                    ifg = Ifg(j)
+                    ifg.open()
                     # all numbers equal
-                    # np.testing.assert_array_almost_equal(legacy_phase_data, j.phase_data, decimal=3)
-
+                    # Note this changed as the nodata mask in the gdal_python.gdal_average changed to nan from 0
+                    # np.testing.assert_array_almost_equal(legacy_phase_data, ifg.phase_data, decimal=3)
                     # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(legacy_phase_data)), np.sum(np.isnan(j.phase_data)))
+                    self.assertEqual(np.sum(np.isnan(legacy_phase_data)), np.sum(np.isnan(ifg.phase_data)))
 
         # ensure that we have expected number of matches
-        self.assertEqual(count, len(self.ifgs))
+        self.assertEqual(count, len(self.new_data_paths))
 
 # TODO: Write tests for various looks and degree combinations
 # TODO: write mpi tests
-
-if __name__ == "__main__":
-    unittest.main()

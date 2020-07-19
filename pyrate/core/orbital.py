@@ -198,7 +198,6 @@ def independent_orbital_correction(ifg, degree, offset, params):
         log.info(f'Reusing already computed orbital fit correction for {ifg.data_path}')
         orbital_correction = np.load(file=orbfit_correction_on_disc)
     else:
-        print('should be here in independe cprrection=================================')
         shared.nan_and_mm_convert(ifg, params)
         # vectorise, keeping NODATA
         vphase = reshape(ifg.phase_data, ifg.num_cells)
