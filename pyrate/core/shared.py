@@ -285,8 +285,8 @@ class Ifg(RasterBase):
         RasterBase.__init__(self, path)
         self._phase_band = None
         self._phase_data = None
-        self.master = None
-        self.slave = None
+        self.main = None
+        self.subordinate = None
         self.nan_converted = False
         self.mm_converted = False
         self.meta_data = None
@@ -315,7 +315,7 @@ class Ifg(RasterBase):
 
     def _init_dates(self):
         """
-        Determine master and slave dates, and interferogram timespan
+        Determine main and subordinate dates, and interferogram timespan
         """
         def _to_date(datestr):
             year, month, day = [int(i) for i in datestr.split('-')]
@@ -325,10 +325,10 @@ class Ifg(RasterBase):
         datestrs = [md[k] for k in [ifc.MASTER_DATE, ifc.SLAVE_DATE]]
 
         if all(datestrs):
-            self.master, self.slave = [_to_date(s) for s in datestrs]
-            self.time_span = (self.slave - self.master).days/ifc.DAYS_PER_YEAR
+            self.main, self.subordinate = [_to_date(s) for s in datestrs]
+            self.time_span = (self.subordinate - self.main).days/ifc.DAYS_PER_YEAR
         else:
-            msg = 'Missing master and/or slave date in %s' % self.data_path
+            msg = 'Missing main and/or subordinate date in %s' % self.data_path
             raise IfgException(msg)
 
     def convert_to_nans(self):
@@ -506,8 +506,8 @@ class IfgPart(object):
         if ifg_dict is not None:  # should be used with MPI
             ifg = ifg_dict[ifg_or_path]
             self.nan_fraction = ifg.nan_fraction
-            self.master = ifg.master
-            self.slave = ifg.slave
+            self.main = ifg.main
+            self.subordinate = ifg.subordinate
             self.time_span = ifg.time_span
             phase_file = 'phase_data_{}_{}.npy'.format(basename(ifg_or_path).split('.')[0], tile.index)
             self.phase_data = np.load(join(params[cf.TMPDIR], phase_file))
@@ -520,8 +520,8 @@ class IfgPart(object):
                 ifg = Ifg(ifg_or_path)
             self.phase_data = None
             self.nan_fraction = None
-            self.master = None
-            self.slave = None
+            self.main = None
+            self.subordinate = None
             self.time_span = None
         if isinstance(ifg, Ifg):
             self.read_required(ifg)
@@ -536,8 +536,8 @@ class IfgPart(object):
         self.phase_data = ifg.phase_data[self.r_start:self.r_end,
                                          self.c_start:self.c_end]
         self.nan_fraction = ifg.nan_fraction
-        self.master = ifg.master
-        self.slave = ifg.slave
+        self.main = ifg.main
+        self.subordinate = ifg.subordinate
         self.time_span = ifg.time_span
         ifg.phase_data = None
         ifg.close()  # close base ifg
@@ -1138,12 +1138,12 @@ class PrereadIfg():
     """
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, path, nan_fraction, master, slave, time_span,
+    def __init__(self, path, nan_fraction, main, subordinate, time_span,
                  nrows, ncols, metadata):
         self.path = path
         self.nan_fraction = nan_fraction
-        self.master = master
-        self.slave = slave
+        self.main = main
+        self.subordinate = subordinate
         self.time_span = time_span
         self.nrows = nrows
         self.ncols = ncols

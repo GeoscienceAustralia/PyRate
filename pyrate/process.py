@@ -68,8 +68,8 @@ def _create_ifg_dict(dest_tifs, params):
         ifg = shared._prep_ifg(d, params)
         ifgs_dict[d] = PrereadIfg(path=d,
                                   nan_fraction=ifg.nan_fraction,
-                                  master=ifg.master,
-                                  slave=ifg.slave,
+                                  main=ifg.main,
+                                  subordinate=ifg.subordinate,
                                   time_span=ifg.time_span,
                                   nrows=ifg.nrows,
                                   ncols=ifg.ncols,

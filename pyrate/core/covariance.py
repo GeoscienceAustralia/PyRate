@@ -29,7 +29,7 @@ from scipy.optimize import fmin
 
 from pyrate.core import shared, ifgconstants as ifc, config as cf
 from pyrate.core.shared import PrereadIfg
-from pyrate.core.algorithm import master_slave_ids
+from pyrate.core.algorithm import main_subordinate_ids
 from pyrate.core.logger import pyratelogger as log
 
 # pylint: disable=too-many-arguments
@@ -279,9 +279,9 @@ def get_vcmt(ifgs, maxvar):
     evaluated according to sig_i * sig_j * C_ij where i and j are two
     interferograms and C is a matrix of coefficients:
 
-    C = 1 if the master and slave epochs of i and j are equal
-    C = 0.5 if have i and j share either a common master or slave epoch
-    C = -0.5 if the master of i or j equals the slave of the other
+    C = 1 if the main and subordinate epochs of i and j are equal
+    C = 0.5 if have i and j share either a common main or subordinate epoch
+    C = -0.5 if the main of i or j equals the subordinate of the other
     C = 0 otherwise
 
     :param list ifgs: A list of pyrate.shared.Ifg class objects.
@@ -292,8 +292,8 @@ def get_vcmt(ifgs, maxvar):
     :rtype: ndarray
     """
     # pylint: disable=too-many-locals
-    # c=0.5 for common master or slave; c=-0.5 if master
-    # of one matches slave of another
+    # c=0.5 for common main or subordinate; c=-0.5 if main
+    # of one matches subordinate of another
 
     if isinstance(ifgs, dict):
         from collections import OrderedDict
@@ -305,14 +305,14 @@ def get_vcmt(ifgs, maxvar):
     nifgs = len(ifgs)
     vcm_pat = zeros((nifgs, nifgs))
 
-    dates = [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
-    ids = master_slave_ids(dates)
+    dates = [ifg.main for ifg in ifgs] + [ifg.subordinate for ifg in ifgs]
+    ids = main_subordinate_ids(dates)
 
     for i, ifg in enumerate(ifgs):
-        mas1, slv1 = ids[ifg.master], ids[ifg.slave]
+        mas1, slv1 = ids[ifg.main], ids[ifg.subordinate]
 
         for j, ifg2 in enumerate(ifgs):
-            mas2, slv2 = ids[ifg2.master], ids[ifg2.slave]
+            mas2, slv2 = ids[ifg2.main], ids[ifg2.subordinate]
             if mas1 == mas2 or slv1 == slv2:
                 vcm_pat[i, j] = 0.5
 

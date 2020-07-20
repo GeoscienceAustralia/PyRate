@@ -244,8 +244,8 @@ class MockIfg(object):
         to the source interferogram for smaller test datasets).
         """
         self.dataset = ifg.dataset
-        self.master = ifg.master
-        self.slave = ifg.slave
+        self.main = ifg.main
+        self.subordinate = ifg.subordinate
         self.data_path = ifg.data_path
         self.nrows = ysize
         self.ncols = xsize
@@ -259,7 +259,7 @@ class MockIfg(object):
         self.is_open = False
 
     def __repr__(self, *args, **kwargs):
-        return 'MockIfg: %s -> %s' % (self.master, self.slave)
+        return 'MockIfg: %s -> %s' % (self.main, self.subordinate)
 
     def open(self):
         # TODO: could move some of the init code here to mimic Ifgs

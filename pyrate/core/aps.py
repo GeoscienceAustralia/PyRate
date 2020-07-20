@@ -151,9 +151,9 @@ def _ts_to_ifgs(tsincr, preread_ifgs):
     log.debug('Reconstructing interferometric observations from time series')
     ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
     _, n = get_epochs(ifgs)
-    index_master, index_slave = n[:len(ifgs)], n[len(ifgs):]
+    index_main, index_subordinate = n[:len(ifgs)], n[len(ifgs):]
     for i, ifg in enumerate(ifgs):
-        phase = np.sum(tsincr[:, :, index_master[i]: index_slave[i]], axis=2)
+        phase = np.sum(tsincr[:, :, index_main[i]: index_subordinate[i]], axis=2)
         _save_aps_corrected_phase(ifg.path, phase)
 
 

@@ -231,9 +231,9 @@ class HeaderParsingTests(unittest.TestCase):
         self.assertIn(roipac.TIME_SPAN_YEAR, hdrs.keys())
 
         # check time span calc
-        master = date(2006, 6, 19)
-        slave = date(2006, 10, 2)
-        diff = (slave - master).days / ifc.DAYS_PER_YEAR
+        main = date(2006, 6, 19)
+        subordinate = date(2006, 10, 2)
+        diff = (subordinate - main).days / ifc.DAYS_PER_YEAR
         self.assertEqual(diff, hdrs[roipac.TIME_SPAN_YEAR])
 
     # long format header tests

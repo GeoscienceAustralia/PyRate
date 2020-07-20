@@ -143,12 +143,12 @@ def parse_header(hdr_file):
     else:
         subset[ifc.PYRATE_WAVELENGTH_METRES] = headers[WAVELENGTH]
 
-        # grab master/slave dates from header, or the filename
+        # grab main/subordinate dates from header, or the filename
         has_dates = True if DATE in headers and DATE12 in headers else False
         dates = headers[DATE12] if has_dates else _parse_dates_from(hdr_file)
         subset[ifc.MASTER_DATE], subset[ifc.SLAVE_DATE] = dates
 
-        # replace time span as ROIPAC is ~4 hours different to (slave - master)
+        # replace time span as ROIPAC is ~4 hours different to (subordinate - main)
         timespan = (subset[ifc.SLAVE_DATE] - subset[ifc.MASTER_DATE]).days / ifc.DAYS_PER_YEAR
         subset[ifc.PYRATE_TIME_SPAN] = timespan
 
@@ -178,7 +178,7 @@ def _parse_dates_from(filename):
         if len(s) == min_date_len:
             return parse_date(s)
     else:  # pragma: no cover
-        msg = "Filename does not include master/slave dates: %s"
+        msg = "Filename does not include main/subordinate dates: %s"
         raise RoipacException(msg % filename)
 
 

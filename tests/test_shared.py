@@ -58,7 +58,7 @@ class IfgTests(unittest.TestCase):
 
     def test_headers_as_attr(self):
         for a in ['ncols', 'nrows', 'x_first', 'x_step',
-                  'y_first', 'y_step', 'wavelength', 'master', 'slave']:
+                  'y_first', 'y_step', 'wavelength', 'main', 'subordinate']:
             self.assertTrue(getattr(self.ifg, a) is not None)
 
     def test_convert_to_nans(self):

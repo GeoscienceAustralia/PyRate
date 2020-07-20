@@ -376,13 +376,13 @@ class NetworkDesignMatrixTests(unittest.TestCase):
             self.assertEqual(exp.shape, (ifg.num_cells, ncoef))
 
             ib1, ib2 = [x * self.ncells for x in (i, i+1)] # row start/end
-            jbm = ncoef * self.date_ids[ifg.master] # starting col index for master
-            jbs = ncoef * self.date_ids[ifg.slave] # col start for slave
+            jbm = ncoef * self.date_ids[ifg.main] # starting col index for main
+            jbs = ncoef * self.date_ids[ifg.subordinate] # col start for subordinate
             assert_array_almost_equal(-exp, dm[ib1:ib2, jbm:jbm+ncoef])
             assert_array_almost_equal( exp, dm[ib1:ib2, jbs:jbs+ncoef])
 
             # ensure remaining rows/cols are zero for this ifg NOT inc offsets
-            assert_array_equal(0, dm[ib1:ib2, :jbm]) # all cols leading up to master
+            assert_array_equal(0, dm[ib1:ib2, :jbm]) # all cols leading up to main
             assert_array_equal(0, dm[ib1:ib2, jbm + ncoef:jbs]) # cols btwn mas/slv
             assert_array_equal(0, dm[ib1:ib2, jbs + ncoef:np]) # to end of non offsets
 
@@ -439,8 +439,8 @@ def _expand_corrections(ifgs, dm, params, ncoef, offsets):
 
     corrections = []
     for ifg in ifgs:
-        jbm = date_ids[ifg.master] * ncoef # starting row index for master
-        jbs = date_ids[ifg.slave] * ncoef # row start for slave
+        jbm = date_ids[ifg.main] * ncoef # starting row index for main
+        jbs = date_ids[ifg.subordinate] * ncoef # row start for subordinate
         par = params[jbs:jbs + ncoef] - params[jbm:jbm + ncoef]
 
         # estimate orbital correction effects
@@ -660,13 +660,13 @@ def unittest_dm(ifg, method, degree, offset=False, scale=100.0):
 
 def get_date_ids(ifgs):
     '''
-    Returns unique master/slave date IDs from the given Ifgs.
+    Returns unique main/subordinate date IDs from the given Ifgs.
     '''
 
     dates = []
     for ifg in ifgs:
-        dates += [ifg.master, ifg.slave]
-    return algorithm.master_slave_ids(dates)
+        dates += [ifg.main, ifg.subordinate]
+    return algorithm.main_subordinate_ids(dates)
 
 
 def _add_nodata(ifgs):

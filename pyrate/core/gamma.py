@@ -145,11 +145,11 @@ def _frequency_to_wavelength(freq):
 
 def combine_headers(hdr0, hdr1, dem_hdr):
     """
-    Combines metadata for master and slave epochs and DEM into a single
+    Combines metadata for main and subordinate epochs and DEM into a single
     dictionary for an interferogram.
 
-    :param dict hdr0: Metadata for the master image
-    :param dict hdr1: Metadata for the slave image
+    :param dict hdr0: Metadata for the main image
+    :param dict hdr1: Metadata for the subordinate image
     :param dict dem_hdr: Metadata for the DEM
 
     :return: chdr: combined metadata
@@ -172,7 +172,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
             ifc.DATA_UNITS: RADIANS,
             ifc.PYRATE_INSAR_PROCESSOR: GAMMA}
 
-    # set incidence angle to mean of master and slave
+    # set incidence angle to mean of main and subordinate
     inc_ang = hdr0[ifc.PYRATE_INCIDENCE_DEGREES]
     if np.isclose(inc_ang, hdr1[ifc.PYRATE_INCIDENCE_DEGREES], atol=1e-1):
         chdr[ifc.PYRATE_INCIDENCE_DEGREES] = (hdr0[ifc.PYRATE_INCIDENCE_DEGREES] + hdr1[
@@ -201,7 +201,7 @@ def manage_headers(dem_header_file, header_paths):
     incidence files
 
     :param str dem_header_file: DEM header path
-    :param list header_paths: List of master/slave header paths
+    :param list header_paths: List of main/subordinate header paths
 
     :return: combined_header: Combined metadata dictionary
     :rtype: dict
