@@ -39,8 +39,8 @@ source_parsers = {'.md': CommonMarkParser}
 source_suffix = ['.rst', '.md']
 # source_suffix = '.rst'
 
-# The master toctree document.
-master_doc = 'index'
+# The main toctree document.
+main_doc = 'index'
 
 # General information about the project.
 project = 'PyRate'
@@ -137,7 +137,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'PyRate.tex', 'PyRate Documentation',
+    (main_doc, 'PyRate.tex', 'PyRate Documentation',
      'Geoscience Australia InSAR team', 'manual'),
 ]
 
@@ -147,7 +147,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'pyrate', 'PyRate Documentation',
+    (main_doc, 'pyrate', 'PyRate Documentation',
      [author], 1)
 ]
 
@@ -158,7 +158,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'PyRate', 'PyRate Documentation',
+    (main_doc, 'PyRate', 'PyRate Documentation',
      author, 'PyRate', 'One line description of project.',
      'Miscellaneous'),
 ]
