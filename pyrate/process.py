@@ -20,6 +20,7 @@ This Python module runs the main PyRate processing workflow
 import os
 import shutil
 from os.path import join
+from pathlib import Path
 import pickle as cp
 from pyrate.core import (shared, algorithm, mpiops, config as cf)
 from pyrate.core.config import ConfigException
@@ -59,19 +60,22 @@ def _create_ifg_dict(params):
                 interferograms that are used later in workflow
     :rtype: dict
     """
-    dest_tifs = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    dest_tifs = [ifg_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     ifgs_dict = {}
     process_tifs = mpiops.array_split(dest_tifs)
     for d in process_tifs:
-        ifg = shared._prep_ifg(d, params)
-        ifgs_dict[d] = PrereadIfg(path=d,
-                                  nan_fraction=ifg.nan_fraction,
-                                  master=ifg.master,
-                                  slave=ifg.slave,
-                                  time_span=ifg.time_span,
-                                  nrows=ifg.nrows,
-                                  ncols=ifg.ncols,
-                                  metadata=ifg.meta_data)
+        ifg = shared._prep_ifg(d.sampled_path, params)
+        ifgs_dict[d.sampled_path] = PrereadIfg(
+            path=d.sampled_path,
+            tmp_path=d.tmp_sampled_path,
+            nan_fraction=ifg.nan_fraction,
+            master=ifg.master,
+            slave=ifg.slave,
+            time_span=ifg.time_span,
+            nrows=ifg.nrows,
+            ncols=ifg.ncols,
+            metadata=ifg.meta_data
+        )
         ifg.close()
     ifgs_dict = _join_dicts(mpiops.comm.allgather(ifgs_dict))
 
@@ -90,7 +94,7 @@ def __save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, proce
     preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
     nifgs = len(dest_tifs)
     # add some extra information that's also useful later
-    gt, md, wkt = shared.get_geotiff_header_info(process_tifs[0])
+    gt, md, wkt = shared.get_geotiff_header_info(process_tifs[0].sampled_path)
     epochlist = algorithm.get_epochs(ifgs_dict)[0]
     log.info('Found {} unique epochs in the {} interferogram network'.format(len(epochlist.dates), nifgs))
     ifgs_dict['epochlist'] = epochlist
@@ -107,11 +111,12 @@ def __save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, proce
 
 
 def _copy_mlooked(params):
-    log.info("copying mlooked files into tempdir for manipulation")
+    log.info("copying mlooked files into tempdir for manipulation during process steps")
     mpaths = params[cf.INTERFEROGRAM_FILES]
     process_mpaths = mpiops.array_split(mpaths)
     for p in process_mpaths:
         shutil.copy(p.sampled_path, p.tmp_sampled_path)
+        Path(p.tmp_sampled_path).chmod(0o664)  # assign write permission as prepifg output is readonly
 
 
 def main(params):

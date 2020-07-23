@@ -1132,15 +1132,16 @@ def _utm_zone(longitude):
     return floor((longitude + 180) / 6.0) + 1
 
 
-class PrereadIfg():
+class PrereadIfg:
     """
     Convenience class for handling pre-calculated ifg params
     """
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, path, nan_fraction, master, slave, time_span,
+    def __init__(self, path, tmp_path, nan_fraction, master, slave, time_span,
                  nrows, ncols, metadata):
         self.path = path
+        self.tmp_path = tmp_path
         self.nan_fraction = nan_fraction
         self.master = master
         self.slave = slave

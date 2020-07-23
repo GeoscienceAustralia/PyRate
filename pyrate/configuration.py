@@ -79,7 +79,7 @@ def validate_file_list_values(file_list, no_of_epochs):
 
 class MultiplePaths:
     def __init__(self, out_dir: str, file_name: str, ifglksx: int = 1, ifgcropopt: int = 1,
-                 input_type: InputTypes = InputTypes.IFG,  tempdir: Union[Path, str] = 'tmpdir'):
+                 input_type: InputTypes = InputTypes.IFG,  tempdir: Union[Path, str] = TEMP_MLOOKED_DIR):
         self.input_type = input_type
         b = Path(file_name)
         if b.suffix == ".tif":
