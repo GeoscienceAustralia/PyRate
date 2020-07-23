@@ -203,6 +203,9 @@ def __update_meta_data(p_unset, c, l):
     check_call('gdal_edit.py -unsetmd {md} {f}'.format(md=md_str, f=l), shell=True)
     ds = None
 
+    # make prepifg output readonly
+    Path(l).chmod(0o444)  # readonly output
+
 
 def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, float, float], params: dict):
     """
@@ -227,6 +230,7 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, fl
         prepifg_helper.prepare_ifg(m_path.converted_path, xlooks, ylooks, exts, thresh, crop,
                                    out_path=params[cf.OUT_DIR], header=header, coherence_path=coherence_path,
                                    coherence_thresh=coherence_thresh)
+        Path(m_path.sampled_path).chmod(0o444)  # readonly output
 
 
 def find_header(path: MultiplePaths, params: dict):
