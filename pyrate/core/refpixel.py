@@ -414,7 +414,7 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
     """
     Wrapper for reference pixel calculation
     """
-    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     lon = params[cf.REFX]
     lat = params[cf.REFY]
 
