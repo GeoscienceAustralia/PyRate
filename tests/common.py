@@ -498,14 +498,14 @@ def copytree(src, dst, symlinks=False, ignore=None):
 
 
 def repair_params_for_process_tests(out_dir, params):
-        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
-        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-        params[cf.INTERFEROGRAM_FILES] = params[cf.INTERFEROGRAM_FILES][:-2]
-        dest_paths = [Path(out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                      for c in params[cf.INTERFEROGRAM_FILES]]
-        for p, d in zip(params[cf.INTERFEROGRAM_FILES], dest_paths):  # hack
-            p.sampled_path = d
-        return dest_paths, headers
+    base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
+    headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
+    params[cf.INTERFEROGRAM_FILES] = params[cf.INTERFEROGRAM_FILES][:-2]
+    dest_paths = [Path(out_dir).joinpath(Path(c.sampled_path).name).as_posix()
+                  for c in params[cf.INTERFEROGRAM_FILES]]
+    for p, d in zip(params[cf.INTERFEROGRAM_FILES], dest_paths):  # hack
+        p.sampled_path = d
+    return dest_paths, headers
 
 
 def pre_prepare_ifgs(ifg_paths, params):
