@@ -18,7 +18,6 @@
 This Python module contains tests for the stack.py PyRate module.
 """
 import os
-import shutil
 import pytest
 
 from numpy import eye, array, ones, nan
@@ -47,7 +46,7 @@ class SinglePixelIfg(object):
         self.phase_data = array([[phase]])
 
 
-class StackRatePixelTests:
+class TestStackRatePixel:
     """
     Tests the weighted least squares algorithm for determining
     the best fitting velocity
@@ -73,7 +72,7 @@ class StackRatePixelTests:
         assert_array_almost_equal(samples, expsamp)
 
 
-class MaskRateTests:
+class TestMaskRate:
     """
     Test the maxsig threshold masking algorithm
     """
@@ -110,9 +109,7 @@ class TestLegacyEquality:
     @pytest.fixture(autouse=True)
     def setup_class(cls, roipac_params):
         params = roipac_params
-        params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
         params[cf.TEMP_MLOOKED_DIR] = os.path.join(params[cf.OUT_DIR], cf.TEMP_MLOOKED_DIR)
-        shared.mkdir_p(params[cf.TMPDIR])
         conv2tif.main(params)
         prepifg.main(params)
 
