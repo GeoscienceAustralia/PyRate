@@ -55,29 +55,7 @@ if not exists(PREP_TEST_TIF):
     sys.exit("ERROR: Missing 'prepifg' dir for unittests\n")
 
 
-def test_prepifg_treat_inputs_read_only(gamma_conf, tempdir, coh_mask):
-    tdir = Path(tempdir())
-    params = common.manipulate_test_conf(gamma_conf, tdir)
-    params[cf.COH_MASK] = coh_mask
-    output_conf = tdir.joinpath('conf.cfg')
-    cf.write_config_file(params=params, output_conf_file=output_conf)
-    check_call(f"mpirun -n 3 pyrate conv2tif -f {output_conf}", shell=True)
-    tifs = list(Path(params[cf.OUT_DIR]).glob('*_unw_ifg.tif'))
-    assert len(tifs) == 17
-
-    check_call(f"mpirun -n 3 pyrate prepifg -f {output_conf}", shell=True)
-    cropped = list(Path(params[cf.OUT_DIR]).glob('*cr.tif'))
-
-    if coh_mask:  # 17 + 1 dem + 17 coh files
-        assert len(cropped) == 35
-    else:  # 17 + 1 dem
-        assert len(cropped) == 18
-    # check all tifs from conv2tif are still readonly
-    for t in tifs:
-        assert t.stat().st_mode == 33060
-
-
-def test_prepifg_outputs_read_only(gamma_conf, tempdir, coh_mask):
+def test_prepifg_treats_inputs_and_outputs_read_only(gamma_conf, tempdir, coh_mask):
     tdir = Path(tempdir())
     params = common.manipulate_test_conf(gamma_conf, tdir)
     params[cf.COH_MASK] = coh_mask

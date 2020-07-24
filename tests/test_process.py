@@ -46,6 +46,6 @@ def test_process_treats_prepif_outputs_readonly(gamma_conf, tempdir, coh_mask):
 
     check_call(f"mpirun -n 3 pyrate process -f {output_conf}", shell=True)
 
-    # check all prepifg outputs are readonly
+    # check all after process steps multilooked files are still readonly
     for c in cropped:
         assert c.stat().st_mode == 33060

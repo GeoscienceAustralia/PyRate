@@ -21,12 +21,14 @@ import glob
 import os
 import shutil
 import tempfile
-import unittest
+import pytest
 from os.path import join
+from pathlib import Path
 import numpy as np
 
 import pyrate.core.shared
 from pyrate.core import shared, config as cf, config, prepifg_helper, mst
+from pyrate.core.shared import dem_or_ifg
 from pyrate import process, prepifg, conv2tif
 from pyrate.configuration import MultiplePaths
 from tests import common
@@ -103,12 +105,12 @@ def get_ifgs(out_dir, _open=True):
     return ifgs
 
 
-class PyRateTests(unittest.TestCase):
+class TestPyRate:
     # Initialise & run workflow from class setup, ignoring multilooking as it is
     # a separate step. Unit tests verify different steps have completed
 
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
 
         # testing constants2
         cls.BASE_DIR = tempfile.mkdtemp()
@@ -154,21 +156,21 @@ class PyRateTests(unittest.TestCase):
             raise
 
     @classmethod
-    def tearDownClass(cls):
+    def teardown_class(cls):
         shutil.rmtree(cls.BASE_DIR, ignore_errors=True)
         os.chdir(CURRENT_DIR)
 
     def key_check(self, ifg, key, value):
         'Helper to check for metadata flags'
         md = ifg.dataset.GetMetadata()
-        self.assertTrue(key in md, 'Missing %s in %s' % (key, ifg.data_path))
-        self.assertTrue(md[key], value)
+        assert key in md, 'Missing %s in %s' % (key, ifg.data_path)
+        assert md[key] == value
 
     def test_basic_outputs(self):
-        self.assertTrue(os.path.exists(self.BASE_OUT_DIR))
+        assert os.path.exists(self.BASE_OUT_DIR)
 
         for i in self.ifgs:
-            self.assertFalse(i.is_read_only)
+            assert ~i.is_read_only
 
         # log_path = self.get_logfile_path()
         # st = os.stat(log_path)
@@ -190,25 +192,25 @@ class PyRateTests(unittest.TestCase):
             self.key_check(i, key, value)
 
 
-class ParallelPyRateTests(unittest.TestCase):
+@pytest.mark.slow
+class TestParallelPyRate:
     """
     parallel vs serial pyrate tests verifying results from all steps equal
     """
 
     @classmethod
-    def setUpClass(cls):
+    @pytest.fixture(autouse=True)
+    def setup_class(cls, gamma_params):
+        params = gamma_params
         rate_types = ['stack_rate', 'stack_error', 'stack_samples']
-        cls.tif_dir = tempfile.mkdtemp()
-        cls.test_conf = common.TEST_CONF_GAMMA
+        cls.tif_dir = params[cf.OUT_DIR]
 
         from pyrate.configuration import Configuration
         # change the required params
-        params = Configuration(cls.test_conf).__dict__
-        params[cf.OBS_DIR] = common.SML_TEST_GAMMA
+        # params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         params[cf.PROCESSES] = 4
         params[cf.PROCESSOR] = 1  # gamma
         params[cf.IFG_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
-        params[cf.OUT_DIR] = cls.tif_dir
         params[cf.PARALLEL] = 1
         params[cf.APS_CORRECTION] = False
         params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
@@ -217,9 +219,7 @@ class ParallelPyRateTests(unittest.TestCase):
         # base_unw_paths need to be geotiffed by converttogeotif
         #  and multilooked by run_prepifg
         base_unw_paths = list(cf.parse_namelist(params[cf.IFG_FILE_LIST]))
-
-        multi_paths = [MultiplePaths(params[cf.OUT_DIR], b, ifglksx=params[cf.IFG_LKSX],
-                                     ifgcropopt=params[cf.IFG_CROP_OPT]) for b in base_unw_paths]
+        multi_paths = params[cf.INTERFEROGRAM_FILES]
 
         # dest_paths are tifs that have been geotif converted and multilooked
         cls.converted_paths = [b.converted_path for b in multi_paths]
@@ -230,9 +230,11 @@ class ParallelPyRateTests(unittest.TestCase):
         prepifg.main(orig_params)
         tiles = pyrate.core.shared.get_tiles(cls.sampled_paths[0], rows, cols)
         ifgs = common.small_data_setup()
-        params[cf.INTERFEROGRAM_FILES] = multi_paths
+        params[cf.INTERFEROGRAM_FILES] = multi_paths[:-2]
         for p in params[cf.INTERFEROGRAM_FILES]:  # hack
             p.tmp_sampled_path = p.sampled_path
+            Path(p.sampled_path).chmod(0o664)  # assign write permission as conv2tif output is readonly
+
         process.process_ifgs(params)
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
@@ -259,7 +261,9 @@ class ParallelPyRateTests(unittest.TestCase):
         params[cf.INTERFEROGRAM_FILES] = multi_paths
         for p in params[cf.INTERFEROGRAM_FILES]:  # hack
             p.tmp_sampled_path = p.sampled_path
+            Path(p.sampled_path).chmod(0o664)
         params[cf.REFX], params[cf.REFY] = -1, -1
+        # process._copy_mlooked(params)
         process.process_ifgs(params)
         cls.refpixel, cls.maxvar, cls.vcmt = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
@@ -268,30 +272,33 @@ class ParallelPyRateTests(unittest.TestCase):
             [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
 
     @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.tif_dir, ignore_errors=True)
-        shutil.rmtree(cls.tif_dir_s, ignore_errors=True)
-        common.remove_tifs(cf.get_config_params(cls.test_conf)[cf.OBS_DIR])
+    def teardown_class(cls):
+        "gamma_params self cleans after use"
 
     def test_orbital_correction(self):
         key = 'ORBITAL_ERROR'
         value = 'REMOVED'
-
-        for i in common.small_data_setup(datafiles=self.sampled_paths):
+        ifgs = [dem_or_ifg(i) for i in self.sampled_paths]
+        for i in ifgs:
+            i.open()
+            i.nodata_value = 0
             self.key_check(i, key, value)
 
     def key_check(self, ifg, key, value):
         'Helper to check for metadata flags'
         md = ifg.dataset.GetMetadata()
-        self.assertTrue(key in md, 'Missing %s in %s' % (key, ifg.data_path))
-        self.assertTrue(md[key], value)
+        assert key in md, 'Missing %s in %s' % (key, ifg.data_path)
+        assert md[key] == value
 
     def test_phase_conversion(self):
         # ensure phase has been converted from radians to millimetres
         key = 'DATA_UNITS'
         value = 'MILLIMETRES'
+        ifgs = [dem_or_ifg(i) for i in self.sampled_paths]
 
-        for i in common.small_data_setup(datafiles=self.sampled_paths):
+        for i in ifgs:
+            i.open()
+            i.nodata_value = 0
             self.key_check(i, key, value)
 
     def test_mst_equal(self):
@@ -312,10 +319,10 @@ class ParallelPyRateTests(unittest.TestCase):
         np.testing.assert_array_almost_equal(self.samples, self.samples_p, decimal=4)
 
 
-class TestPrePrepareIfgs(unittest.TestCase):
+class TestPrePrepareIfgs:
 
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
         params = config.get_config_params(common.TEST_CONF_ROIPAC)
         cls.tmp_dir = tempfile.mkdtemp()
         common.copytree(common.SML_TEST_TIF, cls.tmp_dir)
@@ -353,18 +360,18 @@ class TestPrePrepareIfgs(unittest.TestCase):
             i.close()
 
     @classmethod
-    def tearDownClass(cls):
+    def teardown_class(cls):
         shutil.rmtree(cls.tmp_dir2)
         shutil.rmtree(cls.tmp_dir)
 
     def test_small_data_prep_phase_equality(self):
         for i, j in zip(self.ifgs, self.ifg_ret):
             np.testing.assert_array_almost_equal(i.phase_data, j.phase_data)
-            self.assertFalse((i.phase_data == 0).any())
+            assert ~(i.phase_data == 0).any()
             # if there was any 0 still present
             i.phase_data[4, 2] = 0
-            self.assertTrue((i.phase_data == 0).any())
+            assert (i.phase_data == 0).any()
 
     def test_small_data_prep_metadata_equality(self):
         for i, j in zip(self.ifgs, self.ifg_ret):
-            self.assertDictEqual(i.meta_data, j.meta_data)
+            assert i.meta_data == j.meta_data

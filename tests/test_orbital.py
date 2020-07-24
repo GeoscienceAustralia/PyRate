@@ -47,9 +47,9 @@ from pyrate.process import _create_ifg_dict
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.core.config import ORB_ERROR_DIR
 from tests import common
-from tests.common import TEST_CONF_ROIPAC, IFMS16
+from tests.common import IFMS16
 from tests.common import SML_TEST_LEGACY_ORBITAL_DIR
-from tests.common import SML_TEST_TIF, small_data_setup
+from tests.common import SML_TEST_TIF
 from tests.common import small_ifg_file_list
 
 #TODO: Purpose of this variable? Degrees are 1, 2 and 3 respectively
@@ -857,12 +857,9 @@ class TestLegacyComparisonTestsOrbfitMethod2:
 
         count = 0
         for i, f in enumerate(onlyfiles):
-            legacy_phase_data = np.genfromtxt(os.path.join(
-                SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=',')
+            legacy_phase_data = np.genfromtxt(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f), delimiter=',')
             for k, j in enumerate(self.new_data_paths):
-                if os.path.basename(j).split('_unw.')[0] == \
-                        os.path.basename(f).split(
-                            '_method2_')[1].split('.')[0]:
+                if os.path.basename(j).split('_unw.')[0] == os.path.basename(f).split('_method2_')[1].split('.')[0]:
                     count += 1
                     ifg = Ifg(j)
                     ifg.open()
