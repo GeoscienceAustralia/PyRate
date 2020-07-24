@@ -252,7 +252,7 @@ class TestIfgIOTests:
 
 
 # FIXME:
-# class IncidenceFileTests(unittest.TestCase):
+# class IncidenceFileTests():
 #     'Unit tests to verify operations on GeoTIFF format Incidence rasters'
 #
 #     def setUp(self):
@@ -337,22 +337,12 @@ class TestDEMTests:
 class TestWriteUnw:
 
     @classmethod
-    def setup_class(cls):
-        cls.tif_dir = tempfile.mkdtemp()
-        cls.test_conf = common.TEST_CONF_GAMMA
+    @pytest.fixture(autouse=True)
+    def setup_class(cls, gamma_params):
         # change the required params
-        cls.params = Configuration(cls.test_conf).__dict__
+        cls.params = gamma_params
         cls.params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         cls.params[cf.PROCESSOR] = 1  # gamma
-        file_list = list(cf.parse_namelist(os.path.join(common.SML_TEST_GAMMA, 'ifms_17')))
-        fd, cls.params[cf.IFG_FILE_LIST] = tempfile.mkstemp(suffix='.conf', dir=cls.tif_dir)
-        os.close(fd)
-        # write a short filelist with only 3 gamma unws
-        with open(cls.params[cf.IFG_FILE_LIST], 'w') as fp:
-            for f in file_list[:3]:
-                fp.write(os.path.join(common.SML_TEST_GAMMA, f) + '\n')
-        # cls.params[cf.INTERFEROGRAM_FILES] = MultiplePaths()
-        # cls.params[cf.OUT_DIR] = cls.tif_dir
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.REF_EST_METHOD] = 1
         cls.params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
@@ -373,10 +363,7 @@ class TestWriteUnw:
 
     @classmethod
     def teardown_class(cls):
-        for i in cls.ifgs:
-            i.close()
-        shutil.rmtree(cls.tif_dir)
-        common.remove_tifs(cls.params[cf.OBS_DIR])
+        """auto cleaning on"""
 
     def test_unw_contains_same_data_as_numpy_array(self):
         from datetime import time

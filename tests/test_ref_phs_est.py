@@ -76,7 +76,7 @@ legacy_ref_phs_method2 = [-21.4459648132324,
 class TestRefPhsTests:
     """Basic reference phase estimation tests"""
 
-    def setup_class(self):
+    def setup_method(self):
         self.tmp_dir = tempfile.mkdtemp()
         self.params = dict()
         self.params[cf.OUT_DIR] = self.tmp_dir
@@ -99,7 +99,7 @@ class TestRefPhsTests:
         self.params['rows'], self.params['cols'] = 3, 2
         process._update_params_with_tiles(self.params)
        
-    def teardown_class(self):
+    def teardown_method(self):
         try:
             shutil.rmtree(self.tmp_dir)
         except PermissionError:
