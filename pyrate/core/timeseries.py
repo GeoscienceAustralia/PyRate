@@ -323,7 +323,7 @@ def timeseries_calc_wrapper(params):
     tiles = params[cf.TILES]
     preread_ifgs = params[cf.PREREAD_IFGS]
     vcmt = params[cf.VCMT]
-    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     if params[cf.TIME_SERIES_CAL] == 0:
         log.info('Time Series Calculation not required')
         return

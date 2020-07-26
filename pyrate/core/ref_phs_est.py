@@ -239,4 +239,6 @@ def ref_phase_est_wrapper(params):
         ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
     mpiops.comm.barrier()
     shared.save_numpy_phase(ifg_paths, params)
+
+    log.info("Reference phase computed!")
     return ref_phs, ifgs

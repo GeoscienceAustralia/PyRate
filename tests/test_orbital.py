@@ -44,7 +44,7 @@ from pyrate.core.orbital import _get_num_params, remove_orbital_error
 from pyrate.core.shared import Ifg, mkdir_p
 from pyrate.core.shared import nanmedian
 from pyrate.core import roipac
-from pyrate.process import _create_ifg_dict
+from pyrate import process
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.core.config import ORB_ERROR_DIR
 from tests import common
@@ -815,7 +815,8 @@ class TestLegacyComparisonTestsOrbfitMethod2:
         shutil.rmtree(cls.BASE_DIR)
 
     def test_orbital_correction_legacy_equality_orbfit_method_2(self):
-        _create_ifg_dict(self.params)
+        process._copy_mlooked(self.params)
+        process._create_ifg_dict(self.params)
         remove_orbital_error(self.new_data_paths, self.params, self.headers, preread_ifgs=self.params[cf.PREREAD_IFGS])
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
@@ -849,7 +850,8 @@ class TestLegacyComparisonTestsOrbfitMethod2:
         self.params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
-        _create_ifg_dict(self.params)
+        process._copy_mlooked(self.params)
+        process._create_ifg_dict(self.params)
         remove_orbital_error(self.new_data_paths, self.params, self.headers, preread_ifgs=self.params[cf.PREREAD_IFGS])
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)

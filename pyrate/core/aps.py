@@ -48,7 +48,7 @@ def wrap_spatio_temporal_filter(params):
         return
     tiles = params[cf.TILES]
     preread_ifgs = params[cf.PREREAD_IFGS]
-    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
 
     # perform some checks on existing ifgs
     log.debug('Checking APS correction status')

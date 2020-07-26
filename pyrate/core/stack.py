@@ -215,7 +215,7 @@ def stack_calc_wrapper(params):
     tiles = params[cf.TILES]
     preread_ifgs = params[cf.PREREAD_IFGS]
     vcmt = params[cf.VCMT]
-    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     process_tiles = mpiops.array_split(tiles)
     log.info('Calculating rate map from stacking')
     output_dir = params[cf.TMPDIR]

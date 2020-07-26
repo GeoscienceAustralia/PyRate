@@ -283,7 +283,7 @@ def mst_calc_wrapper(params):
     """
     tiles = params[cf.TILES]
     preread_ifgs = params[cf.PREREAD_IFGS]
-    dest_tifs = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    dest_tifs = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     process_tiles = mpiops.array_split(tiles)
     log.info('Calculating minimum spanning tree matrix')
 

@@ -65,7 +65,7 @@ def _create_ifg_dict(params):
     process_tifs = mpiops.array_split(dest_tifs)
     for d in process_tifs:
         ifg = shared._prep_ifg(d.sampled_path, params)
-        ifgs_dict[d.sampled_path] = PrereadIfg(
+        ifgs_dict[d.tmp_sampled_path] = PrereadIfg(
             path=d.sampled_path,
             tmp_path=d.tmp_sampled_path,
             nan_fraction=ifg.nan_fraction,
@@ -94,7 +94,7 @@ def __save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, proce
     preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
     nifgs = len(dest_tifs)
     # add some extra information that's also useful later
-    gt, md, wkt = shared.get_geotiff_header_info(process_tifs[0].sampled_path)
+    gt, md, wkt = shared.get_geotiff_header_info(process_tifs[0].tmp_sampled_path)
     epochlist = algorithm.get_epochs(ifgs_dict)[0]
     log.info('Found {} unique epochs in the {} interferogram network'.format(len(epochlist.dates), nifgs))
     ifgs_dict['epochlist'] = epochlist
