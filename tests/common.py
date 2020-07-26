@@ -23,6 +23,9 @@ import os
 import shutil
 import stat
 import tempfile
+from decimal import Decimal
+import pytest
+from typing import Iterable
 from os.path import join
 from subprocess import check_output
 from pathlib import Path
@@ -570,3 +573,44 @@ def manipulate_test_conf(conf_file, temp_obs_dir: Path):
     params[cf.COH_FILE_DIR] = temp_obs_dir.as_posix()
     params[cf.TMPDIR] = temp_obs_dir.joinpath(Path(params[cf.TMPDIR]).name).as_posix()
     return params
+
+
+class UnitTestAdaptation:
+    @staticmethod
+    def assertEqual(arg1, arg2):
+        assert arg1 == arg2
+
+    @staticmethod
+    def assertTrue(arg, msg=''):
+        assert arg, msg
+
+    @staticmethod
+    def assertFalse(arg, msg=''):
+        assert ~ arg, msg
+
+    @staticmethod
+    def assertIsNotNone(arg, msg=''):
+        assert arg is not None, msg
+
+    @staticmethod
+    def assertIsNone(arg, msg=''):
+        assert arg is None, msg
+
+    @staticmethod
+    def assertDictEqual(d1: dict, d2: dict):
+        assert d1 == d2
+
+    @staticmethod
+    def assertRaises(excpt: Exception, func, *args, **kwargs):
+        with pytest.raises(excpt):
+            func(*args, **kwargs)
+
+    @staticmethod
+    def assertIn(item, s: Iterable):
+        assert item in s
+
+    @staticmethod
+    def assertAlmostEqual(arg1, arg2, places=7):
+        places *= -1
+        num = Decimal((0, (1, ), places))
+        assert arg1 == pytest.approx(arg2, abs=num)

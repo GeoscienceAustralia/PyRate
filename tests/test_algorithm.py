@@ -16,12 +16,10 @@
 """
 This Python module contains tests for the algorithm.py PyRate module.
 """
-import unittest
 from datetime import date
 from math import pi, cos, sin, radians
 from numpy import array, reshape, squeeze
 from os.path import join
-from unittest import TestCase
 
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_allclose
@@ -38,10 +36,10 @@ from pyrate.core.algorithm import (least_squares_covariance,
 
 from pyrate.core.config import parse_namelist
 from pyrate.core.shared import Ifg, convert_radians_to_mm
-from tests.common import small5_mock_ifgs, SML_TEST_TIF
+from tests.common import small5_mock_ifgs, SML_TEST_TIF, UnitTestAdaptation
 
 
-class LeastSquaresTests(TestCase):
+class TestLeastSquaresTests(UnitTestAdaptation):
     """
     Unit tests for the PyRate least_squares_covariance() implementation.
     """
@@ -60,18 +58,16 @@ class LeastSquaresTests(TestCase):
         b = array([[10]]).T
         A = array([[1]]).T
         v = array([[1]]).T
-        self.assertRaises(ValueError,
-                          least_squares_covariance, A, b, v)
+        self.assertRaises(ValueError, least_squares_covariance, A, b, v)
 
         # try non transposed style
         b = array([[10]])
         A = array([[1]])
         v = array([[1]])
-        self.assertRaises(ValueError,
-                          least_squares_covariance, A, b, v)
+        self.assertRaises(ValueError, least_squares_covariance, A, b, v)
 
 
-class AlgorithmTests(TestCase):
+class TestAlgorithmTests(UnitTestAdaptation):
     """
     Misc unittests for functions in the algorithm module.
     """
@@ -121,8 +117,7 @@ class AlgorithmTests(TestCase):
         unitv = [a.reshape(sh) for a in unitv]
 
         # NB: assumes radian inputs
-        act = unit_vector(reshape(incidence, sh),
-                                    reshape(azimuth, sh))
+        act = unit_vector(reshape(incidence, sh), reshape(azimuth, sh))
         for a, e in zip(act, unitv):
             assert_array_almost_equal(squeeze(a), e)
 
@@ -139,13 +134,14 @@ class AlgorithmTests(TestCase):
         self.assertTrue((abs(E) > abs(N)).all())
 
 
-class DateLookupTests(TestCase):
+class TestDateLookup(UnitTestAdaptation):
     """
     Tests for the algorithm.ifg_date_lookup() function.
     """
 
-    def setUp(self):
-        self.ifgs = small5_mock_ifgs()
+    @classmethod
+    def setup_class(cls):
+        cls.ifgs = small5_mock_ifgs()
 
     def test_ifg_date_lookup(self):
         # check reverse lookup of ifg given a master and slave date tuple
@@ -161,8 +157,7 @@ class DateLookupTests(TestCase):
     def test_ifg_date_lookup_failure(self):
         # error when lookup cannot find an ifg given a date pair
         dates = (date(2006, 12, 11), date(2007, 3, 26))
-        self.assertRaises(ValueError,
-                          ifg_date_lookup, self.ifgs, dates)
+        self.assertRaises(ValueError, ifg_date_lookup, self.ifgs, dates)
 
     def test_date_lookup_bad_inputs(self):
         # test some bad inputs to date lookup
@@ -170,8 +165,7 @@ class DateLookupTests(TestCase):
                   (date(2007, 3, 26), ""), (date(2007, 3, 26), None)]
 
         for d in inputs:
-            self.assertRaises(ValueError,
-                              ifg_date_lookup, self.ifgs, d)
+            self.assertRaises(ValueError, ifg_date_lookup, self.ifgs, d)
 
 
 # TODO: InitialModelTests
@@ -184,7 +178,7 @@ class DateLookupTests(TestCase):
         #raise NotImplementedError
 
 
-class EpochsTests(TestCase):
+class TestEpochs(UnitTestAdaptation):
     """
     Unittests for the EpochList class.
     """
@@ -236,8 +230,4 @@ class EpochsTests(TestCase):
 
         # test unordered and with duplicates
         self.assertEqual(exp, master_slave_ids([d3, d0, d2, d1]))
-        self.assertEqual(exp,
-                         master_slave_ids([d3, d0, d2, d1, d3, d0]))
-
-if __name__ == "__main__":
-    unittest.main()
+        self.assertEqual(exp, master_slave_ids([d3, d0, d2, d1, d3, d0]))

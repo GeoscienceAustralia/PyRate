@@ -20,7 +20,6 @@ import os
 import shutil
 import sys
 import tempfile
-import unittest
 from math import floor
 from os.path import exists, join
 from pathlib import Path
@@ -46,7 +45,7 @@ from pyrate import conv2tif, prepifg
 from tests import common
 from tests.common import SML_TEST_LEGACY_PREPIFG_DIR
 from tests.common import PREP_TEST_TIF, SML_TEST_DEM_DIR, PREP_TEST_OBS
-from tests.common import SML_TEST_DEM_TIF, SML_TEST_DEM_HDR, manipulate_test_conf
+from tests.common import SML_TEST_DEM_TIF, SML_TEST_DEM_HDR, manipulate_test_conf, UnitTestAdaptation
 
 gdal.UseExceptions()
 DUMMY_SECTION_NAME = 'pyrate'
@@ -175,11 +174,8 @@ def test_extents_from_params():
     assert extents_from_params(pars) == CustomExts(xf, yf, xl, yl)
 
 
-class PrepifgOutputTests(unittest.TestCase):
+class TestPrepifgOutput(UnitTestAdaptation):
     """Tests aspects of the prepifg.py script, such as resampling."""
-
-    def __init__(self, *args, **kwargs):
-        super(PrepifgOutputTests, self).__init__(*args, **kwargs)
 
     @staticmethod
     def assert_geotransform_equal(files):
@@ -197,17 +193,17 @@ class PrepifgOutputTests(unittest.TestCase):
         transforms = [ds.GetGeoTransform() for ds in datasets]
         head = transforms[0]
         for t in transforms[1:]:
-            assert_array_almost_equal(t, head, decimal=6,
-                                      err_msg="Extents do not match!")
+            assert_array_almost_equal(t, head, decimal=6, err_msg="Extents do not match!")
 
-    def setUp(self):
-        self.xs = 0.000833333
-        self.ys = -self.xs
-        self.ifgs, self.random_dir = diff_exts_ifgs()
-        self.ifg_paths = [i.data_path for i in self.ifgs]
+    @classmethod
+    def setup_class(cls):
+        cls.xs = 0.000833333
+        cls.ys = -cls.xs
+        cls.ifgs, cls.random_dir = diff_exts_ifgs()
+        cls.ifg_paths = [i.data_path for i in cls.ifgs]
 
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
-        self.headers = [roipac.roipac_header(i.data_path, params) for i in self.ifgs]
+        cls.headers = [roipac.roipac_header(i.data_path, params) for i in cls.ifgs]
         paths = ["geo_060619-061002_unw_1rlks_1cr.tif",
                  "geo_060619-061002_unw_1rlks_2cr.tif",
                  "geo_060619-061002_unw_1rlks_3cr.tif",
@@ -216,7 +212,7 @@ class PrepifgOutputTests(unittest.TestCase):
                  "geo_070326-070917_unw_1rlks_2cr.tif",
                  "geo_070326-070917_unw_1rlks_3cr.tif",
                  "geo_070326-070917_unw_4rlks_3cr.tif"]
-        self.exp_files = [join(self.random_dir, p) for p in paths]
+        cls.exp_files = [join(cls.random_dir, p) for p in paths]
 
     @staticmethod
     def test_mlooked_paths():
@@ -226,13 +222,14 @@ class PrepifgOutputTests(unittest.TestCase):
     def test_extents_from_params():
         test_extents_from_params()
 
-    def tearDown(self):
-        for exp_file in self.exp_files:
+    @classmethod
+    def teardown_class(cls):
+        for exp_file in cls.exp_files:
             if exists(exp_file):
                 os.remove(exp_file)
-        for ifg in self.ifgs:
+        for ifg in cls.ifgs:
             ifg.close()
-        shutil.rmtree(self.random_dir)
+        shutil.rmtree(cls.random_dir)
 
     def _custom_ext_latlons(self):
         return [150.91 + (7 * self.xs),  # xfirst
@@ -483,7 +480,7 @@ class PrepifgOutputTests(unittest.TestCase):
                               CUSTOM_CROP, xlooks=1, ylooks=v, headers=self.headers)
 
 
-class ThresholdTests(unittest.TestCase):
+class TestThresholdTests(UnitTestAdaptation):
     """Tests for threshold of data -> NaN during resampling."""
 
     def test_nan_threshold_inputs(self):
@@ -522,15 +519,15 @@ class ThresholdTests(unittest.TestCase):
             assert_array_equal(res, reshape(exp, res.shape))
 
 
-class SameSizeTests(unittest.TestCase):
+class TestSameSizeTests(UnitTestAdaptation):
     """Tests aspects of the prepifg.py script, such as resampling."""
 
-    def __init__(self, *args, **kwargs):
+    @classmethod
+    def setup_class(cls):
         import datetime
-        super(SameSizeTests, self).__init__(*args, **kwargs)
-        self.xs = 0.000833333
-        self.ys = -self.xs
-        self.headers = [
+        cls.xs = 0.000833333
+        cls.ys = -cls.xs
+        cls.headers = [
             {'NCOLS': 47, 'NROWS': 72, 'LAT': -34.17, 'LONG': 150.91, 'X_STEP': 0.000833333, 'Y_STEP': -0.000833333,
              'WAVELENGTH_METRES': 0.0562356424, 'MASTER_DATE': datetime.date(2007, 3, 26),
              'SLAVE_DATE': datetime.date(2007, 9, 17), 'TIME_SPAN_YEAR': 0.4791238877481177,
@@ -613,7 +610,7 @@ def test_mlooked_path():
 # raise NotImplementedError
 
 
-class LocalMultilookTests(unittest.TestCase):
+class TestLocalMultilookTests:
     """Tests for local testing functions"""
 
     @staticmethod
@@ -665,26 +662,27 @@ def multilooking(src, xscale, yscale, thresh=0):
     return dest
 
 
-class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
+class TestLegacyEqualityTestRoipacSmallTestData(UnitTestAdaptation):
     """
     Legacy roipac prepifg equality test for small test data
     """
 
-    def setUp(self):
+    def setup_class(cls):
         from tests.common import small_data_setup
-        self.ifgs = small_data_setup()
-        self.ifg_paths = [i.data_path for i in self.ifgs]
+        cls.ifgs = small_data_setup()
+        cls.ifg_paths = [i.data_path for i in cls.ifgs]
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
-        self.headers = [roipac.roipac_header(i.data_path, params) for i in self.ifgs]
-        prepare_ifgs(self.ifg_paths, crop_opt=1, xlooks=1, ylooks=1, headers=self.headers)
+        cls.headers = [roipac.roipac_header(i.data_path, params) for i in cls.ifgs]
+        prepare_ifgs(cls.ifg_paths, crop_opt=1, xlooks=1, ylooks=1, headers=cls.headers)
         looks_paths = [mlooked_path(d, looks=1, crop_out=1)
-                       for d in self.ifg_paths]
-        self.ifgs_with_nan = [Ifg(i) for i in looks_paths]
-        for ifg in self.ifgs_with_nan:
+                       for d in cls.ifg_paths]
+        cls.ifgs_with_nan = [Ifg(i) for i in looks_paths]
+        for ifg in cls.ifgs_with_nan:
             ifg.open()
 
-    def tearDown(self):
-        for i in self.ifgs_with_nan:
+    @classmethod
+    def teardown_class(cls):
+        for i in cls.ifgs_with_nan:
             if os.path.exists(i.data_path):
                 i.close()
                 os.remove(i.data_path)
@@ -751,16 +749,18 @@ class LegacyEqualityTestRoipacSmallTestData(unittest.TestCase):
         self.assertEqual(count, len(self.ifgs))
 
 
-class TestOneIncidenceOrElevationMap(unittest.TestCase):
+class TestOneIncidenceOrElevationMap(UnitTestAdaptation):
 
-    def setUp(self):
-        self.base_dir = tempfile.mkdtemp()
-        self.conf_file = tempfile.mktemp(suffix='.conf', dir=self.base_dir)
-        self.ifgListFile = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
+    @classmethod
+    def setup_class(cls):
+        cls.base_dir = tempfile.mkdtemp()
+        cls.conf_file = tempfile.mktemp(suffix='.conf', dir=cls.base_dir)
+        cls.ifgListFile = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
 
-    def tearDown(self):
-        params = cf.get_config_params(self.conf_file)
-        shutil.rmtree(self.base_dir)
+    @classmethod
+    def teardown_class(cls):
+        params = cf.get_config_params(cls.conf_file)
+        shutil.rmtree(cls.base_dir)
         common.remove_tifs(params[cf.OBS_DIR])
 
     def make_input_files(self, inc='', ele=''):
