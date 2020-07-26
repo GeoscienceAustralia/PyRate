@@ -200,10 +200,11 @@ class TestParallelPyRate:
 
     @classmethod
     @pytest.fixture(autouse=True)
-    def setup_class(cls, gamma_params):
-        params = gamma_params
+    def setup_class(cls, gamma_conf):
+        from tests.common import manipulate_test_conf
         rate_types = ['stack_rate', 'stack_error', 'stack_samples']
-        cls.tif_dir = params[cf.OUT_DIR]
+        cls.tif_dir = Path(tempfile.mkdtemp())
+        params = manipulate_test_conf(gamma_conf, cls.tif_dir)
 
         from pyrate.configuration import Configuration
         # change the required params
@@ -212,29 +213,25 @@ class TestParallelPyRate:
         params[cf.PROCESSOR] = 1  # gamma
         params[cf.IFG_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
         params[cf.PARALLEL] = 1
-        params[cf.APS_CORRECTION] = False
-        params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
+        params[cf.APS_CORRECTION] = 0
+        params[cf.REFX], params[cf.REFY] = -1, -1
         rows, cols = params["rows"], params["cols"]
 
-        # base_unw_paths need to be geotiffed by converttogeotif
-        #  and multilooked by run_prepifg
-        base_unw_paths = list(cf.parse_namelist(params[cf.IFG_FILE_LIST]))
-        multi_paths = params[cf.INTERFEROGRAM_FILES]
+        output_conf_file = 'gamma.conf'
+        output_conf = cls.tif_dir.joinpath(output_conf_file).as_posix()
+        cf.write_config_file(params=params, output_conf_file=output_conf)
 
-        # dest_paths are tifs that have been geotif converted and multilooked
-        cls.converted_paths = [b.converted_path for b in multi_paths]
-        cls.sampled_paths = [b.sampled_path for b in multi_paths]
-        from copy import copy
-        orig_params = copy(params)
-        conv2tif.main(params)
-        prepifg.main(orig_params)
-        tiles = pyrate.core.shared.get_tiles(cls.sampled_paths[0], rows, cols)
+        params = Configuration(output_conf).__dict__
+
+        from subprocess import check_call
+        check_call(f"pyrate conv2tif -f {output_conf}", shell=True)
+        check_call(f"pyrate prepifg -f {output_conf}", shell=True)
+
+        cls.sampled_paths = [p.tmp_sampled_path for p in params[cf.INTERFEROGRAM_FILES]]
+
         ifgs = common.small_data_setup()
-        params[cf.INTERFEROGRAM_FILES] = multi_paths[:-2]
-        for p in params[cf.INTERFEROGRAM_FILES]:  # hack
-            p.tmp_sampled_path = p.sampled_path
-            Path(p.sampled_path).chmod(0o664)  # assign write permission as conv2tif output is readonly
-
+        process._copy_mlooked(params)
+        tiles = pyrate.core.shared.get_tiles(cls.sampled_paths[0], rows, cols)
         process.process_ifgs(params)
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
@@ -245,25 +242,23 @@ class TestParallelPyRate:
         common.remove_tifs(params[cf.OBS_DIR])
 
         # now create the non parallel version
-        cls.tif_dir_s = tempfile.mkdtemp()
+        cls.tif_dir_s = Path(tempfile.mkdtemp())
+        params = manipulate_test_conf(gamma_conf, cls.tif_dir_s)
+        params[cf.PROCESSES] = 4
+        params[cf.PROCESSOR] = 1  # gamma
+        params[cf.IFG_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
         params[cf.PARALLEL] = 0
-        params[cf.PROCESSES] = 1
-        params[cf.OUT_DIR] = cls.tif_dir_s
-        params[cf.TMPDIR] = os.path.join(params[cf.OUT_DIR], cf.TMPDIR)
-        multi_paths = [MultiplePaths(params[cf.OUT_DIR], b, ifglksx=params[cf.IFG_LKSX],
-                                     ifgcropopt=params[cf.IFG_CROP_OPT]) for b in base_unw_paths]
-
-        cls.converted_paths_s = [b.converted_path for b in multi_paths]
-        cls.sampled_paths_s = [b.sampled_path for b in multi_paths]
-        orig_params = copy(params)
-        conv2tif.main(params)
-        prepifg.main(orig_params)
-        params[cf.INTERFEROGRAM_FILES] = multi_paths
-        for p in params[cf.INTERFEROGRAM_FILES]:  # hack
-            p.tmp_sampled_path = p.sampled_path
-            Path(p.sampled_path).chmod(0o664)
+        params[cf.APS_CORRECTION] = 0
         params[cf.REFX], params[cf.REFY] = -1, -1
-        # process._copy_mlooked(params)
+        output_conf_file = 'gamma.conf'
+        output_conf = cls.tif_dir_s.joinpath(output_conf_file).as_posix()
+        cf.write_config_file(params=params, output_conf_file=output_conf)
+        params = Configuration(output_conf).__dict__
+
+        check_call(f"pyrate conv2tif -f {output_conf}", shell=True)
+        check_call(f"pyrate prepifg -f {output_conf}", shell=True)
+
+        process._copy_mlooked(params)
         process.process_ifgs(params)
         cls.refpixel, cls.maxvar, cls.vcmt = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
