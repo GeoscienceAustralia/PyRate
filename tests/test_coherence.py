@@ -65,8 +65,8 @@ def test_coherence_files_not_converted():
     sample_gdal_band = sample_gdal_dataset.GetRasterBand(1)
     sample_gdal_band.SetNoDataValue(NO_DATA_VALUE)
     sample_gdal_band.WriteArray(np.arange(25).reshape(5, 5))
-    sample_gdal_dataset.SetMetadataItem(ifc.MASTER_DATE, '2019-10-20')
-    sample_gdal_dataset.SetMetadataItem(ifc.SLAVE_DATE, '2019-11-01')
+    sample_gdal_dataset.SetMetadataItem(ifc.FIRST_DATE, '2019-10-20')
+    sample_gdal_dataset.SetMetadataItem(ifc.SECOND_DATE, '2019-11-01')
     sample_gdal_dataset.SetMetadataItem(ifc.PYRATE_WAVELENGTH_METRES, '10.05656')
     sample_gdal_dataset.FlushCache()
     sample_gdal_dataset = None

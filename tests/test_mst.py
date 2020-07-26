@@ -119,7 +119,7 @@ class TestDefaultMST(UnitTestAdaptation):
     def test_default_mst(self):
         # default MST from full set of Ifgs shouldn't drop any nodes
         ifgs = small5_mock_ifgs()
-        dates = [(i.master, i.slave) for i in ifgs]
+        dates = [(i.first, i.second) for i in ifgs]
 
         res = mst.mst_from_ifgs(ifgs)[0]
         num_edges = len(res)
@@ -133,7 +133,7 @@ class TestDefaultMST(UnitTestAdaptation):
         mst_dates = set(res)
         mst_dates = list(sum(mst_dates, ()))
         for i in ifgs:
-            for node in (i.master, i.slave):
+            for node in (i.first, i.second):
                 self.assertIn(node, mst_dates)
 
 
