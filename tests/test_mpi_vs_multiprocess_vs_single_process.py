@@ -69,7 +69,9 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 @pytest.mark.slow
 @pytest.mark.skipif(REGRESSION or PYTHON3P6 or PYTHON3P8, reason="Only run in REGRESSION2 and Python3.8 env")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
-
+    """
+    Tests proving single/multiprocess/mpi produce same output
+    """
     if np.random.randint(0, 1000) > 149:  # skip 85% of tests randomly
         pytest.skip("Randomly skipping as part of 85 percent")
 
@@ -105,12 +107,16 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
         assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_coh.tif", 17)
         print("coherence files compared")
         # 17 ifgs + 1 dem + 17 mlooked coh files
-        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
-                                   f"*{params[cf.IFG_CROP_OPT]}cr.tif", 35)
+        no_of_files = 35
     else:
         # 17 ifgs + 1 dem
-        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
-                                   f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
+        no_of_files = 18
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
+                               f"*{params[cf.IFG_CROP_OPT]}cr.tif", no_of_files)
+
+    # cf.TEMP_MLOOKED_DIR will contain the temp files that can be potentially deleted later
+    assert_same_files_produced(params[cf.TEMP_MLOOKED_DIR], params_m[cf.TEMP_MLOOKED_DIR],
+                               params_s[cf.TEMP_MLOOKED_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 17)
 
     # prepifg + process steps that overwrite tifs test
     # ifg phase checking in the previous step checks the process pipeline upto APS correction
@@ -247,6 +253,9 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
         assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 35)
     else:
         assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
+
+    assert_two_dirs_equal(params[cf.TEMP_MLOOKED_DIR], params_p[cf.TEMP_MLOOKED_DIR],
+                          f"*{params[cf.IFG_CROP_OPT]}cr.tif", 17)
 
     # ifg phase checking in the previous step checks the process pipeline upto APS correction
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tsincr_*.npy", params['notiles'] * 2)
