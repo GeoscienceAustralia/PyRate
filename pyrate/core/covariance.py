@@ -28,13 +28,13 @@ from scipy.optimize import fmin
 
 from pyrate.core import shared, ifgconstants as ifc, config as cf, mpiops
 from pyrate.core.shared import PrereadIfg, Ifg
-from pyrate.core.algorithm import master_slave_ids
+from pyrate.core.algorithm import first_second_ids
 from pyrate.core.logger import pyratelogger as log
 
 # pylint: disable=too-many-arguments
 # distance division factor of 1000 converts to km and is needed to match legacy output
 
-MASTER_PROCESS = 0
+first_PROCESS = 0
 DISTFACT = 1000
 
 
@@ -280,9 +280,9 @@ def get_vcmt(ifgs, maxvar):
     evaluated according to sig_i * sig_j * C_ij where i and j are two
     interferograms and C is a matrix of coefficients:
 
-    C = 1 if the master and slave epochs of i and j are equal
-    C = 0.5 if have i and j share either a common master or slave epoch
-    C = -0.5 if the master of i or j equals the slave of the other
+    C = 1 if the first and second epochs of i and j are equal
+    C = 0.5 if have i and j share either a common first or second epoch
+    C = -0.5 if the first of i or j equals the second of the other
     C = 0 otherwise
 
     :param list ifgs: A list of pyrate.shared.Ifg class objects.
@@ -293,8 +293,8 @@ def get_vcmt(ifgs, maxvar):
     :rtype: ndarray
     """
     # pylint: disable=too-many-locals
-    # c=0.5 for common master or slave; c=-0.5 if master
-    # of one matches slave of another
+    # c=0.5 for common first or second; c=-0.5 if first
+    # of one matches second of another
 
     if isinstance(ifgs, dict):
         from collections import OrderedDict
@@ -306,14 +306,14 @@ def get_vcmt(ifgs, maxvar):
     nifgs = len(ifgs)
     vcm_pat = zeros((nifgs, nifgs))
 
-    dates = [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
-    ids = master_slave_ids(dates)
+    dates = [ifg.first for ifg in ifgs] + [ifg.second for ifg in ifgs]
+    ids = first_second_ids(dates)
 
     for i, ifg in enumerate(ifgs):
-        mas1, slv1 = ids[ifg.master], ids[ifg.slave]
+        mas1, slv1 = ids[ifg.first], ids[ifg.second]
 
         for j, ifg2 in enumerate(ifgs):
-            mas2, slv2 = ids[ifg2.master], ids[ifg2.slave]
+            mas2, slv2 = ids[ifg2.first], ids[ifg2.second]
             if mas1 == mas2 or slv1 == slv2:
                 vcm_pat[i, j] = 0.5
 
@@ -354,7 +354,7 @@ def maxvar_vcm_calc_wrapper(params):
     for n, i in enumerate(prcs_ifgs):
         log.debug('Calculating maxvar for {} of process ifgs {} of total {}'.format(n+1, len(prcs_ifgs), len(ifg_paths)))
         process_maxvar.append(cvd(i, params, r_dist, calc_alpha=True, write_vals=True, save_acg=True)[0])
-    if mpiops.rank == MASTER_PROCESS:
+    if mpiops.rank == first_PROCESS:
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
         maxvar[process_indices] = process_maxvar
         for i in range(1, mpiops.size):  # pragma: no cover
@@ -364,7 +364,7 @@ def maxvar_vcm_calc_wrapper(params):
             maxvar[rank_indices] = this_process_ref_phs
     else:  # pragma: no cover
         maxvar = np.empty(len(ifg_paths), dtype=np.float64)
-        mpiops.comm.Send(np.array(process_maxvar, dtype=np.float64), dest=MASTER_PROCESS, tag=mpiops.rank)
+        mpiops.comm.Send(np.array(process_maxvar, dtype=np.float64), dest=first_PROCESS, tag=mpiops.rank)
 
     mpiops.comm.barrier()
     maxvar = mpiops.comm.bcast(maxvar, root=0)

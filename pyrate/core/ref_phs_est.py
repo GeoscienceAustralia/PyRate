@@ -26,7 +26,7 @@ from pyrate.core.shared import joblib_log_level, nanmedian, Ifg
 from pyrate.core import mpiops
 from pyrate.core.logger import pyratelogger as log
 
-MASTER_PROCESS = 0
+first_PROCESS = 0
 
 
 def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
@@ -217,7 +217,7 @@ def ref_phase_est_wrapper(params):
 
     # Save reference phase numpy arrays to disk.
     ref_phs_file = os.path.join(params[cf.TMPDIR], 'ref_phs.npy')
-    if mpiops.rank == MASTER_PROCESS:
+    if mpiops.rank == first_PROCESS:
         collected_ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
         process_indices = mpiops.array_split(range(len(ifg_paths)))
         collected_ref_phs[process_indices] = ref_phs
@@ -229,7 +229,7 @@ def ref_phase_est_wrapper(params):
             collected_ref_phs[process_indices] = this_process_ref_phs
         np.save(file=ref_phs_file, arr=collected_ref_phs)
     else:
-        mpiops.comm.Send(ref_phs, dest=MASTER_PROCESS, tag=mpiops.rank)
+        mpiops.comm.Send(ref_phs, dest=first_PROCESS, tag=mpiops.rank)
     log.debug('Finished reference phase correction')
 
     # Preserve old return value so tests don't break.

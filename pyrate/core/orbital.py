@@ -26,7 +26,7 @@ import numpy as np
 from numpy.linalg import pinv
 from scipy.linalg import lstsq
 
-from pyrate.core.algorithm import master_slave_ids, get_all_epochs
+from pyrate.core.algorithm import first_second_ids, get_all_epochs
 from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, mst, mpiops
 from pyrate.core.shared import nanmedian, Ifg
 from pyrate.core.logger import pyratelogger as log
@@ -58,7 +58,7 @@ from pyrate.prepifg import find_header
 # appear to ignore the offset parameter in the networked method. Network DM
 # offsets are cols of 1s in a diagonal line on the LHS of the sparse array.
 
-MASTER_PROCESS = 0
+first_PROCESS = 0
 
 # ORBITAL ERROR correction constants
 INDEPENDENT_METHOD = cf.INDEPENDENT_METHOD
@@ -294,9 +294,9 @@ def network_orbital_correction(ifg_paths, degree, offset, params, m_ifgs: Option
     ncoef = _get_num_params(degree)
     if preread_ifgs:
         temp_ifgs = OrderedDict(sorted(preread_ifgs.items())).values()
-        ids = master_slave_ids(get_all_epochs(temp_ifgs))
+        ids = first_second_ids(get_all_epochs(temp_ifgs))
     else:
-        ids = master_slave_ids(get_all_epochs(ifgs))
+        ids = first_second_ids(get_all_epochs(ifgs))
     coefs = [orbparams[i:i+ncoef] for i in range(0, len(set(ids)) * ncoef, ncoef)]
 
     # create full res DM to expand determined coefficients into full res
@@ -325,7 +325,7 @@ def _remove_network_orb_error(coefs, dm, ifg, ids, offset, params):
     """
     remove network orbital error from input interferograms
     """
-    orb = dm.dot(coefs[ids[ifg.slave]] - coefs[ids[ifg.master]])
+    orb = dm.dot(coefs[ids[ifg.second]] - coefs[ids[ifg.first]])
     orb = orb.reshape(ifg.shape)
     # offset estimation
     if offset:
@@ -441,16 +441,16 @@ def get_network_design_matrix(ifgs, degree, offset):
     netdm = zeros(shape, dtype=float32)
 
     # calc location for individual design matrices
-    dates = [ifg.master for ifg in ifgs] + [ifg.slave for ifg in ifgs]
-    ids = master_slave_ids(dates)
+    dates = [ifg.first for ifg in ifgs] + [ifg.second for ifg in ifgs]
+    ids = first_second_ids(dates)
     offset_col = nepochs * ncoef  # base offset for the offset cols
     tmpdm = get_design_matrix(ifgs[0], degree, offset=False)
 
     # iteratively build up sparse matrix
     for i, ifg in enumerate(ifgs):
         rs = i * ifg.num_cells  # starting row
-        m = ids[ifg.master] * ncoef  # start col for master
-        s = ids[ifg.slave] * ncoef  # start col for slave
+        m = ids[ifg.first] * ncoef  # start col for first
+        s = ids[ifg.second] * ncoef  # start col for second
         netdm[rs:rs + ifg.num_cells, m:m + ncoef] = -tmpdm
         netdm[rs:rs + ifg.num_cells, s:s + ncoef] = tmpdm
 
@@ -496,7 +496,7 @@ def orb_fit_calc_wrapper(params: dict) -> None:
         # remove_orbital_error step
         # A performance comparison should be made for saving multilooked
         # files on disc vs in memory single process multilooking
-        if mpiops.rank == MASTER_PROCESS:
+        if mpiops.rank == first_PROCESS:
             headers = [find_header(p, params) for p in multi_paths]
             remove_orbital_error(ifg_paths, params, headers, preread_ifgs=preread_ifgs)
     mpiops.comm.barrier()

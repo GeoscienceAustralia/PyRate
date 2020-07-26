@@ -59,7 +59,7 @@ class TestIfgTests:
 
     def test_headers_as_attr(self):
         for a in ['ncols', 'nrows', 'x_first', 'x_step',
-                  'y_first', 'y_step', 'wavelength', 'master', 'slave']:
+                  'y_first', 'y_step', 'wavelength', 'first', 'second']:
             assert getattr(self.ifg, a) is not None
 
     def test_convert_to_nans(self):
@@ -381,22 +381,18 @@ class TestWriteUnw:
         # insert some dummy data so we are the dem in write_fullres_geotiff is not
         # not activated and ifg write_fullres_geotiff operation works
         header[ifc.PYRATE_TIME_SPAN] = 0
-        header[ifc.SLAVE_DATE] = 0
+        header[ifc.SECOND_DATE] = 0
         header[ifc.DATA_UNITS] = 'degrees'
         header[ifc.DATA_TYPE] = ifc.ORIG
-        header[ifc.SLAVE_TIME] = time(10)
+        header[ifc.SECOND_TIME] = time(10)
 
         # now create aritrary data
-        data = np.random.rand(dem_header[ifc.PYRATE_NROWS],
-                              dem_header[ifc.PYRATE_NCOLS])
+        data = np.random.rand(dem_header[ifc.PYRATE_NROWS], dem_header[ifc.PYRATE_NCOLS])
 
         # convert numpy array to .unw
-        shared.write_unw_from_data_or_geotiff(geotif_or_data=data,
-                                              dest_unw=temp_unw,
-                                              ifg_proc=1)
+        shared.write_unw_from_data_or_geotiff(geotif_or_data=data, dest_unw=temp_unw, ifg_proc=1)
         # convert the .unw to geotif
-        shared.write_fullres_geotiff(header=header, data_path=temp_unw,
-                                     dest=temp_tif, nodata=np.nan)
+        shared.write_fullres_geotiff(header=header, data_path=temp_unw, dest=temp_tif, nodata=np.nan)
 
         # now compare geotiff with original numpy array
         ds = gdal.Open(temp_tif, gdal.GA_ReadOnly)

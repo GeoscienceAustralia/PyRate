@@ -137,13 +137,13 @@ class TestGammaToGeoTiff:
 
         md = ds.GetMetadata()
         assert len(md) == 11 # 11 metadata items
-        assert md[ifc.MASTER_DATE] == str(date(2009, 7, 13))
-        assert md[ifc.SLAVE_DATE] == str(date(2009, 8, 17))
+        assert md[ifc.FIRST_DATE] == str(date(2009, 7, 13))
+        assert md[ifc.SECOND_DATE] == str(date(2009, 8, 17))
         assert md[ifc.PYRATE_TIME_SPAN] == str(35 / ifc.DAYS_PER_YEAR)
         # TODO test failing
-        # self.assertTrue(md[ifc.MASTER_TIME] == str(12))
+        # self.assertTrue(md[ifc.FIRST_DATE] == str(12))
         # TODO test failing
-        # self.assertTrue(md[ifc.SLAVE_TIME] == str(time(12)))
+        # self.assertTrue(md[ifc.SECOND_DATE] == str(time(12)))
 
         wavelen = float(md[ifc.PYRATE_WAVELENGTH_METRES])
         assert wavelen == pytest.approx(0.05627457792190739)
@@ -198,7 +198,7 @@ class TestGammaHeaderParsingTests:
         hdrs = gamma.parse_epoch_header(path)
 
         exp_date = date(2009, 7, 13)
-        assert hdrs[ifc.MASTER_DATE] == exp_date
+        assert hdrs[ifc.FIRST_DATE] == exp_date
 
         exp_wavelen = LIGHTSPEED / 5.3310040e+09
         assert hdrs[ifc.PYRATE_WAVELENGTH_METRES] == exp_wavelen
@@ -223,26 +223,26 @@ class TestGammaHeaderParsingTests:
 
 
 # Test data for the epoch header combination
-H0 = {ifc.MASTER_DATE : date(2009, 7, 13),
-      ifc.MASTER_TIME : time(12),
+H0 = {ifc.FIRST_DATE : date(2009, 7, 13),
+      ifc.FIRST_DATE : time(12),
       ifc.PYRATE_WAVELENGTH_METRES: 1.8,
       ifc.PYRATE_INCIDENCE_DEGREES: 35.565,
       }
 
-H1 = {ifc.MASTER_DATE : date(2009, 8, 17),
-      ifc.MASTER_TIME : time(12, 10, 10),
+H1 = {ifc.FIRST_DATE : date(2009, 8, 17),
+      ifc.FIRST_DATE : time(12, 10, 10),
       ifc.PYRATE_WAVELENGTH_METRES: 1.8,
       ifc.PYRATE_INCIDENCE_DEGREES: 35.56,
       }
 
-H1_ERR1 = {ifc.MASTER_DATE : date(2009, 8, 17),
-          ifc.MASTER_TIME : time(12),
+H1_ERR1 = {ifc.FIRST_DATE : date(2009, 8, 17),
+          ifc.FIRST_DATE : time(12),
           ifc.PYRATE_WAVELENGTH_METRES: 2.4,
           ifc.PYRATE_INCIDENCE_DEGREES: 35.56,
           }
 
-H1_ERR2 = {ifc.MASTER_DATE : date(2009, 8, 17),
-          ifc.MASTER_TIME : time(12),
+H1_ERR2 = {ifc.FIRST_DATE : date(2009, 8, 17),
+          ifc.FIRST_DATE : time(12),
           ifc.PYRATE_WAVELENGTH_METRES: 1.8,
           ifc.PYRATE_INCIDENCE_DEGREES: 35.76,
           }
@@ -271,9 +271,9 @@ class TestHeaderCombination:
         self.assert_equal(chdr[ifc.PYRATE_TIME_SPAN], exp_timespan)
 
         exp_date = date(2009, 7, 13)
-        self.assert_equal(chdr[ifc.MASTER_DATE], exp_date)
+        self.assert_equal(chdr[ifc.FIRST_DATE], exp_date)
         exp_date2 = date(2009, 8, 17)
-        self.assert_equal(chdr[ifc.SLAVE_DATE], exp_date2)
+        self.assert_equal(chdr[ifc.SECOND_DATE], exp_date2)
 
         exp_wavelen = LIGHTSPEED / 5.3310040e+09
         self.assert_equal(chdr[ifc.PYRATE_WAVELENGTH_METRES], exp_wavelen)

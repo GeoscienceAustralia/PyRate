@@ -35,7 +35,7 @@ from scipy.linalg import lstsq
 import pyrate.core.orbital
 from tests.common import small5_mock_ifgs, MockIfg
 from pyrate.core import config as cf
-from pyrate.core.algorithm import unique_date_ids
+from pyrate.core.algorithm import first_second_ids
 from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
     QUADRATIC, PART_CUBIC
 from pyrate.core.orbital import OrbitalError, _orbital_correction
@@ -681,7 +681,7 @@ def get_date_ids(ifgs):
     dates = []
     for ifg in ifgs:
         dates += [ifg.first, ifg.second]
-    return unique_date_ids(dates)
+    return first_second_ids(dates)
 
 
 def _add_nodata(ifgs):

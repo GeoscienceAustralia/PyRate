@@ -58,8 +58,8 @@ install:
 
 
 script:
+  - pytest tests/ -m "slow"
   - pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/ -m "not slow"
-  - pytest tests/test_mpi_vs_multiprocess_vs_single_process.py -m "slow"
 
 after_success:
   - codecov

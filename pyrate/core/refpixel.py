@@ -35,7 +35,7 @@ from pyrate.core.shared import joblib_log_level
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core import prepifg_helper
 
-MASTER_PROCESS = 0
+first_PROCESS = 0
 
 
 def update_refpix_metadata(ifg_paths, refx, refy, transform, params):
@@ -442,7 +442,7 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
         save_ref_pixel_blocks(process_grid, half_patch_size, ifg_paths, params)
         mean_sds = _ref_pixel_mpi(process_grid, half_patch_size, ifg_paths, thresh, params)
         mean_sds = mpiops.comm.gather(mean_sds, root=0)
-        if mpiops.rank == MASTER_PROCESS:
+        if mpiops.rank == first_PROCESS:
             mean_sds = np.hstack(mean_sds)
 
         refpixel_returned = mpiops.run_once(find_min_mean, mean_sds, grid)
