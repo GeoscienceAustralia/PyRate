@@ -1,9 +1,10 @@
 import shutil
 import pytest
 from pathlib import Path
-from subprocess import check_call
 import numpy as np
 from pyrate.core import config as cf
+from pyrate import conv2tif, prepifg
+from pyrate.configuration import Configuration
 from tests.common import (
     assert_two_dirs_equal,
     manipulate_test_conf,
@@ -61,9 +62,10 @@ def create_mpi_files(modified_config_short):
     def _create(conf):
 
         mpi_conf, params = modified_config_short(conf, 0, 'mpi_conf.conf')
-
-        check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
-        check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
+        params = Configuration(mpi_conf).__dict__
+        conv2tif.main(params)
+        params = Configuration(mpi_conf).__dict__
+        prepifg.main(params)
 
         return params  # don't need the reamining params
     return _create
@@ -117,9 +119,11 @@ def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, crea
 
     params = create_mpi_files(gamma_conf)
     sr_conf, params_p = modified_config_largetifs(gamma_conf, 1, 'parallel_conf.conf')
-    check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
-    check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
-
+    params_p = Configuration(sr_conf).__dict__
+    conv2tif.main(params_p)
+    params_p = Configuration(sr_conf).__dict__
+    prepifg.main(params_p)
+    params_p = Configuration(sr_conf).__dict__
     # convert2tif tests, 17 interferograms
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw_ifg.tif", 17)
 
