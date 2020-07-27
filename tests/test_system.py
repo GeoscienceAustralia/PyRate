@@ -65,6 +65,6 @@ def test_single_workflow(gamma_conf):
     looked_files = [p.sampled_path for p in params[cf.INTERFEROGRAM_FILES]]
     ifgs = [shared.Ifg(ifg) for ifg in looked_files]
     orbfits_on_disc = [Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR,
-                          Path(ifg.data_path).with_suffix('.orbfit.npy').name)
+                          Path(ifg.data_path).stem + '_orbfit.npy')
                        for ifg in ifgs]
     assert all(orbfits_on_disc)

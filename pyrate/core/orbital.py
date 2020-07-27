@@ -191,7 +191,7 @@ def independent_orbital_correction(ifg, degree, offset, params):
     """
     ifg = shared.Ifg(ifg) if isinstance(ifg, str) else ifg
     orbfit_correction_on_disc = Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR,
-                                     Path(ifg.data_path).with_suffix('.orbfit.npy').name)
+                                     Path(ifg.data_path).stem + '_orbfit.npy')
     if not ifg.is_open:
         ifg.open()
 
@@ -255,7 +255,7 @@ def network_orbital_correction(ifg_paths, degree, offset, params, m_ifgs: Option
     # all orbit corrections available?
     if isinstance(ifg_paths[0], str):
         saved_orb_err_paths = [
-            Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR, Path(ifg_path).with_suffix('.orbfit.npy').name)
+            Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR, Path(ifg_path).stem + '_orbfit.npy')
             for ifg_path in ifg_paths
         ]
         for p, i in zip(saved_orb_err_paths, ifg_paths):
@@ -333,7 +333,7 @@ def _remove_network_orb_error(coefs, dm, ifg, ids, offset, params):
         orb -= nanmedian(np.ravel(ifg.phase_data - orb))
     # subtract orbital error from the ifg
     ifg.phase_data -= orb
-    orb_error_path = Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR, Path(ifg.data_path).with_suffix('.orbfit.npy').name)
+    orb_error_path = Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR, Path(ifg.data_path).stem + '_orbfit.npy')
 
     # save orb error on disc
     np.save(file=orb_error_path, arr=orb)

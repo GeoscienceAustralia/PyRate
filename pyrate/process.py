@@ -111,7 +111,7 @@ def __save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, proce
 
 
 def _copy_mlooked(params):
-    log.info("copying mlooked files into tempdir for manipulation during process steps")
+    log.info("Copying input files into tempdir for manipulation during process steps")
     mpaths = params[cf.INTERFEROGRAM_FILES]
     process_mpaths = mpiops.array_split(mpaths)
     for p in process_mpaths:
@@ -183,7 +183,7 @@ def process_ifgs(params: dict) -> None:
     for step in params['process']:
         process_steps[step](params)
 
-    log.info('PyRate workflow completed')
+    log.info('Finished process workflow steps')
 
 
 def __validate_process_steps(params):

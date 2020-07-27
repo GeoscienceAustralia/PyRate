@@ -432,8 +432,9 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
             refx, refy = np.load(ref_pixel_file)
             log.info('Reusing pre-calculated ref-pixel values: ({}, {}) from file {}'.format(
                 refx, refy, ref_pixel_file.as_posix()))
-            log.warn("Reusing pre-calculated ref-pixel values!!!")
-            return refx, refy
+            log.warning("Reusing ref-pixel values from previous run!!!")
+            params[cf.REFX], params[cf.REFY] = int(refx), int(refy)
+            return int(refx), int(refy)
 
         log.info('Searching for best reference pixel location')
 
