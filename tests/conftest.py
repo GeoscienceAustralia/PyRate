@@ -23,7 +23,7 @@ def tempdir():
 def system_conf(request):
     params = Configuration(request.param).__dict__
     yield request.param
-    shutil.rmtree(params[cf.OUT_DIR])
+    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
 
 
 @pytest.fixture
@@ -97,17 +97,17 @@ def get_config():
 @pytest.fixture
 def gamma_params():
     params = Configuration(TEST_CONF_GAMMA).__dict__
-    shutil.rmtree(params[cf.OUT_DIR])
+    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
     shared.mkdir_p(params[cf.OUT_DIR])
     yield params
-    shutil.rmtree(params[cf.OUT_DIR])
+    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
 
 
 @pytest.fixture
 def roipac_params():
     params = Configuration(TEST_CONF_ROIPAC).__dict__
     yield params
-    shutil.rmtree(params[cf.OUT_DIR])
+    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
 
 
 @pytest.fixture(params=[TEST_CONF_GAMMA, TEST_CONF_ROIPAC])

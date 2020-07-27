@@ -25,11 +25,10 @@ import tempfile
 import pytest
 import numpy as np
 
-import pyrate.core.orbital
-import pyrate.core.ref_phs_est
-import pyrate.core.refpixel
 from pyrate.core import ifgconstants as ifc, config as cf
-from pyrate.core.ref_phs_est import ReferencePhaseError
+from pyrate.core.ref_phs_est import ReferencePhaseError, ref_phase_est_wrapper
+from pyrate.core.refpixel import ref_pixel_calc_wrapper
+from pyrate.core.orbital import remove_orbital_error
 from pyrate.core.shared import CorrectionStatusError
 from pyrate import prepifg, process, conv2tif
 from pyrate.configuration import MultiplePaths
@@ -115,10 +114,10 @@ class TestRefPhsTests:
             p.tmp_sampled_path = p.sampled_path
 
         with pytest.raises(ReferencePhaseError):
-            pyrate.core.ref_phs_est.ref_phase_est_wrapper(self.params)
+            ref_phase_est_wrapper(self.params)
 
     def test_metadata(self):
-        pyrate.core.ref_phs_est.ref_phase_est_wrapper(self.params)
+        ref_phase_est_wrapper(self.params)
         for ifg in self.ifgs:
             ifg.open()
             assert ifg.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE) == ifc.REF_PHASE_REMOVED
@@ -132,7 +131,7 @@ class TestRefPhsTests:
             p.tmp_sampled_path = p.sampled_path
 
         # correct reference phase for some of the ifgs
-        pyrate.core.ref_phs_est.ref_phase_est_wrapper(self.params)
+        ref_phase_est_wrapper(self.params)
         for ifg in self.ifgs:
             ifg.open()
 
@@ -144,7 +143,7 @@ class TestRefPhsTests:
 
         # now it should raise exception if we want to correct refernece phase again on all of them
         with pytest.raises(CorrectionStatusError):
-            pyrate.core.ref_phs_est.ref_phase_est_wrapper(self.params)
+            ref_phase_est_wrapper(self.params)
         
 
 class TestRefPhsEstimationLegacyTestMethod1Serial:
@@ -155,7 +154,6 @@ class TestRefPhsEstimationLegacyTestMethod1Serial:
     @classmethod
     @pytest.fixture(autouse=True)
     def setup_class(cls, roipac_params):
-        from pyrate.core import roipac
         # start with a clean output dir
         params = roipac_params
         conv2tif.main(params)
@@ -171,10 +169,10 @@ class TestRefPhsEstimationLegacyTestMethod1Serial:
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
+        refx, refy = ref_pixel_calc_wrapper(params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        remove_orbital_error(ifgs, params, headers)
 
         for i in ifgs:
             i.close()
@@ -189,7 +187,7 @@ class TestRefPhsEstimationLegacyTestMethod1Serial:
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
         process._update_params_with_tiles(params)
-        cls.ref_phs, cls.ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
+        cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
 
     @classmethod
     def teardown_class(cls):
@@ -256,10 +254,10 @@ class TestRefPhsEstimationLegacyTestMethod1Parallel:
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
+        refx, refy = ref_pixel_calc_wrapper(params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        remove_orbital_error(ifgs, params, headers)
 
         for i in ifgs:
             i.close()
@@ -273,7 +271,7 @@ class TestRefPhsEstimationLegacyTestMethod1Parallel:
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
         process._update_params_with_tiles(params)
-        cls.ref_phs, cls.ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
+        cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
 
     @classmethod
     def teardown_class(cls):
@@ -340,10 +338,10 @@ class TestRefPhsEstimationLegacyTestMethod2Serial:
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
+        refx, refy = ref_pixel_calc_wrapper(params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        remove_orbital_error(ifgs, params, headers)
 
         for i in ifgs:
             i.close()
@@ -358,7 +356,7 @@ class TestRefPhsEstimationLegacyTestMethod2Serial:
         params['rows'], params['cols'] = 3, 2
         process._update_params_with_tiles(params)
 
-        cls.ref_phs, cls.ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
+        cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
 
     @classmethod
     def teardown_class(cls):
@@ -425,10 +423,10 @@ class TestRefPhsEstimationLegacyTestMethod2Parallel:
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
+        refx, refy = ref_pixel_calc_wrapper(params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        remove_orbital_error(ifgs, params, headers)
 
         for i in ifgs:
             i.close()
@@ -443,7 +441,7 @@ class TestRefPhsEstimationLegacyTestMethod2Parallel:
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
         process._update_params_with_tiles(params)
-        cls.ref_phs, cls.ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
+        cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
 
     @classmethod
     def teardown_class(cls):

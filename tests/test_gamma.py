@@ -68,7 +68,7 @@ class TestGammaCommandLineTests:
             os.remove(self.exp_path)
         except:
             pass
-        shutil.rmtree(self.base_dir)
+        shutil.rmtree(self.base_dir, ignore_errors=True)
 
     def makeInputFiles(self, data):
         with open(self.confFile, 'w') as conf:
@@ -327,7 +327,7 @@ def parallel_ifgs(gamma_conf):
     p_ifgs = small_data_setup(datafiles=parallel_df)
     yield p_ifgs
 
-    shutil.rmtree(params_p[cf.OBS_DIR])
+    shutil.rmtree(params_p[cf.OBS_DIR], ignore_errors=True)
 
 
 @pytest.fixture(scope='module')
@@ -356,7 +356,7 @@ def series_ifgs(gamma_conf):
 
     print('======================teardown series==========================')
 
-    shutil.rmtree(params_s[cf.OBS_DIR])
+    shutil.rmtree(params_s[cf.OBS_DIR], ignore_errors=True)
 
 
 def test_equality(series_ifgs, parallel_ifgs):

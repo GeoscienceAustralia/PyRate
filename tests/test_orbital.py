@@ -812,7 +812,7 @@ class TestLegacyComparisonTestsOrbfitMethod2:
 
     @classmethod
     def teardown_class(cls):
-        shutil.rmtree(cls.BASE_DIR)
+        shutil.rmtree(cls.BASE_DIR, ignore_errors=True)
 
     def test_orbital_correction_legacy_equality_orbfit_method_2(self):
         process._copy_mlooked(self.params)
