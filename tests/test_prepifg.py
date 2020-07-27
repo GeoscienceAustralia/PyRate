@@ -23,7 +23,6 @@ import tempfile
 from math import floor
 from os.path import exists, join
 from pathlib import Path
-from subprocess import check_call
 
 import numpy as np
 from numpy import isnan, nanmax, nanmin, nanmean, ones, nan, reshape, sum as npsum
@@ -60,11 +59,15 @@ def test_prepifg_treats_inputs_and_outputs_read_only(gamma_conf, tempdir, coh_ma
     params[cf.COH_MASK] = coh_mask
     output_conf = tdir.joinpath('conf.cfg')
     cf.write_config_file(params=params, output_conf_file=output_conf)
-    check_call(f"mpirun -n 3 pyrate conv2tif -f {output_conf}", shell=True)
+
+    params = Configuration(output_conf.as_posix()).__dict__
+    conv2tif.main(params)
+
     tifs = list(Path(params[cf.OUT_DIR]).glob('*_unw_ifg.tif'))
     assert len(tifs) == 17
 
-    check_call(f"mpirun -n 3 pyrate prepifg -f {output_conf}", shell=True)
+    params = Configuration(output_conf.as_posix()).__dict__
+    prepifg.main(params)
     cropped = list(Path(params[cf.OUT_DIR]).glob('*cr.tif'))
 
     if coh_mask:  # 17 + 1 dem + 17 coh files
