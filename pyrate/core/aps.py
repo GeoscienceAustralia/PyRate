@@ -19,7 +19,6 @@ for correcting interferograms for atmospheric phase screen (APS)
 signals.
 """
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
-import logging
 import os
 from copy import deepcopy
 from collections import OrderedDict
@@ -49,7 +48,7 @@ def wrap_spatio_temporal_filter(params):
         return
     tiles = params[cf.TILES]
     preread_ifgs = params[cf.PREREAD_IFGS]
-    ifg_paths = [ifg_path.sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
 
     # perform some checks on existing ifgs
     log.debug('Checking APS correction status')
@@ -160,7 +159,7 @@ def _ts_to_ifgs(tsincr, preread_ifgs):
     index_first, index_second = n[:len(ifgs)], n[len(ifgs):]
     for i, ifg in enumerate(ifgs):
         phase = np.sum(tsincr[:, :, index_first[i]: index_second[i]], axis=2)
-        _save_aps_corrected_phase(ifg.path, phase)
+        _save_aps_corrected_phase(ifg.tmp_path, phase)
 
 
 def _save_aps_corrected_phase(ifg_path, phase):

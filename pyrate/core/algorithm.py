@@ -222,7 +222,7 @@ def get_all_epochs(ifgs):
     return [ifg.first for ifg in ifgs] + [ifg.second for ifg in ifgs]
 
 
-def unique_date_ids(dates):
+def first_second_ids(dates):
     """
     Returns a dictionary of 'date:unique ID' for each date in 'dates'.
     IDs are ordered from oldest to newest, starting at 0.

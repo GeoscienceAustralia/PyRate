@@ -19,17 +19,13 @@ This Python module contains tests for the gdal_python.py PyRate module.
 import os
 import subprocess
 import tempfile
-import unittest
-
 import numpy as np
 from osgeo import gdal, gdalconst
-
 from pyrate.core import gdal_python
 from tests import common
 
 
-
-class TestCrop(unittest.TestCase):
+class TestCrop(common.UnitTestAdaptation):
     def test_small_data_cropping(self):
         small_test_ifgs = common.small_data_setup()
         # minX, minY, maxX, maxY = extents
@@ -51,7 +47,7 @@ class TestCrop(unittest.TestCase):
                 print("File opened by another process.")
 
 
-class TestResample(unittest.TestCase):
+class TestResample(common.UnitTestAdaptation):
 
     def test_small_data_resampling(self):
         small_test_ifgs = common.small_data_setup()
@@ -154,7 +150,7 @@ class TestResample(unittest.TestCase):
                 print("File opened by another process.")
 
 
-class BasicReampleTests(unittest.TestCase):
+class TestBasicReampleTests(common.UnitTestAdaptation):
 
     def test_reproject_with_no_data(self):
 
@@ -336,7 +332,7 @@ class BasicReampleTests(unittest.TestCase):
                                                        [0., 0., 0.]]))
 
 
-class TestMEMVsGTiff(unittest.TestCase):
+class TestMEMVsGTiff(common.UnitTestAdaptation):
 
     @staticmethod
     def check(driver_type):
@@ -390,7 +386,3 @@ class TestMEMVsGTiff(unittest.TestCase):
 
     def test_gtiff(self):
         self.check('GTiff')
-
-
-if __name__ == '__main__':
-    unittest.main()

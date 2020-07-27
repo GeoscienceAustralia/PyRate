@@ -19,6 +19,8 @@ inversion in PyRate.
 """
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-arguments
+import os
+
 import itertools
 
 from numpy import (where, isnan, nan, diff, zeros,
@@ -28,8 +30,8 @@ import numpy as np
 from scipy.linalg import qr
 from joblib import Parallel, delayed
 from pyrate.core.shared import joblib_log_level
-from pyrate.core.algorithm import unique_date_ids, get_epochs
-from pyrate.core import config as cf, mst as mst_module
+from pyrate.core.algorithm import first_second_ids, get_epochs
+from pyrate.core import config as cf, mst as mst_module, mpiops, shared
 from pyrate.core.config import ConfigException
 from pyrate.core.logger import pyratelogger as log
 
@@ -60,16 +62,16 @@ def _time_series_setup(ifgs, mst, params):
     nepoch = len(epochlist.dates)  # epoch number
     nvelpar = nepoch - 1  # velocity parameters number
     # nlap = nvelpar - smorder  # Laplacian observations number
-    img_ids = unique_date_ids(epochlist.dates)
-    ifirst = [img_ids[ifg.first] for ifg in ifgs]
-    isecond = [img_ids[ifg.second] for ifg in ifgs]
+    mast_second_ids = first_second_ids(epochlist.dates)
+    ifirst = [mast_second_ids[ifg.first] for ifg in ifgs]
+    isecond = [mast_second_ids[ifg.second] for ifg in ifgs]
     ifirst = min(ifirst, isecond)
     isecond = max(ifirst, isecond)
     b0_mat = zeros((nifgs, nvelpar))
     for i in range(nifgs):
         b0_mat[i, ifirst[i]:isecond[i]] = span[ifirst[i]:isecond[i]]
 
-    # change the sign if second image is earlier than first
+    # change the sign if second is earlier than first
     isign = where(np.atleast_1d(ifirst) > np.atleast_1d(isecond))
     b0_mat[isign[0], :] = -b0_mat[isign[0], :]
     tsvel_matrix = np.empty(shape=(nrows, ncols, nvelpar),
@@ -299,6 +301,7 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
     # TODO: implement uncertainty estimates (tserror)
     return tsvel
 
+
 def _missing_option_error(option):
     """
     Convenience function for raising similar missing option errors.
@@ -311,3 +314,36 @@ class TimeSeriesError(Exception):
     """
     Generic exception for time series errors.
     """
+
+
+def timeseries_calc_wrapper(params):
+    """
+    MPI wrapper for time series calculation.
+    """
+    tiles = params[cf.TILES]
+    preread_ifgs = params[cf.PREREAD_IFGS]
+    vcmt = params[cf.VCMT]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    if params[cf.TIME_SERIES_CAL] == 0:
+        log.info('Time Series Calculation not required')
+        return
+
+    if params[cf.TIME_SERIES_METHOD] == 1:
+        log.info('Calculating time series using Laplacian Smoothing method')
+    elif params[cf.TIME_SERIES_METHOD] == 2:
+        log.info('Calculating time series using SVD method')
+
+    output_dir = params[cf.TMPDIR]
+    total_tiles = len(tiles)
+    process_tiles = mpiops.array_split(tiles)
+    for t in process_tiles:
+        log.debug("Calculating time series for tile "+str(t.index)+" out of "+str(total_tiles))
+        ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
+        mst_tile = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
+        tsincr, tscuml, _ = time_series(ifg_parts, params, vcmt, mst_tile)
+        np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)), arr=tscuml)
+        # optional save of tsincr npy tiles
+        if params["savetsincr"] == 1:
+            np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)), arr=tsincr)
+    mpiops.comm.barrier()
+    log.debug("Finished timeseries calc!")

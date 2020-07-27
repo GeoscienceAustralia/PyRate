@@ -19,7 +19,6 @@ This Python module contains tests for the gamma.py PyRate module.
 import os
 import shutil
 import tempfile
-import unittest
 from datetime import date, time
 from os.path import join
 import pytest
@@ -53,9 +52,9 @@ gdal.UseExceptions()
 LIGHTSPEED = 3e8  # approx
 
 
-class GammaCommandLineTests(unittest.TestCase):
+class TestGammaCommandLineTests:
 
-    def setUp(self):
+    def setup_method(self):
         self.base = join(PYRATEPATH, 'tests', 'test_data', 'gamma')
         self.hdr = join(self.base, 'dem16x20raw.dem.par')
         temp_text = tempfile.mktemp()
@@ -64,12 +63,12 @@ class GammaCommandLineTests(unittest.TestCase):
         self.base_dir = os.path.dirname(self.confFile)
         shared.mkdir_p(self.base_dir)
 
-    def tearDown(self):
+    def teardown_method(self):
         try:
             os.remove(self.exp_path)
         except:
             pass
-        shutil.rmtree(self.base_dir)
+        shutil.rmtree(self.base_dir, ignore_errors=True)
 
     def makeInputFiles(self, data):
         with open(self.confFile, 'w') as conf:
@@ -83,11 +82,12 @@ class GammaCommandLineTests(unittest.TestCase):
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write(data)
 
-class GammaToGeoTiffTests(unittest.TestCase):
+
+class TestGammaToGeoTiff:
     """Tests conversion of GAMMA rasters to custom PyRate GeoTIFF"""
 
     @classmethod
-    def setUpClass(cls):
+    def setup_method(cls):
         # create common combined header obj so the headers are only read once
         # tricker: needs both ifg headers, and DEM one for the extents
         filenames = ['r20090713_VV.slc.par', 'r20090817_VV.slc.par']
@@ -98,7 +98,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
         cls.DEM_HDR = gamma.parse_dem_header(dem_hdr_path)
         cls.COMBINED = gamma.combine_headers(*hdrs, dem_hdr=cls.DEM_HDR)
 
-    def tearDown(self):
+    def teardown_method(self):
         if os.path.exists(self.dest):
             os.remove(self.dest)
 
@@ -119,7 +119,7 @@ class GammaToGeoTiffTests(unittest.TestCase):
                                   ds.ReadAsArray())
         self.compare_rasters(exp_ds, ds)
         md = ds.GetMetadata()
-        self.assertTrue(md['AREA_OR_POINT'] == 'Area')
+        assert md['AREA_OR_POINT'] == 'Area'
 
     def test_to_geotiff_ifg(self):
         self.dest = os.path.join(TEMPDIR, 'tmp_gamma_ifg.tif')
@@ -136,25 +136,24 @@ class GammaToGeoTiffTests(unittest.TestCase):
         self.compare_rasters(ds, exp_ds)
 
         md = ds.GetMetadata()
-        self.assertEqual(len(md), 11) # 11 metadata items
-        self.assertTrue(md[ifc.FIRST_DATE] == str(date(2009, 7, 13)))
-        self.assertTrue(md[ifc.SECOND_DATE] == str(date(2009, 8, 17)))
-        self.assertTrue(md[ifc.PYRATE_TIME_SPAN] == str(35 / ifc.DAYS_PER_YEAR))
+        assert len(md) == 11 # 11 metadata items
+        assert md[ifc.FIRST_DATE] == str(date(2009, 7, 13))
+        assert md[ifc.SECOND_DATE] == str(date(2009, 8, 17))
+        assert md[ifc.PYRATE_TIME_SPAN] == str(35 / ifc.DAYS_PER_YEAR)
         # TODO test failing
-        # self.assertTrue(md[ifc.FIRST_TIME] == str(12))
+        # self.assertTrue(md[ifc.FIRST_DATE] == str(12))
         # TODO test failing
-        # self.assertTrue(md[ifc.SECOND_TIME] == str(time(12)))
+        # self.assertTrue(md[ifc.SECOND_DATE] == str(time(12)))
 
         wavelen = float(md[ifc.PYRATE_WAVELENGTH_METRES])
-        self.assertAlmostEqual(wavelen, 0.05627457792190739)
+        assert wavelen == pytest.approx(0.05627457792190739)
 
     def test_to_geotiff_wrong_input_data(self):
         # use TIF, not UNW for data
         self.dest = os.path.join(TEMPDIR, 'tmp_gamma_ifg.tif')
-        data_path = join(GAMMA_TEST_DIR,
-                         '16x20_20090713-20090817_VV_4rlks_utm.tif')
-        self.assertRaises(GeotiffException, write_fullres_geotiff,
-                            self.COMBINED, data_path, self.dest, nodata=0)
+        data_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.tif')
+        with pytest.raises(GeotiffException):
+            write_fullres_geotiff(self.COMBINED, data_path, self.dest, nodata=0)
 
     def test_mismatching_cell_resolution(self):
         hdrs = self.DEM_HDR.copy()
@@ -162,33 +161,33 @@ class GammaToGeoTiffTests(unittest.TestCase):
         data_path = join(GAMMA_TEST_DIR, '16x20_20090713-20090817_VV_4rlks_utm.unw')
         self.dest = os.path.join(TEMPDIR, 'fake')
 
-        self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs,
-                            data_path, self.dest, 0)
+        with pytest.raises(GeotiffException):
+            write_fullres_geotiff(hdrs, data_path, self.dest, 0)
 
     def compare_rasters(self, ds, exp_ds):
         band = ds.GetRasterBand(1)
         exp_band = exp_ds.GetRasterBand(1)
 
         nodata = band.GetNoDataValue()
-        self.assertFalse(nodata is None)
-        self.assertEqual(exp_band.GetNoDataValue(), nodata)
+        assert ~(nodata is None)
+        assert exp_band.GetNoDataValue() == nodata
 
         pj = ds.GetProjection()
-        self.assertTrue('WGS 84' in pj)
-        self.assertEqual(exp_ds.GetProjection(), pj)
+        assert 'WGS 84' in pj
+        assert exp_ds.GetProjection() == pj
         for exp, act in zip(exp_ds.GetGeoTransform(), ds.GetGeoTransform()):
-            self.assertAlmostEqual(exp, act, places=4)
+            assert exp == pytest.approx(act, abs=0.0001)
 
     def test_bad_projection(self):
         hdr = self.DEM_HDR.copy()
         hdr[ifc.PYRATE_DATUM] = 'nonexistent projection'
         data_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem')
         self.dest = os.path.join(TEMPDIR, 'tmp_gamma_dem2.tif')
-        self.assertRaises(GeotiffException, write_fullres_geotiff, hdr,
-                            data_path, self.dest, nodata=0)
+        with pytest.raises(GeotiffException):
+            write_fullres_geotiff(hdr, data_path, self.dest, nodata=0)
 
 
-class GammaHeaderParsingTests(unittest.TestCase):
+class TestGammaHeaderParsingTests:
     'Tests conversion of GAMMA headers to Py dicts'
 
     def test_parse_gamma_epoch_header(self):
@@ -199,59 +198,67 @@ class GammaHeaderParsingTests(unittest.TestCase):
         hdrs = gamma.parse_epoch_header(path)
 
         exp_date = date(2009, 7, 13)
-        self.assertEqual(hdrs[ifc.FIRST_DATE], exp_date)
+        assert hdrs[ifc.FIRST_DATE] == exp_date
 
         exp_wavelen = LIGHTSPEED / 5.3310040e+09
-        self.assertEqual(hdrs[ifc.PYRATE_WAVELENGTH_METRES], exp_wavelen)
+        assert hdrs[ifc.PYRATE_WAVELENGTH_METRES] == exp_wavelen
 
         incidence_angle = 22.9671
-        self.assertEqual(hdrs[ifc.PYRATE_INCIDENCE_DEGREES], incidence_angle)
+        assert hdrs[ifc.PYRATE_INCIDENCE_DEGREES] == incidence_angle
 
     def test_parse_gamma_dem_header(self):
         path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
         hdrs = gamma.parse_dem_header(path)
 
-        self.assertEqual(hdrs[ifc.PYRATE_NCOLS], 16)
-        self.assertEqual(hdrs[ifc.PYRATE_NROWS], 20)
-        self.assertEqual(hdrs[ifc.PYRATE_LAT], -33.3831945)
-        self.assertEqual(hdrs[ifc.PYRATE_LONG], 150.3870833)
-        self.assertEqual(hdrs[ifc.PYRATE_X_STEP], 6.9444445e-05)
-        self.assertEqual(hdrs[ifc.PYRATE_Y_STEP], -6.9444445e-05)
+        self.assert_equal(hdrs[ifc.PYRATE_NCOLS], 16)
+        self.assert_equal(hdrs[ifc.PYRATE_NROWS], 20)
+        self.assert_equal(hdrs[ifc.PYRATE_LAT], -33.3831945)
+        self.assert_equal(hdrs[ifc.PYRATE_LONG], 150.3870833)
+        self.assert_equal(hdrs[ifc.PYRATE_X_STEP], 6.9444445e-05)
+        self.assert_equal(hdrs[ifc.PYRATE_Y_STEP], -6.9444445e-05)
+
+    @staticmethod
+    def assert_equal(arg1, arg2):
+        assert arg1 == arg2
 
 
 # Test data for the epoch header combination
 H0 = {ifc.FIRST_DATE : date(2009, 7, 13),
-      ifc.FIRST_TIME : time(12),
+      ifc.FIRST_DATE : time(12),
       ifc.PYRATE_WAVELENGTH_METRES: 1.8,
       ifc.PYRATE_INCIDENCE_DEGREES: 35.565,
       }
 
 H1 = {ifc.FIRST_DATE : date(2009, 8, 17),
-      ifc.FIRST_TIME : time(12, 10, 10),
+      ifc.FIRST_DATE : time(12, 10, 10),
       ifc.PYRATE_WAVELENGTH_METRES: 1.8,
       ifc.PYRATE_INCIDENCE_DEGREES: 35.56,
       }
 
 H1_ERR1 = {ifc.FIRST_DATE : date(2009, 8, 17),
-          ifc.FIRST_TIME : time(12),
+          ifc.FIRST_DATE : time(12),
           ifc.PYRATE_WAVELENGTH_METRES: 2.4,
           ifc.PYRATE_INCIDENCE_DEGREES: 35.56,
           }
 
 H1_ERR2 = {ifc.FIRST_DATE : date(2009, 8, 17),
-          ifc.FIRST_TIME : time(12),
+          ifc.FIRST_DATE : time(12),
           ifc.PYRATE_WAVELENGTH_METRES: 1.8,
           ifc.PYRATE_INCIDENCE_DEGREES: 35.76,
           }
 
 
-class HeaderCombinationTests(unittest.TestCase):
+class TestHeaderCombination:
     'Tests GAMMA epoch and DEM headers can be combined into a single Py dict'
 
-    def setUp(self):
+    def setup_method(self):
         self.err = gamma.GammaException
         dem_hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
         self.dh = gamma.parse_dem_header(dem_hdr_path)
+
+    @staticmethod
+    def assert_equal(arg1, arg2):
+        assert arg1 == arg2
 
     def test_combine_headers(self):
         filenames = ['r20090713_VV.slc.par', 'r20090817_VV.slc.par']
@@ -261,33 +268,38 @@ class HeaderCombinationTests(unittest.TestCase):
         chdr = gamma.combine_headers(hdr0, hdr1, self.dh)
 
         exp_timespan = (18 + 17) / ifc.DAYS_PER_YEAR
-        self.assertEqual(chdr[ifc.PYRATE_TIME_SPAN], exp_timespan)
+        self.assert_equal(chdr[ifc.PYRATE_TIME_SPAN], exp_timespan)
 
         exp_date = date(2009, 7, 13)
-        self.assertEqual(chdr[ifc.FIRST_DATE], exp_date)
+        self.assert_equal(chdr[ifc.FIRST_DATE], exp_date)
         exp_date2 = date(2009, 8, 17)
-        self.assertEqual(chdr[ifc.SECOND_DATE], exp_date2)
+        self.assert_equal(chdr[ifc.SECOND_DATE], exp_date2)
 
         exp_wavelen = LIGHTSPEED / 5.3310040e+09
-        self.assertEqual(chdr[ifc.PYRATE_WAVELENGTH_METRES], exp_wavelen)
+        self.assert_equal(chdr[ifc.PYRATE_WAVELENGTH_METRES], exp_wavelen)
 
     def test_fail_non_dict_header(self):
-        self.assertRaises(self.err, gamma.combine_headers, H0, '', self.dh)
-        self.assertRaises(self.err, gamma.combine_headers, '', H0, self.dh)
-        self.assertRaises(self.err, gamma.combine_headers, H0, H1, None)
-        self.assertRaises(self.err, gamma.combine_headers, H0, H1, '')
+        self.assertRaises(gamma.combine_headers, H0, '', self.dh)
+        self.assertRaises(gamma.combine_headers, '', H0, self.dh)
+        self.assertRaises(gamma.combine_headers, H0, H1, None)
+        self.assertRaises(gamma.combine_headers, H0, H1, '')
 
     def test_fail_mismatching_wavelength(self):
-        self.assertRaises(self.err, gamma.combine_headers, H0, H1_ERR1, self.dh)
+        self.assertRaises(gamma.combine_headers, H0, H1_ERR1, self.dh)
         
     def test_fail_mismatching_incidence(self):
-        self.assertRaises(self.err, gamma.combine_headers, H0, H1_ERR2, self.dh)
+        self.assertRaises(gamma.combine_headers, H0, H1_ERR2, self.dh)
 
     def test_fail_same_date(self):
-        self.assertRaises(self.err, gamma.combine_headers, H0, H0, self.dh)
+        self.assertRaises(gamma.combine_headers, H0, H0, self.dh)
 
     def test_fail_bad_date_order(self):
-        self.assertRaises(self.err, gamma.combine_headers, H1, H0, self.dh)
+        with pytest.raises(self.err):
+            gamma.combine_headers(H1, H0, self.dh)
+
+    def assertRaises(self, func, * args):
+        with pytest.raises(self.err):
+            func(* args)
 
 
 glob_prefix = "*utm_unw_ifg_1rlks_1cr.tif"
@@ -307,7 +319,7 @@ def parallel_ifgs(gamma_conf):
 
     params_p = Configuration(output_conf).__dict__
 
-    gtif_paths = conv2tif.main(params_p)
+    conv2tif.main(params_p)
     prepifg.main(params_p)
 
     parallel_df = list(Path(tdir).joinpath('out').glob(glob_prefix))
@@ -315,7 +327,7 @@ def parallel_ifgs(gamma_conf):
     p_ifgs = small_data_setup(datafiles=parallel_df)
     yield p_ifgs
 
-    shutil.rmtree(params_p[cf.OBS_DIR])
+    shutil.rmtree(params_p[cf.OBS_DIR], ignore_errors=True)
 
 
 @pytest.fixture(scope='module')
@@ -344,7 +356,7 @@ def series_ifgs(gamma_conf):
 
     print('======================teardown series==========================')
 
-    shutil.rmtree(params_s[cf.OBS_DIR])
+    shutil.rmtree(params_s[cf.OBS_DIR], ignore_errors=True)
 
 
 def test_equality(series_ifgs, parallel_ifgs):
@@ -363,6 +375,3 @@ def test_meta_data_exist(series_ifgs, parallel_ifgs):
         assert s.meta_data[ifc.DATA_TYPE] == ifc.MULTILOOKED
 
     assert i == 16
-
-if __name__ == "__main__":
-    unittest.main()

@@ -17,23 +17,22 @@
 """
 This Python module implements a reference phase estimation algorithm.
 """
+import os
 from joblib import Parallel, delayed
 import numpy as np
 
-from pyrate.core import ifgconstants as ifc, config as cf
+from pyrate.core import ifgconstants as ifc, config as cf, mpiops, shared
 from pyrate.core.shared import joblib_log_level, nanmedian, Ifg
 from pyrate.core import mpiops
-
 from pyrate.core.logger import pyratelogger as log
 
+first_PROCESS = 0
 
-PRIMARY_PROCESS = 0
 
-
-def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
+def est_ref_phase_patch_median(ifg_paths, params, refpx, refpy):
     """
-    Reference phase estimation using method 2. Reference phase is the
-    median calculated with a patch around the supplied reference pixel.
+    Reference phase estimation, calculated as the median within a patch around
+    the supplied reference pixel.
 
     :param list ifg_paths: List of interferogram paths or objects.
     :param dict params: Dictionary of configuration parameters
@@ -62,7 +61,7 @@ def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
         if params[cf.PARALLEL]:
             ref_phs = Parallel(n_jobs=params[cf.PROCESSES],
                                verbose=joblib_log_level(cf.LOG_LEVEL))(
-                delayed(_est_ref_phs_method2)(p, half_chip_size, refpx, refpy, thresh)
+                delayed(_est_ref_phs_patch_median)(p, half_chip_size, refpx, refpy, thresh)
                 for p in phase_data)
 
             for n, ifg in enumerate(ifgs):
@@ -70,7 +69,7 @@ def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
         else:
             ref_phs = np.zeros(len(ifgs))
             for n, ifg in enumerate(ifgs):
-                ref_phs[n] = _est_ref_phs_method2(phase_data[n], half_chip_size, refpx, refpy, thresh)
+                ref_phs[n] = _est_ref_phs_patch_median(phase_data[n], half_chip_size, refpx, refpy, thresh)
                 ifg.phase_data -= ref_phs[n]
 
         for ifg in ifgs:
@@ -84,7 +83,7 @@ def est_ref_phase_method2(ifg_paths, params, refpx, refpy):
     return ref_phs   
 
 
-def _est_ref_phs_method2(phase_data, half_chip_size, refpx, refpy, thresh):
+def _est_ref_phs_patch_median(phase_data, half_chip_size, refpx, refpy, thresh):
     """
     Convenience function for ref phs estimate method 2 parallelisation
     """
@@ -101,10 +100,10 @@ def _est_ref_phs_method2(phase_data, half_chip_size, refpx, refpy, thresh):
     return ref_ph
 
 
-def est_ref_phase_method1(ifg_paths, params):
+def est_ref_phase_ifg_median(ifg_paths, params):
     """
-    Reference phase estimation using method 1. Reference phase is the
-    median of the whole interferogram image.
+    Reference phase estimation, calculated as the median of the whole
+    interferogram image.
 
     :param list ifg_paths: List of interferogram paths or objects
     :param dict params: Dictionary of configuration parameters
@@ -146,7 +145,7 @@ def est_ref_phase_method1(ifg_paths, params):
         if params[cf.PARALLEL]:
             log.info("Calculating ref phase using multiprocessing")
             ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-                delayed(_est_ref_phs_method1)(p.phase_data, comp) for p in proc_ifgs
+                delayed(_est_ref_phs_ifg_median)(p.phase_data, comp) for p in proc_ifgs
             )
             for n, ifg in enumerate(proc_ifgs):
                 ifg.phase_data -= ref_phs[n]
@@ -154,7 +153,7 @@ def est_ref_phase_method1(ifg_paths, params):
             log.info("Calculating ref phase")
             ref_phs = np.zeros(len(proc_ifgs))
             for n, ifg in enumerate(proc_ifgs):
-                ref_phs[n] = _est_ref_phs_method1(ifg.phase_data, comp)
+                ref_phs[n] = _est_ref_phs_ifg_median(ifg.phase_data, comp)
                 ifg.phase_data -= ref_phs[n]
 
         for ifg in proc_ifgs:
@@ -170,7 +169,7 @@ def est_ref_phase_method1(ifg_paths, params):
     return ref_phs
 
 
-def _est_ref_phs_method1(phase_data, comp):
+def _est_ref_phs_ifg_median(phase_data, comp):
     """
     Convenience function for ref phs estimate method 1 parallelisation
     """
@@ -190,3 +189,57 @@ class ReferencePhaseError(Exception):
     Generic class for errors in reference phase estimation.
     """
     pass
+
+
+def ref_phase_est_wrapper(params):
+    """
+    Wrapper for reference phase estimation.
+    """
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    refpx, refpy = params[cf.REFX], params[cf.REFY]
+    if len(ifg_paths) < 2:
+        raise ReferencePhaseError(
+            "At least two interferograms required for reference phase correction ({len_ifg_paths} "
+            "provided).".format(len_ifg_paths=len(ifg_paths))
+        )
+
+    if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_REF_PHASE):
+        log.debug('Finished reference phase correction')
+        return
+
+    if params[cf.REF_EST_METHOD] == 1:
+        log.info("Calculating reference phase as median of interferogram")
+        ref_phs = est_ref_phase_ifg_median(ifg_paths, params)
+    elif params[cf.REF_EST_METHOD] == 2:
+        log.info('Calculating reference phase in a patch surrounding pixel (x, y): ({}, {})'.format(refpx, refpy))
+        ref_phs = est_ref_phase_patch_median(ifg_paths, params, refpx, refpy)
+    else:
+        raise ReferencePhaseError("No such option, set parameter 'refest' to '1' or '2'.")
+
+    # Save reference phase numpy arrays to disk.
+    ref_phs_file = os.path.join(params[cf.TMPDIR], 'ref_phs.npy')
+    if mpiops.rank == first_PROCESS:
+        collected_ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
+        process_indices = mpiops.array_split(range(len(ifg_paths)))
+        collected_ref_phs[process_indices] = ref_phs
+        for r in range(1, mpiops.size):
+            process_indices = mpiops.array_split(range(len(ifg_paths)), r)
+            this_process_ref_phs = np.zeros(shape=len(process_indices),
+                                            dtype=np.float64)
+            mpiops.comm.Recv(this_process_ref_phs, source=r, tag=r)
+            collected_ref_phs[process_indices] = this_process_ref_phs
+        np.save(file=ref_phs_file, arr=collected_ref_phs)
+    else:
+        mpiops.comm.Send(ref_phs, dest=first_PROCESS, tag=mpiops.rank)
+    log.debug('Finished reference phase correction')
+
+    # Preserve old return value so tests don't break.
+    if isinstance(ifg_paths[0], Ifg):
+        ifgs = ifg_paths
+    else:
+        ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
+    mpiops.comm.barrier()
+    shared.save_numpy_phase(ifg_paths, params)
+
+    log.debug("Reference phase computed!")
+    return ref_phs, ifgs

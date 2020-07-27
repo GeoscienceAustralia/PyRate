@@ -18,14 +18,13 @@ This Python module contains tests for the covariance.py PyRate module.
 """
 import os
 from pathlib import Path
-import shutil
-import sys
-import tempfile
-import unittest
+import pytest
 from numpy import array
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
+import pyrate.core.ref_phs_est
+import pyrate.core.refpixel
 from pyrate.core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
 from pyrate import process, prepifg, conv2tif
 from pyrate.core.covariance import cvd, get_vcmt, RDist
@@ -42,16 +41,18 @@ from tests.common import (
 )
 
 
-class CovarianceTests(unittest.TestCase):
-    def setUp(self):
-        self.ifgs = small_data_setup()
-        for i in self.ifgs:
+class TestCovariance:
+
+    @classmethod
+    def setup_class(cls):
+        cls.ifgs = small_data_setup()
+        for i in cls.ifgs:
             i.mm_converted = True
         params = dict()
         params[cf.NO_DATA_VALUE] = 0
         params[cf.NAN_CONVERSION] = True
-        self.params = params
-        self.r_dist = RDist(self.ifgs[0])()
+        cls.params = params
+        cls.r_dist = RDist(cls.ifgs[0])()
 
     def test_covariance_basic(self):
         ifgs = small5_ifgs()
@@ -62,8 +63,8 @@ class CovarianceTests(unittest.TestCase):
                 raise Exception("All zero")
 
             maxvar, alpha = cvd(i, self.params, self.r_dist, calc_alpha=True)
-            self.assertTrue(maxvar is not None)
-            self.assertTrue(alpha is not None)
+            assert maxvar is not None
+            assert alpha is not None
             print("maxvar: %s, alpha: %s" % (maxvar, alpha))
 
     def test_covariance_17ifgs(self):
@@ -85,8 +86,8 @@ class CovarianceTests(unittest.TestCase):
                 raise Exception("All zero")
 
             maxvar, alpha = cvd(i, self.params, self.r_dist, calc_alpha=True)
-            self.assertTrue(maxvar is not None)
-            self.assertTrue(alpha is not None)
+            assert maxvar is not None
+            assert alpha is not None
            
             act_maxvar.append(maxvar)
             act_alpha.append(alpha)
@@ -98,10 +99,10 @@ class CovarianceTests(unittest.TestCase):
         assert_array_almost_equal(act_alpha, exp_alpha, decimal=1)
 
 
-class VCMTests(unittest.TestCase):
+class TestVCMT:
 
-    def setUp(self):
-        self.ifgs = small_data_setup()
+    def setup_class(cls):
+        cls.ifgs = small_data_setup()
 
     def test_vcm_basic(self):
         ifgs = small5_mock_ifgs(5, 9)
@@ -182,38 +183,40 @@ legacy_maxvar = [15.4156637191772,
                  5.62802362442017]
 
 
-class LegacyEqualityTest(unittest.TestCase):
-
+class TestLegacyEquality:
     @classmethod
-    def setUpClass(cls):
-        params = Configuration(TEST_CONF_ROIPAC).__dict__
-        cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['prepifg.py', TEST_CONF_ROIPAC]
-        params[cf.OUT_DIR] = cls.temp_out_dir
-        params[cf.TMPDIR] = os.path.join(cls.temp_out_dir, cf.TMPDIR)
+    @pytest.fixture(autouse=True)
+    def setup_class(cls, roipac_params):
+
+        params = roipac_params
         shared.mkdir_p(params[cf.TMPDIR])
         params[cf.REF_EST_METHOD] = 2
         conv2tif.main(params)
         prepifg.main(params)
-        cls.params = params
+        params = params
         base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
         dest_paths = [c.converted_path for c in params[cf.INTERFEROGRAM_FILES]]
         dest_paths = dest_paths[:-2]
-        params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(cls.temp_out_dir, d) for d in dest_paths]
+        params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(params[cf.OUT_DIR], d) for d in dest_paths]
         for p in params[cf.INTERFEROGRAM_FILES]:  # hack
             p.sampled_path = p.converted_path
 
         for i in dest_paths:
             Path(i).chmod(0o664)  # assign write permission as conv2tif output is readonly
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
+        process._copy_mlooked(params)
         process._update_params_with_tiles(params)
-        process._ref_pixel_calc(params)
-        headers = [roipac.roipac_header(i, cls.params) for i in base_ifg_paths]
+        process._create_ifg_dict(params)
+        pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
+        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
-        _, cls.ifgs = process._ref_phase_est_wrapper(params)
+
+        for p in params[cf.INTERFEROGRAM_FILES]:  # hack
+            p.tmp_sampled_path = p.sampled_path
+        _, cls.ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = RDist(ifgs[0])()
         ifgs[0].close()
@@ -222,18 +225,15 @@ class LegacyEqualityTest(unittest.TestCase):
         cls.vcmt = get_vcmt(ifgs, cls.maxvar)
         for ifg in ifgs:
             ifg.close()
+        cls.params = params
 
     @classmethod
-    def tearDownClass(cls):
-        for i in cls.ifgs:
-            i.close()
-        shutil.rmtree(cls.temp_out_dir)
-        params = cf.get_config_params(TEST_CONF_ROIPAC)
-        common.remove_tifs(params[cf.OBS_DIR])
+    def teardown_class(cls):
+        # roipac_params tears down itself
+        pass
 
     def test_legacy_maxvar_equality_small_test_files(self):
-        np.testing.assert_array_almost_equal(self.maxvar, legacy_maxvar,
-                                             decimal=3)
+        np.testing.assert_array_almost_equal(self.maxvar, legacy_maxvar, decimal=3)
 
     def test_legacy_vcmt_equality_small_test_files(self):
         from tests.common import SML_TEST_DIR

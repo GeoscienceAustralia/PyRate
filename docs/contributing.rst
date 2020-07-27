@@ -80,17 +80,17 @@ Ready to contribute? Here's how to set up `PyRate` for local development.
 
 Now you can make your changes locally.
 
-4. When you have finished making changes, check that your changes pass style and unit
+4. When you have finished making changes, check that your changes pass against unit
    tests. A suite of tests have been developed for use in testing `PyRate` functionality
    and for further code development. The tests use `pytest <http://doc.pytest.org/en/latest/>`__
-   and can be found in the ``PyRate/tests/`` directory. A small test dataset used by the test suite is included in the repository in the ``PyRate/tests/test_data/small_test`` directory.
+   and can be found in the ``PyRate/tests/`` directory. A small test dataset used by
+   the test suite is included in the repository in the ``PyRate/tests/test_data/small_test`` directory.
 
 ::
 
     cd ~/PyRate
-    pytest tests/
-    pip install tox
-    tox
+    # 'not slow' avoids running those tests marked as 'slow'
+    pytest tests/ -m "not slow"
 
 5. If the tests pass, commit your changes and push your branch to GitHub:
 

@@ -19,9 +19,10 @@
 pyrate basic workflow for all supported input datasets
 
 """
-import pytest
 from subprocess import check_call
 from pathlib import Path
+import pytest
+import numpy as np
 from pyrate.core import config as cf
 from pyrate.configuration import Configuration
 
@@ -52,3 +53,18 @@ def test_single_workflow(gamma_conf):
     log_file_name = 'pyrate.log.' + 'workflow'
     files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
     assert len(files) == 1
+
+    # ref pixel file generated
+    ref_pixel_file = Path(params[cf.OUT_DIR]).joinpath(cf.REF_PIXEL_FILE)
+    assert ref_pixel_file.exists()
+    ref_pixel = np.load(ref_pixel_file)
+    np.testing.assert_array_equal(ref_pixel, [38, 58])
+
+    # assert orbfit exists on disc
+    from pyrate.core import shared
+    looked_files = [p.sampled_path for p in params[cf.INTERFEROGRAM_FILES]]
+    ifgs = [shared.Ifg(ifg) for ifg in looked_files]
+    orbfits_on_disc = [Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR,
+                          Path(ifg.data_path).stem + '_orbfit.npy')
+                       for ifg in ifgs]
+    assert all(orbfits_on_disc)

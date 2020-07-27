@@ -19,7 +19,6 @@ Variance/Covariance matrix functionality.
 """
 # coding: utf-8
 from os.path import basename, join
-import logging
 from numpy import array, where, isnan, real, imag, sqrt, meshgrid
 from numpy import zeros, vstack, ceil, mean, exp, reshape
 from numpy.linalg import norm
@@ -27,13 +26,15 @@ import numpy as np
 from scipy.fftpack import fft2, ifft2, fftshift
 from scipy.optimize import fmin
 
-from pyrate.core import shared, ifgconstants as ifc, config as cf
-from pyrate.core.shared import PrereadIfg
-from pyrate.core.algorithm import unique_date_ids
+from pyrate.core import shared, ifgconstants as ifc, config as cf, mpiops
+from pyrate.core.shared import PrereadIfg, Ifg
+from pyrate.core.algorithm import first_second_ids
 from pyrate.core.logger import pyratelogger as log
 
 # pylint: disable=too-many-arguments
 # distance division factor of 1000 converts to km and is needed to match legacy output
+
+first_PROCESS = 0
 DISTFACT = 1000
 
 
@@ -281,7 +282,7 @@ def get_vcmt(ifgs, maxvar):
 
     C = 1 if the first and second epochs of i and j are equal
     C = 0.5 if have i and j share either a common first or second epoch
-    C = -0.5 if the first epoch of i or j equals the second epoch of the other
+    C = -0.5 if the first of i or j equals the second of the other
     C = 0 otherwise
 
     :param list ifgs: A list of pyrate.shared.Ifg class objects.
@@ -292,8 +293,8 @@ def get_vcmt(ifgs, maxvar):
     :rtype: ndarray
     """
     # pylint: disable=too-many-locals
-    # c=0.5 for common first or second epoch; c=-0.5 if first epoch
-    # of one matches second epoch of another
+    # c=0.5 for common first or second; c=-0.5 if first
+    # of one matches second of another
 
     if isinstance(ifgs, dict):
         from collections import OrderedDict
@@ -306,23 +307,68 @@ def get_vcmt(ifgs, maxvar):
     vcm_pat = zeros((nifgs, nifgs))
 
     dates = [ifg.first for ifg in ifgs] + [ifg.second for ifg in ifgs]
-    ids = unique_date_ids(dates)
+    ids = first_second_ids(dates)
 
     for i, ifg in enumerate(ifgs):
-        first1, second1 = ids[ifg.first], ids[ifg.second]
+        mas1, slv1 = ids[ifg.first], ids[ifg.second]
 
         for j, ifg2 in enumerate(ifgs):
-            first2, second2 = ids[ifg2.first], ids[ifg2.second]
-            if first1 == first2 or second1 == second2:
+            mas2, slv2 = ids[ifg2.first], ids[ifg2.second]
+            if mas1 == mas2 or slv1 == slv2:
                 vcm_pat[i, j] = 0.5
 
-            if first1 == second2 or second1 == first2:
+            if mas1 == slv2 or slv1 == mas2:
                 vcm_pat[i, j] = -0.5
 
-            if first1 == first2 and second1 == second2:
+            if mas1 == mas2 and slv1 == slv2:
                 vcm_pat[i, j] = 1.0  # diagonal elements
 
     # make covariance matrix in time domain
     std = sqrt(maxvar).reshape((nifgs, 1))
     vcm_t = std * std.transpose()
     return vcm_t * vcm_pat
+
+
+def maxvar_vcm_calc_wrapper(params):
+    """
+    MPI wrapper for maxvar and vcmt computation
+    """
+    preread_ifgs = params[cf.PREREAD_IFGS]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    log.info('Calculating the temporal variance-covariance matrix')
+    process_indices = mpiops.array_split(range(len(ifg_paths)))
+
+    def _get_r_dist(ifg_path):
+        """
+        Get RDIst class object
+        """
+        ifg = Ifg(ifg_path)
+        ifg.open()
+        r_dist = RDist(ifg)()
+        ifg.close()
+        return r_dist
+
+    r_dist = mpiops.run_once(_get_r_dist, ifg_paths[0])
+    prcs_ifgs = mpiops.array_split(ifg_paths)
+    process_maxvar = []
+    for n, i in enumerate(prcs_ifgs):
+        log.debug('Calculating maxvar for {} of process ifgs {} of total {}'.format(n+1, len(prcs_ifgs), len(ifg_paths)))
+        process_maxvar.append(cvd(i, params, r_dist, calc_alpha=True, write_vals=True, save_acg=True)[0])
+    if mpiops.rank == first_PROCESS:
+        maxvar = np.empty(len(ifg_paths), dtype=np.float64)
+        maxvar[process_indices] = process_maxvar
+        for i in range(1, mpiops.size):  # pragma: no cover
+            rank_indices = mpiops.array_split(range(len(ifg_paths)), i)
+            this_process_ref_phs = np.empty(len(rank_indices), dtype=np.float64)
+            mpiops.comm.Recv(this_process_ref_phs, source=i, tag=i)
+            maxvar[rank_indices] = this_process_ref_phs
+    else:  # pragma: no cover
+        maxvar = np.empty(len(ifg_paths), dtype=np.float64)
+        mpiops.comm.Send(np.array(process_maxvar, dtype=np.float64), dest=first_PROCESS, tag=mpiops.rank)
+
+    mpiops.comm.barrier()
+    maxvar = mpiops.comm.bcast(maxvar, root=0)
+    vcmt = mpiops.run_once(get_vcmt, preread_ifgs, maxvar)
+    log.debug("Finished maxvar and vcm calc!")
+    params[cf.MAXVAR], params[cf.VCMT] = maxvar, vcmt
+    return maxvar, vcmt
