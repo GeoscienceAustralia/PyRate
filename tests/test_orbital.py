@@ -866,9 +866,6 @@ class TestLegacyComparisonTestsOrbfitMethod2:
                     count += 1
                     ifg = Ifg(j)
                     ifg.open()
-                    # all numbers equal
-                    # Note this changed as the nodata mask in the gdal_python.gdal_average changed to nan from 0
-                    # np.testing.assert_array_almost_equal(legacy_phase_data, ifg.phase_data, decimal=3)
                     # number of nans must equal
                     assert np.sum(np.isnan(legacy_phase_data)) == np.sum(np.isnan(ifg.phase_data))
 
