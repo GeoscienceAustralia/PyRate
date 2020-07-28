@@ -27,7 +27,7 @@ from pyrate.core import config as cf
 from pyrate.configuration import Configuration
 
 
-@pytest.mark.slow
+# @pytest.mark.slow
 def test_workflow(system_conf):
     """check the handlers are working as expected"""
     check_call(f"mpirun -n 3 pyrate conv2tif -f {system_conf}", shell=True)
@@ -43,7 +43,7 @@ def test_workflow(system_conf):
         assert len(files) == 1
 
 
-@pytest.mark.slow
+# @pytest.mark.slow
 def test_single_workflow(gamma_conf):
 
     check_call(f"mpirun -n 4 pyrate workflow -f {gamma_conf}", shell=True)
