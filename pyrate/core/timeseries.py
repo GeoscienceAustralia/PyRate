@@ -305,7 +305,22 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
 
 def linear_rate_pixel(y, t):
     """
-    Calculate best fitting linear rate to cumulative time series for one pixel
+    Calculate best fitting linear rate to cumulative displacement
+    time series for one pixel using linear regression.
+
+    :param ndarray y: 1-dimensional vector of cumulative displacement time series
+    :param ndarray t: 1-dimensional vector of cumulative time at each epoch
+
+    :return: linrate: Linear rate; gradient of fitted line.
+    :rtype: float
+    :return intercept: Y-axis intercept of fitted line at t = 0
+    :rtype: float
+    :return: rsquared: R-squared value of the linear regression
+    :rtype: float
+    :return: error: Standard error of the linear regression
+    :rtype: float
+    :return: samples: Number of observations used in linear regression
+    :rtype: int
     """
 
     # insert leading zero (not saved in tscuml by default)
@@ -316,14 +331,14 @@ def linear_rate_pixel(y, t):
     y = y[~isnan(y)]    
     nsamp = len(y)
 
-    # break out if not enough time series obs
+    # break out if not enough time series obs for line fitting
     if nsamp < 2:
         return nan, nan, nan, nan, nan
 
     # compute linear regression of tscuml 
     linrate, intercept, r_value, p_value, std_err = linregress(t, y)
 
-    return linrate, intercept, r_value**2, std_err, nsamp
+    return linrate, intercept, r_value**2, std_err, int(nsamp)
 
 
 def linear_rate_array(tscuml, ifgs, params):
@@ -336,11 +351,13 @@ def linear_rate_array(tscuml, ifgs, params):
     :param list ifgs: list of interferogram class objects.
     :param dict params: Configuration parameters
 
-    :return: rate: Linear rate map
+    :return: linrate: Linear rate map from linear regression
     :rtype: ndarray
-    :return: rsquared: R-squared value of the linear regression
+    :return: intercept: Array of Y-axis intercepts from linear regression
     :rtype: ndarray
-    :return: error: Standard error of the linear regression
+    :return: rsquared: Array of R-squared value of the linear regression
+    :rtype: ndarray
+    :return: error: Array of standard errors of the linear regression
     :rtype: ndarray
     :return: samples: Number of observations used in linear regression for each pixel
     :rtype: ndarray
