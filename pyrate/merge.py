@@ -172,7 +172,7 @@ def create_png_and_kml_from_tif(output_folder_path: str, output_type: str) -> No
     # steps used for the colourmap, must be even (currently hard-coded to 254 resulting in 255 values)
     no_of_steps = 254
     # slightly different code required for rate map and rate error map
-    if output_type == 'stack_rate' or 'linear_rate':
+    if output_type in ('stack_rate', 'linear_rate'):
         # minimum value might be negative
         maximum = max(abs(minimum), abs(maximum))
         minimum = -1 * maximum
@@ -190,7 +190,7 @@ def create_png_and_kml_from_tif(output_folder_path: str, output_type: str) -> No
         r = np.flipud(r) * 255
         g = np.flipud(g) * 255
         b = np.flipud(b) * 255
-    if output_type == 'stack_error' or 'linear_error' or 'linear_rsquared':
+    if output_type in ('stack_error', 'linear_error', 'linear_rsquared'):
         # colours: white -> red (minimum error -> maximum error  
         # allocate RGB values to three numpy arrays r, g, b
         r = np.ones(no_of_steps+1)*255
