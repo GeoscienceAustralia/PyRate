@@ -318,12 +318,12 @@ def linear_rate_pixel(y, t):
 
     # break out if not enough time series obs
     if nsamp < 2:
-        return nan, nan, nan, nan
+        return nan, nan, nan, nan, nan
 
     # compute linear regression of tscuml 
     linrate, intercept, r_value, p_value, std_err = linregress(t, y)
-    
-    return linrate, r_value**2, std_err, nsamp
+
+    return linrate, intercept, r_value**2, std_err, nsamp
 
 
 def linear_rate_array(tscuml, ifgs, params):
@@ -362,21 +362,23 @@ def linear_rate_array(tscuml, ifgs, params):
         )
         res = np.array(res)
         linrate = res[:, 0].reshape(nrows, ncols)
-        rsquared = res[:, 1].reshape(nrows, ncols)
-        error = res[:, 2].reshape(nrows, ncols)
-        samples = res[:, 3].reshape(nrows, ncols)
+        intercept = res[:, 1].reshape(nrows, ncols)
+        rsquared = res[:, 2].reshape(nrows, ncols)
+        error = res[:, 3].reshape(nrows, ncols)
+        samples = res[:, 4].reshape(nrows, ncols)
     else:
         log.info('Calculating linear regression of cumulative time series in serial')
         # preallocate empty arrays for results
         linrate = np.empty([nrows, ncols], dtype=float32)
         rsquared = np.empty([nrows, ncols], dtype=float32)
         error = np.empty([nrows, ncols], dtype=float32)
+        intercept = np.empty([nrows, ncols], dtype=np.float32)
         samples = np.empty([nrows, ncols], dtype=np.float32)
         for i in range(nrows):
             for j in range(ncols):
-                linrate[i, j], rsquared[i, j], error[i, j], samples[i, j] = linear_rate_pixel(tscuml[i, j, :], t)
+                linrate[i, j], intercept[i, j], rsquared[i, j], error[i, j], samples[i, j] = linear_rate_pixel(tscuml[i, j, :], t)
 
-    return linrate, rsquared, error, samples
+    return linrate, intercept, rsquared, error, samples
 
 
 def _missing_option_error(option):
@@ -422,8 +424,9 @@ def timeseries_calc_wrapper(params):
         # optional save of tsincr npy tiles
         if params["savetsincr"] == 1:
             np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)), arr=tsincr)
-        linrate, r_squared, std_err, samples = linear_rate_array(tscuml, ifg_parts, params)
+        linrate, intercept, r_squared, std_err, samples = linear_rate_array(tscuml, ifg_parts, params)
         np.save(file=os.path.join(output_dir, 'linear_rate_{}.npy'.format(t.index)), arr=linrate)
+        np.save(file=os.path.join(output_dir, 'linear_intercept_{}.npy'.format(t.index)), arr=intercept)
         np.save(file=os.path.join(output_dir, 'linear_rsquared_{}.npy'.format(t.index)), arr=r_squared)
         np.save(file=os.path.join(output_dir, 'linear_error_{}.npy'.format(t.index)), arr=std_err)
         np.save(file=os.path.join(output_dir, 'linear_samples_{}.npy'.format(t.index)), arr=samples)

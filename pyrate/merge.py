@@ -87,10 +87,12 @@ def _merge_linrate(params: dict) -> None:
     rate = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='linear_rate')
     rsq = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='linear_rsquared')
     error = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='linear_error')
+    intercept = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='linear_intercept')
     samples = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='linear_samples')
 
     # save geotiff and numpy array files
-    for out, ot in zip([rate, rsq, error, samples], ['linear_rate', 'linear_rsquared', 'linear_error', 'linear_samples']):
+    for out, ot in zip([rate, rsq, error, intercept, samples], ['linear_rate', 'linear_rsquared', 'linear_error',
+                                        'linear_intercept', 'linear_samples']):
         _save_merged_files(ifgs_dict, params[cf.OUT_DIR], out, ot, savenpy=params["savenpy"])
 
 
