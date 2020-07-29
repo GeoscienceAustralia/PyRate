@@ -26,6 +26,7 @@ from os.path import join
 from pathlib import Path
 import numpy as np
 
+import pyrate.configuration
 import pyrate.core.shared
 from pyrate.core import shared, config as cf, config, prepifg_helper, mst
 from pyrate.core.shared import dem_or_ifg
@@ -141,7 +142,8 @@ class TestPyRate:
             paths = glob.glob(join(cls.BASE_OUT_DIR, 'geo_*-*.tif'))
             paths = sorted(paths)
             params[cf.PARALLEL] = False
-            params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(cls.BASE_OUT_DIR, p) for p in paths]
+            params[cf.TEMP_MLOOKED_DIR] = cls.BASE_OUT_DIR.join(cf.TEMP_MLOOKED_DIR)
+            params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(p, params) for p in paths]
             for p in params[cf.INTERFEROGRAM_FILES]:  # cheat
                 p.sampled_path = p.converted_path
                 p.tmp_sampled_path = p.converted_path
@@ -219,7 +221,7 @@ class TestParallelPyRate:
 
         output_conf_file = 'gamma.conf'
         output_conf = cls.tif_dir.joinpath(output_conf_file).as_posix()
-        cf.write_config_file(params=params, output_conf_file=output_conf)
+        pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
 
         params = Configuration(output_conf).__dict__
 
@@ -252,7 +254,7 @@ class TestParallelPyRate:
         params[cf.REFX], params[cf.REFY] = -1, -1
         output_conf_file = 'gamma.conf'
         output_conf = cls.tif_dir_s.joinpath(output_conf_file).as_posix()
-        cf.write_config_file(params=params, output_conf_file=output_conf)
+        pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
         params = Configuration(output_conf).__dict__
 
         check_call(f"pyrate conv2tif -f {output_conf}", shell=True)

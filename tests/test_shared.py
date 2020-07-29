@@ -420,8 +420,7 @@ class TestWriteUnw:
             shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw= dest_unw, ifg_proc=1)
             dest_unws.append(dest_unw)
 
-        dest_unws_ = [MultiplePaths(self.params[cf.OUT_DIR], b, self.params[cf.IFG_LKSX], self.params[cf.IFG_CROP_OPT])
-                      for b in dest_unws]
+        dest_unws_ = [MultiplePaths(b, self.params) for b in dest_unws]
 
         # Convert back to tiff
         new_geotiffs_ = conv2tif.do_geotiff(dest_unws_, self.params)

@@ -27,6 +27,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 from osgeo import gdal
 
+import pyrate.configuration
 import pyrate.core.ifgconstants as ifc
 from pyrate.core import shared, config as cf, gamma
 from pyrate.core.config import (
@@ -315,7 +316,7 @@ def parallel_ifgs(gamma_conf):
 
     output_conf_file = 'conf.conf'
     output_conf = tdir.joinpath(output_conf_file)
-    cf.write_config_file(params=params_p, output_conf_file=output_conf)
+    pyrate.configuration.write_config_file(params=params_p, output_conf_file=output_conf)
 
     params_p = Configuration(output_conf).__dict__
 
@@ -341,7 +342,7 @@ def series_ifgs(gamma_conf):
 
     output_conf_file = 'conf.conf'
     output_conf = tdir.joinpath(output_conf_file)
-    cf.write_config_file(params=params_s, output_conf_file=output_conf)
+    pyrate.configuration.write_config_file(params=params_s, output_conf_file=output_conf)
 
     params_s = Configuration(output_conf).__dict__
 

@@ -4,6 +4,8 @@ import pytest
 from pathlib import Path
 from subprocess import check_call, check_output, CalledProcessError
 import numpy as np
+
+import pyrate.configuration
 from pyrate.core import config as cf
 from tests.common import (
     assert_same_files_produced,
@@ -60,7 +62,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
         print(params)
         # write new temp config
         output_conf = tdir.joinpath(output_conf_file)
-        cf.write_config_file(params=params, output_conf_file=output_conf)
+        pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
 
         return output_conf, params
     return modify_params
@@ -187,7 +189,7 @@ def modified_config_short(tempdir, local_crop, get_lks, coh_mask, ref_pixel):
         print(params)
         # write new temp config
         output_conf = tdir.joinpath(output_conf_file)
-        cf.write_config_file(params=params, output_conf_file=output_conf)
+        pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
 
         return output_conf, params
 

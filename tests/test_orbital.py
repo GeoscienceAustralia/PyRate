@@ -731,7 +731,7 @@ class TestLegacyComparisonTestsOrbfitMethod1:
         from pyrate import process
         from pyrate.configuration import MultiplePaths
 
-        multi_paths = [MultiplePaths(self.BASE_DIR, p) for p in self.ifg_paths]
+        multi_paths = [MultiplePaths(p, params=self.params) for p in self.ifg_paths]
         for m in multi_paths:  # cheat
             m.sampled_path = m.converted_path
 
@@ -796,7 +796,7 @@ class TestLegacyComparisonTestsOrbfitMethod2:
         cls.params[cf.OUT_DIR] = cls.BASE_DIR
         data_paths = [os.path.join(SML_TEST_TIF, p) for p in small_ifg_file_list()]
         cls.new_data_paths = [os.path.join(cls.BASE_DIR, os.path.basename(d)) for d in data_paths]
-        cls.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(out_dir=cls.BASE_DIR, file_name=d) for d in data_paths]
+        cls.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(file_name=d, params=cls.params) for d in data_paths]
         for p in cls.params[cf.INTERFEROGRAM_FILES]:
             p.sampled_path = p.converted_path
 

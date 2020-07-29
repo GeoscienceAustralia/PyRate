@@ -22,6 +22,7 @@ import shutil
 import pytest
 from pathlib import Path
 
+import pyrate.configuration
 from pyrate.core.shared import DEM
 from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.prepifg_helper import _is_number
@@ -70,7 +71,7 @@ def __workflow(params, tdir):
     params[cf.APS_INCIDENCE_MAP] = tdir.joinpath(Path(params[cf.APS_INCIDENCE_MAP]).name).as_posix()
     params[cf.TMPDIR] = tdir.joinpath(Path(params[cf.TMPDIR]).name).as_posix()
     output_conf = tdir.joinpath('roipac_temp.conf')
-    cf.write_config_file(params=params, output_conf_file=output_conf)
+    pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
     params = configuration.Configuration(output_conf).__dict__
     conv2tif.main(params)
     prepifg.main(params)

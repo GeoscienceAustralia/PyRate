@@ -438,32 +438,6 @@ def parse_namelist(nml):
     return filter(None, lines)
 
 
-def write_config_file(params, output_conf_file):
-    """
-    Takes a param object and writes the config file. Reverse of get_conf_params.
-
-    :param dict params: parameter dictionary
-    :param str output_conf_file: output file name
-
-    :return: config file
-    :rtype: list
-    """
-    with open(output_conf_file, 'w') as f:
-        for k, v in params.items():
-            if v is not None:
-                if k == 'process':
-                    f.write(''.join([k, ':\t', '', '\n']))
-                    f.write(''.join(['steps = ', '\n']))
-                    for vv in v:
-                        f.write(''.join(['\t' + str(vv), '\n']))
-                elif isinstance(v, list):
-                    continue
-                else:
-                    f.write(''.join([k, ':\t', str(v), '\n']))
-            else:
-                f.write(''.join([k, ':\t', '', '\n']))
-
-
 def transform_params(params):
     """
     Returns subset of all parameters for cropping and multilooking.

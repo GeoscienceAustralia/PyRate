@@ -6,6 +6,7 @@ import copy
 import itertools
 from pathlib import Path
 
+import pyrate.configuration
 import pyrate.core.config as cf
 from pyrate.core.shared import Ifg, DEM
 from pyrate.core import ifgconstants as ifc
@@ -30,7 +31,7 @@ def test_conv2tif_file_types(tempdir, gamma_conf):
     params[cf.COH_MASK] = 1
     output_conf_file = 'conf.conf'
     output_conf = tdir.joinpath(output_conf_file)
-    cf.write_config_file(params=params, output_conf_file=output_conf)
+    pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
     params_s = configuration.Configuration(output_conf).__dict__
     conv2tif.main(params_s)
     ifg_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_ifg.tif'))

@@ -187,17 +187,17 @@ class TestLegacyEquality:
     @classmethod
     @pytest.fixture(autouse=True)
     def setup_class(cls, roipac_params):
-
-        params = roipac_params
+        from copy import deepcopy
+        params = deepcopy(roipac_params)
         shared.mkdir_p(params[cf.TMPDIR])
         params[cf.REF_EST_METHOD] = 2
         conv2tif.main(params)
+        params = deepcopy(roipac_params)
         prepifg.main(params)
-        params = params
+        params = deepcopy(roipac_params)
         base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
         dest_paths = [c.converted_path for c in params[cf.INTERFEROGRAM_FILES]]
-        dest_paths = dest_paths[:-2]
-        params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(params[cf.OUT_DIR], d) for d in dest_paths]
+        params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(d, params) for d in dest_paths]
         for p in params[cf.INTERFEROGRAM_FILES]:  # hack
             p.sampled_path = p.converted_path
 

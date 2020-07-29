@@ -23,6 +23,7 @@ from pathlib import Path
 import pytest
 from numpy import nan, mean, std, isnan
 
+import pyrate.configuration
 import pyrate.core.refpixel
 from pyrate.core import config as cf
 from pyrate.core.refpixel import ref_pixel, _step, RefPixelError
@@ -245,7 +246,7 @@ class TestLegacyEqualityTest:
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.OUT_DIR], cls.ifg_paths = copy_small_ifg_file_list()
         conf_file = Path(cls.params[cf.OUT_DIR], 'conf_file.conf')
-        cf.write_config_file(params=cls.params, output_conf_file=conf_file)
+        pyrate.configuration.write_config_file(params=cls.params, output_conf_file=conf_file)
         cls.params = Configuration(conf_file).__dict__
         cls.params_alt_ref_frac = copy.copy(cls.params)
         cls.params_alt_ref_frac[cf.REF_MIN_FRAC] = 0.5
@@ -317,7 +318,7 @@ class TestLegacyEqualityTestMultiprocessParallel:
         cls.params[cf.PARALLEL] = 1
         cls.params[cf.OUT_DIR], cls.ifg_paths = copy_small_ifg_file_list()
         conf_file = Path(cls.params[cf.OUT_DIR], 'conf_file.conf')
-        cf.write_config_file(params=cls.params, output_conf_file=conf_file)
+        pyrate.configuration.write_config_file(params=cls.params, output_conf_file=conf_file)
         cls.params = Configuration(conf_file).__dict__
         cls.params_alt_ref_frac = copy.copy(cls.params)
         cls.params_alt_ref_frac[cf.REF_MIN_FRAC] = 0.5
@@ -402,7 +403,7 @@ def _get_mlooked_files(gamma_conf, tdir, refx, refy):
     params[cf.REFY] = refy
     output_conf_file = 'config.conf'
     output_conf = tdir.joinpath(output_conf_file)
-    cf.write_config_file(params=params, output_conf_file=output_conf)
+    pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
     check_call(f"pyrate conv2tif -f {output_conf}", shell=True)
     check_call(f"pyrate prepifg -f {output_conf}", shell=True)
     stdout = run(f"pyrate process -f {output_conf}", shell=True, capture_output=True, text=True)

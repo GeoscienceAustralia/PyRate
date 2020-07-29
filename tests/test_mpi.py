@@ -23,6 +23,7 @@ import numpy as np
 import os
 from pathlib import Path
 
+import pyrate.configuration
 import pyrate.core.covariance
 import pyrate.core.orbital
 import pyrate.core.ref_phs_est
@@ -44,7 +45,7 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, roipac_or_gamma_conf):
     params[cf.OUT_DIR] = tmpdir.joinpath('out')
     params[cf.PARALLEL] = 0
     output_conf = Path(tmpdir).joinpath('conf.cfg')
-    cf.write_config_file(params=params, output_conf_file=output_conf)
+    pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
     params = configuration.Configuration(output_conf).__dict__
 
     # dest_paths = [p.sampled_path for p in params[cf.INTERFEROGRAM_FILES]]

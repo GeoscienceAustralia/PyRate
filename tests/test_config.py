@@ -22,6 +22,8 @@ import os
 import shutil
 import tempfile
 from os.path import join
+
+import pyrate.configuration
 from tests.common import SML_TEST_CONF, SML_TEST_TIF
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
 from pyrate.core import config
@@ -355,14 +357,14 @@ class TestConfigWriteTest(UnitTestAdaptation):
     def test_write_config_file(self):
         params = config.get_config_params(TEST_CONF_GAMMA)
         temp_config = tempfile.mktemp(suffix='.conf')
-        config.write_config_file(params, temp_config)
+        pyrate.configuration.write_config_file(params, temp_config)
         self.assertTrue(os.path.exists(temp_config))
         os.remove(temp_config)
 
     def test_new_config_file_and_original_match(self):
         params = config.get_config_params(TEST_CONF_GAMMA)
         temp_config = tempfile.mktemp(suffix='.conf')
-        config.write_config_file(params, temp_config)
+        pyrate.configuration.write_config_file(params, temp_config)
         new_params = config.get_config_params(temp_config)
         self.maxDiff = None
         self.assertDictEqual(params, new_params)

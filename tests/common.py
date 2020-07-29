@@ -614,3 +614,14 @@ class UnitTestAdaptation:
         places *= -1
         num = Decimal((0, (1, ), places))
         assert arg1 == pytest.approx(arg2, abs=num)
+
+def min_params(out_dir):
+    params = {}
+    params[cf.OUT_DIR] = out_dir
+    params[cf.IFG_LKSX] = 1
+    params[cf.IFG_CROP_OPT] = 4
+    params[cf.TEMP_MLOOKED_DIR] = Path(tempfile.mkdtemp())
+    params[cf.ORBITAL_FIT_LOOKS_X] = 10
+    params[cf.ORBITAL_FIT_METHOD] = 1
+    params[cf.ORBITAL_FIT_DEGREE] = 2
+    return params

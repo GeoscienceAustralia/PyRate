@@ -77,7 +77,7 @@ class TestRefPhsTests:
 
     def setup_method(self):
         self.tmp_dir = tempfile.mkdtemp()
-        self.params = dict()
+        self.params = common.min_params(out_dir=self.tmp_dir)
         self.params[cf.OUT_DIR] = self.tmp_dir
         self.params[cf.REF_EST_METHOD] = 1
         self.params[cf.PARALLEL] = False
@@ -87,7 +87,7 @@ class TestRefPhsTests:
         for s in self.small_tifs:
             os.chmod(s, 0o644)
         self.ifgs = common.small_data_setup(self.tmp_dir, is_dir=True)
-        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs]
+        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.params) for p in self.small_tifs]
         for p in self.params[cf.INTERFEROGRAM_FILES]:
             p.sampled_path = p.converted_path
             p.tmp_sampled_path = p.sampled_path
@@ -108,7 +108,7 @@ class TestRefPhsTests:
             ifg.close()
 
     def test_need_at_least_two_ifgs(self):
-        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs[:1]]
+        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(p ,self.params) for p in self.small_tifs[:1]]
         for p in self.params[cf.INTERFEROGRAM_FILES]:
             p.sampled_path = p.converted_path
             p.tmp_sampled_path = p.sampled_path
@@ -125,7 +125,7 @@ class TestRefPhsTests:
     def test_mixed_metadata_raises(self):
 
         # change config to 5 ifgs
-        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs[:5]]
+        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.params) for p in self.small_tifs[:5]]
         for p in self.params[cf.INTERFEROGRAM_FILES]:
             p.sampled_path = p.converted_path
             p.tmp_sampled_path = p.sampled_path
@@ -136,7 +136,7 @@ class TestRefPhsTests:
             ifg.open()
 
         # change config to all ifgs
-        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs]
+        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.params) for p in self.small_tifs]
         for p in self.params[cf.INTERFEROGRAM_FILES]:
             p.sampled_path = p.converted_path
             p.tmp_sampled_path = p.sampled_path
