@@ -17,9 +17,10 @@
 """
 This Python module runs the main PyRate processing workflow
 """
-import os
 import shutil
+import os
 from os.path import join
+from typing import List
 from pathlib import Path
 import pickle as cp
 from pyrate.core import (shared, algorithm, mpiops, config as cf)
@@ -36,12 +37,12 @@ from pyrate.core.stack import stack_calc_wrapper
 from pyrate.core.timeseries import timeseries_calc_wrapper
 
 
-def _join_dicts(dicts):
+def _join_dicts(dicts: List[dict]) -> dict:
     """
     Function to concatenate dictionaries
     """
     if dicts is None:  # pragma: no cover
-        return
+        return {}
     assembled_dict = {k: v for D in dicts for k, v in D.items()}
     return assembled_dict
 
