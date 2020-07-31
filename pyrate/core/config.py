@@ -142,6 +142,7 @@ ORBITAL_FIT_DEGREE = 'orbfitdegrees'
 ORBITAL_FIT_LOOKS_X = 'orbfitlksx'
 #: INT; Multi look factor for orbital error calculation in y dimension
 ORBITAL_FIT_LOOKS_Y = 'orbfitlksy'
+ORBFIT_OFFSET = 'orbfit_offset'
 
 # Stacking parameters
 #: FLOAT; Threshold ratio between 'model minus observation' residuals and a-priori observation standard deviations for stacking estimate acceptance (otherwise remove furthest outlier and re-iterate)
