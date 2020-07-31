@@ -213,6 +213,7 @@ class TestIndependentCorrection:
         params[cf.NO_DATA_VALUE] = 0
         params[cf.NAN_CONVERSION] = False
         params[cf.OUT_DIR] = tempfile.mkdtemp()
+        params[cf.ORBITAL_FIT_LOOKS_X] = 1
         for i in self.ifgs:
             i.mm_converted = True
         remove_orbital_error(self.ifgs, params)
@@ -537,6 +538,7 @@ class TestNetworkCorrectionTests:
         params = dict()
         params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
         params[cf.ORBITAL_FIT_DEGREE] = deg
+        params[cf.ORBITAL_FIT_LOOKS_X] = 1
         params[cf.PARALLEL] = False
         params[cf.OUT_DIR] = tempfile.mkdtemp()
         params[cf.ORBFIT_OFFSET] = offset
@@ -605,6 +607,7 @@ class TestNetworkCorrectionTestsMultilooking:
         params = dict()
         params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
         params[cf.ORBITAL_FIT_DEGREE] = deg
+        params[cf.ORBITAL_FIT_LOOKS_X] = 1
         params[cf.PARALLEL] = False
         params[cf.ORBFIT_OFFSET] = offset
         params[cf.PREREAD_IFGS] = None
