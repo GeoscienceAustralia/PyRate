@@ -704,6 +704,7 @@ class TestLegacyComparisonTestsOrbfitMethod1:
         cls.params[cf.ORBITAL_FIT_LOOKS_X] = 2
         cls.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
         cls.params[cf.PARALLEL] = False
+        cls.params[cf.ORBFIT_OFFSET] = True
 
         data_paths = [os.path.join(SML_TEST_TIF, p) for p in IFMS16]
         cls.ifg_paths = [os.path.join(cls.BASE_DIR, os.path.basename(d)) for d in data_paths]

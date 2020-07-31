@@ -77,19 +77,27 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
     files. The network method assumes the given ifgs have already been reduced
     to a minimum spanning tree network.
     """
-    __degree_and_method_check(params)
+    mpiops.run_once(__degree_and_method_check, params)
     ifg_paths = [i.data_path for i in ifgs] if isinstance(ifgs[0], Ifg) else ifgs
-    degree = params[cf.ORBITAL_FIT_DEGREE]
-    offset = params[cf.ORBFIT_OFFSET]
+    method = params[cf.ORBITAL_FIT_METHOD]
     # mlooking is not necessary for independent correction
     # can use multiple procesing if write_to_disc=True
-    if params[cf.ORBITAL_FIT_METHOD] == NETWORK_METHOD:
-        mlooked = __create_multilooked_dataset_for_network_correction(params)
-        network_orbital_correction(ifg_paths, params, mlooked)
+
+    if method == INDEPENDENT_METHOD:
+        ifgs = [shared.Ifg(p) for p in ifg_paths] if isinstance(ifgs[0], str) else ifgs
+        process_ifgs = mpiops.array_split(ifgs)
+        for ifg in process_ifgs:
+            independent_orbital_correction(ifg, params=params)
     else:
-        ifgs = [shared.Ifg(p) if isinstance(p, str) else p for p in ifg_paths]
-        for ifg in ifgs:
-            independent_orbital_correction(ifg, degree, offset, params)
+        # Here we do all the multilooking in one process, but in memory
+        # can use multiple processes if we write data to disc during
+        # remove_orbital_error step
+        # A performance comparison should be made for saving multilooked
+        # files on disc vs in memory single process multilooking
+        if mpiops.rank == MAIN_PROCESS:
+            mlooked = __create_multilooked_dataset_for_network_correction(params)
+            _validate_mlooked(mlooked, ifg_paths)
+            network_orbital_correction(ifg_paths, params, mlooked)
 
 
 def __create_multilooked_dataset_for_network_correction(params):
@@ -165,7 +173,7 @@ def _get_num_params(degree, offset=None):
     return nparams
 
 
-def independent_orbital_correction(ifg, degree, offset, params):
+def independent_orbital_correction(ifg, params):
     """
     Calculates and removes an orbital error surface from a single independent
     interferogram.
@@ -179,6 +187,8 @@ def independent_orbital_correction(ifg, degree, offset, params):
 
     :return: None - interferogram phase data is updated and saved to disk
     """
+    degree = params[cf.ORBITAL_FIT_DEGREE]
+    offset = params[cf.ORBFIT_OFFSET]
     orbfit_correction_on_disc = Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR,
                                      Path(ifg.data_path).stem + '_orbfit.npy')
     if not ifg.is_open:
@@ -481,28 +491,7 @@ def orb_fit_calc_wrapper(params: dict) -> None:
             log.debug('Orbital error correction not required as all ifgs are already corrected!')
             return  # return if True condition returned
 
-    __degree_and_method_check(params)
-    degree = params[cf.ORBITAL_FIT_DEGREE]
-    method = params[cf.ORBITAL_FIT_METHOD]
-
-    # mlooking is not necessary for independent correction
-    # can use multiple procesing if write_to_disc=True
-
-    if method == 1:
-        ifgs = [shared.Ifg(p) if isinstance(p, str) else p for p in ifg_paths]
-        process_ifgs = mpiops.array_split(ifgs)
-        for ifg in process_ifgs:
-            independent_orbital_correction(ifg, degree, offset=True, params=params)
-    else:
-        # Here we do all the multilooking in one process, but in memory
-        # can use multiple processes if we write data to disc during
-        # remove_orbital_error step
-        # A performance comparison should be made for saving multilooked
-        # files on disc vs in memory single process multilooking
-        if mpiops.rank == MAIN_PROCESS:
-            mlooked = __create_multilooked_dataset_for_network_correction(params)
-            _validate_mlooked(mlooked, ifg_paths)
-            network_orbital_correction(ifg_paths, params, mlooked)
+    remove_orbital_error(ifg_paths, params)
     mpiops.comm.barrier()
     shared.save_numpy_phase(ifg_paths, params)
     log.debug('Finished Orbital error correction')
