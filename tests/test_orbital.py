@@ -44,11 +44,11 @@ from pyrate.core.orbital import _get_num_params, remove_orbital_error, network_o
 from pyrate.core.shared import Ifg, mkdir_p
 from pyrate.core.shared import nanmedian
 from pyrate.core import roipac
-from pyrate import process
+from pyrate import process, conv2tif, prepifg
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.core.config import ORB_ERROR_DIR
 from tests import common
-from tests.common import IFMS16
+from tests.common import IFMS16, TEST_CONF_GAMMA
 from tests.common import SML_TEST_LEGACY_ORBITAL_DIR
 from tests.common import SML_TEST_TIF
 from tests.common import small_ifg_file_list
@@ -864,3 +864,56 @@ class TestLegacyComparisonTestsOrbfitMethod2:
 
 # TODO: Write tests for various looks and degree combinations
 # TODO: write mpi tests
+
+
+class TestOrbErrorCorrectionsOnDiscReused:
+
+    @classmethod
+    def setup_class(cls):
+        print("\nsetup_class")
+        cls.conf = TEST_CONF_GAMMA
+        params = Configuration(cls.conf).__dict__
+        conv2tif.main(params)
+        params = Configuration(cls.conf).__dict__
+        prepifg.main(params)
+        cls.params = Configuration(cls.conf).__dict__
+        process._copy_mlooked(cls.params)
+        process._create_ifg_dict(cls.params)
+
+    @classmethod
+    def teardown_class(cls):
+        shutil.rmtree(cls.params[cf.OUT_DIR])
+
+    def test_orb_error_reused_if_params_unchanged(self, orbfit_method, orbfit_degrees):
+        self.params[cf.ORBITAL_FIT_METHOD] = orbfit_method
+        self.params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
+        multi_paths = self.params[cf.INTERFEROGRAM_FILES]
+        self.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
+        remove_orbital_error(self.ifg_paths, self.params)
+
+        # test_orb_errors_written
+        orb_error_files = [MultiplePaths.orb_error_path(i, self.params) for i in self.ifg_paths]
+        assert all(p.exists() for p in orb_error_files)
+
+        last_mod_times = np.array([os.stat(o).st_mtime for o in orb_error_files])
+
+        # run orbit removal again
+        remove_orbital_error(self.ifg_paths, self.params)
+        orb_error_files2 = [MultiplePaths.orb_error_path(i, self.params) for i in self.ifg_paths]
+        # if files are written again - times will change
+        last_mod_times_2 = np.array([os.stat(o).st_mtime for o in orb_error_files2])
+
+        # test_orb_error_reused_if_params_unchanged
+        assert all(a == b for a, b in zip(last_mod_times, last_mod_times_2))
+
+        # change one of the params
+        _degrees = set(cf.ORB_DEGREE_NAMES.keys())
+        _degrees.discard(orbfit_degrees)
+
+        # test_orb_errors_recalculated_if_params_change
+        self.params[cf.ORBITAL_FIT_DEGREE] = _degrees.pop()
+
+        remove_orbital_error(self.ifg_paths, self.params)
+        orb_error_files3 = [MultiplePaths.orb_error_path(i, self.params) for i in self.ifg_paths]
+        last_mod_times_3 = np.array([os.stat(o).st_mtime for o in orb_error_files3])
+        assert all(a != b for a, b in zip(last_mod_times, last_mod_times_3))

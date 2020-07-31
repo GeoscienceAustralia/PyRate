@@ -110,9 +110,9 @@ class MultiplePaths:
             ifg_path = Path(ifg_path)
         return Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR,
                     ifg_path.stem + '_' +
-                    '_'.join([cf.ORBITAL_FIT_METHOD,
-                              cf.ORBITAL_FIT_DEGREE,
-                              cf.ORBITAL_FIT_LOOKS_X]) +
+                    '_'.join([str(params[cf.ORBITAL_FIT_METHOD]),
+                              str(params[cf.ORBITAL_FIT_DEGREE]),
+                              str(params[cf.ORBITAL_FIT_LOOKS_X])]) +
                     '_orbfit.npy')
 
     def __str__(self):  # pragma: no cover
