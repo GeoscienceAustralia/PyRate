@@ -168,7 +168,7 @@ def _get_num_params(degree, offset=None):
         raise OrbitalError(msg)
 
     # NB: independent method only, network method handles offsets separately
-    if offset is True:
+    if offset:
         nparams += 1  # eg. y = mx + offset
     return nparams
 
@@ -403,7 +403,7 @@ def get_design_matrix(ifg, degree, offset, scale=100.0):
         dm[:, 3] = x * y
         dm[:, 4] = x
         dm[:, 5] = y
-    if offset is True:
+    if offset:
         dm[:, -1] = np.ones(ifg.num_cells)
 
     return dm

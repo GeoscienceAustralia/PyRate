@@ -142,6 +142,7 @@ class TestPyRate:
             paths = glob.glob(join(cls.BASE_OUT_DIR, 'geo_*-*.tif'))
             paths = sorted(paths)
             params[cf.PARALLEL] = False
+            params[cf.ORBFIT_OFFSET] = True
             params[cf.TEMP_MLOOKED_DIR] = cls.BASE_OUT_DIR.join(cf.TEMP_MLOOKED_DIR)
             params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(p, params) for p in paths]
             for p in params[cf.INTERFEROGRAM_FILES]:  # cheat
