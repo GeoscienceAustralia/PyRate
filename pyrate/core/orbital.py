@@ -502,7 +502,7 @@ def orb_fit_calc_wrapper(params: dict) -> None:
         if mpiops.rank == MAIN_PROCESS:
             mlooked = __create_multilooked_dataset_for_network_correction(params)
             _validate_mlooked(mlooked, ifg_paths)
-            network_orbital_correction(ifg_paths, params, mlooked, preread_ifgs)
+            network_orbital_correction(ifg_paths, params, mlooked)
     mpiops.comm.barrier()
     shared.save_numpy_phase(ifg_paths, params)
     log.debug('Finished Orbital error correction')

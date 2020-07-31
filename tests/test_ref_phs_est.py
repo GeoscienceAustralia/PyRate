@@ -163,6 +163,7 @@ class TestRefPhsEstimationLegacyTestMethod1Serial:
             Path(p.sampled_path).chmod(0o664)  # assign write permission as conv2tif output is readonly
         params[cf.REF_EST_METHOD] = 1
         params[cf.PARALLEL] = False
+        params[cf.ORBFIT_OFFSET] = True
 
         dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
         # start run_pyrate copy
@@ -172,7 +173,7 @@ class TestRefPhsEstimationLegacyTestMethod1Serial:
         refx, refy = ref_pixel_calc_wrapper(params)
 
         # Estimate and remove orbit errors
-        remove_orbital_error(ifgs, params, headers)
+        remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
@@ -247,6 +248,7 @@ class TestRefPhsEstimationLegacyTestMethod1Parallel:
 
         params[cf.REF_EST_METHOD] = 1
         params[cf.PARALLEL] = True
+        params[cf.ORBFIT_OFFSET] = True
 
         dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
 
@@ -257,7 +259,7 @@ class TestRefPhsEstimationLegacyTestMethod1Parallel:
         refx, refy = ref_pixel_calc_wrapper(params)
 
         # Estimate and remove orbit errors
-        remove_orbital_error(ifgs, params, headers)
+        remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
@@ -331,6 +333,7 @@ class TestRefPhsEstimationLegacyTestMethod2Serial:
 
         params[cf.REF_EST_METHOD] = 2
         params[cf.PARALLEL] = False
+        params[cf.ORBFIT_OFFSET] = True
 
         dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
 
@@ -341,7 +344,7 @@ class TestRefPhsEstimationLegacyTestMethod2Serial:
         refx, refy = ref_pixel_calc_wrapper(params)
 
         # Estimate and remove orbit errors
-        remove_orbital_error(ifgs, params, headers)
+        remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()
@@ -417,6 +420,7 @@ class TestRefPhsEstimationLegacyTestMethod2Parallel:
 
         params[cf.REF_EST_METHOD] = 2
         params[cf.PARALLEL] = 1
+        params[cf.ORBFIT_OFFSET] = True
 
         dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
 
@@ -426,7 +430,7 @@ class TestRefPhsEstimationLegacyTestMethod2Parallel:
         refx, refy = ref_pixel_calc_wrapper(params)
 
         # Estimate and remove orbit errors
-        remove_orbital_error(ifgs, params, headers)
+        remove_orbital_error(ifgs, params)
 
         for i in ifgs:
             i.close()

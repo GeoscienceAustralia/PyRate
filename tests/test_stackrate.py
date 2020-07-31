@@ -129,9 +129,10 @@ class TestLegacyEquality:
 
         params[cf.REFX] = refx
         params[cf.REFY] = refy
+        params[cf.ORBFIT_OFFSET] = True
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(copied_dest_paths, params)
         for ifg in ifgs:
             ifg.close()

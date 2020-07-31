@@ -208,8 +208,8 @@ class TestLegacyEquality:
         process._update_params_with_tiles(params)
         process._create_ifg_dict(params)
         pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
-        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        params[cf.ORBFIT_OFFSET] = True
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
