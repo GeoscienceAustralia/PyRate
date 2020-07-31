@@ -873,7 +873,6 @@ class TestOrbErrorCorrectionsOnDiscReused:
 
     @classmethod
     def setup_class(cls):
-        print("\nsetup_class")
         cls.conf = TEST_CONF_GAMMA
         params = Configuration(cls.conf).__dict__
         conv2tif.main(params)
@@ -887,7 +886,7 @@ class TestOrbErrorCorrectionsOnDiscReused:
     def teardown_class(cls):
         shutil.rmtree(cls.params[cf.OUT_DIR])
 
-    def test_orb_error_reused_if_params_unchanged(self, orbfit_method, orbfit_degrees):
+    def test_orb_error(self, orbfit_method, orbfit_degrees):
         self.params[cf.ORBITAL_FIT_METHOD] = orbfit_method
         self.params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
         multi_paths = self.params[cf.INTERFEROGRAM_FILES]
@@ -920,3 +919,46 @@ class TestOrbErrorCorrectionsOnDiscReused:
         orb_error_files3 = [MultiplePaths.orb_error_path(i, self.params) for i in self.ifg_paths]
         last_mod_times_3 = np.array([os.stat(o).st_mtime for o in orb_error_files3])
         assert all(a != b for a, b in zip(last_mod_times, last_mod_times_3))
+
+
+class TestOrbErrorCorrectionsReappliedDoesNotChangePhaseData:
+
+    @classmethod
+    def setup_method(cls):
+        cls.conf = TEST_CONF_GAMMA
+        params = Configuration(cls.conf).__dict__
+        conv2tif.main(params)
+        params = Configuration(cls.conf).__dict__
+        prepifg.main(params)
+        cls.params = Configuration(cls.conf).__dict__
+        process._copy_mlooked(cls.params)
+        process._create_ifg_dict(cls.params)
+
+    @classmethod
+    def teardown_method(cls):
+        shutil.rmtree(cls.params[cf.OUT_DIR])
+
+    def test_orb_error_multiple_run_does_not_change_phase_data(self, orbfit_method, orbfit_degrees):
+        self.params[cf.ORBITAL_FIT_METHOD] = orbfit_method
+        self.params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
+        multi_paths = self.params[cf.INTERFEROGRAM_FILES]
+        self.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
+        remove_orbital_error(self.ifg_paths, self.params)
+        ifgs = [Ifg(i) for i in self.ifg_paths]
+        for i in ifgs:
+            i.open()
+
+        phase_prev = [i.phase_data for i in ifgs]
+
+        # orb correct once more
+        process._copy_mlooked(self.params)
+        remove_orbital_error(self.ifg_paths, self.params)
+
+        # and again
+        process._copy_mlooked(self.params)
+        remove_orbital_error(self.ifg_paths, self.params)
+        ifgs = [Ifg(i) for i in self.ifg_paths]
+        for i in ifgs:
+            i.open()
+        phase_now = [i.phase_data for i in ifgs]
+        np.testing.assert_array_equal(phase_now, phase_prev)

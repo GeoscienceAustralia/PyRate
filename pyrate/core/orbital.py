@@ -253,7 +253,7 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
     # all orbit corrections available?
     if isinstance(ifg_paths[0], str):
         if __check_and_apply_orberrors_found_on_disc(ifg_paths, params):
-            log.info("Reusing previously calculated orbfit error")
+            log.info("Reused previously calculated orbfit error")
             return
         # all corrections are available in numpy files already saved - return
         ifgs = [shared.Ifg(i) for i in ifg_paths]
