@@ -102,13 +102,18 @@ class MultiplePaths:
                 converted_path.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif")
         self.tmp_sampled_path = tempdir.joinpath(self.sampled_path.name).as_posix()
         self.converted_path = converted_path.as_posix()
-        self.orbfit_correction_on_disc = Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR,
-                                              self.sampled_path.stem + '_' +
-                                              '_'.join([cf.ORBITAL_FIT_METHOD,
-                                                        cf.ORBITAL_FIT_DEGREE,
-                                                        cf.ORBITAL_FIT_LOOKS_X]) +
-                                              '_orbfit.npy')
         self.sampled_path = self.sampled_path.as_posix()
+
+    @staticmethod
+    def orb_error_path(ifg_path: Union[str, Path], params) -> Path:
+        if isinstance(ifg_path, str):
+            ifg_path = Path(ifg_path)
+        return Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR,
+                    ifg_path.stem + '_' +
+                    '_'.join([cf.ORBITAL_FIT_METHOD,
+                              cf.ORBITAL_FIT_DEGREE,
+                              cf.ORBITAL_FIT_LOOKS_X]) +
+                    '_orbfit.npy')
 
     def __str__(self):  # pragma: no cover
         st = ""

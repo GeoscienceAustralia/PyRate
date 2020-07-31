@@ -31,6 +31,7 @@ from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helpe
 from pyrate.core.shared import nanmedian, Ifg
 from pyrate.core.logger import pyratelogger as log
 from pyrate.prepifg import find_header
+from pyrate.configuration import MultiplePaths
 # Orbital correction tasks
 #
 # TODO: options for multilooking
@@ -189,8 +190,7 @@ def independent_orbital_correction(ifg, params):
     """
     degree = params[cf.ORBITAL_FIT_DEGREE]
     offset = params[cf.ORBFIT_OFFSET]
-    orbfit_correction_on_disc = Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR,
-                                     Path(ifg.data_path).stem + '_orbfit.npy')
+    orbfit_correction_on_disc = MultiplePaths.orb_error_path(ifg.data_path, params)
     if not ifg.is_open:
         ifg.open()
     if orbfit_correction_on_disc.exists():
@@ -253,12 +253,12 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
     preread_ifgs = params[cf.PREREAD_IFGS]
     # all orbit corrections available?
     if isinstance(ifg_paths[0], str):
-        if __check_orberror_corrections_exist_on_disc(ifg_paths, params):
+        if __check_and_apply_orberrors_found_on_disc(ifg_paths, params):
             log.info("Reusing previously calculated orbfit error")
             return
         # all corrections are available in numpy files already saved - return
         ifgs = [shared.Ifg(i) for i in ifg_paths]
-    else:
+    else:  # alternate test paths # TODO: improve
         ifgs = ifg_paths
 
     src_ifgs = ifgs if m_ifgs is None else m_ifgs
@@ -303,11 +303,8 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
         _remove_network_orb_error(coefs, dm, i, ids, offset, params)
 
 
-def __check_orberror_corrections_exist_on_disc(ifg_paths, params):
-    saved_orb_err_paths = [
-        Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR, Path(ifg_path).stem + '_orbfit.npy')
-        for ifg_path in ifg_paths
-    ]
+def __check_and_apply_orberrors_found_on_disc(ifg_paths, params):
+    saved_orb_err_paths = [MultiplePaths.orb_error_path(ifg_path, params) for ifg_path in ifg_paths]
     for p, i in zip(saved_orb_err_paths, ifg_paths):
         if p.exists():
             orb = np.load(p)
