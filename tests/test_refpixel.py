@@ -423,12 +423,6 @@ class TestRefPixelReuseLoadsSameFileAndPixels:
         prepifg.main(params)
         params = Configuration(cls.conf).__dict__
         process._copy_mlooked(params)
-        params[cf.REFX] = params[cf.REFY] = -1
-        params[cf.REF_PIXEL_FILE] = Configuration.generate_ref_pixel_file_name(
-            params[cf.OUT_DIR], params[cf.REFX], params[cf.REFY],
-            params[cf.REFNX], params[cf.REFNY], params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC]
-        )
-        ref_pixel_calc_wrapper(params)
         cls.params = params
 
     @classmethod
@@ -436,19 +430,31 @@ class TestRefPixelReuseLoadsSameFileAndPixels:
         shutil.rmtree(cls.params[cf.OUT_DIR])
 
     @pytest.mark.slow()
-    def test_ref_pixel_multiple_runs_reuse_from_disc(self):
+    def test_ref_pixel_multiple_runs_reuse_from_disc(self, ref_pixel):
+        params = self.params
+        params[cf.REFX], params[cf.REFY] = ref_pixel
+        params[cf.REF_PIXEL_FILE] = Configuration.generate_ref_pixel_file_name(
+            params[cf.OUT_DIR], params[cf.REFX], params[cf.REFY],
+            params[cf.REFNX], params[cf.REFNY], params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC]
+        )
+        ref_pixel_calc_wrapper(params)
+
         ref_pixel_file = self.params[cf.REF_PIXEL_FILE]
         time_written = os.stat(ref_pixel_file).st_mtime
+        assert self.params[cf.REFX_FOUND] == 38
+        assert self.params[cf.REFY_FOUND] == 58
         # run again
         ref_pixel_calc_wrapper(self.params)
         ref_pixel_file = self.params[cf.REF_PIXEL_FILE]
         time_written_1 = os.stat(ref_pixel_file).st_mtime
+        assert self.params[cf.REFX_FOUND] == 38
+        assert self.params[cf.REFY_FOUND] == 58
 
         # run a third time
         ref_pixel_calc_wrapper(self.params)
         ref_pixel_file = self.params[cf.REF_PIXEL_FILE]
         time_written_2 = os.stat(ref_pixel_file).st_mtime
         assert time_written == time_written_2 == time_written_1
-        assert self.params[cf.REFX] == self.params[cf.REFY] == -1
+        assert self.params[cf.REFX], self.params[cf.REFY] == ref_pixel
         assert self.params[cf.REFX_FOUND] == 38
         assert self.params[cf.REFY_FOUND] == 58

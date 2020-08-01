@@ -426,16 +426,19 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
 
     ref_pixel_file = Path(params[cf.REF_PIXEL_FILE])
 
+    def __reuse_ref_pixel_file_if_exists():
+        refx, refy = np.load(ref_pixel_file)
+        log.info('Reusing pre-calculated ref-pixel values: ({}, {}) from file {}'.format(
+            refx, refy, ref_pixel_file.as_posix()))
+        log.warning("Reusing ref-pixel values from previous run!!!")
+        params[cf.REFX_FOUND], params[cf.REFY_FOUND] = int(refx), int(refy)
+        return int(refx), int(refy)
+
     if lon == -1 or lat == -1:
 
         if ref_pixel_file.exists():
             # read and return
-            refx, refy = np.load(ref_pixel_file)
-            log.info('Reusing pre-calculated ref-pixel values: ({}, {}) from file {}'.format(
-                refx, refy, ref_pixel_file.as_posix()))
-            log.warning("Reusing ref-pixel values from previous run!!!")
-            params[cf.REFX_FOUND], params[cf.REFY_FOUND] = int(refx), int(refy)
-            return int(refx), int(refy)
+            return __reuse_ref_pixel_file_if_exists()
 
         log.info('Searching for best reference pixel location')
 
@@ -463,6 +466,9 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
     else:
         log.info('Using reference pixel from config file (lon, lat): ({}, {})'.format(lon, lat))
         log.warning("Ensure user supplied reference pixel values are in lon/lat")
+
+        if ref_pixel_file.exists():
+            return __reuse_ref_pixel_file_if_exists()
         refx, refy = convert_geographic_coordinate_to_pixel_value(lon, lat, transform)
         np.save(file=ref_pixel_file, arr=[int(refx), int(refy)])
         log.info('Converted reference pixel coordinate (x, y): ({}, {})'.format(refx, refy))
