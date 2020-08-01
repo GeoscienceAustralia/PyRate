@@ -119,7 +119,7 @@ def roipac_or_gamma_conf(request):
 def gamma_conf(request):
     params = Configuration(TEST_CONF_GAMMA).__dict__
     yield request.param
-    # shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
+    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
 
 
 @pytest.fixture

@@ -55,8 +55,8 @@ def test_single_workflow(gamma_conf):
     assert len(files) == 1
 
     # ref pixel file generated
-    ref_pixel_file = Path(params[cf.OUT_DIR]).joinpath(cf.REF_PIXEL_FILE)
-    assert ref_pixel_file.exists()
+    ref_pixel_file = params[cf.REF_PIXEL_FILE]
+    assert Path(ref_pixel_file).exists()
     ref_pixel = np.load(ref_pixel_file)
     np.testing.assert_array_equal(ref_pixel, [38, 58])
 
