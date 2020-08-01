@@ -449,3 +449,6 @@ class TestRefPixelReuseLoadsSameFileAndPixels:
         ref_pixel_file = self.params[cf.REF_PIXEL_FILE]
         time_written_2 = os.stat(ref_pixel_file).st_mtime
         assert time_written == time_written_2 == time_written_1
+        assert self.params[cf.REFX] == self.params[cf.REFY] == -1
+        assert self.params[cf.REFX_FOUND] == 38
+        assert self.params[cf.REFY_FOUND] == 58
