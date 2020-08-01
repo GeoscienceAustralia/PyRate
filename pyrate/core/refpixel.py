@@ -414,6 +414,7 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
     """
     Wrapper for reference pixel calculation
     """
+    validate_supplied_lat_lon(params)
     ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     lon = params[cf.REFX]
     lat = params[cf.REFY]
@@ -423,7 +424,7 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
     # assume all interferograms have same projection and will share the same transform
     transform = ifg.dataset.GetGeoTransform()
 
-    ref_pixel_file = Path(params[cf.OUT_DIR]).joinpath(cf.REF_PIXEL_FILE)
+    ref_pixel_file = Path(params[cf.REF_PIXEL_FILE])
 
     if lon == -1 or lat == -1:
 
@@ -433,7 +434,7 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
             log.info('Reusing pre-calculated ref-pixel values: ({}, {}) from file {}'.format(
                 refx, refy, ref_pixel_file.as_posix()))
             log.warning("Reusing ref-pixel values from previous run!!!")
-            params[cf.REFX], params[cf.REFY] = int(refx), int(refy)
+            params[cf.REFX_FOUND], params[cf.REFY_FOUND] = int(refx), int(refy)
             return int(refx), int(refy)
 
         log.info('Searching for best reference pixel location')
@@ -470,5 +471,5 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
 
     log.debug("refpx, refpy: "+str(refx) + " " + str(refy))
     ifg.close()
-    params[cf.REFX], params[cf.REFY] = int(refx), int(refy)
+    params[cf.REFX_FOUND], params[cf.REFY_FOUND] = int(refx), int(refy)
     return int(refx), int(refy)

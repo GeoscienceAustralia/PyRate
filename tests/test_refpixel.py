@@ -16,6 +16,7 @@
 """
 This Python module contains tests for the refpixel.py PyRate module.
 """
+import os
 import copy
 import shutil
 from subprocess import check_call, run
@@ -26,12 +27,11 @@ from numpy import nan, mean, std, isnan
 import pyrate.configuration
 import pyrate.core.refpixel
 from pyrate.core import config as cf
-from pyrate.core.refpixel import ref_pixel, _step, RefPixelError
+from pyrate.core.refpixel import ref_pixel, _step, RefPixelError, ref_pixel_calc_wrapper
 from pyrate.core import shared, ifgconstants as ifc
-
-from pyrate import process
+from pyrate import process, conv2tif, prepifg
 from pyrate.configuration import Configuration
-from tests.common import TEST_CONF_ROIPAC
+from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
 from tests.common import small_data_setup, MockIfg, copy_small_ifg_file_list, \
     copy_and_setup_small_data, manipulate_test_conf, assert_two_dirs_equal, PYTHON3P6
 
@@ -379,8 +379,8 @@ class TestLegacyEqualityTestMultiprocessParallel:
 
 
 @pytest.mark.slow
-@pytest.mark.skip(PYTHON3P6, reason='Skipped in python3p6')
-def test_error_msg_refpixel_out_out_bounds(tempdir, gamma_conf):
+@pytest.mark.skipif(PYTHON3P6, reason='Skipped in python3p6')
+def test_error_msg_refpixel_out_of_bounds(tempdir, gamma_conf):
     "check correct latitude/longitude refpixel error is raised when specified refpixel is out of bounds"
     for x, (refx, refy) in zip(['longitude', 'latitude', 'longitude and latitude'],
                                [(150., -34.218333314), (150.941666654, -34.), (150, -34)]):
@@ -390,7 +390,7 @@ def test_error_msg_refpixel_out_out_bounds(tempdir, gamma_conf):
 
 
 @pytest.mark.slow
-@pytest.mark.skip(PYTHON3P6, reason='Skipped in python3p6')
+@pytest.mark.skipif(PYTHON3P6, reason='Skipped in python3p6')
 def test_gamma_ref_pixel_search_vs_lat_lon(tempdir, gamma_conf):
     params_1, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=-1, refy=-1)
     params_2, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=150.941666654, refy=-34.218333314)
@@ -404,8 +404,48 @@ def _get_mlooked_files(gamma_conf, tdir, refx, refy):
     output_conf_file = 'config.conf'
     output_conf = tdir.joinpath(output_conf_file)
     pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
-    check_call(f"pyrate conv2tif -f {output_conf}", shell=True)
-    check_call(f"pyrate prepifg -f {output_conf}", shell=True)
+    params = Configuration(output_conf).__dict__
+    conv2tif.main(params)
+    params = Configuration(output_conf).__dict__
+    prepifg.main(params)
     stdout = run(f"pyrate process -f {output_conf}", shell=True, capture_output=True, text=True)
-    print("============================================", stdout)
     return params, stdout
+
+
+class TestRefPixelReuseLoadsSameFileAndPixels:
+
+    @classmethod
+    def setup_method(cls):
+        cls.conf = TEST_CONF_GAMMA
+        params = Configuration(cls.conf).__dict__
+        conv2tif.main(params)
+        params = Configuration(cls.conf).__dict__
+        prepifg.main(params)
+        params = Configuration(cls.conf).__dict__
+        process._copy_mlooked(params)
+        params[cf.REFX] = params[cf.REFY] = -1
+        params[cf.REF_PIXEL_FILE] = Configuration.generate_ref_pixel_file_name(
+            params[cf.OUT_DIR], params[cf.REFX], params[cf.REFY],
+            params[cf.REFNX], params[cf.REFNY], params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC]
+        )
+        ref_pixel_calc_wrapper(params)
+        cls.params = params
+
+    @classmethod
+    def teardown_method(cls):
+        shutil.rmtree(cls.params[cf.OUT_DIR])
+
+    @pytest.mark.slow()
+    def test_ref_pixel_multiple_runs_reuse_from_disc(self):
+        ref_pixel_file = self.params[cf.REF_PIXEL_FILE]
+        time_written = os.stat(ref_pixel_file).st_mtime
+        # run again
+        ref_pixel_calc_wrapper(self.params)
+        ref_pixel_file = self.params[cf.REF_PIXEL_FILE]
+        time_written_1 = os.stat(ref_pixel_file).st_mtime
+
+        # run a third time
+        ref_pixel_calc_wrapper(self.params)
+        ref_pixel_file = self.params[cf.REF_PIXEL_FILE]
+        time_written_2 = os.stat(ref_pixel_file).st_mtime
+        assert time_written == time_written_2 == time_written_1

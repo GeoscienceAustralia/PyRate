@@ -211,6 +211,10 @@ class Configuration:
         self.temp_mlooked_dir = Path(self.outdir).joinpath(TEMP_MLOOKED_DIR)
         self.temp_mlooked_dir.mkdir(parents=True, exist_ok=True)
 
+        self.ref_pixel_file = self.generate_ref_pixel_file_name(
+            self.outdir, self.refx, self.refy, self.refnx, self.refny, self.refchipsize, self.refminfrac
+        )
+
         # var no longer used
         self.APS_ELEVATION_EXT = None
         self.APS_INCIDENCE_EXT = None
@@ -238,6 +242,14 @@ class Configuration:
         for key in self.__dict__:
             if isinstance(self.__dict__[key], PurePath):
                 self.__dict__[key] = str(self.__dict__[key])
+
+    @staticmethod
+    def generate_ref_pixel_file_name(outdir, refx, refy, refnx, refny, refchipsize, refminfrac):
+        return Path(outdir).joinpath(
+            '_'.join(
+                [str(x) for x in [refx, refy, refnx, refny, refchipsize, refminfrac, 'ref_pixel.npy']]
+            )
+        )
 
     def __get_files_from_attr(self, attr, input_type=InputTypes.IFG):
         val = self.__getattribute__(attr)

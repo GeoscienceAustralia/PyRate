@@ -94,8 +94,10 @@ IFG_YLAST = 'ifgylast'
 # reference pixel parameters
 #: INT; Longitude (decimal degrees) of reference pixel, or if left blank a search will be performed
 REFX = 'refx'
+REFX_FOUND = 'refxfound'
 #: INT; Latitude (decimal degrees) of reference pixel, or if left blank a search will be performed
 REFY = 'refy'
+REFY_FOUND = 'refyfound'
 #: INT; Number of reference pixel grid search nodes in x dimension
 REFNX = "refnx"
 #: INT; Number of reference pixel grid search nodes in y dimension
@@ -297,7 +299,7 @@ DEFAULT_TO_OBS_DIR = [SLC_DIR, COH_FILE_DIR]
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
 # filenames reused in  many parts of the program
-REF_PIXEL_FILE = 'ref_pixel.npy'
+REF_PIXEL_FILE = 'ref_pixel_file'
 ORB_ERROR_DIR = 'orb_error'
 TEMP_MLOOKED_DIR = 'temp_mlooked_dir'
 
