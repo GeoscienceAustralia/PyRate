@@ -257,6 +257,15 @@ class Configuration:
     def mst_path(params):
         return Path(params[cf.TMPDIR]).joinpath('mst_mat.npy')
 
+    @staticmethod
+    def ref_phs_file(params):
+        ref_pixel_path = Configuration.ref_pixel_path(params)
+        # add ref pixel path as when ref pixel changes - ref phs path should also change
+        return Path(params[cf.OUT_DIR]).joinpath(
+            ref_pixel_path.stem + '_' +
+            '_'.join(['ref_phs', str(params[cf.REF_EST_METHOD]), 'file.npy'])
+        )
+
     def __get_files_from_attr(self, attr, input_type=InputTypes.IFG):
         val = self.__getattribute__(attr)
         files = parse_namelist(val)
