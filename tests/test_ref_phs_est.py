@@ -115,10 +115,15 @@ class TestRefPhsTests:
             ref_phase_est_wrapper(self.params)
 
     def test_metadata(self):
+        for ifg in self.ifgs:
+            ifg.open()
+            assert ifc.PYRATE_REF_PHASE not in ifg.dataset.GetMetadata()
+            ifg.close()
         ref_phase_est_wrapper(self.params)
         for ifg in self.ifgs:
             ifg.open()
             assert ifg.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE) == ifc.REF_PHASE_REMOVED
+            ifg.close()
     
     def test_mixed_metadata_raises(self):
 
@@ -482,3 +487,17 @@ class TestRefPhsEstimationLegacyTestMethod2Parallel:
 
     def test_estimate_reference_phase_method2(self):
         np.testing.assert_array_almost_equal(legacy_ref_phs_method2, self.ref_phs, decimal=3)
+
+
+class RefPhsEstReusedFromDisc:
+
+    @classmethod
+    def setup_class(cls):
+        pass
+
+    @classmethod
+    def teardown_class(cls):
+        pass
+
+    def test_file_reused_from_disc(self):
+        pass
