@@ -284,7 +284,6 @@ def mst_calc_wrapper(params):
     tiles = params[cf.TILES]
     preread_ifgs = params[cf.PREREAD_IFGS]
     dest_tifs = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
-    process_tiles = mpiops.array_split(tiles)
     log.info('Calculating minimum spanning tree matrix')
 
     def _save_mst_tile(tile, i, preread_ifgs):
@@ -296,7 +295,16 @@ def mst_calc_wrapper(params):
         mst_file_process_n = join(params[cf.TMPDIR], 'mst_mat_{}.npy'.format(i))
         np.save(file=mst_file_process_n, arr=mst_tile)
 
-    for t in process_tiles:
-        _save_mst_tile(t, t.index, preread_ifgs)
+    process_tiles = mpiops.array_split(tiles)
+    if mpiops.size > 1:
+        params[cf.PARALLEL] = 0
+
+    if params[cf.PARALLEL]:
+        Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+            delayed(_save_mst_tile)(t, t.index, preread_ifgs) for t in process_tiles
+        )
+    else:
+        for t in process_tiles:
+            _save_mst_tile(t, t.index, preread_ifgs)
     log.debug('Finished mst calculation for process {}'.format(mpiops.rank))
     mpiops.comm.barrier()
