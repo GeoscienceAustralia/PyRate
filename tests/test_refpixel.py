@@ -433,10 +433,7 @@ class TestRefPixelReuseLoadsSameFileAndPixels:
     def test_ref_pixel_multiple_runs_reuse_from_disc(self, ref_pixel):
         params = self.params
         params[cf.REFX], params[cf.REFY] = ref_pixel
-        params[cf.REF_PIXEL_FILE] = Configuration.generate_ref_pixel_file_name(
-            params[cf.OUT_DIR], params[cf.REFX], params[cf.REFY],
-            params[cf.REFNX], params[cf.REFNY], params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC]
-        )
+        params[cf.REF_PIXEL_FILE] = Configuration.ref_pixel_path(params)
         ref_pixel_calc_wrapper(params)
 
         ref_pixel_file = self.params[cf.REF_PIXEL_FILE]

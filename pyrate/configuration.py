@@ -211,9 +211,7 @@ class Configuration:
         self.temp_mlooked_dir = Path(self.outdir).joinpath(TEMP_MLOOKED_DIR)
         self.temp_mlooked_dir.mkdir(parents=True, exist_ok=True)
 
-        self.ref_pixel_file = self.generate_ref_pixel_file_name(
-            self.outdir, self.refx, self.refy, self.refnx, self.refny, self.refchipsize, self.refminfrac
-        )
+        self.ref_pixel_file = self.ref_pixel_path(self.__dict__)
 
         # var no longer used
         self.APS_ELEVATION_EXT = None
@@ -244,10 +242,14 @@ class Configuration:
                 self.__dict__[key] = str(self.__dict__[key])
 
     @staticmethod
-    def generate_ref_pixel_file_name(outdir, refx, refy, refnx, refny, refchipsize, refminfrac):
-        return Path(outdir).joinpath(
+    def ref_pixel_path(params):
+        return Path(params[cf.OUT_DIR]).joinpath(
             '_'.join(
-                [str(x) for x in [refx, refy, refnx, refny, refchipsize, refminfrac, 'ref_pixel.npy']]
+                [str(x) for x in [
+                    'ref_pixel', params[cf.REFX], params[cf.REFY], params[cf.REFNX], params[cf.REFNY],
+                    params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC], 'file.npy'
+                    ]
+                ]
             )
         )
 

@@ -149,10 +149,7 @@ class TestPyRate:
                 p.sampled_path = p.converted_path
                 p.tmp_sampled_path = p.converted_path
             params["rows"], params["cols"] = 2, 2
-            params[cf.REF_PIXEL_FILE] = Configuration.generate_ref_pixel_file_name(
-            params[cf.OUT_DIR], params[cf.REFX], params[cf.REFY],
-            params[cf.REFNX], params[cf.REFNY], params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC]
-        )
+            params[cf.REF_PIXEL_FILE] = Configuration.ref_pixel_path(params)
             process.process_ifgs(params)
 
             if not hasattr(cls, 'ifgs'):

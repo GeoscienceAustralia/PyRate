@@ -98,10 +98,7 @@ class TestRefPhsTests:
         self.params[cf.REFNX], self.params[cf.REFNY] = 10, 10
         self.params[cf.REF_CHIP_SIZE], self.params[cf.REF_MIN_FRAC] = 21, 0.5
         self.params['rows'], self.params['cols'] = 3, 2
-        self.params[cf.REF_PIXEL_FILE] = Configuration.generate_ref_pixel_file_name(
-            self.params[cf.OUT_DIR], self.params[cf.REFX], self.params[cf.REFY],
-            self.params[cf.REFNX], self.params[cf.REFNY], self.params[cf.REF_CHIP_SIZE], self.params[cf.REF_MIN_FRAC]
-        )
+        self.params[cf.REF_PIXEL_FILE] = Configuration.ref_pixel_path(self.params)
         process._update_params_with_tiles(self.params)
         process.ref_pixel_calc_wrapper(self.params)
        
