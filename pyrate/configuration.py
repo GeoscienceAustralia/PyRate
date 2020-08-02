@@ -254,8 +254,8 @@ class Configuration:
         )
 
     @staticmethod
-    def ref_pixel_path(params):
-        return Path(params[cf.TMPDIR]).joinpath('mst_mat_{}.npy'.format(i))
+    def mst_path(params):
+        return Path(params[cf.TMPDIR]).joinpath('mst_mat.npy')
 
     def __get_files_from_attr(self, attr, input_type=InputTypes.IFG):
         val = self.__getattribute__(attr)
