@@ -438,7 +438,7 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
 
     # read and return
     refx, refy = mpiops.run_once(__reuse_ref_pixel_file_if_exists)
-    if refx is not None and refy is not None:
+    if (refx is not None) and (refy is not None):
         update_refpix_metadata(ifg_paths, int(refx), int(refy), transform, params)
         return refx, refy
 

@@ -178,7 +178,7 @@ def process_ifgs(params: dict) -> None:
     # house keeping
     _update_params_with_tiles(params)
     _create_ifg_dict(params)
-    ref_pixel_calc_wrapper(params)
+    params[cf.REFX_FOUND], params[cf.REFY_FOUND] = ref_pixel_calc_wrapper(params)
 
     # run through the process steps in user specified sequence
     for step in params['process']:
