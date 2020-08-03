@@ -18,6 +18,7 @@
 This Python module implements a reference phase estimation algorithm.
 """
 from pathlib import Path
+from typing import List
 from joblib import Parallel, delayed
 import numpy as np
 
@@ -28,6 +29,16 @@ from pyrate.configuration import Configuration
 from pyrate.core.logger import pyratelogger as log
 
 MAIN_PROCESS = 0
+
+
+def _join_dicts(dicts: List[dict]) -> dict:
+    """
+    Function to concatenate dictionaries
+    """
+    if dicts is None:  # pragma: no cover
+        return {}
+    assembled_dict = {k: v for D in dicts for k, v in D.items()}
+    return assembled_dict
 
 
 def est_ref_phase_patch_median(ifg_paths, params, refpx, refpy):
@@ -160,6 +171,12 @@ def est_ref_phase_ifg_median(ifg_paths, params):
     return ref_phs
 
 
+def _update_phase_metadata(ifg):
+    ifg.meta_data[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
+    ifg.write_modified_phase()
+    log.debug(f"Reference phase corrected for {ifg.data_path}")
+
+
 def _est_ref_phs_ifg_median(phase_data, comp):
     """
     Convenience function for ref phs estimate method 1 parallelisation
@@ -194,6 +211,7 @@ def ref_phase_est_wrapper(params):
     Wrapper for reference phase estimation.
     """
     ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    refpx, refpy = params[cf.REFX_FOUND], params[cf.REFY_FOUND]
     if len(ifg_paths) < 2:
         raise ReferencePhaseError(
             "At least two interferograms required for reference phase correction ({len_ifg_paths} "
@@ -219,7 +237,6 @@ def ref_phase_est_wrapper(params):
         log.info("Calculating reference phase as median of interferogram")
         ref_phs = est_ref_phase_ifg_median(ifg_paths, params)
     elif params[cf.REF_EST_METHOD] == 2:
-        refpx, refpy = params[cf.REFX_FOUND], params[cf.REFY_FOUND]
         log.info('Calculating reference phase in a patch surrounding pixel (x, y): ({}, {})'.format(refpx, refpy))
         ref_phs = est_ref_phase_patch_median(ifg_paths, params, refpx, refpy)
     else:
@@ -237,9 +254,13 @@ def ref_phase_est_wrapper(params):
             collected_ref_phs[process_indices] = this_process_ref_phs
         np.save(file=ref_phs_file, arr=collected_ref_phs)
     else:
+        collected_ref_phs = np.empty(len(ifg_paths), dtype=np.float64)
         mpiops.comm.Send(ref_phs, dest=MAIN_PROCESS, tag=mpiops.rank)
 
-    _update_phase_and_metadata(ifgs, ref_phs)
+    mpiops.comm.Bcast(collected_ref_phs, root=0)
+
+    _update_phase_and_metadata(ifgs, collected_ref_phs)
+
     log.debug('Finished reference phase correction')
 
     mpiops.comm.barrier()
