@@ -199,13 +199,16 @@ def create_png_and_kml_from_tif(output_folder_path: str, output_type: str) -> No
         b = g  
     # generate the colourmap file in the output folder   
     color_map_path = join(output_folder_path, f"colourmap_{output_type}.txt")
-    log.info(
-        'Saving colour map to file {}; min/max values: {:.2f}/{:.2f}'.format(color_map_path, minimum,
-                                                                                            maximum))
+    log.info('Saving colour map to file {}; min/max values: {:.2f}/{:.2f}'.format(
+             color_map_path, minimum, maximum))
+
+    # write colourmap as text file
     with open(color_map_path, "w") as f:
         f.write("nan 0 0 0 0\n")
         for i, value in enumerate(np.linspace(minimum, maximum, no_of_steps+1)):
             f.write("%f %f %f %f 255\n" % (value, r[i], g[i], b[i]))
+
+    # create PNG image file
     input_tif_path = join(output_folder_path, f"{output_type}.tif")
     output_png_path = join(output_folder_path, f"{output_type}.png")
     subprocess.check_call(["gdaldem", "color-relief", "-of", "PNG", input_tif_path, "-alpha",

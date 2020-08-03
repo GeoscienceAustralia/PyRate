@@ -44,12 +44,12 @@ def create_merge_output(tempdir, gamma_conf):
     params = Configuration(output_conf).__dict__
     _merge_stack(params)
     _merge_linrate(params)
-    return params, tdir
+    return params
 
 
 @pytest.mark.slow
 def test_file_creation(create_merge_output):
-    params, tdir = create_merge_output
+    params = create_merge_output
 
     # check if color map is created
     for ot in ['stack_rate', 'stack_error', 'linear_rate', 'linear_error', 'linear_rsquared']:
