@@ -21,7 +21,7 @@ import os
 import shutil
 import sys
 import tempfile
-import unittest
+import pytest
 from pathlib import Path
 from itertools import product
 from numpy import isnan, where, nan
@@ -35,6 +35,7 @@ from osgeo.gdal import Open, Dataset, UseExceptions
 
 from tests.common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
 from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, gamma
+from pyrate.core.shared import dem_or_ifg
 from pyrate import prepifg, conv2tif
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.core.shared import Ifg, DEM, RasterException
@@ -48,37 +49,37 @@ if not exists(SML_TEST_TIF):
     sys.exit("ERROR: Missing small_test data for unit tests\n")
 
 
-class IfgTests(unittest.TestCase):
+class TestIfgTests:
     """Unit tests for the Ifg/interferogram class."""
 
-    def setUp(self):
-        self.ifg = Ifg(join(SML_TEST_TIF, 'geo_060619-061002_unw.tif'))
-        self.ifg.open()
-        self.ifg.nodata_value = 0
+    def setup_class(cls):
+        cls.ifg = Ifg(join(SML_TEST_TIF, 'geo_060619-061002_unw.tif'))
+        cls.ifg.open()
+        cls.ifg.nodata_value = 0
 
     def test_headers_as_attr(self):
         for a in ['ncols', 'nrows', 'x_first', 'x_step',
-                  'y_first', 'y_step', 'wavelength', 'master', 'slave']:
-            self.assertTrue(getattr(self.ifg, a) is not None)
+                  'y_first', 'y_step', 'wavelength', 'first', 'second']:
+            assert getattr(self.ifg, a) is not None
 
     def test_convert_to_nans(self):
         self.ifg.convert_to_nans()
-        self.assertTrue(self.ifg.nan_converted)
+        assert self.ifg.nan_converted
 
     def test_xylast(self):
         # ensure the X|Y_LAST header element has been created
-        self.assertAlmostEqual(self.ifg.x_last, 150.9491667)
-        self.assertAlmostEqual(self.ifg.y_last, -34.23)
+        assert self.ifg.x_last == pytest.approx(150.9491667)
+        assert self.ifg.y_last == pytest.approx(-34.23)
 
     def test_num_cells(self):
         # test cell size from header elements
         data = self.ifg.phase_band.ReadAsArray()
         ys, xs = data.shape
         exp_ncells = ys * xs
-        self.assertEqual(exp_ncells, self.ifg.num_cells)
+        assert exp_ncells == self.ifg.num_cells
 
     def test_shape(self):
-        self.assertEqual(self.ifg.shape, self.ifg.phase_data.shape)
+        assert self.ifg.shape == self.ifg.phase_data.shape
 
     def test_nan_count(self):
         num_nan = 0
@@ -87,13 +88,13 @@ class IfgTests(unittest.TestCase):
                 if isnan(v):
                     num_nan += 1
         if self.ifg.nan_converted:
-            self.assertEqual(num_nan, self.ifg.nan_count)
+            assert num_nan == self.ifg.nan_count
         else:
-            self.assertEqual(num_nan, 0)
+            assert num_nan == 0
 
     def test_phase_band(self):
         data = self.ifg.phase_band.ReadAsArray()
-        self.assertEqual(data.shape, (72, 47) )
+        assert data.shape == (72, 47)
 
     def test_nan_fraction(self):
         # NB: source data lacks 0 -> NaN conversion
@@ -109,58 +110,59 @@ class IfgTests(unittest.TestCase):
         del data
 
         num_cells = float(ys * xs)
-        self.assertTrue(nans > 0)
-        self.assertTrue(nans <= num_cells)
-        self.assertEqual(nans / num_cells, self.ifg.nan_fraction)
+        assert nans > 0
+        assert nans <= num_cells
+        assert nans / num_cells == self.ifg.nan_fraction
 
     def test_xy_size(self):
-        self.assertFalse(self.ifg.ncols is None)
-        self.assertFalse(self.ifg.nrows is None)
+        assert ~ (self.ifg.ncols is None)
+        assert ~ (self.ifg.nrows is None)
 
         # test with tolerance from base 90m cell
         # within 2% of cells over small?
-        self.assertTrue(self.ifg.y_size > 88.0)
-        self.assertTrue(self.ifg.y_size < 92.0, 'Got %s' % self.ifg.y_size)
+        assert self.ifg.y_size > 88.0
+        assert self.ifg.y_size < 92.0, 'Got %s' % self.ifg.y_size
 
         width = 76.9 # from nearby PyRate coords
-        self.assertTrue(self.ifg.x_size > 0.97 * width)  # ~3% tolerance
-        self.assertTrue(self.ifg.x_size < 1.03 * width)
+        assert self.ifg.x_size > 0.97 * width  # ~3% tolerance
+        assert  self.ifg.x_size < 1.03 * width
 
     def test_centre_latlong(self):
         lat_exp = self.ifg.y_first + \
                   (int(self.ifg.nrows / 2) * self.ifg.y_step)
         long_exp = self.ifg.x_first + \
                    (int(self.ifg.ncols / 2) * self.ifg.x_step)
-        self.assertEqual(lat_exp, self.ifg.lat_centre)
-        self.assertEqual(long_exp, self.ifg.long_centre)
+        assert lat_exp == self.ifg.lat_centre
+        assert long_exp == self.ifg.long_centre
 
     def test_centre_cell(self):
-        self.assertEqual(self.ifg.x_centre, 23)
-        self.assertEqual(self.ifg.y_centre, 36)
+        assert self.ifg.x_centre == 23
+        assert self.ifg.y_centre == 36
 
     def test_time_span(self):
-        self.assertAlmostEqual(self.ifg.time_span, 0.287474332649)
+        assert self.ifg.time_span == pytest.approx(0.287474332649)
 
     def test_wavelength(self):
-        self.assertEqual(self.ifg.wavelength, 0.0562356424)
+        assert self.ifg.wavelength == pytest.approx(0.0562356424)
 
 
-class IfgIOTests(unittest.TestCase):
+class TestIfgIOTests:
 
-    def setUp(self):
+    def setup_method(self):
         self.ifg = Ifg(join(SML_TEST_TIF, 'geo_070709-070813_unw.tif'))
         self.header = join(common.SML_TEST_OBS, 'geo_070709-070813_unw.rsc')
 
     def test_open(self):
-        self.assertTrue(self.ifg.dataset is None)
-        self.assertTrue(self.ifg.is_open is False)
+        assert self.ifg.dataset is None
+        assert self.ifg.is_open is False
         self.ifg.open(readonly=True)
-        self.assertTrue(self.ifg.dataset is not None)
-        self.assertTrue(self.ifg.is_open is True)
-        self.assertTrue(isinstance(self.ifg.dataset, Dataset))
+        assert  self.ifg.dataset is not None
+        assert self.ifg.is_open is True
+        assert isinstance(self.ifg.dataset, Dataset)
 
         # ensure open cannot be called twice
-        self.assertRaises(RasterException, self.ifg.open, True)
+        with pytest.raises(RasterException):
+            self.ifg.open(True)
 
     def test_open_ifg_from_dataset(self):
         """
@@ -176,7 +178,8 @@ class IfgIOTests(unittest.TestCase):
                                                          write_to_disc=False,
                                                          headers=headers)
         mlooked = [Ifg(m[1]) for m in mlooked_phase_data]
-        self.assertRaises(RasterException, mlooked[0].open)
+        with pytest.raises(RasterException):
+            mlooked[0].open()
 
     def test_write(self):
         base = TEMPDIR
@@ -205,10 +208,11 @@ class IfgIOTests(unittest.TestCase):
     def test_write_fails_on_readonly(self):
         # check readonly status is same before
         # and after open() for readonly file
-        self.assertTrue(self.ifg.is_read_only)
+        assert self.ifg.is_read_only
         self.ifg.open(readonly=True)
-        self.assertTrue(self.ifg.is_read_only)
-        self.assertRaises(IOError, self.ifg.write_modified_phase)
+        assert self.ifg.is_read_only
+        with pytest.raises(IOError):
+            self.ifg.write_modified_phase()
 
     def test_phase_band_unopened_ifg(self):
         try:
@@ -240,15 +244,15 @@ class IfgIOTests(unittest.TestCase):
             assert_array_equal(data[y], row)
 
         # test the data is cached if changed
-        crd = (5,4)
+        crd = (5, 4)
         orig = self.ifg.phase_data[crd]
         self.ifg.phase_data[crd] *= 2
-        nv = self.ifg.phase_data[crd] # pull new value out again
-        self.assertEqual(nv, 2 * orig)
+        nv = self.ifg.phase_data[crd]  # pull new value out again
+        assert nv == 2 * orig
 
 
 # FIXME:
-# class IncidenceFileTests(unittest.TestCase):
+# class IncidenceFileTests():
 #     'Unit tests to verify operations on GeoTIFF format Incidence rasters'
 #
 #     def setUp(self):
@@ -287,15 +291,15 @@ class IfgIOTests(unittest.TestCase):
 #         self.assertTrue(ptp < 0.1, msg="min -> max diff is %s" % ptp)
 
 
-class DEMTests(unittest.TestCase):
+class TestDEMTests:
     'Unit tests to verify operations on GeoTIFF format DEMs'
 
-    def setUp(self):
+    def setup_method(self):
         self.ras = DEM(SML_TEST_DEM_TIF)
 
     def test_create_raster(self):
         # validate header path
-        self.assertTrue(os.path.exists(self.ras.data_path))
+        assert os.path.exists(self.ras.data_path)
 
     def test_headers_as_attr(self):
         self.ras.open()
@@ -303,76 +307,63 @@ class DEMTests(unittest.TestCase):
 
         # TODO: are 'projection' and 'datum' attrs needed?
         for a in attrs:
-            self.assertTrue(getattr(self.ras, a) is not None)
+            assert getattr(self.ras, a) is not None
 
     def test_is_dem(self):
         self.ras = DEM(join(SML_TEST_TIF, 'geo_060619-061002_unw.tif'))
-        self.assertFalse(hasattr(self.ras, 'datum'))
+        assert  ~hasattr(self.ras, 'datum')
 
     def test_open(self):
-        self.assertTrue(self.ras.dataset is None)
+        assert self.ras.dataset is None
         self.ras.open()
-        self.assertTrue(self.ras.dataset is not None)
-        self.assertTrue(isinstance(self.ras.dataset, Dataset))
+        assert self.ras.dataset is not None
+        assert isinstance(self.ras.dataset, Dataset)
 
         # ensure open cannot be called twice
-        self.assertRaises(RasterException, self.ras.open)
+        with pytest.raises(RasterException):
+            self.ras.open()
 
-    def test_band(self):
+    def test_band_fails_with_unopened_raster(self):
         # test accessing bands with open and unopened datasets
-        try:
-            _ = self.ras.height_band
-            self.fail("Should not be able to access band without open dataset")
-        except RasterException:
-            pass
+        with pytest.raises(RasterException):
+            self.ras.height_band
 
+    def test_band_read_with_open_raster(self):
         self.ras.open()
         data = self.ras.height_band.ReadAsArray()
-        self.assertEqual(data.shape, (72, 47))
+        assert data.shape == (72, 47)
 
 
-class WriteUnwTest(unittest.TestCase):
+class TestWriteUnw:
 
     @classmethod
-    def setUpClass(cls):
-        cls.tif_dir = tempfile.mkdtemp()
-        cls.test_conf = common.TEST_CONF_GAMMA
-
+    @pytest.fixture(autouse=True)
+    def setup_class(cls, gamma_params):
         # change the required params
-        cls.params = Configuration(cls.test_conf).__dict__
+        cls.params = gamma_params
         cls.params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         cls.params[cf.PROCESSOR] = 1  # gamma
-        file_list = list(cf.parse_namelist(os.path.join(common.SML_TEST_GAMMA, 'ifms_17')))
-        fd, cls.params[cf.IFG_FILE_LIST] = tempfile.mkstemp(suffix='.conf', dir=cls.tif_dir)
-        os.close(fd)
-        # write a short filelist with only 3 gamma unws
-        with open(cls.params[cf.IFG_FILE_LIST], 'w') as fp:
-            for f in file_list[:3]:
-                fp.write(os.path.join(common.SML_TEST_GAMMA, f) + '\n')
-        cls.params[cf.OUT_DIR] = cls.tif_dir
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.REF_EST_METHOD] = 1
         cls.params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
-        cls.base_unw_paths = cf.original_ifg_paths(
-            cls.params[cf.IFG_FILE_LIST], cls.params[cf.OBS_DIR])
+        cls.base_unw_paths = cf.original_ifg_paths(cls.params[cf.IFG_FILE_LIST], cls.params[cf.OBS_DIR])
         cls.base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
 
         # dest_paths are tifs that have been geotif converted and multilooked
         conv2tif.main(cls.params)
         prepifg.main(cls.params)
 
-        cls.dest_paths = [Path(cls.tif_dir).joinpath(Path(c.sampled_path).name).as_posix()
+        cls.dest_paths = [Path(cls.params[cf.OUT_DIR]).joinpath(Path(c.sampled_path).name).as_posix()
                           for c in cls.params[cf.INTERFEROGRAM_FILES][:-2]]
-
-        cls.ifgs = common.small_data_setup(datafiles=cls.dest_paths)
+        cls.ifgs = [dem_or_ifg(i) for i in cls.dest_paths]
+        for i in cls.ifgs:
+            i.open()
+            i.nodata_value = 0
 
     @classmethod
-    def tearDownClass(cls):
-        for i in cls.ifgs:
-            i.close()
-        shutil.rmtree(cls.tif_dir)
-        common.remove_tifs(cls.params[cf.OBS_DIR])
+    def teardown_class(cls):
+        """auto cleaning on"""
 
     def test_unw_contains_same_data_as_numpy_array(self):
         from datetime import time
@@ -390,22 +381,18 @@ class WriteUnwTest(unittest.TestCase):
         # insert some dummy data so we are the dem in write_fullres_geotiff is not
         # not activated and ifg write_fullres_geotiff operation works
         header[ifc.PYRATE_TIME_SPAN] = 0
-        header[ifc.SLAVE_DATE] = 0
+        header[ifc.SECOND_DATE] = 0
         header[ifc.DATA_UNITS] = 'degrees'
         header[ifc.DATA_TYPE] = ifc.ORIG
-        header[ifc.SLAVE_TIME] = time(10)
+        header[ifc.SECOND_TIME] = time(10)
 
         # now create aritrary data
-        data = np.random.rand(dem_header[ifc.PYRATE_NROWS],
-                              dem_header[ifc.PYRATE_NCOLS])
+        data = np.random.rand(dem_header[ifc.PYRATE_NROWS], dem_header[ifc.PYRATE_NCOLS])
 
         # convert numpy array to .unw
-        shared.write_unw_from_data_or_geotiff(geotif_or_data=data,
-                                              dest_unw=temp_unw,
-                                              ifg_proc=1)
+        shared.write_unw_from_data_or_geotiff(geotif_or_data=data, dest_unw=temp_unw, ifg_proc=1)
         # convert the .unw to geotif
-        shared.write_fullres_geotiff(header=header, data_path=temp_unw,
-                                     dest=temp_tif, nodata=np.nan)
+        shared.write_fullres_geotiff(header=header, data_path=temp_unw, dest=temp_tif, nodata=np.nan)
 
         # now compare geotiff with original numpy array
         ds = gdal.Open(temp_tif, gdal.GA_ReadOnly)
@@ -429,7 +416,7 @@ class WriteUnwTest(unittest.TestCase):
         # Convert back to .unw
         dest_unws = []
         for g in geotiffs:
-            dest_unw = os.path.join(self.params[cf.OUT_DIR], os.path.splitext(g)[0] + '.unw')
+            dest_unw = os.path.join(self.params[cf.OUT_DIR], Path(g).stem + '.unw')
             shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw= dest_unw, ifg_proc=1)
             dest_unws.append(dest_unw)
 
@@ -459,36 +446,35 @@ class WriteUnwTest(unittest.TestCase):
         for g in geotiffs[:1]:
             dest_unw = os.path.join(self.params[cf.OUT_DIR],
                                     os.path.splitext(g)[0] + '.unw')
-            with self.assertRaises(NotImplementedError):
+            with pytest.raises(NotImplementedError):
                 shared.write_unw_from_data_or_geotiff(
                     geotif_or_data=g, dest_unw=dest_unw, ifg_proc=0)
 
 
-class GeodesyTests(unittest.TestCase):
+class TestGeodesy:
 
     def test_utm_zone(self):
         # test some different zones (collected manually)
         for lon in [174.0, 176.5, 179.999, 180.0]:
-            self.assertEqual(60, _utm_zone(lon))
+            assert 60 == _utm_zone(lon)
 
         for lon in [144.0, 144.1, 146.3456, 149.9999]:
-            self.assertEqual(55, _utm_zone(lon))
+            assert 55 == _utm_zone(lon)
 
         for lon in [-180.0, -179.275, -176.925]:
-            self.assertEqual(1, _utm_zone(lon))
+            assert 1 == _utm_zone(lon)
 
         for lon in [-72.0, -66.1]:
-            self.assertEqual(19, _utm_zone(lon))
+            assert 19 == _utm_zone(lon)
 
         for lon in [0.0, 0.275, 3.925, 5.999]:
-            self.assertEqual(31, _utm_zone(lon))
-
+            assert 31 == _utm_zone(lon)
 
     def test_cell_size_polar_region(self):
         # Can't have polar area zones: see http://www.dmap.co.uk/utmworld.htm
         for lat in [-80.1, -85.0, -90.0, 84.1, 85.0, 89.9999, 90.0]:
-            self.assertRaises(ValueError, cell_size, lat, 0, 0.1, 0.1)
-
+            with pytest.raises(ValueError):
+                cell_size(lat, 0, 0.1, 0.1)
 
     def test_cell_size_calc(self):
         # test conversion of X|Y_STEP to X|Y_SIZE
@@ -505,10 +491,6 @@ class GeodesyTests(unittest.TestCase):
         for lon, lat in latlons:
             xs, ys = cell_size(lat, lon, x_deg, y_deg)
             for s in (xs, ys):
-                self.assertTrue(s > 0, msg="size=%s" % s)
-                self.assertTrue(s > exp_low, msg="size=%s" % s)
-                self.assertTrue(s < exp_high, msg="size=%s" % s)
-
-
-if __name__ == "__main__":
-    unittest.main()
+                assert s > 0, "size=%s" % s
+                assert s > exp_low, "size=%s" % s
+                assert s < exp_high, "size=%s" % s

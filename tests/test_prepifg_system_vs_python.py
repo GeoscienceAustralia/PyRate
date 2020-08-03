@@ -1,22 +1,17 @@
 import shutil
 import pytest
 from pathlib import Path
-from subprocess import check_call
 import numpy as np
 from pyrate.core import config as cf
+from pyrate import conv2tif, prepifg
+from pyrate.configuration import Configuration
 from tests.common import (
     assert_two_dirs_equal,
     manipulate_test_conf,
     TRAVIS,
     PYTHON3P6,
     PYTHON3P7,
-    GDAL_VERSION
 )
-# python3.7 and gdal3.0.4
-REGRESSION = PYTHON3P7 and (GDAL_VERSION == '3.0.4')
-# python3.7 and gdal3.0.2
-REGRESSION2 = PYTHON3P7 and (GDAL_VERSION == '3.0.2')
-
 
 @pytest.fixture(params=[1, 2, 3, 4])
 def local_crop(request):
@@ -49,7 +44,7 @@ def modified_config_short(tempdir, local_crop, get_lks, coh_mask):
         params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
         params[cf.REF_EST_METHOD] = ref_est_method
         params["rows"], params["cols"] = 3, 2
-        params["tiles"] = params["rows"] * params["cols"]
+        params["notiles"] = params["rows"] * params["cols"]  # number of tiles
 
         print(params)
         # write new temp config
@@ -67,9 +62,10 @@ def create_mpi_files(modified_config_short):
     def _create(conf):
 
         mpi_conf, params = modified_config_short(conf, 0, 'mpi_conf.conf')
-
-        check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
-        check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
+        params = Configuration(mpi_conf).__dict__
+        conv2tif.main(params)
+        params = Configuration(mpi_conf).__dict__
+        prepifg.main(params)
 
         return params  # don't need the reamining params
     return _create
@@ -100,7 +96,7 @@ def modified_config_largetifs(tempdir, local_crop, get_lks, coh_mask):
         params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
         params[cf.REF_EST_METHOD] = ref_est_method
         params["rows"], params["cols"] = 3, 2
-        params["tiles"] = params["rows"] * params["cols"]
+        params["notiles"] = params["rows"] * params["cols"]  # number of tiles
 
         print(params)
         # write new temp config
@@ -123,9 +119,11 @@ def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, crea
 
     params = create_mpi_files(gamma_conf)
     sr_conf, params_p = modified_config_largetifs(gamma_conf, 1, 'parallel_conf.conf')
-    check_call(f"pyrate conv2tif -f {sr_conf}", shell=True)
-    check_call(f"pyrate prepifg -f {sr_conf}", shell=True)
-
+    params_p = Configuration(sr_conf).__dict__
+    conv2tif.main(params_p)
+    params_p = Configuration(sr_conf).__dict__
+    prepifg.main(params_p)
+    params_p = Configuration(sr_conf).__dict__
     # convert2tif tests, 17 interferograms
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw_ifg.tif", 17)
 

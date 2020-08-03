@@ -23,6 +23,9 @@ import os
 import shutil
 import stat
 import tempfile
+from decimal import Decimal
+import pytest
+from typing import Iterable
 from os.path import join
 from subprocess import check_output
 from pathlib import Path
@@ -34,8 +37,10 @@ from osgeo import gdal
 from pyrate.core import algorithm, ifgconstants as ifc, config as cf, timeseries, mst, stack
 from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info,
                                 write_output_geotiff, dem_or_ifg)
+from pyrate.core import roipac
 from pyrate.constants import PYRATEPATH
 from pyrate.configuration import Configuration
+
 
 TRAVIS = True if 'TRAVIS' in os.environ else False
 PYTHON3P6 = True if ('TRAVIS_PYTHON_VERSION' in os.environ and os.environ['TRAVIS_PYTHON_VERSION'] == '3.6') else False
@@ -214,14 +219,19 @@ def small_data_setup_gamma_unws():
 
 def small5_ifgs():
     """Convenience func to return a subset of 5 linked Ifgs from the testdata"""
+    new_data_paths = small5_ifg_paths()
+
+    return [Ifg(p) for p in new_data_paths]
+
+
+def small5_ifg_paths():
     BASE_DIR = tempfile.mkdtemp()
     data_paths = [os.path.join(SML_TEST_TIF, p) for p in IFMS5.split()]
     new_data_paths = [os.path.join(BASE_DIR, os.path.basename(d))
                       for d in data_paths]
     for d in data_paths:
         shutil.copy(d, os.path.join(BASE_DIR, os.path.basename(d)))
-
-    return [Ifg(p) for p in new_data_paths]
+    return new_data_paths
 
 
 def small5_mock_ifgs(xs=3, ys=4):
@@ -244,8 +254,8 @@ class MockIfg(object):
         to the source interferogram for smaller test datasets).
         """
         self.dataset = ifg.dataset
-        self.master = ifg.master
-        self.slave = ifg.slave
+        self.first = ifg.first
+        self.second = ifg.second
         self.data_path = ifg.data_path
         self.nrows = ysize
         self.ncols = xsize
@@ -259,7 +269,7 @@ class MockIfg(object):
         self.is_open = False
 
     def __repr__(self, *args, **kwargs):
-        return 'MockIfg: %s -> %s' % (self.master, self.slave)
+        return 'MockIfg: %s -> %s' % (self.first, self.second)
 
     def open(self):
         # TODO: could move some of the init code here to mimic Ifgs
@@ -490,6 +500,17 @@ def copytree(src, dst, symlinks=False, ignore=None):
             shutil.copy2(s, d)
 
 
+def repair_params_for_process_tests(out_dir, params):
+    base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
+    headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
+    params[cf.INTERFEROGRAM_FILES] = params[cf.INTERFEROGRAM_FILES][:-2]
+    dest_paths = [Path(out_dir).joinpath(Path(c.sampled_path).name).as_posix()
+                  for c in params[cf.INTERFEROGRAM_FILES]]
+    for p, d in zip(params[cf.INTERFEROGRAM_FILES], dest_paths):  # hack
+        p.sampled_path = d
+    return dest_paths, headers
+
+
 def pre_prepare_ifgs(ifg_paths, params):
     """
     nan and mm convert ifgs
@@ -535,20 +556,61 @@ def assert_same_files_produced(dir1, dir2, dir3, ext, num_files=None):
     assert_two_dirs_equal(dir1, dir3, ext, num_files)
 
 
-def manipulate_test_conf(conf_file, temp_obs_dir):
-    params = cf.get_config_params(conf_file)
+def manipulate_test_conf(conf_file, temp_obs_dir: Path):
+    params = Configuration(conf_file).__dict__
     copytree(params[cf.OBS_DIR], temp_obs_dir)
     # manipulate params
     params[cf.OBS_DIR] = temp_obs_dir.as_posix()
     outdir = temp_obs_dir.joinpath('out')
     outdir.mkdir(exist_ok=True)
     params[cf.OUT_DIR] = outdir.as_posix()
+    params[cf.TEMP_MLOOKED_DIR] = outdir.joinpath(cf.TEMP_MLOOKED_DIR).as_posix()
     params[cf.DEM_FILE] = temp_obs_dir.joinpath(Path(params[cf.DEM_FILE]).name).as_posix()
     params[cf.DEM_HEADER_FILE] = temp_obs_dir.joinpath(Path(params[cf.DEM_HEADER_FILE]).name).as_posix()
     params[cf.HDR_FILE_LIST] = temp_obs_dir.joinpath(Path(params[cf.HDR_FILE_LIST]).name).as_posix()
     params[cf.SLC_DIR] = temp_obs_dir.as_posix()
     params[cf.IFG_FILE_LIST] = temp_obs_dir.joinpath(Path(params[cf.IFG_FILE_LIST]).name).as_posix()
     params[cf.COH_FILE_DIR] = temp_obs_dir.as_posix()
-    params[cf.APS_INCIDENCE_MAP] = temp_obs_dir.joinpath(Path(params[cf.APS_INCIDENCE_MAP]).name).as_posix()
     params[cf.TMPDIR] = temp_obs_dir.joinpath(Path(params[cf.TMPDIR]).name).as_posix()
     return params
+
+
+class UnitTestAdaptation:
+    @staticmethod
+    def assertEqual(arg1, arg2):
+        assert arg1 == arg2
+
+    @staticmethod
+    def assertTrue(arg, msg=''):
+        assert arg, msg
+
+    @staticmethod
+    def assertFalse(arg, msg=''):
+        assert ~ arg, msg
+
+    @staticmethod
+    def assertIsNotNone(arg, msg=''):
+        assert arg is not None, msg
+
+    @staticmethod
+    def assertIsNone(arg, msg=''):
+        assert arg is None, msg
+
+    @staticmethod
+    def assertDictEqual(d1: dict, d2: dict):
+        assert d1 == d2
+
+    @staticmethod
+    def assertRaises(excpt: Exception, func, *args, **kwargs):
+        with pytest.raises(excpt):
+            func(*args, **kwargs)
+
+    @staticmethod
+    def assertIn(item, s: Iterable):
+        assert item in s
+
+    @staticmethod
+    def assertAlmostEqual(arg1, arg2, places=7):
+        places *= -1
+        num = Decimal((0, (1, ), places))
+        assert arg1 == pytest.approx(arg2, abs=num)

@@ -17,7 +17,6 @@
 This module contains tests for the mst.py PyRate module.
 """
 
-import unittest
 from itertools import product
 from numpy import empty, array, nan, isnan, sum as nsum
 
@@ -27,12 +26,13 @@ from tests.common import MockIfg, small5_mock_ifgs, small_data_setup
 from pyrate.core import algorithm, config as cf, mst
 from pyrate.core.shared import IfgPart, Tile
 from tests import common
+from tests.common import UnitTestAdaptation
 
 
-class MSTTests(unittest.TestCase):
+class TestMST(UnitTestAdaptation):
     """Basic verification of minimum spanning tree (MST) functionality."""
 
-    def setUp(self):
+    def setup_method(self):
         self.ifgs = small_data_setup()
 
     def test_mst_matrix_as_array(self):
@@ -73,7 +73,8 @@ class MSTTests(unittest.TestCase):
         for coord in product(range(ys), range(xs)):
             stack = (i.phase_data[coord] for i in self.ifgs)
             nc = nsum([isnan(n) for n in stack])
-            self.assertTrue(len(result[coord]) <= (nifgs - nc))
+            check = len(result[coord]) <= (nifgs - nc)
+            self.assertTrue(check)
 
             # HACK: type testing here is a bit grubby
             self.assertTrue(all([isinstance(i, MockIfg) for i in ifgs]))
@@ -113,12 +114,12 @@ class MSTTests(unittest.TestCase):
         self.assertTrue(isnan(res[0][0]) and isnan(exp[0][0]))
 
 
-class DefaultMSTTests(unittest.TestCase):
+class TestDefaultMST(UnitTestAdaptation):
 
     def test_default_mst(self):
         # default MST from full set of Ifgs shouldn't drop any nodes
         ifgs = small5_mock_ifgs()
-        dates = [(i.master, i.slave) for i in ifgs]
+        dates = [(i.first, i.second) for i in ifgs]
 
         res = mst.mst_from_ifgs(ifgs)[0]
         num_edges = len(res)
@@ -132,13 +133,15 @@ class DefaultMSTTests(unittest.TestCase):
         mst_dates = set(res)
         mst_dates = list(sum(mst_dates, ()))
         for i in ifgs:
-            for node in (i.master, i.slave):
+            for node in (i.first, i.second):
                 self.assertIn(node, mst_dates)
 
 
-class NetworkxMSTTreeCheck(unittest.TestCase):
-    def setUp(self):
-        self.ifgs = small_data_setup()
+class TestNetworkxMSTTreeCheck(UnitTestAdaptation):
+
+    @classmethod
+    def setup_class(cls):
+        cls.ifgs = small_data_setup()
 
     def test_assert_is_not_tree(self):
         non_overlapping = [1, 2, 5, 6, 12, 13, 14, 15, 16, 17]
@@ -174,9 +177,9 @@ class NetworkxMSTTreeCheck(unittest.TestCase):
         self.assertEqual(2, ntrees)
 
 
-class IfgPartTest(unittest.TestCase):
+class TestIfgPart(UnitTestAdaptation):
 
-    def setUp(self):
+    def setup_method(self):
         self.ifgs = small_data_setup()
         self.params = cf.get_config_params(common.TEST_CONF_ROIPAC)
 
@@ -200,7 +203,3 @@ class IfgPartTest(unittest.TestCase):
         original_mst = mst.mst_boolean_array(self.ifgs)
         parallel_mst = mst.mst_parallel(self.ifgs, params=self.params)
         np.testing.assert_array_equal(original_mst, parallel_mst)
-
-
-if __name__ == "__main__":
-    unittest.main()

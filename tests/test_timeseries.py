@@ -21,16 +21,17 @@ import os
 import shutil
 import sys
 import tempfile
-import unittest
-from pathlib import Path
+import pytest
 from datetime import date, timedelta
 from numpy import nan, asarray, where
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 import pyrate.core.orbital
+import pyrate.core.ref_phs_est
+import pyrate.core.refpixel
 import tests.common as common
-from pyrate.core import ref_phs_est as rpe, config as cf, mst, covariance, roipac
+from pyrate.core import config as cf, mst, covariance, roipac
 from pyrate import process, prepifg, conv2tif
 from pyrate.configuration import Configuration
 from pyrate.core.timeseries import time_series
@@ -52,10 +53,10 @@ class SinglePixelIfg(object):
     A single pixel ifg (interferogram) solely for unit testing
     """
 
-    def __init__(self, master, slave, phase, nan_fraction):
+    def __init__(self, first, second, phase, nan_fraction):
         self.phase_data = asarray([[phase]])
-        self.master = master
-        self.slave = slave
+        self.first = first
+        self.second = second
         self.nrows = 1
         self.ncols = 1
         self.nan_fraction = asarray([nan_fraction])
@@ -69,11 +70,11 @@ class SinglePixelIfg(object):
         self.nan_converted = True
 
 
-class TimeSeriesTests(unittest.TestCase):
+class TestTimeSeries:
     """Verifies error checking capabilities of the time_series function"""
 
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
         cls.ifgs = common.small_data_setup()
         cls.params = default_params()
         cls.mstmat = mst.mst_boolean_array(cls.ifgs)
@@ -86,8 +87,8 @@ class TimeSeriesTests(unittest.TestCase):
         """
         Checks that the code works the same as the calculated example
         """
-        imaster = asarray([1, 1, 2, 2, 3, 3, 4, 5])
-        islave = asarray([2, 4, 3, 4, 5, 6, 6, 6])
+        ifirst = asarray([1, 1, 2, 2, 3, 3, 4, 5])
+        isecond = asarray([2, 4, 3, 4, 5, 6, 6, 6])
         timeseries = asarray([0.0, 0.1, 0.6, 0.8, 1.1, 1.3])
         phase = asarray([0.5, 4, 2.5, 3.5, 2.5, 3.5, 2.5, 1])
         nan_fraction = asarray([0.5, 0.4, 0.2, 0.3, 0.1, 0.3, 0.2, 0.1])
@@ -96,11 +97,11 @@ class TimeSeriesTests(unittest.TestCase):
 
         dates = [now + timedelta(days=(t*365.25)) for t in timeseries]
         dates.sort()
-        master = [dates[m_num - 1] for m_num in imaster]
-        slave = [dates[s_num - 1] for s_num in islave]
+        first = [dates[m_num - 1] for m_num in ifirst]
+        second = [dates[s_num - 1] for s_num in isecond]
 
         self.ifgs = [SinglePixelIfg(m, s, p, n) for m, s, p, n in
-                     zip(master, slave, phase, nan_fraction)]
+                     zip(first, second, phase, nan_fraction)]
 
         tsincr, tscum, tsvel = time_series(
             self.ifgs, params=self.params, vcmt=self.vcmt, mst=None)
@@ -108,37 +109,42 @@ class TimeSeriesTests(unittest.TestCase):
         assert_array_almost_equal(tscum, expected, decimal=2)
 
 
-class LegacyTimeSeriesEquality(unittest.TestCase):
+class TestLegacyTimeSeriesEquality:
 
     @classmethod
-    def setUpClass(cls):
-        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
-        cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
-        params[cf.OUT_DIR] = cls.temp_out_dir
+    @pytest.fixture(autouse=True)
+    def setup_class(cls, roipac_params):
+        params = roipac_params
+        params[cf.TEMP_MLOOKED_DIR] = os.path.join(params[cf.OUT_DIR], cf.TEMP_MLOOKED_DIR)
         conv2tif.main(params)
         prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2
 
-        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
-        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
+        xlks, _, crop = cf.transform_params(params)
+
+        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
+        process._copy_mlooked(params)
+        copied_dest_paths = [os.path.join(params[cf.TEMP_MLOOKED_DIR], os.path.basename(d)) for d in dest_paths]
+        del dest_paths
         # start run_pyrate copy
-        ifgs = common.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = common.mst_calculation(dest_paths, params)
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
+        ifgs = common.pre_prepare_ifgs(copied_dest_paths, params)
+        mst_grid = common.mst_calculation(copied_dest_paths, params)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
+
+        params[cf.REFX] = refx
+        params[cf.REFY] = refy
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
-        ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
+        ifgs = common.prepare_ifgs_without_phase(copied_dest_paths, params)
         for ifg in ifgs:
             ifg.close()
-        _, ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+        process._update_params_with_tiles(params)
+        _, ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = covariance.RDist(ifgs[0])()
         ifgs[0].close()
-        maxvar = [covariance.cvd(i, params, r_dist)[0] for i in dest_paths]
+        maxvar = [covariance.cvd(i, params, r_dist)[0] for i in copied_dest_paths]
         for ifg in ifgs:
             ifg.open()
         vcmt = covariance.get_vcmt(ifgs, maxvar)
@@ -167,10 +173,8 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
         cls.ts_cum = np.reshape(ts_cum, newshape=cls.tscum_0.shape, order='F')
 
     @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.temp_out_dir)
-        common.remove_tifs(
-            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+    def teardown_class(cls):
+        "auto clean fixture used"
 
     def test_time_series_equality_parallel_by_rows(self):
         """
@@ -199,41 +203,50 @@ class LegacyTimeSeriesEquality(unittest.TestCase):
         np.testing.assert_array_almost_equal(
             self.ts_cum, self.tscum_0, decimal=3)
 
+    @staticmethod
+    def assertEqual(val1, val2):
+        assert val1 == val2
 
-class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
+
+class TestLegacyTimeSeriesEqualityMethod2Interp0:
 
     @classmethod
-    def setUpClass(cls):
-        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
-        cls.temp_out_dir = tempfile.mkdtemp()
-        params[cf.OUT_DIR] = cls.temp_out_dir
-        params[cf.PARALLEL] = 0
+    @pytest.fixture(autouse=True)
+    def setup_class(cls, roipac_params):
+        params = roipac_params
+        params[cf.TEMP_MLOOKED_DIR] = os.path.join(params[cf.OUT_DIR], cf.TEMP_MLOOKED_DIR)
         conv2tif.main(params)
         prepifg.main(params)
 
         params[cf.REF_EST_METHOD] = 2
 
-        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
-        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
-        # start run_pyrate copy
-        ifgs = common.pre_prepare_ifgs(dest_paths, params)
-        mst_grid = common.mst_calculation(dest_paths, params)
+        xlks, _, crop = cf.transform_params(params)
 
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
+        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
+        process._copy_mlooked(params)
+        copied_dest_paths = [os.path.join(params[cf.TEMP_MLOOKED_DIR], os.path.basename(d)) for d in dest_paths]
+        del dest_paths
+        # start run_pyrate copy
+        ifgs = common.pre_prepare_ifgs(copied_dest_paths, params)
+        mst_grid = common.mst_calculation(copied_dest_paths, params)
+        refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
+
+        params[cf.REFX] = refx
+        params[cf.REFY] = refy
 
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
-        ifgs = common.prepare_ifgs_without_phase(dest_paths, params)
+        ifgs = common.prepare_ifgs_without_phase(copied_dest_paths, params)
         for ifg in ifgs:
             ifg.close()
-        _, ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+
+        process._update_params_with_tiles(params)
+        _, ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = covariance.RDist(ifgs[0])()
         ifgs[0].close()
         # Calculate interferogram noise
-        maxvar = [covariance.cvd(i, params, r_dist)[0] for i in dest_paths]
+        maxvar = [covariance.cvd(i, params, r_dist)[0] for i in copied_dest_paths]
         for ifg in ifgs:
             ifg.open()
         vcmt = covariance.get_vcmt(ifgs, maxvar)
@@ -264,8 +277,7 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
 
     @classmethod
     def teardown_class(cls):
-        shutil.rmtree(cls.temp_out_dir)
-        common.remove_tifs(cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+        "atuo clean fixture used"
 
     def test_time_series_equality_parallel_by_rows(self):
 
@@ -277,12 +289,8 @@ class LegacyTimeSeriesEqualityMethod2Interp0(unittest.TestCase):
 
     def test_time_series_equality_serial_by_the_pixel(self):
 
-        self.assertEqual(self.tsincr_0.shape, self.tscum_0.shape)
+        assert self.tsincr_0.shape == self.tscum_0.shape
 
         np.testing.assert_array_almost_equal(self.ts_incr, self.tsincr_0, decimal=3)
 
         np.testing.assert_array_almost_equal(self.ts_cum, self.tscum_0, decimal=3)
-
-
-if __name__ == "__main__":
-    unittest.main()

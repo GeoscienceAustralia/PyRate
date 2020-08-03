@@ -285,8 +285,8 @@ class Ifg(RasterBase):
         RasterBase.__init__(self, path)
         self._phase_band = None
         self._phase_data = None
-        self.master = None
-        self.slave = None
+        self.first = None
+        self.second = None
         self.nan_converted = False
         self.mm_converted = False
         self.meta_data = None
@@ -315,20 +315,20 @@ class Ifg(RasterBase):
 
     def _init_dates(self):
         """
-        Determine master and slave dates, and interferogram timespan
+        Determine first and second image dates, and interferogram timespan
         """
         def _to_date(datestr):
             year, month, day = [int(i) for i in datestr.split('-')]
             return date(year, month, day)
 
         md = self.dataset.GetMetadata()
-        datestrs = [md[k] for k in [ifc.MASTER_DATE, ifc.SLAVE_DATE]]
+        datestrs = [md[k] for k in [ifc.FIRST_DATE, ifc.SECOND_DATE]]
 
         if all(datestrs):
-            self.master, self.slave = [_to_date(s) for s in datestrs]
-            self.time_span = (self.slave - self.master).days/ifc.DAYS_PER_YEAR
+            self.first, self.second = [_to_date(s) for s in datestrs]
+            self.time_span = (self.second - self.first).days/ifc.DAYS_PER_YEAR
         else:
-            msg = 'Missing master and/or slave date in %s' % self.data_path
+            msg = 'Missing first and/or second date in %s' % self.data_path
             raise IfgException(msg)
 
     def convert_to_nans(self):
@@ -506,8 +506,8 @@ class IfgPart(object):
         if ifg_dict is not None:  # should be used with MPI
             ifg = ifg_dict[ifg_or_path]
             self.nan_fraction = ifg.nan_fraction
-            self.master = ifg.master
-            self.slave = ifg.slave
+            self.first = ifg.first
+            self.second = ifg.second
             self.time_span = ifg.time_span
             phase_file = 'phase_data_{}_{}.npy'.format(basename(ifg_or_path).split('.')[0], tile.index)
             self.phase_data = np.load(join(params[cf.TMPDIR], phase_file))
@@ -520,8 +520,8 @@ class IfgPart(object):
                 ifg = Ifg(ifg_or_path)
             self.phase_data = None
             self.nan_fraction = None
-            self.master = None
-            self.slave = None
+            self.first = None
+            self.second = None
             self.time_span = None
         if isinstance(ifg, Ifg):
             self.read_required(ifg)
@@ -536,8 +536,8 @@ class IfgPart(object):
         self.phase_data = ifg.phase_data[self.r_start:self.r_end,
                                          self.c_start:self.c_end]
         self.nan_fraction = ifg.nan_fraction
-        self.master = ifg.master
-        self.slave = ifg.slave
+        self.first = ifg.first
+        self.second = ifg.second
         self.time_span = ifg.time_span
         ifg.phase_data = None
         ifg.close()  # close base ifg
@@ -828,11 +828,11 @@ def collate_metadata(header):
     def __common_ifg_coh_update(header, md):
         for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
                   ifc.PYRATE_INSAR_PROCESSOR,
-                  ifc.MASTER_DATE, ifc.SLAVE_DATE,
+                  ifc.FIRST_DATE, ifc.SECOND_DATE,
                   ifc.DATA_UNITS]:
             md.update({k: str(header[k])})
         if header[ifc.PYRATE_INSAR_PROCESSOR] == GAMMA:
-            for k in [ifc.MASTER_TIME, ifc.SLAVE_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
+            for k in [ifc.FIRST_TIME, ifc.SECOND_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
                 md.update({k: str(header[k])})
 
     if _is_coherence(header):
@@ -1029,25 +1029,6 @@ def create_tiles(shape, nrows=2, ncols=2):
     return [Tile(i, (r[0], c[0]), (r[-1]+1, c[-1]+1)) for i, (r, c) in enumerate(product(row_arr, col_arr))]
 
 
-def get_tiles(ifg_path, rows, cols):
-    """
-    Break up the interferograms into smaller tiles based on user supplied
-    rows and columns.
-
-    :param list ifg_path: List of destination geotiff file names
-    :param int rows: Number of rows to break each interferogram into
-    :param int cols: Number of columns to break each interferogram into
-
-    :return: tiles: List of shared.Tile instances
-    :rtype: list
-    """
-    ifg = Ifg(ifg_path)
-    ifg.open(readonly=True)
-    tiles = create_tiles(ifg.shape, nrows=rows, ncols=cols)
-    ifg.close()
-    return tiles
-
-
 class Tile():
     """
     Tile class for containing a sub-part of an interferogram
@@ -1072,6 +1053,25 @@ class Tile():
 
     def __str__(self):
         return "Convenience Tile class containing tile co-ordinates"
+
+
+def get_tiles(ifg_path, rows, cols) -> List[Tile]:
+    """
+    Break up the interferograms into smaller tiles based on user supplied
+    rows and columns.
+
+    :param list ifg_path: List of destination geotiff file names
+    :param int rows: Number of rows to break each interferogram into
+    :param int cols: Number of columns to break each interferogram into
+
+    :return: tiles: List of shared.Tile instances
+    :rtype: list
+    """
+    ifg = Ifg(ifg_path)
+    ifg.open(readonly=True)
+    tiles = create_tiles(ifg.shape, nrows=rows, ncols=cols)
+    ifg.close()
+    return tiles
 
 
 def nan_and_mm_convert(ifg, params):
@@ -1132,18 +1132,19 @@ def _utm_zone(longitude):
     return floor((longitude + 180) / 6.0) + 1
 
 
-class PrereadIfg():
+class PrereadIfg:
     """
     Convenience class for handling pre-calculated ifg params
     """
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, path, nan_fraction, master, slave, time_span,
+    def __init__(self, path, tmp_path, nan_fraction, first, second, time_span,
                  nrows, ncols, metadata):
         self.path = path
+        self.tmp_path = tmp_path
         self.nan_fraction = nan_fraction
-        self.master = master
-        self.slave = slave
+        self.first = first
+        self.second = second
         self.time_span = time_span
         self.nrows = nrows
         self.ncols = ncols
@@ -1168,7 +1169,7 @@ def _prep_ifg(ifg_path, params):
     return ifg
 
 
-def save_numpy_phase(ifg_paths, tiles, params):
+def save_numpy_phase(ifg_paths, params):
     """
     Save interferogram phase data as numpy array file on disk.
 
@@ -1178,6 +1179,7 @@ def save_numpy_phase(ifg_paths, tiles, params):
 
     :return: None, file saved to disk
     """
+    tiles = params['tiles']
     process_ifgs = mpiops.array_split(ifg_paths)
     outdir = params[cf.TMPDIR]
     if not os.path.exists(outdir):
@@ -1266,7 +1268,7 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
     :return: True if correction has been performed, otherwise False
     :rtype: bool
     """
-    def close_all(ifgs):    
+    def close_all(ifgs):
         for ifg in ifgs:
             ifg.close()
     
@@ -1332,7 +1334,7 @@ def dem_or_ifg(data_path):
     """
     ds = gdal.Open(data_path)
     md = ds.GetMetadata()
-    if ifc.MASTER_DATE in md:  # ifg
+    if ifc.FIRST_DATE in md:  # ifg
         return Ifg(data_path)
     else:
         return DEM(data_path)

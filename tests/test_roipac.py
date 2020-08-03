@@ -21,7 +21,6 @@ import os
 import shutil
 import sys
 import tempfile
-import unittest
 from datetime import date
 from os.path import exists, join
 
@@ -43,7 +42,7 @@ from pyrate.core.config import (
 from pyrate.core.shared import GeotiffException
 from pyrate.core.shared import write_fullres_geotiff
 from tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
-from tests.common import SML_TEST_DEM_DIR, SML_TEST_OBS, TEMPDIR
+from tests.common import SML_TEST_DEM_DIR, SML_TEST_OBS, TEMPDIR, UnitTestAdaptation
 from tests.common import SML_TEST_DEM_ROIPAC, SML_TEST_DEM_HDR
 
 gdal.UseExceptions()
@@ -58,49 +57,17 @@ SHORT_HEADER_PATH = join(SML_TEST_OBS, 'geo_060619-061002.unw.rsc')
 FULL_HEADER_PATH = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
 
 
-class RoipacCommandLine(unittest.TestCase):
-    def setUp(self):
-        random_text = tempfile.mktemp()
-        self.confFile = os.path.join(TEMPDIR,
-                                     '{}/roipac_test.cfg'.format(random_text))
-        self.ifgListFile = os.path.join(
-            TEMPDIR, '{}/roipac_ifg.list'.format(random_text))
-        self.base_dir = os.path.dirname(self.confFile)
-        shared.mkdir_p(self.base_dir)
-        self.hdr = SML_TEST_DEM_HDR
-
-    def tearDown(self):
-        def rmPaths(paths):
-            for path in paths:
-                try: os.remove(path)
-                except: pass
-
-        rmPaths(self.expPaths)
-        shutil.rmtree(self.base_dir)
-
-    def makeInputFiles(self, data, projection):
-        with open(self.confFile, 'w') as conf:
-            conf.write('{}: {}\n'.format(DEM_HEADER_FILE, self.hdr))
-            conf.write('{}: {}\n'.format(INPUT_IFG_PROJECTION, projection))
-            conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
-            conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
-            conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
-            conf.write('{}: {}\n'.format(PROCESSOR, '0'))
-        with open(self.ifgListFile, 'w') as ifgl:
-            ifgl.write('\n'.join(data))
-
-class RoipacToGeoTiffTests(unittest.TestCase):
+class TestRoipacToGeoTiff(UnitTestAdaptation):
     """Tests conversion of GAMMA rasters to custom PyRate GeoTIFF"""
 
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
         hdr_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw.rsc')
         cls.HDRS = roipac.parse_header(hdr_path)
 
-    def tearDown(self):
-        if os.path.exists(self.dest):
-            os.remove(self.dest)
+    @classmethod
+    def teardown_class(cls):
+        pass
 
     def test_to_geotiff_dem(self):
         hdr = roipac.parse_header(SML_TEST_DEM_HDR)        
@@ -142,8 +109,8 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         date1 = date(2006, 6, 19)
         date2 = date(2006, 10, 2)
         diff = (date2 - date1).days
-        self.assertTrue(md[ifc.MASTER_DATE] == str(date1))
-        self.assertTrue(md[ifc.SLAVE_DATE] == str(date2))
+        self.assertTrue(md[ifc.FIRST_DATE] == str(date1))
+        self.assertTrue(md[ifc.SECOND_DATE] == str(date2))
         self.assertTrue(md[ifc.PYRATE_TIME_SPAN] == str(diff / ifc.DAYS_PER_YEAR))
 
         wavelen = float(md[ifc.PYRATE_WAVELENGTH_METRES])
@@ -167,8 +134,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         hdrs[ifc.DATA_TYPE] = ifc.ORIG
         self.dest = os.path.join(TEMPDIR, 'tmp_roipac_ifg2.tif')
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
-        self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs,
-                          data_path, self.dest, 0)
+        self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs, data_path, self.dest, 0)
 
     def test_mismatching_cell_resolution(self):
         hdrs = self.HDRS.copy()
@@ -177,8 +143,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
         self.dest = os.path.join(TEMPDIR, 'fake')
 
-        self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs,
-                            data_path, self.dest, 0)
+        self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs, data_path, self.dest, 0)
 
     def compare_rasters(self, ds, exp_ds):
         band = ds.GetRasterBand(1)
@@ -195,7 +160,7 @@ class RoipacToGeoTiffTests(unittest.TestCase):
             self.assertAlmostEqual(exp, act, places=4)
 
 
-class DateParsingTests(unittest.TestCase):
+class TestDateParsing(UnitTestAdaptation):
 
     def test_parse_short_date_pre2000(self):
         dstr = "980416"
@@ -211,7 +176,7 @@ class DateParsingTests(unittest.TestCase):
         self.assertEqual(exp, roipac.parse_date(dstr))
 
 
-class HeaderParsingTests(unittest.TestCase):
+class TestHeaderParsingTests(UnitTestAdaptation):
     """Verifies ROIPAC headers are parsed correctly."""
 
     # short format header tests
@@ -231,9 +196,9 @@ class HeaderParsingTests(unittest.TestCase):
         self.assertIn(roipac.TIME_SPAN_YEAR, hdrs.keys())
 
         # check time span calc
-        master = date(2006, 6, 19)
-        slave = date(2006, 10, 2)
-        diff = (slave - master).days / ifc.DAYS_PER_YEAR
+        first = date(2006, 6, 19)
+        second = date(2006, 10, 2)
+        diff = (second - first).days / ifc.DAYS_PER_YEAR
         self.assertEqual(diff, hdrs[roipac.TIME_SPAN_YEAR])
 
     # long format header tests
@@ -244,8 +209,8 @@ class HeaderParsingTests(unittest.TestCase):
         # check DATE/ DATE12 fields are parsed correctly
         date0 = date(2006, 6, 19) # from "DATE 060619" header
         date2 = date(2006, 8, 28) # from DATE12 060619-060828
-        self.assertEqual(hdrs[ifc.MASTER_DATE], date0)
-        self.assertEqual(hdrs[ifc.SLAVE_DATE], date2)
+        self.assertEqual(hdrs[ifc.FIRST_DATE], date0)
+        self.assertEqual(hdrs[ifc.SECOND_DATE], date2)
 
     def test_read_full_roipac_header2(self):
         # Tests header from cropped original dataset is parsed correctly
@@ -257,6 +222,3 @@ class HeaderParsingTests(unittest.TestCase):
         hdrs = roipac.parse_header(FULL_HEADER_PATH)
         self.assertAlmostEqual(hdrs[roipac.X_LAST], 151.8519444445)
         self.assertAlmostEqual(hdrs[roipac.Y_LAST], -34.625)
-
-if __name__ == "__main__":
-    unittest.main()

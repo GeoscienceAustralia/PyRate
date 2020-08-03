@@ -58,12 +58,11 @@ install:
 
 
 script:
-  - travis_wait 30 pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/
-
+  - pytest tests/ -m "slow"
+  - pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/ -m "not slow"
 
 after_success:
   - codecov
-
 
 before_deploy:
   - cd docs && make html

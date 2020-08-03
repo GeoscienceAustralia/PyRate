@@ -37,11 +37,11 @@ pip install -r requirements-dev.txt
 cd /PyRate/docs && make html
 
 ---------------------------------------
-# Run unit tests
+# Run unit tests, avoiding those marked as "slow"
 pip install -r requirements-test.txt
 cd /PyRate
 chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif
-cd /PyRate && python -m pytest tests/
+pytest tests/ -m "not slow"
 
 ---------------------------------------
 NCI Gadi supercomputer

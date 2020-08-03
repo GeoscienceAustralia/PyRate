@@ -19,6 +19,8 @@ inversion in PyRate.
 """
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-arguments
+import os
+
 import itertools
 
 from numpy import (where, isnan, nan, diff, zeros,
@@ -28,8 +30,8 @@ import numpy as np
 from scipy.linalg import qr
 from joblib import Parallel, delayed
 from pyrate.core.shared import joblib_log_level
-from pyrate.core.algorithm import master_slave_ids, get_epochs
-from pyrate.core import config as cf, mst as mst_module
+from pyrate.core.algorithm import first_second_ids, get_epochs
+from pyrate.core import config as cf, mst as mst_module, mpiops, shared
 from pyrate.core.config import ConfigException
 from pyrate.core.logger import pyratelogger as log
 
@@ -60,17 +62,17 @@ def _time_series_setup(ifgs, mst, params):
     nepoch = len(epochlist.dates)  # epoch number
     nvelpar = nepoch - 1  # velocity parameters number
     # nlap = nvelpar - smorder  # Laplacian observations number
-    mast_slave_ids = master_slave_ids(epochlist.dates)
-    imaster = [mast_slave_ids[ifg.master] for ifg in ifgs]
-    islave = [mast_slave_ids[ifg.slave] for ifg in ifgs]
-    imaster = min(imaster, islave)
-    islave = max(imaster, islave)
+    mast_second_ids = first_second_ids(epochlist.dates)
+    ifirst = [mast_second_ids[ifg.first] for ifg in ifgs]
+    isecond = [mast_second_ids[ifg.second] for ifg in ifgs]
+    ifirst = min(ifirst, isecond)
+    isecond = max(ifirst, isecond)
     b0_mat = zeros((nifgs, nvelpar))
     for i in range(nifgs):
-        b0_mat[i, imaster[i]:islave[i]] = span[imaster[i]:islave[i]]
+        b0_mat[i, ifirst[i]:isecond[i]] = span[ifirst[i]:isecond[i]]
 
-    # change the sign if slave is earlier than master
-    isign = where(np.atleast_1d(imaster) > np.atleast_1d(islave))
+    # change the sign if second is earlier than first
+    isign = where(np.atleast_1d(ifirst) > np.atleast_1d(isecond))
     b0_mat[isign[0], :] = -b0_mat[isign[0], :]
     tsvel_matrix = np.empty(shape=(nrows, ncols, nvelpar),
                             dtype=float32)
@@ -113,26 +115,25 @@ def time_series(ifgs, params, vcmt=None, mst=None):
     network. Solves the linear least squares system using either the SVD
     method (similar to the SBAS method implemented by Berardino et al. 2002)
     or a Finite Difference method using a Laplacian Smoothing operator
-    (similar to the method implemented by Schmidt and Burgmann 2003)
+    (similar to the method implemented by Schmidt and Burgmann 2003).
+    The returned outputs are multi-dimensional arrays of
+    size(nrows, ncols, nepochs-1), where:
+
+        - *nrows* is the number of rows in the ifgs,
+        - *ncols* is the  number of columns in the ifgs, and
+        - *nepochs* is the number of unique epochs (dates)
 
     :param list ifgs: list of interferogram class objects.
     :param dict params: Dictionary of configuration parameters
     :param ndarray vcmt: Positive definite temporal variance covariance matrix
     :param ndarray mst: [optional] Minimum spanning tree array.
 
-    :return: Tuple with the elements:
-
-        - incremental displacement time series,
-        - cumulative displacement time series, and
-        - velocity for the epoch interval
-
-        these outputs are multi-dimensional arrays of
-        size(nrows, ncols, nepochs-1), where:
-
-        - *nrows* is the number of rows in the ifgs,
-        - *ncols* is the  number of columns in the ifgs, and
-        - *nepochs* is the number of unique epochs (dates)
-    :rtype: tuple
+    :return: tsincr: incremental displacement time series.
+    :rtype: ndarray
+    :return: tscuml: cumulative displacement time series.
+    :rtype: ndarray
+    :return: tsvel_matrix: velocity for each epoch interval.
+    :rtype: ndarray
     """
 
     b0_mat, interp, p_thresh, sm_factor, sm_order, ts_method, ifg_data, mst, \
@@ -160,11 +161,11 @@ def time_series(ifgs, params, vcmt=None, mst=None):
     # SB: do the span multiplication as a numpy linalg operation, MUCH faster
     #  not even this is necessary here, perform late for performance
     tsincr = tsvel_matrix * span
-    tscum = cumsum(tsincr, 2)
+    tscuml = cumsum(tsincr, 2)
     # SB: perform this after tsvel_matrix has been nan converted,
     # saves the step of comparing a large matrix (tsincr) to zero.
-    # tscum = where(tscum == 0, nan, tscum)
-    return tsincr, tscum, tsvel_matrix
+    # tscuml = where(tscuml == 0, nan, tscuml)
+    return tsincr, tscuml, tsvel_matrix
 
 
 def _remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):
@@ -300,6 +301,7 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
     # TODO: implement uncertainty estimates (tserror)
     return tsvel
 
+
 def _missing_option_error(option):
     """
     Convenience function for raising similar missing option errors.
@@ -312,3 +314,36 @@ class TimeSeriesError(Exception):
     """
     Generic exception for time series errors.
     """
+
+
+def timeseries_calc_wrapper(params):
+    """
+    MPI wrapper for time series calculation.
+    """
+    tiles = params[cf.TILES]
+    preread_ifgs = params[cf.PREREAD_IFGS]
+    vcmt = params[cf.VCMT]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    if params[cf.TIME_SERIES_CAL] == 0:
+        log.info('Time Series Calculation not required')
+        return
+
+    if params[cf.TIME_SERIES_METHOD] == 1:
+        log.info('Calculating time series using Laplacian Smoothing method')
+    elif params[cf.TIME_SERIES_METHOD] == 2:
+        log.info('Calculating time series using SVD method')
+
+    output_dir = params[cf.TMPDIR]
+    total_tiles = len(tiles)
+    process_tiles = mpiops.array_split(tiles)
+    for t in process_tiles:
+        log.debug("Calculating time series for tile "+str(t.index)+" out of "+str(total_tiles))
+        ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
+        mst_tile = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
+        tsincr, tscuml, _ = time_series(ifg_parts, params, vcmt, mst_tile)
+        np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)), arr=tscuml)
+        # optional save of tsincr npy tiles
+        if params["savetsincr"] == 1:
+            np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)), arr=tsincr)
+    mpiops.comm.barrier()
+    log.debug("Finished timeseries calc!")

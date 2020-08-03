@@ -55,7 +55,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
         params[cf.REF_EST_METHOD] = ref_est_method
         params["rows"], params["cols"] = 3, 2
         params["savenpy"] = 1
-        params["tiles"] = params["rows"] * params["cols"]
+        params["notiles"] = params["rows"] * params["cols"]  # number of tiles
 
         print(params)
         # write new temp config
@@ -67,9 +67,11 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(REGRESSION or PYTHON3P8 or PYTHON3P6, reason="Skip if not python3.7 and gdal=3.0.4")
+@pytest.mark.skipif(REGRESSION or PYTHON3P6 or PYTHON3P8, reason="Only run in REGRESSION2 and Python3.8 env")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
-
+    """
+    Tests proving single/multiprocess/mpi produce same output
+    """
     if np.random.randint(0, 1000) > 149:  # skip 85% of tests randomly
         pytest.skip("Randomly skipping as part of 85 percent")
 
@@ -105,29 +107,33 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
         assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_coh.tif", 17)
         print("coherence files compared")
         # 17 ifgs + 1 dem + 17 mlooked coh files
-        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
-                                   f"*{params[cf.IFG_CROP_OPT]}cr.tif", 35)
+        no_of_files = 35
     else:
         # 17 ifgs + 1 dem
-        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
-                               f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
+        no_of_files = 18
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
+                               f"*{params[cf.IFG_CROP_OPT]}cr.tif", no_of_files)
+
+    # cf.TEMP_MLOOKED_DIR will contain the temp files that can be potentially deleted later
+    assert_same_files_produced(params[cf.TEMP_MLOOKED_DIR], params_m[cf.TEMP_MLOOKED_DIR],
+                               params_s[cf.TEMP_MLOOKED_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 17)
 
     # prepifg + process steps that overwrite tifs test
     # ifg phase checking in the previous step checks the process pipeline upto APS correction
 
     # 2 x because of aps files
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "tsincr_*.npy",
-                               params['tiles'] * 2)
+                               params['notiles'] * 2)
 
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "tscuml_*.npy",
-                               params['tiles'])
+                               params['notiles'])
 
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "stack_rate_*.npy",
-                               params['tiles'])
+                               params['notiles'])
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "stack_error_*.npy",
-                               params['tiles'])
+                               params['notiles'])
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "stack_samples_*.npy",
-                               params['tiles'])
+                               params['notiles'])
 
     # compare merge step
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.tif", 3)
@@ -176,7 +182,7 @@ def modified_config_short(tempdir, local_crop, get_lks, coh_mask, ref_pixel):
         params[cf.REF_EST_METHOD] = ref_est_method
         params["rows"], params["cols"] = 3, 2
         params["savenpy"] = 1
-        params["tiles"] = params["rows"] * params["cols"]
+        params["notiles"] = params["rows"] * params["cols"]  # number of tiles
 
         print(params)
         # write new temp config
@@ -211,7 +217,7 @@ def create_mpi_files():
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(PYTHON3P8 or PYTHON3P7, reason="Skip if not python3.7 and gdal=3.0.4")
+@pytest.mark.skipif(PYTHON3P6 or PYTHON3P8 or REGRESSION2, reason="Only run in REGRESSION env")
 def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_conf, create_mpi_files, parallel):
     """
     Checks performed:
@@ -248,12 +254,15 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     else:
         assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
 
+    assert_two_dirs_equal(params[cf.TEMP_MLOOKED_DIR], params_p[cf.TEMP_MLOOKED_DIR],
+                          f"*{params[cf.IFG_CROP_OPT]}cr.tif", 17)
+
     # ifg phase checking in the previous step checks the process pipeline upto APS correction
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tsincr_*.npy", params['tiles'] * 2)
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tscuml_*.npy", params['tiles'])
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_rate_*.npy", params['tiles'])
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_error_*.npy", params['tiles'])
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_samples_*.npy", params['tiles'])
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tsincr_*.npy", params['notiles'] * 2)
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tscuml_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_rate_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_error_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_samples_*.npy", params['notiles'])
 
     # compare merge step
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.tif", 3)

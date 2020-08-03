@@ -21,18 +21,11 @@ This Python module contains tests for the config.py PyRate module.
 import os
 import shutil
 import tempfile
-import unittest
 from os.path import join
-
-import pytest
-
 from tests.common import SML_TEST_CONF, SML_TEST_TIF
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
 from pyrate.core import config
-from pyrate.core.config import write_config_file
 
-from pyrate.constants import SIXTEEN_DIGIT_EPOCH_PAIR, TWELVE_DIGIT_EPOCH_PAIR, EIGHT_DIGIT_EPOCH
-from pyrate.core import config as cf
 
 from pyrate.core.config import (
     _COHERENCE_VALIDATION,
@@ -93,13 +86,14 @@ from pyrate.core.config import (
     APS_ELEVATION_MAP,
     APS_METHOD,
     APS_CORRECTION,
-    ConfigException)
+)
 from tests import common
+from tests.common import UnitTestAdaptation
 from pyrate.configuration import Configuration
 DUMMY_SECTION_NAME = 'pyrate'
 
 
-class ValidateTestConfig(unittest.TestCase):
+class TestValidateTestConfig(UnitTestAdaptation):
 
     def test_gamma_conf_passes(self):
         config.get_config_params(TEST_CONF_GAMMA)
@@ -108,16 +102,18 @@ class ValidateTestConfig(unittest.TestCase):
         config.get_config_params(TEST_CONF_ROIPAC)
 
 
-class TestConfigValidation(unittest.TestCase):
-    def setUp(self):
+class TestConfigValidation(UnitTestAdaptation):
+
+    @classmethod
+    def setup_class(cls):
         """
         Get a copy of the GAMMA params and also use this to verify that 
         they are correct before we start testing.
         """
-        self.params = Configuration(TEST_CONF_GAMMA).__dict__
-        self.roipac_params = config.get_config_params(TEST_CONF_ROIPAC)
-        self.dummy_dir = '/i/should/not/exist/'
-        if os.path.exists(self.dummy_dir):
+        cls.params = Configuration(TEST_CONF_GAMMA).__dict__
+        cls.roipac_params = config.get_config_params(TEST_CONF_ROIPAC)
+        cls.dummy_dir = '/i/should/not/exist/'
+        if os.path.exists(cls.dummy_dir):
             raise IOError("'dummy_dir' needs to be non-existant for testing.")
     
     def test_validators(self):
@@ -313,7 +309,7 @@ class TestConfigValidation(unittest.TestCase):
         self.assertFalse(validate(TIME_SERIES_METHOD, 3))
 
 
-class ConfigTest(unittest.TestCase):
+class TestConfig(UnitTestAdaptation):
 
     @staticmethod
     def test_read_param_file():
@@ -354,7 +350,7 @@ class ConfigTest(unittest.TestCase):
             assert path in result
 
 
-class ConfigWriteTest(unittest.TestCase):
+class TestConfigWriteTest(UnitTestAdaptation):
 
     def test_write_config_file(self):
         params = config.get_config_params(TEST_CONF_GAMMA)
@@ -373,10 +369,12 @@ class ConfigWriteTest(unittest.TestCase):
         os.remove(temp_config)
 
 
-class ConfigAPSParametersTest(unittest.TestCase):
-    def setUp(self):
-        self.conf_path = TEST_CONF_ROIPAC
-        self.params = config.get_config_params(self.conf_path)
+class TestConfigAPSParameters(UnitTestAdaptation):
+
+    @staticmethod
+    def setup_class(cls):
+        cls.conf_path = TEST_CONF_ROIPAC
+        cls.params = config.get_config_params(cls.conf_path)
 
     def test_incidence_and_elevation_keys_exist(self):
         self.assertIn(config.APS_INCIDENCE_MAP, self.params.keys())
@@ -402,15 +400,17 @@ class ConfigAPSParametersTest(unittest.TestCase):
         self.assertIsNone(self.params[config.APS_ELEVATION_MAP])
 
 
-class TestOneIncidenceOrElevationMap(unittest.TestCase):
+class TestOneIncidenceOrElevationMap(UnitTestAdaptation):
 
-    def setUp(self):
-        self.base_dir = tempfile.mkdtemp()
-        self.conf_file = tempfile.mktemp(suffix='.conf', dir=self.base_dir)
-        self.ifgListFile = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
+    @staticmethod
+    def setup_class(cls):
+        cls.base_dir = tempfile.mkdtemp()
+        cls.conf_file = tempfile.mktemp(suffix='.conf', dir=cls.base_dir)
+        cls.ifgListFile = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
 
-    def tearDown(self):
-        shutil.rmtree(self.base_dir)
+    @staticmethod
+    def teardown_class(cls):
+        shutil.rmtree(cls.base_dir)
 
     def make_input_files(self, inc='', ele=''):
         with open(self.conf_file, 'w') as conf:
@@ -466,7 +466,3 @@ class TestOneIncidenceOrElevationMap(unittest.TestCase):
         self.assertIsNotNone(params[config.APS_ELEVATION_MAP])
         self.assertIn(config.APS_ELEVATION_EXT, params.keys())
         self.assertIn(config.APS_ELEVATION_MAP, params.keys())
-
-
-if __name__ == "__main__":
-    unittest.main()

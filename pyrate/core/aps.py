@@ -36,7 +36,7 @@ from pyrate.core.timeseries import time_series
 from pyrate.merge import assemble_tiles
 
 
-def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
+def wrap_spatio_temporal_filter(params):
     """
     A wrapper for the spatio-temporal filter so it can be tested.
     See docstring for spatio_temporal_filter.
@@ -46,6 +46,9 @@ def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     else:
         log.info('APS spatio-temporal filtering not required')
         return
+    tiles = params[cf.TILES]
+    preread_ifgs = params[cf.PREREAD_IFGS]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
 
     # perform some checks on existing ifgs
     log.debug('Checking APS correction status')
@@ -61,6 +64,8 @@ def wrap_spatio_temporal_filter(ifg_paths, params, tiles, preread_ifgs):
     spatio_temporal_filter(tsincr, ifg, params, preread_ifgs)
     ifg.close()
     mpiops.comm.barrier()
+
+    shared.save_numpy_phase(ifg_paths, params)
 
 
 def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
@@ -151,10 +156,10 @@ def _ts_to_ifgs(tsincr, preread_ifgs):
     log.debug('Reconstructing interferometric observations from time series')
     ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
     _, n = get_epochs(ifgs)
-    index_master, index_slave = n[:len(ifgs)], n[len(ifgs):]
+    index_first, index_second = n[:len(ifgs)], n[len(ifgs):]
     for i, ifg in enumerate(ifgs):
-        phase = np.sum(tsincr[:, :, index_master[i]: index_slave[i]], axis=2)
-        _save_aps_corrected_phase(ifg.path, phase)
+        phase = np.sum(tsincr[:, :, index_first[i]: index_second[i]], axis=2)
+        _save_aps_corrected_phase(ifg.tmp_path, phase)
 
 
 def _save_aps_corrected_phase(ifg_path, phase):

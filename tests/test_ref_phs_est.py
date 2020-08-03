@@ -21,18 +21,17 @@ import glob
 import os
 from pathlib import Path
 import shutil
-import sys
 import tempfile
-import unittest
+import pytest
 import numpy as np
 
-import pyrate.core.orbital
 from pyrate.core import ifgconstants as ifc, config as cf
-from pyrate.core.ref_phs_est import ReferencePhaseError
+from pyrate.core.ref_phs_est import ReferencePhaseError, ref_phase_est_wrapper
+from pyrate.core.refpixel import ref_pixel_calc_wrapper
+from pyrate.core.orbital import remove_orbital_error
 from pyrate.core.shared import CorrectionStatusError
-from pyrate.core import roipac
 from pyrate import prepifg, process, conv2tif
-from pyrate.configuration import Configuration
+from pyrate.configuration import MultiplePaths
 from tests import common
 
 legacy_ref_phs_method1 = [-18.2191658020020,
@@ -73,25 +72,33 @@ legacy_ref_phs_method2 = [-21.4459648132324,
                           -11.9066228866577]
 
 
-class RefPhsTests(unittest.TestCase):
+class TestRefPhsTests:
     """Basic reference phase estimation tests"""
 
-    def setUp(self):
+    def setup_method(self):
         self.tmp_dir = tempfile.mkdtemp()
         self.params = dict()
+        self.params[cf.OUT_DIR] = self.tmp_dir
         self.params[cf.REF_EST_METHOD] = 1
         self.params[cf.PARALLEL] = False
         self.params[cf.TMPDIR] = self.tmp_dir
-        self.refpx, self.refpy = 38, 58
         common.copytree(common.SML_TEST_TIF, self.tmp_dir)
-        small_tifs = glob.glob(os.path.join(self.tmp_dir, "*.tif"))
-        for s in small_tifs:
+        self.small_tifs = glob.glob(os.path.join(self.tmp_dir, "*.tif"))
+        for s in self.small_tifs:
             os.chmod(s, 0o644)
         self.ifgs = common.small_data_setup(self.tmp_dir, is_dir=True)
+        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs]
+        for p in self.params[cf.INTERFEROGRAM_FILES]:
+            p.sampled_path = p.converted_path
+            p.tmp_sampled_path = p.sampled_path
         for ifg in self.ifgs:
             ifg.close()
+
+        self.params[cf.REFX], self.params[cf.REFY] = 38, 58
+        self.params['rows'], self.params['cols'] = 3, 2
+        process._update_params_with_tiles(self.params)
        
-    def tearDown(self):
+    def teardown_method(self):
         try:
             shutil.rmtree(self.tmp_dir)
         except PermissionError:
@@ -101,63 +108,71 @@ class RefPhsTests(unittest.TestCase):
             ifg.close()
 
     def test_need_at_least_two_ifgs(self):
-        self.assertRaises(ReferencePhaseError, process._ref_phase_estimation,
-                          self.ifgs[:1], self.params, self.refpx, self.refpy)
+        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs[:1]]
+        for p in self.params[cf.INTERFEROGRAM_FILES]:
+            p.sampled_path = p.converted_path
+            p.tmp_sampled_path = p.sampled_path
+
+        with pytest.raises(ReferencePhaseError):
+            ref_phase_est_wrapper(self.params)
 
     def test_metadata(self):
-        process._ref_phase_estimation(self.ifgs, self.params, self.refpx, self.refpy)
+        ref_phase_est_wrapper(self.params)
         for ifg in self.ifgs:
             ifg.open()
-            self.assertEqual(ifg.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE),
-                             ifc.REF_PHASE_REMOVED)
+            assert ifg.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE) == ifc.REF_PHASE_REMOVED
     
     def test_mixed_metadata_raises(self):
+
+        # change config to 5 ifgs
+        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs[:5]]
+        for p in self.params[cf.INTERFEROGRAM_FILES]:
+            p.sampled_path = p.converted_path
+            p.tmp_sampled_path = p.sampled_path
+
         # correct reference phase for some of the ifgs
-        process._ref_phase_estimation(self.ifgs[:5], self.params, self.refpx, self.refpy)
+        ref_phase_est_wrapper(self.params)
         for ifg in self.ifgs:
             ifg.open()
 
-        # now it should raise exception if we wnat to correct
-        # refernece phase again on all of them
-        self.assertRaises(CorrectionStatusError, process._ref_phase_estimation,
-                          self.ifgs, self.params, self.refpx, self.refpy)
+        # change config to all ifgs
+        self.params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(self.tmp_dir, p) for p in self.small_tifs]
+        for p in self.params[cf.INTERFEROGRAM_FILES]:
+            p.sampled_path = p.converted_path
+            p.tmp_sampled_path = p.sampled_path
+
+        # now it should raise exception if we want to correct refernece phase again on all of them
+        with pytest.raises(CorrectionStatusError):
+            ref_phase_est_wrapper(self.params)
         
 
-class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
+class TestRefPhsEstimationLegacyTestMethod1Serial:
     """
     Reference phase estimation method 1 is tested vs legacy output
     """
 
     @classmethod
-    def setUpClass(cls):
-        from pyrate.core import roipac
+    @pytest.fixture(autouse=True)
+    def setup_class(cls, roipac_params):
         # start with a clean output dir
-        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
-        shutil.rmtree(params[cf.OUT_DIR])
-        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
-        cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
-        params[cf.OUT_DIR] = cls.temp_out_dir
-        params[cf.TMPDIR] = cls.temp_out_dir
+        params = roipac_params
         conv2tif.main(params)
         prepifg.main(params)
-
+        for p in params[cf.INTERFEROGRAM_FILES]:  # hack
+            p.tmp_sampled_path = p.sampled_path
+            Path(p.sampled_path).chmod(0o664)  # assign write permission as conv2tif output is readonly
         params[cf.REF_EST_METHOD] = 1
         params[cf.PARALLEL] = False
 
-        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
-        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
-
+        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
+        refx, refy = ref_pixel_calc_wrapper(params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        remove_orbital_error(ifgs, params, headers)
 
         for i in ifgs:
             i.close()
@@ -167,27 +182,19 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
         for ifg in ifgs:
             ifg.close()
 
-        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+        for p in params[cf.INTERFEROGRAM_FILES]:
+            p.tmp_sampled_path = p.sampled_path
+        params[cf.REFX], params[cf.REFY] = refx, refy
+        params['rows'], params['cols'] = 3, 2
+        process._update_params_with_tiles(params)
+        cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
 
     @classmethod
-    def tearDownClass(cls):
-        try:
-            shutil.rmtree(cls.temp_out_dir)
-        except PermissionError:
-            print("File opened by another process.")
-
-        try:
-            common.remove_tifs(cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
-        except PermissionError:
-            print("File opened by another process.")
-
-        for ifg in cls.ifgs:
-            ifg.close()
+    def teardown_class(cls):
+        """roipac_params self cleans"""
 
     def test_estimate_reference_phase(self):
-        np.testing.assert_array_almost_equal(legacy_ref_phs_method1,
-                                             self.ref_phs,
-                                             decimal=3)
+        np.testing.assert_array_almost_equal(legacy_ref_phs_method1, self.ref_phs, decimal=3)
 
     def test_ifgs_after_ref_phs_est(self):
         for ifg in self.ifgs:
@@ -214,49 +221,43 @@ class RefPhsEstimationLegacyTestMethod1Serial(unittest.TestCase):
                         self.ifgs[k].phase_data, decimal=3)
 
                     # means must also be equal
-                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
+                    assert np.nanmean(ifg_data) == pytest.approx(np.nanmean(self.ifgs[k].phase_data), abs=0.001)
 
                     # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(ifg_data)), np.sum(np.isnan(self.ifgs[k].phase_data)))
+                    assert np.sum(np.isnan(ifg_data)) == np.sum(np.isnan(self.ifgs[k].phase_data))
 
         # ensure we have the correct number of matches
-        self.assertEqual(count, len(self.ifgs))
+        assert count == len(self.ifgs)
 
 
-class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
+class TestRefPhsEstimationLegacyTestMethod1Parallel:
     """
     Reference phase estimation method 1 is tested vs legacy output
     """
     @classmethod
-    def setUpClass(cls):
-        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
-        shutil.rmtree(params[cf.OUT_DIR])
-        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
-        cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
-        params[cf.OUT_DIR] = cls.temp_out_dir
-        params[cf.TMPDIR] = cls.temp_out_dir
+    @pytest.fixture(autouse=True)
+    def setup_class(cls, roipac_params):
+        params = roipac_params
         conv2tif.main(params)
         prepifg.main(params)
+        for p in params[cf.INTERFEROGRAM_FILES]:  # hack
+            p.tmp_sampled_path = p.sampled_path
+            Path(p.sampled_path).chmod(0o664)  # assign write permission as conv2tif output is readonly
+
 
         params[cf.REF_EST_METHOD] = 1
         params[cf.PARALLEL] = True
 
-        xlks, ylks, crop = cf.transform_params(params)
-
-        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
-        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
+        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
+        refx, refy = ref_pixel_calc_wrapper(params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        remove_orbital_error(ifgs, params, headers)
 
         for i in ifgs:
             i.close()
@@ -265,24 +266,19 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
 
         for i in ifgs:
             i.close()
-
-        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
-
-        # end run_pyrate copy
-
+        for p in params[cf.INTERFEROGRAM_FILES]:
+            p.tmp_sampled_path = p.sampled_path
+        params[cf.REFX], params[cf.REFY] = refx, refy
+        params['rows'], params['cols'] = 3, 2
+        process._update_params_with_tiles(params)
+        cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
 
     @classmethod
-    def tearDownClass(cls):
-        for i in cls.ifgs:
-            i.close()
-        shutil.rmtree(cls.temp_out_dir)
-        common.remove_tifs(
-            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+    def teardown_class(cls):
+        """self cleaning"""
 
     def test_estimate_reference_phase(self):
-        np.testing.assert_array_almost_equal(legacy_ref_phs_method1,
-                                             self.ref_phs,
-                                             decimal=3)
+        np.testing.assert_array_almost_equal(legacy_ref_phs_method1, self.ref_phs, decimal=3)
 
     def test_ifgs_after_ref_phs_est(self):
         for ifg in self.ifgs:
@@ -309,48 +305,43 @@ class RefPhsEstimationLegacyTestMethod1Parallel(unittest.TestCase):
                         decimal=3)
 
                     # means must also be equal
-                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
+                    assert np.nanmean(ifg_data) == pytest.approx(np.nanmean(self.ifgs[k].phase_data), abs=0.001)
 
                     # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(ifg_data)),
-                        np.sum(np.isnan(self.ifgs[k].phase_data)))
+                    assert np.sum(np.isnan(ifg_data)) == np.sum(np.isnan(self.ifgs[k].phase_data))
 
         # ensure we have the correct number of matches
-        self.assertEqual(count, len(self.ifgs))
+        assert count == len(self.ifgs)
 
 
-class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
+class TestRefPhsEstimationLegacyTestMethod2Serial:
     """
     Reference phase estimation method 2 is tested vs legacy output
     """
 
     @classmethod
-    def setUpClass(cls):
-        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
-        shutil.rmtree(params[cf.OUT_DIR])
-        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
-        cls.temp_out_dir = tempfile.mkdtemp()
-        sys.argv = ['prepifg.py', common.TEST_CONF_ROIPAC]
-        params[cf.OUT_DIR] = cls.temp_out_dir
-        params[cf.TMPDIR] = cls.temp_out_dir
+    @pytest.fixture(autouse=True)
+    def setup_class(cls, roipac_params):
+        params = roipac_params
         conv2tif.main(params)
         prepifg.main(params)
+        for p in params[cf.INTERFEROGRAM_FILES]:  # hack
+            p.tmp_sampled_path = p.sampled_path
+            Path(p.sampled_path).chmod(0o664)  # assign write permission as conv2tif output is readonly
 
         params[cf.REF_EST_METHOD] = 2
         params[cf.PARALLEL] = False
 
-        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
-        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
+        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
+
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
+        refx, refy = ref_pixel_calc_wrapper(params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        remove_orbital_error(ifgs, params, headers)
 
         for i in ifgs:
             i.close()
@@ -359,23 +350,22 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
         
         for i in ifgs:
             i.close()
+        for p in params[cf.INTERFEROGRAM_FILES]:
+            p.tmp_sampled_path = p.sampled_path
+        params[cf.REFX], params[cf.REFY] = refx, refy
+        params['rows'], params['cols'] = 3, 2
+        process._update_params_with_tiles(params)
 
-        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+        cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
 
     @classmethod
-    def tearDownClass(cls):
-        for ifg in cls.ifgs:
-            ifg.close()
-        shutil.rmtree(cls.temp_out_dir)
-        common.remove_tifs(
-            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
-
+    def teardown_class(cls):
+        """self cleaning on"""
 
     def test_ifgs_after_ref_phs_est(self):
         for ifg in self.ifgs:
             ifg.open()
-        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                                     'ref_phase_est')
+        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR, 'ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
                 if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
@@ -395,56 +385,48 @@ class RefPhsEstimationLegacyTestMethod2Serial(unittest.TestCase):
                         self.ifgs[k].phase_data, decimal=3)
 
                     # means must also be equal
-                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
+                    assert np.nanmean(ifg_data) == pytest.approx(np.nanmean(self.ifgs[k].phase_data), abs=0.001)
 
                     # number of nans must equal
-                    self.assertEqual(np.sum(np.isnan(ifg_data)),
-                        np.sum(np.isnan(self.ifgs[k].phase_data)))
+                    assert np.sum(np.isnan(ifg_data)) == np.sum(np.isnan(self.ifgs[k].phase_data))
 
 
         # ensure we have the correct number of matches
-        self.assertEqual(count, len(self.ifgs))
+        assert count == len(self.ifgs)
 
     def test_estimate_reference_phase_method2(self):
-        np.testing.assert_array_almost_equal(legacy_ref_phs_method2,
-                                             self.ref_phs, decimal=3)
+        np.testing.assert_array_almost_equal(legacy_ref_phs_method2, self.ref_phs, decimal=3)
 
 
-class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
+class TestRefPhsEstimationLegacyTestMethod2Parallel:
     """
     Reference phase estimation method 2 is tested vs legacy output
 
     """
     # TODO: Improve the parallel tests to remove duplication from serial tests
+
     @classmethod
-    def setUpClass(cls):
-        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
-        shutil.rmtree(params[cf.OUT_DIR])
-        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
-        cls.temp_out_dir = tempfile.mkdtemp()
-        params[cf.OUT_DIR] = cls.temp_out_dir
-        params[cf.TMPDIR] = cls.temp_out_dir
+    @pytest.fixture(autouse=True)
+    def setup_class(cls, roipac_params):
+        params = roipac_params
         conv2tif.main(params)
         prepifg.main(params)
+        for p in params[cf.INTERFEROGRAM_FILES]:  # hack
+            p.tmp_sampled_path = p.sampled_path
+            Path(p.sampled_path).chmod(0o664)  # assign write permission as conv2tif output is readonly
 
-        params[cf.OUT_DIR] = cls.temp_out_dir
         params[cf.REF_EST_METHOD] = 2
         params[cf.PARALLEL] = 1
 
-        base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
-        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-
-        # leave 2 out due to conv2tif and prepifg dems
-        dest_paths = [Path(cls.temp_out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                      for c in params[cf.INTERFEROGRAM_FILES][:-2]]
+        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         # Estimate reference pixel location
-        refx, refy = process._ref_pixel_calc(dest_paths, params)
+        refx, refy = ref_pixel_calc_wrapper(params)
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        remove_orbital_error(ifgs, params, headers)
 
         for i in ifgs:
             i.close()
@@ -454,21 +436,21 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
         for i in ifgs:
             i.close()
 
-        cls.ref_phs, cls.ifgs = process._ref_phase_estimation(dest_paths, params, refx, refy)
+        for p in params[cf.INTERFEROGRAM_FILES]:
+            p.tmp_sampled_path = p.sampled_path
+        params[cf.REFX], params[cf.REFY] = refx, refy
+        params['rows'], params['cols'] = 3, 2
+        process._update_params_with_tiles(params)
+        cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
 
     @classmethod
-    def tearDownClass(cls):
-        for ifg in cls.ifgs:
-            ifg.close()
-        shutil.rmtree(cls.temp_out_dir)
-        common.remove_tifs(
-            cf.get_config_params(common.TEST_CONF_ROIPAC)[cf.OBS_DIR])
+    def teardown_class(cls):
+        """self cleaning on"""
 
     def test_ifgs_after_ref_phs_est(self):
         for ifg in self.ifgs:
             ifg.open()
-        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                            'ref_phase_est')
+        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR, 'ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
                      if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
@@ -488,15 +470,13 @@ class RefPhsEstimationLegacyTestMethod2Parallel(unittest.TestCase):
                         ifg_data, self.ifgs[k].phase_data, decimal=3)
 
                     # means must also be equal
-                    self.assertAlmostEqual(np.nanmean(ifg_data), np.nanmean(self.ifgs[k].phase_data), places=3)
+                    assert np.nanmean(ifg_data) == pytest.approx(np.nanmean(self.ifgs[k].phase_data), abs=0.001)
 
                     # number of nans must equal
-                    self.assertEqual(
-                        np.sum(np.isnan(ifg_data)),
-                        np.sum(np.isnan(self.ifgs[k].phase_data)))
+                    assert np.sum(np.isnan(ifg_data)) == np.sum(np.isnan(self.ifgs[k].phase_data))
 
         # ensure we have the correct number of matches
-        self.assertEqual(count, len(self.ifgs))
+        assert count == len(self.ifgs)
 
     def test_estimate_reference_phase_method2(self):
         np.testing.assert_array_almost_equal(legacy_ref_phs_method2, self.ref_phs, decimal=3)
