@@ -104,7 +104,7 @@ def _validate_params(params, tsmethod):
     else:
         pthresh = params[cf.TIME_SERIES_PTHRESH]
         if pthresh < 0.0 or pthresh > 1000:
-            raise ValueError(
+            raise TimeSeriesError(
                 "minimum number of coherent observations for a pixel"
                 " TIME_SERIES_PTHRESH setting must be >= 0.0 and <= 1000")
     return pthresh, smfactor, smorder
@@ -219,7 +219,7 @@ def _time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
             # Use SVD method
             tsvel = _solve_ts_svd(nvelpar, velflag, ifgv, b_mat)
         else:
-            raise ValueError("Unrecognised time series method")
+            raise TimeSeriesError("Unrecognised time series method")
         return tsvel
     else:
         return np.empty(nvelpar) * np.nan
@@ -325,6 +325,11 @@ def linear_rate_pixel(y, t):
 
     # insert leading zero (not saved in tscuml by default)
     y = np.insert(y, 0, 0., axis=0)
+
+    # test for equal length of input vectors
+    if len(y) != len(t):
+        raise TimeSeriesError("linear_rate_pixel: y and t are not equal "
+                              "length after adding zero element to y")
 
     # remove nan elements from both arrays
     t = t[~isnan(y)]
