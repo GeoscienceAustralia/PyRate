@@ -178,8 +178,7 @@ def _update_phase_and_metadata(ifgs, ref_phs):
         ifg.write_modified_phase()
         log.debug(f"Reference phase corrected for {ifg.data_path}")
         ifg.close()
-
-    for i, rp in zip(ifgs, ref_phs):
+    for i, rp in zip(mpiops.array_split(ifgs), mpiops.array_split(ref_phs)):
         __inner(i, rp)
 
 

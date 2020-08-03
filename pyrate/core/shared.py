@@ -1184,11 +1184,10 @@ def save_numpy_phase(ifg_paths, params):
     :return: None, file saved to disk
     """
     tiles = params['tiles']
-    process_ifgs = mpiops.array_split(ifg_paths)
     outdir = params[cf.TMPDIR]
     if not os.path.exists(outdir):
         mkdir_p(outdir)
-    for ifg_path in process_ifgs:
+    for ifg_path in mpiops.array_split(ifg_paths):
         ifg = Ifg(ifg_path)
         ifg.open()
         phase_data = ifg.phase_data
