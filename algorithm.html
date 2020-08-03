@@ -147,12 +147,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -261,15 +262,33 @@ The two factors are evaluated to be as close to each other in size as possible</
 </dd></dl>
 
 <dl class="py function">
+<dt id="pyrate.core.algorithm.first_second_ids">
+<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">first_second_ids</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dates</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#first_second_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.first_second_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dictionary of ‘date:unique ID’ for each date in ‘dates’.
+IDs are ordered from oldest to newest, starting at 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dates</strong> (<em>list</em>) – List of dates</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>unique dates IDs</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt id="pyrate.core.algorithm.get_all_epochs">
 <code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">get_all_epochs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifgs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#get_all_epochs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.get_all_epochs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a sequence of all master and slave dates in given interferograms.</p>
+<dd><p>Returns a sequence of all image dates used to form given interferograms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>ifgs</strong> (<em>list</em>) – List of interferogram objects</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>master and slave dates</p>
+<dd class="field-even"><p>list of all image dates</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>list</p>
@@ -297,8 +316,8 @@ The two factors are evaluated to be as close to each other in size as possible</
 <dl class="py function">
 <dt id="pyrate.core.algorithm.ifg_date_index_lookup">
 <code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">ifg_date_index_lookup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifgs</span></em>, <em class="sig-param"><span class="n">date_pair</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#ifg_date_index_lookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.ifg_date_index_lookup" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the Interferogram index which has the master and slave dates
-given in ‘date_pair’.</p>
+<dd><p>Returns the Interferogram index which has the first and second image
+dates given in ‘date_pair’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -318,7 +337,7 @@ given in ‘date_pair’.</p>
 <dl class="py function">
 <dt id="pyrate.core.algorithm.ifg_date_lookup">
 <code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">ifg_date_lookup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifgs</span></em>, <em class="sig-param"><span class="n">date_pair</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#ifg_date_lookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.ifg_date_lookup" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the Interferogram which has the master and slave dates given
+<dd><p>Returns the Interferogram which has the first and second dates given
 in ‘date_pair’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -390,24 +409,6 @@ in ‘date_pair’.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="pyrate.core.algorithm.master_slave_ids">
-<code class="sig-prename descclassname">pyrate.core.algorithm.</code><code class="sig-name descname">master_slave_ids</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dates</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#master_slave_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.algorithm.master_slave_ids" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a dictionary of ‘date:unique ID’ for each date in ‘dates’.
-IDs are ordered from oldest to newest, starting at 0.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dates</strong> (<em>list</em>) – List of dates</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>unique dates IDs</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>

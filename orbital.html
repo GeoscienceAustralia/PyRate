@@ -147,12 +147,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -306,14 +307,14 @@ interferogram.</p>
 
 <dl class="py function">
 <dt id="pyrate.core.orbital.network_orbital_correction">
-<code class="sig-prename descclassname">pyrate.core.orbital.</code><code class="sig-name descname">network_orbital_correction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifgs</span></em>, <em class="sig-param"><span class="n">degree</span></em>, <em class="sig-param"><span class="n">offset</span></em>, <em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">m_ifgs</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">preread_ifgs</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/orbital.html#network_orbital_correction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.orbital.network_orbital_correction" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.orbital.</code><code class="sig-name descname">network_orbital_correction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifg_paths</span></em>, <em class="sig-param"><span class="n">degree</span></em>, <em class="sig-param"><span class="n">offset</span></em>, <em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">m_ifgs</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>List<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">preread_ifgs</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Dict<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/orbital.html#network_orbital_correction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.orbital.network_orbital_correction" title="Permalink to this definition">¶</a></dt>
 <dd><p>This algorithm implements a network inversion to determine orbital
 corrections for a set of interferograms forming a connected network.</p>
 <p>Warning: This will write orbital error corrected phase_data to the ifgs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>ifgs</strong> (<em>list</em>) – List of Ifg class objects reduced to a minimum spanning
+<li><p><strong>ifg_paths</strong> (<em>list</em>) – List of Ifg class objects reduced to a minimum spanning
 tree network</p></li>
 <li><p><strong>degree</strong> (<em>str</em>) – model to fit (PLANAR / QUADRATIC / PART_CUBIC)</p></li>
 <li><p><strong>offset</strong> (<em>bool</em>) – True to calculate the model using offsets</p></li>
@@ -328,6 +329,12 @@ for MPI jobs (optional)</p></li>
 <dd class="field-even"><p>None - interferogram phase data is updated and saved to disk</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyrate.core.orbital.orb_fit_calc_wrapper">
+<code class="sig-prename descclassname">pyrate.core.orbital.</code><code class="sig-name descname">orb_fit_calc_wrapper</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/pyrate/core/orbital.html#orb_fit_calc_wrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.orbital.orb_fit_calc_wrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>MPI wrapper for orbital fit correction</p>
 </dd></dl>
 
 <dl class="py function">

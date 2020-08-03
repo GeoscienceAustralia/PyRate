@@ -147,12 +147,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -291,15 +292,15 @@ are welcome :)</p></li>
 </div>
 <p>Now you can make your changes locally.</p>
 <ol class="arabic simple" start="4">
-<li><p>When you have finished making changes, check that your changes pass style and unit
+<li><p>When you have finished making changes, check that your changes pass against unit
 tests. A suite of tests have been developed for use in testing <cite>PyRate</cite> functionality
 and for further code development. The tests use <a class="reference external" href="http://doc.pytest.org/en/latest/">pytest</a>
-and can be found in the <code class="docutils literal notranslate"><span class="pre">PyRate/tests/</span></code> directory. A small test dataset used by the test suite is included in the repository in the <code class="docutils literal notranslate"><span class="pre">PyRate/tests/test_data/small_test</span></code> directory.</p></li>
+and can be found in the <code class="docutils literal notranslate"><span class="pre">PyRate/tests/</span></code> directory. A small test dataset used by
+the test suite is included in the repository in the <code class="docutils literal notranslate"><span class="pre">PyRate/tests/test_data/small_test</span></code> directory.</p></li>
 </ol>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">~/</span><span class="n">PyRate</span>
-<span class="n">pytest</span> <span class="n">tests</span><span class="o">/</span>
-<span class="n">pip</span> <span class="n">install</span> <span class="n">tox</span>
-<span class="n">tox</span>
+<span class="c1"># &#39;not slow&#39; avoids running those tests marked as &#39;slow&#39;</span>
+<span class="n">pytest</span> <span class="n">tests</span><span class="o">/</span> <span class="o">-</span><span class="n">m</span> <span class="s2">&quot;not slow&quot;</span>
 </pre></div>
 </div>
 <ol class="arabic simple" start="5">

@@ -145,12 +145,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -504,8 +505,8 @@
         <span class="n">RasterBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_phase_band</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_phase_data</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">master</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">slave</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">second</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nan_converted</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mm_converted</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span> <span class="o">=</span> <span class="kc">None</span>
@@ -534,20 +535,20 @@
 
     <span class="k">def</span> <span class="nf">_init_dates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Determine master and slave dates, and interferogram timespan</span>
+<span class="sd">        Determine first and second image dates, and interferogram timespan</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">def</span> <span class="nf">_to_date</span><span class="p">(</span><span class="n">datestr</span><span class="p">):</span>
             <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">datestr</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)]</span>
             <span class="k">return</span> <span class="n">date</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">)</span>
 
         <span class="n">md</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">GetMetadata</span><span class="p">()</span>
-        <span class="n">datestrs</span> <span class="o">=</span> <span class="p">[</span><span class="n">md</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">SLAVE_DATE</span><span class="p">]]</span>
+        <span class="n">datestrs</span> <span class="o">=</span> <span class="p">[</span><span class="n">md</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">FIRST_DATE</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">SECOND_DATE</span><span class="p">]]</span>
 
         <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">datestrs</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">slave</span> <span class="o">=</span> <span class="p">[</span><span class="n">_to_date</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">datestrs</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">time_span</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slave</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">master</span><span class="p">)</span><span class="o">.</span><span class="n">days</span><span class="o">/</span><span class="n">ifc</span><span class="o">.</span><span class="n">DAYS_PER_YEAR</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">first</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">second</span> <span class="o">=</span> <span class="p">[</span><span class="n">_to_date</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">datestrs</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time_span</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">second</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">first</span><span class="p">)</span><span class="o">.</span><span class="n">days</span><span class="o">/</span><span class="n">ifc</span><span class="o">.</span><span class="n">DAYS_PER_YEAR</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Missing master and/or slave date in </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Missing first and/or second date in </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_path</span>
             <span class="k">raise</span> <span class="n">IfgException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Ifg.convert_to_nans"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.Ifg.convert_to_nans">[docs]</a>    <span class="k">def</span> <span class="nf">convert_to_nans</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -725,8 +726,8 @@
         <span class="k">if</span> <span class="n">ifg_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># should be used with MPI</span>
             <span class="n">ifg</span> <span class="o">=</span> <span class="n">ifg_dict</span><span class="p">[</span><span class="n">ifg_or_path</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nan_fraction</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">nan_fraction</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">master</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">master</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">slave</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">slave</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">first</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">first</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">second</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">second</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">time_span</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">time_span</span>
             <span class="n">phase_file</span> <span class="o">=</span> <span class="s1">&#39;phase_data_</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">basename</span><span class="p">(</span><span class="n">ifg_or_path</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tile</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">phase_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="n">phase_file</span><span class="p">))</span>
@@ -739,8 +740,8 @@
                 <span class="n">ifg</span> <span class="o">=</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">ifg_or_path</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">phase_data</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nan_fraction</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">master</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">slave</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">first</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">second</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">time_span</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">Ifg</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">read_required</span><span class="p">(</span><span class="n">ifg</span><span class="p">)</span>
@@ -755,8 +756,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">phase_data</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">phase_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">r_start</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">r_end</span><span class="p">,</span>
                                          <span class="bp">self</span><span class="o">.</span><span class="n">c_start</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">c_end</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nan_fraction</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">nan_fraction</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">master</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">master</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">slave</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">slave</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">first</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">second</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">second</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">time_span</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">time_span</span>
         <span class="n">ifg</span><span class="o">.</span><span class="n">phase_data</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  <span class="c1"># close base ifg</span></div>
@@ -1047,11 +1048,11 @@
     <span class="k">def</span> <span class="nf">__common_ifg_coh_update</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">md</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_WAVELENGTH_METRES</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_TIME_SPAN</span><span class="p">,</span>
                   <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INSAR_PROCESSOR</span><span class="p">,</span>
-                  <span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">SLAVE_DATE</span><span class="p">,</span>
+                  <span class="n">ifc</span><span class="o">.</span><span class="n">FIRST_DATE</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">SECOND_DATE</span><span class="p">,</span>
                   <span class="n">ifc</span><span class="o">.</span><span class="n">DATA_UNITS</span><span class="p">]:</span>
             <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="n">k</span><span class="p">])})</span>
         <span class="k">if</span> <span class="n">header</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INSAR_PROCESSOR</span><span class="p">]</span> <span class="o">==</span> <span class="n">GAMMA</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_TIME</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">SLAVE_TIME</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INCIDENCE_DEGREES</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">FIRST_TIME</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">SECOND_TIME</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INCIDENCE_DEGREES</span><span class="p">]:</span>
                 <span class="n">md</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="n">k</span><span class="p">])})</span>
 
     <span class="k">if</span> <span class="n">_is_coherence</span><span class="p">(</span><span class="n">header</span><span class="p">):</span>
@@ -1248,25 +1249,6 @@
     <span class="k">return</span> <span class="p">[</span><span class="n">Tile</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">c</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">product</span><span class="p">(</span><span class="n">row_arr</span><span class="p">,</span> <span class="n">col_arr</span><span class="p">))]</span></div>
 
 
-<div class="viewcode-block" id="get_tiles"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.get_tiles">[docs]</a><span class="k">def</span> <span class="nf">get_tiles</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Break up the interferograms into smaller tiles based on user supplied</span>
-<span class="sd">    rows and columns.</span>
-
-<span class="sd">    :param list ifg_path: List of destination geotiff file names</span>
-<span class="sd">    :param int rows: Number of rows to break each interferogram into</span>
-<span class="sd">    :param int cols: Number of columns to break each interferogram into</span>
-
-<span class="sd">    :return: tiles: List of shared.Tile instances</span>
-<span class="sd">    :rtype: list</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">ifg</span> <span class="o">=</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">)</span>
-    <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">readonly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">tiles</span> <span class="o">=</span> <span class="n">create_tiles</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">nrows</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="n">cols</span><span class="p">)</span>
-    <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">tiles</span></div>
-
-
 <div class="viewcode-block" id="Tile"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.Tile">[docs]</a><span class="k">class</span> <span class="nc">Tile</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Tile class for containing a sub-part of an interferogram</span>
@@ -1291,6 +1273,25 @@
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;Convenience Tile class containing tile co-ordinates&quot;</span></div>
+
+
+<div class="viewcode-block" id="get_tiles"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.get_tiles">[docs]</a><span class="k">def</span> <span class="nf">get_tiles</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tile</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Break up the interferograms into smaller tiles based on user supplied</span>
+<span class="sd">    rows and columns.</span>
+
+<span class="sd">    :param list ifg_path: List of destination geotiff file names</span>
+<span class="sd">    :param int rows: Number of rows to break each interferogram into</span>
+<span class="sd">    :param int cols: Number of columns to break each interferogram into</span>
+
+<span class="sd">    :return: tiles: List of shared.Tile instances</span>
+<span class="sd">    :rtype: list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ifg</span> <span class="o">=</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">)</span>
+    <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">readonly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">tiles</span> <span class="o">=</span> <span class="n">create_tiles</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">nrows</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="n">cols</span><span class="p">)</span>
+    <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">tiles</span></div>
 
 
 <div class="viewcode-block" id="nan_and_mm_convert"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.nan_and_mm_convert">[docs]</a><span class="k">def</span> <span class="nf">nan_and_mm_convert</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
@@ -1351,18 +1352,19 @@
     <span class="k">return</span> <span class="n">floor</span><span class="p">((</span><span class="n">longitude</span> <span class="o">+</span> <span class="mi">180</span><span class="p">)</span> <span class="o">/</span> <span class="mf">6.0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
 
 
-<div class="viewcode-block" id="PrereadIfg"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.PrereadIfg">[docs]</a><span class="k">class</span> <span class="nc">PrereadIfg</span><span class="p">():</span>
+<div class="viewcode-block" id="PrereadIfg"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.PrereadIfg">[docs]</a><span class="k">class</span> <span class="nc">PrereadIfg</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convenience class for handling pre-calculated ifg params</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># pylint: disable=too-many-arguments</span>
     <span class="c1"># pylint: disable=too-many-instance-attributes</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">nan_fraction</span><span class="p">,</span> <span class="n">master</span><span class="p">,</span> <span class="n">slave</span><span class="p">,</span> <span class="n">time_span</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">tmp_path</span><span class="p">,</span> <span class="n">nan_fraction</span><span class="p">,</span> <span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">,</span> <span class="n">time_span</span><span class="p">,</span>
                  <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tmp_path</span> <span class="o">=</span> <span class="n">tmp_path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nan_fraction</span> <span class="o">=</span> <span class="n">nan_fraction</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">master</span> <span class="o">=</span> <span class="n">master</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">slave</span> <span class="o">=</span> <span class="n">slave</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first</span> <span class="o">=</span> <span class="n">first</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">second</span> <span class="o">=</span> <span class="n">second</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">time_span</span> <span class="o">=</span> <span class="n">time_span</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nrows</span> <span class="o">=</span> <span class="n">nrows</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ncols</span> <span class="o">=</span> <span class="n">ncols</span>
@@ -1387,7 +1389,7 @@
     <span class="k">return</span> <span class="n">ifg</span>
 
 
-<div class="viewcode-block" id="save_numpy_phase"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.save_numpy_phase">[docs]</a><span class="k">def</span> <span class="nf">save_numpy_phase</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<div class="viewcode-block" id="save_numpy_phase"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.save_numpy_phase">[docs]</a><span class="k">def</span> <span class="nf">save_numpy_phase</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Save interferogram phase data as numpy array file on disk.</span>
 
@@ -1397,6 +1399,7 @@
 
 <span class="sd">    :return: None, file saved to disk</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tiles</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;tiles&#39;</span><span class="p">]</span>
     <span class="n">process_ifgs</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)</span>
     <span class="n">outdir</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outdir</span><span class="p">):</span>
@@ -1485,7 +1488,7 @@
 <span class="sd">    :return: True if correction has been performed, otherwise False</span>
 <span class="sd">    :rtype: bool</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">close_all</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>    
+    <span class="k">def</span> <span class="nf">close_all</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">:</span>
             <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     
@@ -1551,7 +1554,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
     <span class="n">md</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">GetMetadata</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span> <span class="ow">in</span> <span class="n">md</span><span class="p">:</span>  <span class="c1"># ifg</span>
+    <span class="k">if</span> <span class="n">ifc</span><span class="o">.</span><span class="n">FIRST_DATE</span> <span class="ow">in</span> <span class="n">md</span><span class="p">:</span>  <span class="c1"># ifg</span>
         <span class="k">return</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">DEM</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span></div>

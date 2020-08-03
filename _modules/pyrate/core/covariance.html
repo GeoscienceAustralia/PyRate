@@ -145,12 +145,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -238,7 +239,6 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="c1"># coding: utf-8</span>
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">basename</span><span class="p">,</span> <span class="n">join</span>
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">array</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">isnan</span><span class="p">,</span> <span class="n">real</span><span class="p">,</span> <span class="n">imag</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">meshgrid</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">vstack</span><span class="p">,</span> <span class="n">ceil</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">reshape</span>
 <span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">norm</span>
@@ -246,13 +246,15 @@
 <span class="kn">from</span> <span class="nn">scipy.fftpack</span> <span class="kn">import</span> <span class="n">fft2</span><span class="p">,</span> <span class="n">ifft2</span><span class="p">,</span> <span class="n">fftshift</span>
 <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">fmin</span>
 
-<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">shared</span><span class="p">,</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span><span class="p">,</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span>
-<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">PrereadIfg</span>
-<span class="kn">from</span> <span class="nn">pyrate.core.algorithm</span> <span class="kn">import</span> <span class="n">master_slave_ids</span>
+<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">shared</span><span class="p">,</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span><span class="p">,</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span><span class="p">,</span> <span class="n">mpiops</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">PrereadIfg</span><span class="p">,</span> <span class="n">Ifg</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.algorithm</span> <span class="kn">import</span> <span class="n">first_second_ids</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.logger</span> <span class="kn">import</span> <span class="n">pyratelogger</span> <span class="k">as</span> <span class="n">log</span>
 
 <span class="c1"># pylint: disable=too-many-arguments</span>
 <span class="c1"># distance division factor of 1000 converts to km and is needed to match legacy output</span>
+
+<span class="n">first_PROCESS</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="n">DISTFACT</span> <span class="o">=</span> <span class="mi">1000</span>
 
 
@@ -498,9 +500,9 @@
 <span class="sd">    evaluated according to sig_i * sig_j * C_ij where i and j are two</span>
 <span class="sd">    interferograms and C is a matrix of coefficients:</span>
 
-<span class="sd">    C = 1 if the master and slave epochs of i and j are equal</span>
-<span class="sd">    C = 0.5 if have i and j share either a common master or slave epoch</span>
-<span class="sd">    C = -0.5 if the master of i or j equals the slave of the other</span>
+<span class="sd">    C = 1 if the first and second epochs of i and j are equal</span>
+<span class="sd">    C = 0.5 if have i and j share either a common first or second epoch</span>
+<span class="sd">    C = -0.5 if the first of i or j equals the second of the other</span>
 <span class="sd">    C = 0 otherwise</span>
 
 <span class="sd">    :param list ifgs: A list of pyrate.shared.Ifg class objects.</span>
@@ -511,8 +513,8 @@
 <span class="sd">    :rtype: ndarray</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># pylint: disable=too-many-locals</span>
-    <span class="c1"># c=0.5 for common master or slave; c=-0.5 if master</span>
-    <span class="c1"># of one matches slave of another</span>
+    <span class="c1"># c=0.5 for common first or second; c=-0.5 if first</span>
+    <span class="c1"># of one matches second of another</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
@@ -524,14 +526,14 @@
     <span class="n">nifgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)</span>
     <span class="n">vcm_pat</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">nifgs</span><span class="p">,</span> <span class="n">nifgs</span><span class="p">))</span>
 
-    <span class="n">dates</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">master</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">slave</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span>
-    <span class="n">ids</span> <span class="o">=</span> <span class="n">master_slave_ids</span><span class="p">(</span><span class="n">dates</span><span class="p">)</span>
+    <span class="n">dates</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">first</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">second</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span>
+    <span class="n">ids</span> <span class="o">=</span> <span class="n">first_second_ids</span><span class="p">(</span><span class="n">dates</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
-        <span class="n">mas1</span><span class="p">,</span> <span class="n">slv1</span> <span class="o">=</span> <span class="n">ids</span><span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">master</span><span class="p">],</span> <span class="n">ids</span><span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">slave</span><span class="p">]</span>
+        <span class="n">mas1</span><span class="p">,</span> <span class="n">slv1</span> <span class="o">=</span> <span class="n">ids</span><span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">first</span><span class="p">],</span> <span class="n">ids</span><span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">second</span><span class="p">]</span>
 
         <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">ifg2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
-            <span class="n">mas2</span><span class="p">,</span> <span class="n">slv2</span> <span class="o">=</span> <span class="n">ids</span><span class="p">[</span><span class="n">ifg2</span><span class="o">.</span><span class="n">master</span><span class="p">],</span> <span class="n">ids</span><span class="p">[</span><span class="n">ifg2</span><span class="o">.</span><span class="n">slave</span><span class="p">]</span>
+            <span class="n">mas2</span><span class="p">,</span> <span class="n">slv2</span> <span class="o">=</span> <span class="n">ids</span><span class="p">[</span><span class="n">ifg2</span><span class="o">.</span><span class="n">first</span><span class="p">],</span> <span class="n">ids</span><span class="p">[</span><span class="n">ifg2</span><span class="o">.</span><span class="n">second</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">mas1</span> <span class="o">==</span> <span class="n">mas2</span> <span class="ow">or</span> <span class="n">slv1</span> <span class="o">==</span> <span class="n">slv2</span><span class="p">:</span>
                 <span class="n">vcm_pat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
 
@@ -545,6 +547,51 @@
     <span class="n">std</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">maxvar</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">nifgs</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
     <span class="n">vcm_t</span> <span class="o">=</span> <span class="n">std</span> <span class="o">*</span> <span class="n">std</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">vcm_t</span> <span class="o">*</span> <span class="n">vcm_pat</span></div>
+
+
+<div class="viewcode-block" id="maxvar_vcm_calc_wrapper"><a class="viewcode-back" href="../../../covariance.html#pyrate.core.covariance.maxvar_vcm_calc_wrapper">[docs]</a><span class="k">def</span> <span class="nf">maxvar_vcm_calc_wrapper</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MPI wrapper for maxvar and vcmt computation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">preread_ifgs</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PREREAD_IFGS</span><span class="p">]</span>
+    <span class="n">ifg_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg_path</span><span class="o">.</span><span class="n">tmp_sampled_path</span> <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">INTERFEROGRAM_FILES</span><span class="p">]]</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating the temporal variance-covariance matrix&#39;</span><span class="p">)</span>
+    <span class="n">process_indices</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">_get_r_dist</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get RDIst class object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ifg</span> <span class="o">=</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">)</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+        <span class="n">r_dist</span> <span class="o">=</span> <span class="n">RDist</span><span class="p">(</span><span class="n">ifg</span><span class="p">)()</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">r_dist</span>
+
+    <span class="n">r_dist</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">_get_r_dist</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">prcs_ifgs</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)</span>
+    <span class="n">process_maxvar</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">prcs_ifgs</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Calculating maxvar for </span><span class="si">{}</span><span class="s1"> of process ifgs </span><span class="si">{}</span><span class="s1"> of total </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">prcs_ifgs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)))</span>
+        <span class="n">process_maxvar</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cvd</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">r_dist</span><span class="p">,</span> <span class="n">calc_alpha</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">write_vals</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_acg</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="n">first_PROCESS</span><span class="p">:</span>
+        <span class="n">maxvar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">maxvar</span><span class="p">[</span><span class="n">process_indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">process_maxvar</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">size</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+            <span class="n">rank_indices</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)),</span> <span class="n">i</span><span class="p">)</span>
+            <span class="n">this_process_ref_phs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rank_indices</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">Recv</span><span class="p">(</span><span class="n">this_process_ref_phs</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">maxvar</span><span class="p">[</span><span class="n">rank_indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">this_process_ref_phs</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="n">maxvar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">Send</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">process_maxvar</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="n">dest</span><span class="o">=</span><span class="n">first_PROCESS</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+
+    <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+    <span class="n">maxvar</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">bcast</span><span class="p">(</span><span class="n">maxvar</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">vcmt</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">get_vcmt</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">,</span> <span class="n">maxvar</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Finished maxvar and vcm calc!&quot;</span><span class="p">)</span>
+    <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">MAXVAR</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">VCMT</span><span class="p">]</span> <span class="o">=</span> <span class="n">maxvar</span><span class="p">,</span> <span class="n">vcmt</span>
+    <span class="k">return</span> <span class="n">maxvar</span><span class="p">,</span> <span class="n">vcmt</span></div>
 </pre></div>
 
            </div>

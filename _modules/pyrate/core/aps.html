@@ -145,12 +145,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -255,7 +256,7 @@
 <span class="kn">from</span> <span class="nn">pyrate.merge</span> <span class="kn">import</span> <span class="n">assemble_tiles</span>
 
 
-<div class="viewcode-block" id="wrap_spatio_temporal_filter"><a class="viewcode-back" href="../../../aps.html#pyrate.core.aps.wrap_spatio_temporal_filter">[docs]</a><span class="k">def</span> <span class="nf">wrap_spatio_temporal_filter</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">):</span>
+<div class="viewcode-block" id="wrap_spatio_temporal_filter"><a class="viewcode-back" href="../../../aps.html#pyrate.core.aps.wrap_spatio_temporal_filter">[docs]</a><span class="k">def</span> <span class="nf">wrap_spatio_temporal_filter</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A wrapper for the spatio-temporal filter so it can be tested.</span>
 <span class="sd">    See docstring for spatio_temporal_filter.</span>
@@ -265,6 +266,9 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;APS spatio-temporal filtering not required&#39;</span><span class="p">)</span>
         <span class="k">return</span>
+    <span class="n">tiles</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TILES</span><span class="p">]</span>
+    <span class="n">preread_ifgs</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PREREAD_IFGS</span><span class="p">]</span>
+    <span class="n">ifg_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg_path</span><span class="o">.</span><span class="n">tmp_sampled_path</span> <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">INTERFEROGRAM_FILES</span><span class="p">]]</span>
 
     <span class="c1"># perform some checks on existing ifgs</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Checking APS correction status&#39;</span><span class="p">)</span>
@@ -279,7 +283,9 @@
     <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
     <span class="n">spatio_temporal_filter</span><span class="p">(</span><span class="n">tsincr</span><span class="p">,</span> <span class="n">ifg</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">)</span>
     <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span></div>
+    <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+
+    <span class="n">shared</span><span class="o">.</span><span class="n">save_numpy_phase</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="spatio_temporal_filter"><a class="viewcode-back" href="../../../aps.html#pyrate.core.aps.spatio_temporal_filter">[docs]</a><span class="k">def</span> <span class="nf">spatio_temporal_filter</span><span class="p">(</span><span class="n">tsincr</span><span class="p">,</span> <span class="n">ifg</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">):</span>
@@ -370,10 +376,10 @@
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Reconstructing interferometric observations from time series&#39;</span><span class="p">)</span>
     <span class="n">ifgs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">OrderedDict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">preread_ifgs</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
     <span class="n">_</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">get_epochs</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)</span>
-    <span class="n">index_master</span><span class="p">,</span> <span class="n">index_slave</span> <span class="o">=</span> <span class="n">n</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)],</span> <span class="n">n</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):]</span>
+    <span class="n">index_first</span><span class="p">,</span> <span class="n">index_second</span> <span class="o">=</span> <span class="n">n</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)],</span> <span class="n">n</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):]</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
-        <span class="n">phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">tsincr</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">index_master</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span> <span class="n">index_slave</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-        <span class="n">_save_aps_corrected_phase</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">phase</span><span class="p">)</span>
+        <span class="n">phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">tsincr</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">index_first</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span> <span class="n">index_second</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">_save_aps_corrected_phase</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">tmp_path</span><span class="p">,</span> <span class="n">phase</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_save_aps_corrected_phase</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">,</span> <span class="n">phase</span><span class="p">):</span>

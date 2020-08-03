@@ -145,12 +145,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -344,7 +345,7 @@
 
 <div class="viewcode-block" id="ifg_date_lookup"><a class="viewcode-back" href="../../../algorithm.html#pyrate.core.algorithm.ifg_date_lookup">[docs]</a><span class="k">def</span> <span class="nf">ifg_date_lookup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">date_pair</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Returns the Interferogram which has the master and slave dates given</span>
+<span class="sd">    Returns the Interferogram which has the first and second dates given</span>
 <span class="sd">    in &#39;date_pair&#39;.</span>
 
 <span class="sd">    :param list ifgs: List of interferogram objects to search</span>
@@ -355,10 +356,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">date_pair</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Need (datetime.date, datetime.date) master/slave pair&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Need (datetime.date, datetime.date) first/second image pair&quot;</span>
         <span class="k">raise</span> <span class="n">IfgException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="c1"># check master/slave dates are in order</span>
+    <span class="c1"># check first/second dates are in order</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="c1"># TODO: Clarify: Is the comparison here for a different date?</span>
         <span class="c1"># Then it should be written in a more pythonic way</span>
@@ -370,17 +371,17 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Bad date_pair arg to ifg_date_lookup()&quot;</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">date_pair</span> <span class="o">==</span> <span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">master</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">slave</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">date_pair</span> <span class="o">==</span> <span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">first</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">second</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">i</span>
 
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot find Ifg with &quot;</span>
-                     <span class="s2">&quot;master/slave of </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">date_pair</span><span class="p">))</span></div>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot find Ifg with first/second&quot;</span>
+                     <span class="s2">&quot;image dates of </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">date_pair</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="ifg_date_index_lookup"><a class="viewcode-back" href="../../../algorithm.html#pyrate.core.algorithm.ifg_date_index_lookup">[docs]</a><span class="k">def</span> <span class="nf">ifg_date_index_lookup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">date_pair</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Returns the Interferogram index which has the master and slave dates</span>
-<span class="sd">    given in &#39;date_pair&#39;.</span>
+<span class="sd">    Returns the Interferogram index which has the first and second image</span>
+<span class="sd">    dates given in &#39;date_pair&#39;.</span>
 
 <span class="sd">    :param list ifgs: List of interferogram objects to search</span>
 <span class="sd">    :param tuple date_pair: A (datetime.date, datetime.date)</span>
@@ -390,10 +391,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">date_pair</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Need (datetime.date, datetime.date) master/slave pair&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Need (datetime.date, datetime.date) first/second image date pair&quot;</span>
         <span class="k">raise</span> <span class="n">IfgException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="c1"># check master/slave dates are in order</span>
+    <span class="c1"># check first/second image dates are in order</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">date_pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">date_pair</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
             <span class="n">date_pair</span> <span class="o">=</span> <span class="n">date_pair</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">date_pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -401,10 +402,10 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Bad date_pair arg to ifg_date_lookup()&quot;</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">date_pair</span> <span class="o">==</span> <span class="p">(</span><span class="n">ifgs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">master</span><span class="p">,</span> <span class="n">ifgs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">slave</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">date_pair</span> <span class="o">==</span> <span class="p">(</span><span class="n">ifgs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">first</span><span class="p">,</span> <span class="n">ifgs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">second</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">i</span>
 
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot find Ifg with master/slave of </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">date_pair</span><span class="p">))</span></div>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot find Ifg with first/second image dates of </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">date_pair</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="get_epochs"><a class="viewcode-back" href="../../../algorithm.html#pyrate.core.algorithm.get_epochs">[docs]</a><span class="k">def</span> <span class="nf">get_epochs</span><span class="p">(</span><span class="n">ifgs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Iterable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">EpochList</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
@@ -430,18 +431,18 @@
 
 <div class="viewcode-block" id="get_all_epochs"><a class="viewcode-back" href="../../../algorithm.html#pyrate.core.algorithm.get_all_epochs">[docs]</a><span class="k">def</span> <span class="nf">get_all_epochs</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Returns a sequence of all master and slave dates in given interferograms.</span>
+<span class="sd">    Returns a sequence of all image dates used to form given interferograms.</span>
 
 <span class="sd">    :param list ifgs: List of interferogram objects</span>
 
-<span class="sd">    :return: master and slave dates</span>
+<span class="sd">    :return: list of all image dates</span>
 <span class="sd">    :rtype: list</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">return</span> <span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">master</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">slave</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span></div>
+    <span class="k">return</span> <span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">first</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">second</span> <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="master_slave_ids"><a class="viewcode-back" href="../../../algorithm.html#pyrate.core.algorithm.master_slave_ids">[docs]</a><span class="k">def</span> <span class="nf">master_slave_ids</span><span class="p">(</span><span class="n">dates</span><span class="p">):</span>
+<div class="viewcode-block" id="first_second_ids"><a class="viewcode-back" href="../../../algorithm.html#pyrate.core.algorithm.first_second_ids">[docs]</a><span class="k">def</span> <span class="nf">first_second_ids</span><span class="p">(</span><span class="n">dates</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a dictionary of &#39;date:unique ID&#39; for each date in &#39;dates&#39;.</span>
 <span class="sd">    IDs are ordered from oldest to newest, starting at 0.</span>

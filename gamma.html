@@ -147,12 +147,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -241,13 +242,13 @@
 <dl class="py function">
 <dt id="pyrate.core.gamma.combine_headers">
 <code class="sig-prename descclassname">pyrate.core.gamma.</code><code class="sig-name descname">combine_headers</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hdr0</span></em>, <em class="sig-param"><span class="n">hdr1</span></em>, <em class="sig-param"><span class="n">dem_hdr</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gamma.html#combine_headers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.gamma.combine_headers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Combines metadata for master and slave epochs and DEM into a single
-dictionary for an interferogram.</p>
+<dd><p>Combines metadata for first and second image epochs and DEM into a
+single dictionary for an interferogram.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>hdr0</strong> (<em>dict</em>) – Metadata for the master image</p></li>
-<li><p><strong>hdr1</strong> (<em>dict</em>) – Metadata for the slave image</p></li>
+<li><p><strong>hdr0</strong> (<em>dict</em>) – Metadata for the first image</p></li>
+<li><p><strong>hdr1</strong> (<em>dict</em>) – Metadata for the second image</p></li>
 <li><p><strong>dem_hdr</strong> (<em>dict</em>) – Metadata for the DEM</p></li>
 </ul>
 </dd>
@@ -307,7 +308,7 @@ incidence files</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dem_header_file</strong> (<em>str</em>) – DEM header path</p></li>
-<li><p><strong>header_paths</strong> (<em>list</em>) – List of master/slave header paths</p></li>
+<li><p><strong>header_paths</strong> (<em>list</em>) – List of first/second image header paths</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

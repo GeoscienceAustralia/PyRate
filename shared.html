@@ -147,12 +147,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -410,7 +411,7 @@ e.g. incidence and azimuth raster values</p>
 
 <dl class="py class">
 <dt id="pyrate.core.shared.PrereadIfg">
-<em class="property">class </em><code class="sig-prename descclassname">pyrate.core.shared.</code><code class="sig-name descname">PrereadIfg</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">nan_fraction</span></em>, <em class="sig-param"><span class="n">master</span></em>, <em class="sig-param"><span class="n">slave</span></em>, <em class="sig-param"><span class="n">time_span</span></em>, <em class="sig-param"><span class="n">nrows</span></em>, <em class="sig-param"><span class="n">ncols</span></em>, <em class="sig-param"><span class="n">metadata</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/shared.html#PrereadIfg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.shared.PrereadIfg" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pyrate.core.shared.</code><code class="sig-name descname">PrereadIfg</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">tmp_path</span></em>, <em class="sig-param"><span class="n">nan_fraction</span></em>, <em class="sig-param"><span class="n">first</span></em>, <em class="sig-param"><span class="n">second</span></em>, <em class="sig-param"><span class="n">time_span</span></em>, <em class="sig-param"><span class="n">nrows</span></em>, <em class="sig-param"><span class="n">ncols</span></em>, <em class="sig-param"><span class="n">metadata</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/shared.html#PrereadIfg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.shared.PrereadIfg" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convenience class for handling pre-calculated ifg params</p>
 </dd></dl>
 
@@ -682,7 +683,7 @@ to numpy.array_split.</p>
 
 <dl class="py function">
 <dt id="pyrate.core.shared.get_tiles">
-<code class="sig-prename descclassname">pyrate.core.shared.</code><code class="sig-name descname">get_tiles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifg_path</span></em>, <em class="sig-param"><span class="n">rows</span></em>, <em class="sig-param"><span class="n">cols</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/shared.html#get_tiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.shared.get_tiles" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.shared.</code><code class="sig-name descname">get_tiles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifg_path</span></em>, <em class="sig-param"><span class="n">rows</span></em>, <em class="sig-param"><span class="n">cols</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span><a class="reference internal" href="#pyrate.core.shared.Tile" title="pyrate.core.shared.Tile">pyrate.core.shared.Tile</a><span class="p">]</span><a class="reference internal" href="_modules/pyrate/core/shared.html#get_tiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.shared.get_tiles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Break up the interferograms into smaller tiles based on user supplied
 rows and columns.</p>
 <dl class="field-list simple">
@@ -778,7 +779,7 @@ Use different numpy algorithm dependent on numpy version.</p>
 
 <dl class="py function">
 <dt id="pyrate.core.shared.save_numpy_phase">
-<code class="sig-prename descclassname">pyrate.core.shared.</code><code class="sig-name descname">save_numpy_phase</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifg_paths</span></em>, <em class="sig-param"><span class="n">tiles</span></em>, <em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/shared.html#save_numpy_phase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.shared.save_numpy_phase" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyrate.core.shared.</code><code class="sig-name descname">save_numpy_phase</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifg_paths</span></em>, <em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/shared.html#save_numpy_phase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.shared.save_numpy_phase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save interferogram phase data as numpy array file on disk.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

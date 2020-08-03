@@ -145,12 +145,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -250,26 +251,26 @@
 <span class="n">gdal</span><span class="o">.</span><span class="n">SetCacheMax</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../pyrate.merge.html#pyrate.merge.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../pyrate.merge.html#pyrate.merge.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    PyRate merge main function. Assembles product tiles in to</span>
 <span class="sd">    single geotiff files</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># setup paths</span>
-    <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;rows&quot;</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;cols&quot;</span><span class="p">]</span>
-    <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">_merge_stack</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">_merge_stack</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
     <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">_create_png_from_tif</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">])</span>
 
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_CAL</span><span class="p">]:</span>
-        <span class="n">_merge_timeseries</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span></div>
-        <span class="c1"># mpiops.run_once(_delete_tsincr_files, params)</span>
+        <span class="n">_merge_timeseries</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="s1">&#39;tscuml&#39;</span><span class="p">)</span>
+        <span class="c1"># optional save of merged tsincr products</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;savetsincr&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="n">_merge_timeseries</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="s1">&#39;tsincr&#39;</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_merge_stack</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_merge_stack</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Merge stacking outputs</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">shape</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">ifgs_dict</span> <span class="o">=</span> <span class="n">_merge_setup</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="n">shape</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">ifgs_dict</span> <span class="o">=</span> <span class="n">_merge_setup</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
 
     <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Merging and writing Stack Rate product geotiffs&#39;</span><span class="p">)</span>
 
@@ -289,42 +290,33 @@
         <span class="n">_save_merged_files</span><span class="p">(</span><span class="n">ifgs_dict</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">out</span><span class="p">,</span> <span class="n">ot</span><span class="p">,</span> <span class="n">savenpy</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;savenpy&quot;</span><span class="p">])</span>
 
 
-<span class="k">def</span> <span class="nf">_merge_timeseries</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_merge_timeseries</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">tstype</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Merge time series output</span>
+<span class="sd">    Merge tiled time series outputs</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Merging timeseries output&quot;</span><span class="p">)</span>
-    <span class="n">shape</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">ifgs_dict</span> <span class="o">=</span> <span class="n">_merge_setup</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Merging </span><span class="si">{}</span><span class="s1"> time series outputs&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tstype</span><span class="p">))</span>
+    <span class="n">shape</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">ifgs_dict</span> <span class="o">=</span> <span class="n">_merge_setup</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
 
-    <span class="c1"># load the first tsincr file to determine the number of time series tifs</span>
-    <span class="n">tsincr_file</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="s1">&#39;tsincr_0.npy&#39;</span><span class="p">)</span>
-    <span class="n">tsincr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">tsincr_file</span><span class="p">)</span>
+    <span class="c1"># load the first time series file to determine the number of time series tifs</span>
+    <span class="n">ts_file</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="n">tstype</span> <span class="o">+</span> <span class="s1">&#39;_0.npy&#39;</span><span class="p">)</span>
+    <span class="n">ts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">ts_file</span><span class="p">)</span>
     <span class="c1"># pylint: disable=no-member</span>
-    <span class="n">no_ts_tifs</span> <span class="o">=</span> <span class="n">tsincr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-
-    <span class="c1"># create 2 x no_ts_tifs as we are splitting tsincr and tscuml to all processes.</span>
-    <span class="n">process_tifs</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">no_ts_tifs</span><span class="p">))</span>
-
+    <span class="n">no_ts_tifs</span> <span class="o">=</span> <span class="n">ts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">process_tifs</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">no_ts_tifs</span><span class="p">))</span>
     <span class="c1"># depending on nvelpar, this will not fit in memory</span>
     <span class="c1"># e.g. nvelpar=100, nrows=10000, ncols=10000, 32bit floats need 40GB memory</span>
     <span class="c1"># 32 * 100 * 10000 * 10000 / 8 bytes = 4e10 bytes = 40 GB</span>
     <span class="c1"># the double for loop helps us overcome the memory limit</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Process </span><span class="si">{}</span><span class="s1"> writing </span><span class="si">{}</span><span class="s1"> timeseries tifs of &#39;</span>
-             <span class="s1">&#39;total </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">process_tifs</span><span class="p">),</span> <span class="n">no_ts_tifs</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Process </span><span class="si">{}</span><span class="s1"> writing </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> time series tifs of &#39;</span>
+             <span class="s1">&#39;total </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">process_tifs</span><span class="p">),</span> <span class="n">tstype</span><span class="p">,</span> <span class="n">no_ts_tifs</span><span class="p">))</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">process_tifs</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">no_ts_tifs</span><span class="p">:</span>
-            <span class="n">tscum_g</span> <span class="o">=</span> <span class="n">assemble_tiles</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">out_type</span><span class="o">=</span><span class="s1">&#39;tscuml&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
-            <span class="n">_save_merged_files</span><span class="p">(</span><span class="n">ifgs_dict</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">tscum_g</span><span class="p">,</span> <span class="n">out_type</span><span class="o">=</span><span class="s1">&#39;tscuml&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
-                               <span class="n">savenpy</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;savenpy&quot;</span><span class="p">])</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">i</span> <span class="o">%=</span> <span class="n">no_ts_tifs</span>
-            <span class="n">tsincr_g</span> <span class="o">=</span> <span class="n">assemble_tiles</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">out_type</span><span class="o">=</span><span class="s1">&#39;tsincr&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
-            <span class="n">_save_merged_files</span><span class="p">(</span><span class="n">ifgs_dict</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">tsincr_g</span><span class="p">,</span> <span class="n">out_type</span><span class="o">=</span><span class="s1">&#39;tsincr&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
-                               <span class="n">savenpy</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;savenpy&quot;</span><span class="p">])</span>
+        <span class="n">ts_arr</span> <span class="o">=</span> <span class="n">assemble_tiles</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">out_type</span><span class="o">=</span><span class="n">tstype</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">i</span><span class="p">)</span>
+        <span class="n">_save_merged_files</span><span class="p">(</span><span class="n">ifgs_dict</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">ts_arr</span><span class="p">,</span> <span class="n">out_type</span><span class="o">=</span><span class="n">tstype</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                           <span class="n">savenpy</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;savenpy&quot;</span><span class="p">])</span>
 
     <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Process </span><span class="si">{}</span><span class="s1"> finished writing </span><span class="si">{}</span><span class="s1"> timeseries tifs of &#39;</span>
-             <span class="s1">&#39;total </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">process_tifs</span><span class="p">),</span> <span class="n">no_ts_tifs</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Process </span><span class="si">{}</span><span class="s1"> finished writing </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> time series tifs of &#39;</span>
+             <span class="s1">&#39;total </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">process_tifs</span><span class="p">),</span> <span class="n">tstype</span><span class="p">,</span> <span class="n">no_ts_tifs</span><span class="p">))</span>
 
 
 <span class="k">def</span> <span class="nf">_create_png_from_tif</span><span class="p">(</span><span class="n">output_folder_path</span><span class="p">):</span>
@@ -490,7 +482,7 @@
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished saving </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">out_type</span><span class="p">))</span>
 
 
-<span class="k">def</span> <span class="nf">_merge_setup</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_merge_setup</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convenience function for Merge set up steps</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -514,18 +506,9 @@
     <span class="n">ifgs_dict</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">preread_ifgs_file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">))</span>
     <span class="n">ifgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ifgs_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">shared</span><span class="o">.</span><span class="n">PrereadIfg</span><span class="p">)]</span>
     <span class="n">shape</span> <span class="o">=</span> <span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;rows&quot;</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;cols&quot;</span><span class="p">]</span>
     <span class="n">tiles</span> <span class="o">=</span> <span class="n">shared</span><span class="o">.</span><span class="n">get_tiles</span><span class="p">(</span><span class="n">dest_tifs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">shape</span><span class="p">,</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">ifgs_dict</span>
-
-
-<span class="k">def</span> <span class="nf">_delete_tsincr_files</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convenience function to delete tsincr files</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">out_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">])</span>
-    <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">out_dir</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
-        <span class="k">if</span> <span class="s2">&quot;tsincr&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
-            <span class="n">file_path</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
 </pre></div>
 
            </div>

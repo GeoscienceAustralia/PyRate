@@ -147,12 +147,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -315,9 +316,9 @@ Must be provided if save_acg=True</p></li>
 described by Biggs et al., Geophys. J. Int, 2007. Matrix elements are
 evaluated according to sig_i * sig_j * C_ij where i and j are two
 interferograms and C is a matrix of coefficients:</p>
-<p>C = 1 if the master and slave epochs of i and j are equal
-C = 0.5 if have i and j share either a common master or slave epoch
-C = -0.5 if the master of i or j equals the slave of the other
+<p>C = 1 if the first and second epochs of i and j are equal
+C = 0.5 if have i and j share either a common first or second epoch
+C = -0.5 if the first of i or j equals the second of the other
 C = 0 otherwise</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -334,6 +335,12 @@ interferograms.</p></li>
 <dd class="field-odd"><p>ndarray</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyrate.core.covariance.maxvar_vcm_calc_wrapper">
+<code class="sig-prename descclassname">pyrate.core.covariance.</code><code class="sig-name descname">maxvar_vcm_calc_wrapper</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/covariance.html#maxvar_vcm_calc_wrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.covariance.maxvar_vcm_calc_wrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>MPI wrapper for maxvar and vcmt computation</p>
 </dd></dl>
 
 </div>

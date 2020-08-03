@@ -145,12 +145,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -422,6 +423,9 @@
     <span class="n">check_call</span><span class="p">(</span><span class="s1">&#39;gdal_edit.py -unsetmd </span><span class="si">{md}</span><span class="s1"> </span><span class="si">{f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">md</span><span class="o">=</span><span class="n">md_str</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">l</span><span class="p">),</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">ds</span> <span class="o">=</span> <span class="kc">None</span>
 
+    <span class="c1"># make prepifg output readonly</span>
+    <span class="n">Path</span><span class="p">(</span><span class="n">l</span><span class="p">)</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="mo">0o444</span><span class="p">)</span>  <span class="c1"># readonly output</span>
+
 
 <span class="k">def</span> <span class="nf">_prepifg_multiprocessing</span><span class="p">(</span><span class="n">m_path</span><span class="p">:</span> <span class="n">MultiplePaths</span><span class="p">,</span> <span class="n">exts</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -441,13 +445,12 @@
         <span class="n">coherence_thresh</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">LARGE_TIFS</span><span class="p">]:</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="n">output_tiff_filename</span><span class="p">(</span><span class="n">m_path</span><span class="o">.</span><span class="n">converted_path</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">])</span>
-        <span class="n">looks_path</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">mlooked_path</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">crop</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">m_path</span><span class="o">.</span><span class="n">converted_path</span><span class="p">,</span> <span class="n">coherence_path</span><span class="p">,</span> <span class="n">looks_path</span>
+        <span class="k">return</span> <span class="n">m_path</span><span class="o">.</span><span class="n">converted_path</span><span class="p">,</span> <span class="n">coherence_path</span><span class="p">,</span> <span class="n">m_path</span><span class="o">.</span><span class="n">sampled_path</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">prepifg_helper</span><span class="o">.</span><span class="n">prepare_ifg</span><span class="p">(</span><span class="n">m_path</span><span class="o">.</span><span class="n">converted_path</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">exts</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span>
                                    <span class="n">out_path</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">,</span> <span class="n">coherence_path</span><span class="o">=</span><span class="n">coherence_path</span><span class="p">,</span>
                                    <span class="n">coherence_thresh</span><span class="o">=</span><span class="n">coherence_thresh</span><span class="p">)</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">m_path</span><span class="o">.</span><span class="n">sampled_path</span><span class="p">)</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="mo">0o444</span><span class="p">)</span>  <span class="c1"># readonly output</span>
 
 
 <div class="viewcode-block" id="find_header"><a class="viewcode-back" href="../../pyrate.prepifg.html#pyrate.prepifg.find_header">[docs]</a><span class="k">def</span> <span class="nf">find_header</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">MultiplePaths</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>

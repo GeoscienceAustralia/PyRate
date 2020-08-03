@@ -147,12 +147,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -260,36 +261,15 @@
 
 <dl class="py function">
 <dt id="pyrate.process.process_ifgs">
-<code class="sig-prename descclassname">pyrate.process.</code><code class="sig-name descname">process_ifgs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifg_paths</span></em>, <em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">rows</span></em>, <em class="sig-param"><span class="n">cols</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/process.html#process_ifgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.process.process_ifgs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Top level function to perform PyRate workflow on given interferograms</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifg_paths</strong> (<em>list</em>) – List of interferogram paths</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p></li>
-<li><p><strong>rows</strong> (<em>int</em>) – Number of sub-tiles in y direction</p></li>
-<li><p><strong>cols</strong> (<em>int</em>) – Number of sub-tiles in x direction</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>refpt: tuple of reference pixel x and y position</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>tuple</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>maxvar: array of maximum variance values of interferograms</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>vcmt: Variance-covariance matrix array</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-</dl>
+<code class="sig-prename descclassname">pyrate.process.</code><code class="sig-name descname">process_ifgs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/pyrate/process.html#process_ifgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.process.process_ifgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Top level function to perform PyRate workflow on given interferograms
+:param dict params: Dictionary of configuration parameters
+:return: refpt: tuple of reference pixel x and y position
+:rtype: tuple
+:return: maxvar: array of maximum variance values of interferograms
+:rtype: ndarray
+:return: vcmt: Variance-covariance matrix array
+:rtype: ndarray</p>
 </dd></dl>
 
 </div>

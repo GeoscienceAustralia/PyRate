@@ -145,12 +145,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -275,8 +276,8 @@
 <span class="n">DATUM</span> <span class="o">=</span> <span class="s2">&quot;DATUM&quot;</span>
 
 <span class="c1"># custom header aliases</span>
-<span class="n">MASTER</span> <span class="o">=</span> <span class="s2">&quot;MASTER&quot;</span>
-<span class="n">SLAVE</span> <span class="o">=</span> <span class="s2">&quot;SLAVE&quot;</span>
+<span class="n">FIRST</span> <span class="o">=</span> <span class="s2">&quot;FIRST&quot;</span>
+<span class="n">SECOND</span> <span class="o">=</span> <span class="s2">&quot;SECOND&quot;</span>
 <span class="n">X_LAST</span> <span class="o">=</span> <span class="s2">&quot;X_LAST&quot;</span>
 <span class="n">Y_LAST</span> <span class="o">=</span> <span class="s2">&quot;Y_LAST&quot;</span>
 <span class="n">RADIANS</span> <span class="o">=</span> <span class="s2">&quot;RADIANS&quot;</span>
@@ -362,13 +363,13 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_WAVELENGTH_METRES</span><span class="p">]</span> <span class="o">=</span> <span class="n">headers</span><span class="p">[</span><span class="n">WAVELENGTH</span><span class="p">]</span>
 
-        <span class="c1"># grab master/slave dates from header, or the filename</span>
+        <span class="c1"># grab first/second dates from header, or the filename</span>
         <span class="n">has_dates</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">DATE</span> <span class="ow">in</span> <span class="n">headers</span> <span class="ow">and</span> <span class="n">DATE12</span> <span class="ow">in</span> <span class="n">headers</span> <span class="k">else</span> <span class="kc">False</span>
         <span class="n">dates</span> <span class="o">=</span> <span class="n">headers</span><span class="p">[</span><span class="n">DATE12</span><span class="p">]</span> <span class="k">if</span> <span class="n">has_dates</span> <span class="k">else</span> <span class="n">_parse_dates_from</span><span class="p">(</span><span class="n">hdr_file</span><span class="p">)</span>
-        <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span><span class="p">],</span> <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">SLAVE_DATE</span><span class="p">]</span> <span class="o">=</span> <span class="n">dates</span>
+        <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">FIRST_DATE</span><span class="p">],</span> <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">SECOND_DATE</span><span class="p">]</span> <span class="o">=</span> <span class="n">dates</span>
 
-        <span class="c1"># replace time span as ROIPAC is ~4 hours different to (slave - master)</span>
-        <span class="n">timespan</span> <span class="o">=</span> <span class="p">(</span><span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">SLAVE_DATE</span><span class="p">]</span> <span class="o">-</span> <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span><span class="p">])</span><span class="o">.</span><span class="n">days</span> <span class="o">/</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DAYS_PER_YEAR</span>
+        <span class="c1"># replace time span as ROIPAC is ~4 hours different to (second minus first)</span>
+        <span class="n">timespan</span> <span class="o">=</span> <span class="p">(</span><span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">SECOND_DATE</span><span class="p">]</span> <span class="o">-</span> <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">FIRST_DATE</span><span class="p">])</span><span class="o">.</span><span class="n">days</span> <span class="o">/</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DAYS_PER_YEAR</span>
         <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_TIME_SPAN</span><span class="p">]</span> <span class="o">=</span> <span class="n">timespan</span>
 
         <span class="c1"># Add data units of interferogram</span>
@@ -397,7 +398,7 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="n">min_date_len</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">parse_date</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Filename does not include master/slave dates: </span><span class="si">%s</span><span class="s2">&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Filename does not include first/second image dates: </span><span class="si">%s</span><span class="s2">&quot;</span>
         <span class="k">raise</span> <span class="n">RoipacException</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
 
 

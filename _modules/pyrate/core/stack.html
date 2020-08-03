@@ -145,12 +145,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -237,13 +238,15 @@
 <span class="sd">(velocity) estimation using an iterative weighted least-squares</span>
 <span class="sd">stacking method.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
 <span class="kn">import</span> <span class="nn">itertools</span>
 
 <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">solve</span><span class="p">,</span> <span class="n">cholesky</span><span class="p">,</span> <span class="n">qr</span><span class="p">,</span> <span class="n">inv</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">nan</span><span class="p">,</span> <span class="n">isnan</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">diag</span><span class="p">,</span> <span class="n">delete</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">float32</span><span class="p">,</span> <span class="n">size</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
-<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span>
+<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span><span class="p">,</span> <span class="n">mpiops</span><span class="p">,</span> <span class="n">shared</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">joblib_log_level</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.logger</span> <span class="kn">import</span> <span class="n">pyratelogger</span> <span class="k">as</span> <span class="n">log</span>
 
@@ -423,6 +426,30 @@
     <span class="n">rate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
     <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">nsig</span><span class="p">,</span> <span class="n">pthresh</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">parallel</span><span class="p">,</span> <span class="n">processes</span><span class="p">,</span> <span class="n">rate</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">span</span>
+
+
+<div class="viewcode-block" id="stack_calc_wrapper"><a class="viewcode-back" href="../../../stack.html#pyrate.core.stack.stack_calc_wrapper">[docs]</a><span class="k">def</span> <span class="nf">stack_calc_wrapper</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MPI wrapper for stacking calculation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tiles</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TILES</span><span class="p">]</span>
+    <span class="n">preread_ifgs</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PREREAD_IFGS</span><span class="p">]</span>
+    <span class="n">vcmt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">VCMT</span><span class="p">]</span>
+    <span class="n">ifg_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg_path</span><span class="o">.</span><span class="n">tmp_sampled_path</span> <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">INTERFEROGRAM_FILES</span><span class="p">]]</span>
+    <span class="n">process_tiles</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">tiles</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating rate map from stacking&#39;</span><span class="p">)</span>
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">process_tiles</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Stacking of tile </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
+        <span class="n">ifg_parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">shared</span><span class="o">.</span><span class="n">IfgPart</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ifg_paths</span><span class="p">]</span>
+        <span class="n">mst_grid_n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;mst_mat_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)))</span>
+        <span class="n">rate</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">samples</span> <span class="o">=</span> <span class="n">stack_rate_array</span><span class="p">(</span><span class="n">ifg_parts</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">mst_grid_n</span><span class="p">)</span>
+        <span class="c1"># declare file names</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;stack_rate_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">rate</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;stack_error_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">error</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;stack_samples_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">samples</span><span class="p">)</span>
+    <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Finished stack rate calc!&quot;</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

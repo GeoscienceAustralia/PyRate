@@ -145,12 +145,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -242,17 +243,13 @@
 <span class="c1"># pylint: disable=W1203</span>
 <span class="c1"># pylint: disable=too-many-locals</span>
 <span class="c1"># pylint: disable=trailing-whitespace</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">splitext</span><span class="p">,</span> <span class="n">split</span>
 <span class="kn">import</span> <span class="nn">re</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span>
 
 <span class="kn">from</span> <span class="nn">pyrate.core.ifgconstants</span> <span class="kn">import</span> <span class="n">YEARS_PER_DAY</span>
-<span class="kn">from</span> <span class="nn">pyrate.constants</span> <span class="kn">import</span> <span class="n">CONV2TIF</span><span class="p">,</span> <span class="n">PREPIFG</span><span class="p">,</span> <span class="n">PROCESS</span><span class="p">,</span> <span class="n">MERGE</span>
-<span class="kn">from</span> <span class="nn">pyrate.constants</span> <span class="kn">import</span> <span class="n">SIXTEEN_DIGIT_EPOCH_PAIR</span><span class="p">,</span> <span class="n">TWELVE_DIGIT_EPOCH_PAIR</span><span class="p">,</span> <span class="n">EIGHT_DIGIT_EPOCH</span><span class="p">,</span> \
-    <span class="n">sixteen_digits_pattern</span>
+<span class="kn">from</span> <span class="nn">pyrate.constants</span> <span class="kn">import</span> <span class="n">sixteen_digits_pattern</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.logger</span> <span class="kn">import</span> <span class="n">pyratelogger</span> <span class="k">as</span> <span class="n">_logger</span>
 
 <span class="c1"># general constants</span>
@@ -329,6 +326,12 @@
 <span class="n">REF_MIN_FRAC</span> <span class="o">=</span> <span class="s1">&#39;refminfrac&#39;</span>
 <span class="c1">#: BOOL (1/2); Reference phase estimation method (1: median of the whole interferogram, 2: median within the window surrounding the reference pixel)</span>
 <span class="n">REF_EST_METHOD</span> <span class="o">=</span> <span class="s1">&#39;refest&#39;</span>
+
+
+<span class="n">MAXVAR</span> <span class="o">=</span> <span class="s1">&#39;maxvar&#39;</span>
+<span class="n">VCMT</span> <span class="o">=</span> <span class="s1">&#39;vcmt&#39;</span>
+<span class="n">PREREAD_IFGS</span> <span class="o">=</span> <span class="s1">&#39;preread_ifgs&#39;</span>
+<span class="n">TILES</span> <span class="o">=</span> <span class="s1">&#39;tiles&#39;</span>
 
 <span class="c1"># coherence masking parameters</span>
 <span class="c1">#: BOOL (0/1); Perform coherence masking (1: yes, 0: no)</span>
@@ -512,6 +515,11 @@
 
 <span class="n">INT_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="n">APS_CORRECTION</span><span class="p">,</span> <span class="n">APS_METHOD</span><span class="p">]</span>
 
+<span class="c1"># filenames reused in  many parts of the program</span>
+<span class="n">REF_PIXEL_FILE</span> <span class="o">=</span> <span class="s1">&#39;ref_pixel.npy&#39;</span>
+<span class="n">ORB_ERROR_DIR</span> <span class="o">=</span> <span class="s1">&#39;orb_error&#39;</span>
+<span class="n">TEMP_MLOOKED_DIR</span> <span class="o">=</span> <span class="s1">&#39;temp_mlooked_dir&#39;</span>
+
 
 <div class="viewcode-block" id="get_config_params"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.get_config_params">[docs]</a><span class="k">def</span> <span class="nf">get_config_params</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -663,7 +671,15 @@
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_conf_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="s1">&#39;:</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s1">&#39;process&#39;</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="s1">&#39;:</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;steps = &#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span>
+                    <span class="k">for</span> <span class="n">vv</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">vv</span><span class="p">),</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="s1">&#39;:</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="s1">&#39;:</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span></div>
 

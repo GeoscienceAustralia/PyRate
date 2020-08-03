@@ -145,12 +145,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -238,21 +239,23 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
+
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">isnan</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="nb">sum</span> <span class="k">as</span> <span class="n">nsum</span>
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
 
-<span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span>
-
-<span class="kn">import</span> <span class="nn">pyrate.core.config</span> <span class="k">as</span> <span class="nn">cf</span>
-<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span>
+<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span><span class="p">,</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span><span class="p">,</span> <span class="n">mpiops</span>
 <span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">mpiops</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">Ifg</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">joblib_log_level</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.logger</span> <span class="kn">import</span> <span class="n">pyratelogger</span> <span class="k">as</span> <span class="n">log</span>
 <span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">prepifg_helper</span>
+
+<span class="n">first_PROCESS</span> <span class="o">=</span> <span class="mi">0</span>
 
 
 <div class="viewcode-block" id="update_refpix_metadata"><a class="viewcode-back" href="../../../refpixel.html#pyrate.core.refpixel.update_refpix_metadata">[docs]</a><span class="k">def</span> <span class="nf">update_refpix_metadata</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
@@ -534,7 +537,7 @@
 
 <span class="sd">    :param int dim: Total length of the grid dimension</span>
 <span class="sd">    :param int ref: The desired number of steps</span>
-<span class="sd">    :param float radius: The number of cells from the centre of the chip eg.</span>
+<span class="sd">    :param int radius: The number of cells from the centre of the chip eg.</span>
 <span class="sd">        (chipsize / 2)</span>
 
 <span class="sd">    :return: range object of axis indices</span>
@@ -625,6 +628,70 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generic exception for reference pixel errors.</span>
 <span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="ref_pixel_calc_wrapper"><a class="viewcode-back" href="../../../refpixel.html#pyrate.core.refpixel.ref_pixel_calc_wrapper">[docs]</a><span class="k">def</span> <span class="nf">ref_pixel_calc_wrapper</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper for reference pixel calculation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ifg_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg_path</span><span class="o">.</span><span class="n">tmp_sampled_path</span> <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">INTERFEROGRAM_FILES</span><span class="p">]]</span>
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFX</span><span class="p">]</span>
+    <span class="n">lat</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFY</span><span class="p">]</span>
+
+    <span class="n">ifg</span> <span class="o">=</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">readonly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># assume all interferograms have same projection and will share the same transform</span>
+    <span class="n">transform</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">GetGeoTransform</span><span class="p">()</span>
+
+    <span class="n">ref_pixel_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">])</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">REF_PIXEL_FILE</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">lon</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">lat</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">ref_pixel_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="c1"># read and return</span>
+            <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ref_pixel_file</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Reusing pre-calculated ref-pixel values: (</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">) from file </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">,</span> <span class="n">ref_pixel_file</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()))</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Reusing ref-pixel values from previous run!!!&quot;</span><span class="p">)</span>
+            <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFX</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFY</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Searching for best reference pixel location&#39;</span><span class="p">)</span>
+
+        <span class="n">half_patch_size</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">grid</span> <span class="o">=</span> <span class="n">ref_pixel_setup</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="n">process_grid</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+        <span class="n">save_ref_pixel_blocks</span><span class="p">(</span><span class="n">process_grid</span><span class="p">,</span> <span class="n">half_patch_size</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="n">mean_sds</span> <span class="o">=</span> <span class="n">_ref_pixel_mpi</span><span class="p">(</span><span class="n">process_grid</span><span class="p">,</span> <span class="n">half_patch_size</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="n">mean_sds</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">mean_sds</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="n">first_PROCESS</span><span class="p">:</span>
+            <span class="n">mean_sds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">mean_sds</span><span class="p">)</span>
+
+        <span class="n">refpixel_returned</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">find_min_mean</span><span class="p">,</span> <span class="n">mean_sds</span><span class="p">,</span> <span class="n">grid</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">refpixel_returned</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">RefPixelError</span><span class="p">(</span>
+                <span class="s2">&quot;Reference pixel calculation returned an all nan slice!</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="s2">&quot;Cannot continue downstream computation. Please change reference pixel algorithm used before &quot;</span>
+                <span class="s2">&quot;continuing.&quot;</span><span class="p">)</span>
+        <span class="n">refy</span><span class="p">,</span> <span class="n">refx</span> <span class="o">=</span> <span class="n">refpixel_returned</span>   <span class="c1"># row first means first value is latitude</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Selected reference pixel coordinate (x, y): (</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">))</span>
+        <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">convert_pixel_value_to_geographic_coordinate</span><span class="p">(</span><span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Selected reference pixel coordinate (lon, lat): (</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">))</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">ref_pixel_file</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">)])</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Using reference pixel from config file (lon, lat): (</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">))</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Ensure user supplied reference pixel values are in lon/lat&quot;</span><span class="p">)</span>
+        <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span> <span class="o">=</span> <span class="n">convert_geographic_coordinate_to_pixel_value</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">ref_pixel_file</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">)])</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Converted reference pixel coordinate (x, y): (</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">))</span>
+
+    <span class="n">update_refpix_metadata</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;refpx, refpy: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">refx</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">refy</span><span class="p">))</span>
+    <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFX</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFY</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

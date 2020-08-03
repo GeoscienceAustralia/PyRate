@@ -145,12 +145,13 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id6">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id10">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id14">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id15">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.3 (2020-07-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id16">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -319,8 +320,8 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Date and time information not complete in GAMMA headers&quot;</span>
         <span class="k">raise</span> <span class="n">GammaException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span><span class="p">]</span> <span class="o">=</span> <span class="n">date</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">)</span>
-    <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_TIME</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="p">(</span><span class="n">hour</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="n">sec</span><span class="p">)</span>
+    <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">FIRST_DATE</span><span class="p">]</span> <span class="o">=</span> <span class="n">date</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">)</span>
+    <span class="n">subset</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">FIRST_TIME</span><span class="p">]</span> <span class="o">=</span> <span class="n">time</span><span class="p">(</span><span class="n">hour</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="n">sec</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">subset</span>
 
@@ -364,11 +365,11 @@
 
 <div class="viewcode-block" id="combine_headers"><a class="viewcode-back" href="../../../gamma.html#pyrate.core.gamma.combine_headers">[docs]</a><span class="k">def</span> <span class="nf">combine_headers</span><span class="p">(</span><span class="n">hdr0</span><span class="p">,</span> <span class="n">hdr1</span><span class="p">,</span> <span class="n">dem_hdr</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Combines metadata for master and slave epochs and DEM into a single</span>
-<span class="sd">    dictionary for an interferogram.</span>
+<span class="sd">    Combines metadata for first and second image epochs and DEM into a</span>
+<span class="sd">    single dictionary for an interferogram.</span>
 
-<span class="sd">    :param dict hdr0: Metadata for the master image</span>
-<span class="sd">    :param dict hdr1: Metadata for the slave image</span>
+<span class="sd">    :param dict hdr0: Metadata for the first image</span>
+<span class="sd">    :param dict hdr1: Metadata for the second image</span>
 <span class="sd">    :param dict dem_hdr: Metadata for the DEM</span>
 
 <span class="sd">    :return: chdr: combined metadata</span>
@@ -377,21 +378,21 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">[</span><span class="n">hdr0</span><span class="p">,</span> <span class="n">hdr1</span><span class="p">,</span> <span class="n">dem_hdr</span><span class="p">]]):</span>
         <span class="k">raise</span> <span class="n">GammaException</span><span class="p">(</span><span class="s1">&#39;Header args need to be dicts&#39;</span><span class="p">)</span>
 
-    <span class="n">date0</span><span class="p">,</span> <span class="n">date1</span> <span class="o">=</span> <span class="n">hdr0</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span><span class="p">],</span> <span class="n">hdr1</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span><span class="p">]</span>
+    <span class="n">date0</span><span class="p">,</span> <span class="n">date1</span> <span class="o">=</span> <span class="n">hdr0</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">FIRST_DATE</span><span class="p">],</span> <span class="n">hdr1</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">FIRST_DATE</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">date0</span> <span class="o">==</span> <span class="n">date1</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">GammaException</span><span class="p">(</span><span class="s2">&quot;Can&#39;t combine headers for the same day&quot;</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">date1</span> <span class="o">&lt;</span> <span class="n">date0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">GammaException</span><span class="p">(</span><span class="s2">&quot;Wrong date order&quot;</span><span class="p">)</span>
 
     <span class="n">chdr</span> <span class="o">=</span> <span class="p">{</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_TIME_SPAN</span><span class="p">:</span> <span class="p">(</span><span class="n">date1</span> <span class="o">-</span> <span class="n">date0</span><span class="p">)</span><span class="o">.</span><span class="n">days</span> <span class="o">/</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DAYS_PER_YEAR</span><span class="p">,</span>
-            <span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span><span class="p">:</span> <span class="n">date0</span><span class="p">,</span>
-            <span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_TIME</span><span class="p">:</span> <span class="n">hdr0</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_TIME</span><span class="p">],</span>
-            <span class="n">ifc</span><span class="o">.</span><span class="n">SLAVE_DATE</span><span class="p">:</span> <span class="n">date1</span><span class="p">,</span>
-            <span class="n">ifc</span><span class="o">.</span><span class="n">SLAVE_TIME</span><span class="p">:</span> <span class="n">hdr1</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_TIME</span><span class="p">],</span>
+            <span class="n">ifc</span><span class="o">.</span><span class="n">FIRST_DATE</span><span class="p">:</span> <span class="n">date0</span><span class="p">,</span>
+            <span class="n">ifc</span><span class="o">.</span><span class="n">FIRST_TIME</span><span class="p">:</span> <span class="n">hdr0</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">FIRST_TIME</span><span class="p">],</span>
+            <span class="n">ifc</span><span class="o">.</span><span class="n">SECOND_DATE</span><span class="p">:</span> <span class="n">date1</span><span class="p">,</span>
+            <span class="n">ifc</span><span class="o">.</span><span class="n">SECOND_TIME</span><span class="p">:</span> <span class="n">hdr1</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">FIRST_TIME</span><span class="p">],</span>
             <span class="n">ifc</span><span class="o">.</span><span class="n">DATA_UNITS</span><span class="p">:</span> <span class="n">RADIANS</span><span class="p">,</span>
             <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INSAR_PROCESSOR</span><span class="p">:</span> <span class="n">GAMMA</span><span class="p">}</span>
 
-    <span class="c1"># set incidence angle to mean of master and slave</span>
+    <span class="c1"># set incidence angle to mean of first amd second image values</span>
     <span class="n">inc_ang</span> <span class="o">=</span> <span class="n">hdr0</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INCIDENCE_DEGREES</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">inc_ang</span><span class="p">,</span> <span class="n">hdr1</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INCIDENCE_DEGREES</span><span class="p">],</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-1</span><span class="p">):</span>
         <span class="n">chdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INCIDENCE_DEGREES</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">hdr0</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INCIDENCE_DEGREES</span><span class="p">]</span> <span class="o">+</span> <span class="n">hdr1</span><span class="p">[</span>
@@ -404,7 +405,7 @@
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">wavelen</span><span class="p">,</span> <span class="n">hdr1</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_WAVELENGTH_METRES</span><span class="p">],</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
         <span class="n">chdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_WAVELENGTH_METRES</span><span class="p">]</span> <span class="o">=</span> <span class="n">wavelen</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">chdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">MASTER_DATE</span><span class="p">],</span> <span class="n">chdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">SLAVE_DATE</span><span class="p">])</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">chdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">FIRST_DATE</span><span class="p">],</span> <span class="n">chdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">SECOND_DATE</span><span class="p">])</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Wavelength mismatch, check both header files for </span><span class="si">%s</span><span class="s2"> &amp; </span><span class="si">%s</span><span class="s2">&quot;</span>
         <span class="k">raise</span> <span class="n">GammaException</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="n">args</span><span class="p">)</span>
     <span class="c1"># non-cropped, non-multilooked geotif process step information added</span>
@@ -420,7 +421,7 @@
 <span class="sd">    incidence files</span>
 
 <span class="sd">    :param str dem_header_file: DEM header path</span>
-<span class="sd">    :param list header_paths: List of master/slave header paths</span>
+<span class="sd">    :param list header_paths: List of first/second image header paths</span>
 
 <span class="sd">    :return: combined_header: Combined metadata dictionary</span>
 <span class="sd">    :rtype: dict</span>
