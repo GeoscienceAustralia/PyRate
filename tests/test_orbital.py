@@ -942,9 +942,9 @@ class TestOrbErrorCorrectionsReappliedDoesNotChangePhaseData:
         self.params[cf.ORBITAL_FIT_METHOD] = orbfit_method
         self.params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
         multi_paths = self.params[cf.INTERFEROGRAM_FILES]
-        self.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
-        remove_orbital_error(self.ifg_paths, self.params)
-        ifgs = [Ifg(i) for i in self.ifg_paths]
+        ifg_paths = [p.tmp_sampled_path for p in multi_paths]
+        remove_orbital_error(ifg_paths, self.params)
+        ifgs = [Ifg(i) for i in ifg_paths]
         for i in ifgs:
             i.open()
 
@@ -952,12 +952,12 @@ class TestOrbErrorCorrectionsReappliedDoesNotChangePhaseData:
 
         # orb correct once more
         process._copy_mlooked(self.params)
-        remove_orbital_error(self.ifg_paths, self.params)
+        remove_orbital_error(ifg_paths, self.params)
 
         # and again
         process._copy_mlooked(self.params)
-        remove_orbital_error(self.ifg_paths, self.params)
-        ifgs = [Ifg(i) for i in self.ifg_paths]
+        remove_orbital_error(ifg_paths, self.params)
+        ifgs = [Ifg(i) for i in ifg_paths]
         for i in ifgs:
             i.open()
         phase_now = [i.phase_data for i in ifgs]

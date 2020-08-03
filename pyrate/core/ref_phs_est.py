@@ -225,7 +225,7 @@ def ref_phase_est_wrapper(params):
 
     ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
     # Save reference phase numpy arrays to disk.
-    ref_phs_file = Path(Configuration.ref_phs_file(params))
+    ref_phs_file = Configuration.ref_phs_file(params)
 
     if ref_phs_file.exists():
         ref_phs = np.load(ref_phs_file)

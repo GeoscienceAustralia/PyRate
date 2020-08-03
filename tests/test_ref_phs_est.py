@@ -29,10 +29,11 @@ from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.ref_phs_est import ReferencePhaseError, ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.orbital import remove_orbital_error
-from pyrate.core.shared import CorrectionStatusError
+from pyrate.core.shared import CorrectionStatusError, Ifg
 from pyrate import prepifg, process, conv2tif
 from pyrate.configuration import MultiplePaths, Configuration
 from tests import common
+from tests.common import TEST_CONF_GAMMA
 
 legacy_ref_phs_method1 = [-18.2191658020020,
                           27.7119445800781,
@@ -489,15 +490,53 @@ class TestRefPhsEstimationLegacyTestMethod2Parallel:
         np.testing.assert_array_almost_equal(legacy_ref_phs_method2, self.ref_phs, decimal=3)
 
 
-class RefPhsEstReusedFromDisc:
+class TestRefPhsEstReusedFromDisc:
 
     @classmethod
     def setup_class(cls):
-        pass
+        cls.conf = TEST_CONF_GAMMA
+        params = Configuration(cls.conf).__dict__
+        conv2tif.main(params)
+        params = Configuration(cls.conf).__dict__
+        prepifg.main(params)
+        cls.params = params
 
     @classmethod
     def teardown_class(cls):
-        pass
+        shutil.rmtree(cls.params[cf.OUT_DIR])
 
-    def test_file_reused_from_disc(self):
-        pass
+    def test_ref_phase_used_from_disc_on_rerun(self, ref_est_method):
+        self.params = Configuration(self.conf).__dict__
+        process._copy_mlooked(self.params)
+        process._update_params_with_tiles(self.params)
+        process._create_ifg_dict(self.params)
+        self.params[cf.REFX_FOUND], self.params[cf.REFY_FOUND] = ref_pixel_calc_wrapper(self.params)
+
+        self.params[cf.REF_EST_METHOD] = ref_est_method
+        ref_phase_est_wrapper(self.params)
+        multi_paths = self.params[cf.INTERFEROGRAM_FILES]
+        ifg_paths = [p.tmp_sampled_path for p in multi_paths]
+        ifgs = [Ifg(i) for i in ifg_paths]
+        for i in ifgs:
+            i.open()
+        phase_prev = [i.phase_data for i in ifgs]
+
+        # assert ref_ph_file present
+        ref_phs_file = Configuration.ref_phs_file(self.params)
+        assert ref_phs_file.exists()
+        time_written = os.stat(ref_phs_file).st_mtime
+
+        # and again
+        process._copy_mlooked(self.params)
+        ref_phase_est_wrapper(self.params)
+        ifgs = [Ifg(i) for i in ifg_paths]
+        for i in ifgs:
+            i.open()
+        phase_now = [i.phase_data for i in ifgs]
+        time_written_1 = os.stat(ref_phs_file).st_mtime
+
+        # assert no new file was written
+        assert time_written_1 == time_written
+
+        # assert phase data is unchanged after applying ref_ph correction from disc
+        np.testing.assert_array_equal(phase_now, phase_prev)

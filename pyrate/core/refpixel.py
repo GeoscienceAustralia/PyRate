@@ -19,7 +19,6 @@ of the interferometric reference pixel
 """
 import os
 from os.path import join
-from pathlib import Path
 from typing import Tuple
 
 from itertools import product
@@ -34,6 +33,7 @@ from pyrate.core.shared import Ifg
 from pyrate.core.shared import joblib_log_level
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core import prepifg_helper
+from pyrate.configuration import Configuration
 
 MAIN_PROCESS = 0
 
@@ -423,7 +423,7 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
     # assume all interferograms have same projection and will share the same transform
     transform = ifg.dataset.GetGeoTransform()
 
-    ref_pixel_file = Path(params[cf.REF_PIXEL_FILE])
+    ref_pixel_file = Configuration.ref_pixel_path(params)
 
     def __reuse_ref_pixel_file_if_exists():
         if ref_pixel_file.exists():
