@@ -39,7 +39,7 @@ from pyrate.core.algorithm import first_second_ids
 from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
     QUADRATIC, PART_CUBIC
 from pyrate.core.orbital import OrbitalError
-from pyrate.core.orbital import get_design_matrix, get_network_design_matrix
+from pyrate.core.orbital import get_design_matrix, get_network_design_matrix, orb_fit_calc_wrapper
 from pyrate.core.orbital import _get_num_params, remove_orbital_error, network_orbital_correction
 from pyrate.core.shared import Ifg, mkdir_p
 from pyrate.core.shared import nanmedian
@@ -63,6 +63,9 @@ NUM_COEF_LOOKUP = {
     PLANAR: 2,
     QUADRATIC: 5,
     PART_CUBIC: 6}
+
+
+
 
 
 class TestSingleDesignMatrixTests:
@@ -933,6 +936,8 @@ class TestOrbErrorCorrectionsReappliedDoesNotChangePhaseData:
         cls.params = Configuration(cls.conf).__dict__
         process._copy_mlooked(cls.params)
         process._create_ifg_dict(cls.params)
+        multi_paths = cls.params[cf.INTERFEROGRAM_FILES]
+        cls.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
 
     @classmethod
     def teardown_method(cls):
@@ -941,10 +946,8 @@ class TestOrbErrorCorrectionsReappliedDoesNotChangePhaseData:
     def test_orb_error_multiple_run_does_not_change_phase_data(self, orbfit_method, orbfit_degrees):
         self.params[cf.ORBITAL_FIT_METHOD] = orbfit_method
         self.params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
-        multi_paths = self.params[cf.INTERFEROGRAM_FILES]
-        ifg_paths = [p.tmp_sampled_path for p in multi_paths]
-        remove_orbital_error(ifg_paths, self.params)
-        ifgs = [Ifg(i) for i in ifg_paths]
+        remove_orbital_error(self.ifg_paths, self.params)
+        ifgs = [Ifg(i) for i in self.ifg_paths]
         for i in ifgs:
             i.open()
 
@@ -952,13 +955,22 @@ class TestOrbErrorCorrectionsReappliedDoesNotChangePhaseData:
 
         # orb correct once more
         process._copy_mlooked(self.params)
-        remove_orbital_error(ifg_paths, self.params)
+        remove_orbital_error(self.ifg_paths, self.params)
 
         # and again
         process._copy_mlooked(self.params)
-        remove_orbital_error(ifg_paths, self.params)
-        ifgs = [Ifg(i) for i in ifg_paths]
+        remove_orbital_error(self.ifg_paths, self.params)
+        ifgs = [Ifg(i) for i in self.ifg_paths]
         for i in ifgs:
             i.open()
         phase_now = [i.phase_data for i in ifgs]
         np.testing.assert_array_equal(phase_now, phase_prev)
+
+    def test_same_looks_work(self):
+        assert self.params[cf.ORBITAL_FIT_LOOKS_X] == self.params[cf.ORBITAL_FIT_LOOKS_Y]
+        remove_orbital_error(self.ifg_paths, self.params)
+
+    def test_different_looks_raise(self):
+        self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2 * self.params[cf.ORBITAL_FIT_LOOKS_X]
+        with pytest.raises(OrbitalError):
+            remove_orbital_error(self.ifg_paths, self.params)
