@@ -16,7 +16,9 @@
 """
 This module contains tests for the mst.py PyRate module.
 """
-
+import os
+import shutil
+from pathlib import Path
 from itertools import product
 from numpy import empty, array, nan, isnan, sum as nsum
 
@@ -24,9 +26,11 @@ import numpy as np
 from tests.common import MockIfg, small5_mock_ifgs, small_data_setup
 
 from pyrate.core import algorithm, config as cf, mst
-from pyrate.core.shared import IfgPart, Tile
+from pyrate.core.shared import IfgPart, Tile, Ifg, save_numpy_phase
+from pyrate.configuration import Configuration
+from pyrate import conv2tif, prepifg, process
 from tests import common
-from tests.common import UnitTestAdaptation
+from tests.common import UnitTestAdaptation, TEST_CONF_GAMMA
 
 
 class TestMST(UnitTestAdaptation):
@@ -203,3 +207,38 @@ class TestIfgPart(UnitTestAdaptation):
         original_mst = mst.mst_boolean_array(self.ifgs)
         parallel_mst = mst.mst_parallel(self.ifgs, params=self.params)
         np.testing.assert_array_equal(original_mst, parallel_mst)
+
+
+class TestMSTFilesReusedFromDisc:
+
+    @classmethod
+    def setup_class(cls):
+        cls.conf = TEST_CONF_GAMMA
+        cls.params = Configuration(cls.conf).__dict__
+        conv2tif.main(cls.params)
+        cls.params = Configuration(cls.conf).__dict__
+        prepifg.main(cls.params)
+        cls.params = Configuration(cls.conf).__dict__
+        multi_paths = cls.params[cf.INTERFEROGRAM_FILES]
+        cls.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
+
+    @classmethod
+    def teardown_class(cls):
+        shutil.rmtree(cls.params[cf.OUT_DIR])
+
+    def test_ref_phase_used_from_disc_on_rerun(self):
+        process._update_params_with_tiles(self.params)
+        times_written = self.__run_once()
+        times_written_1 = self.__run_once()
+
+        np.testing.assert_array_equal(times_written_1, times_written)
+
+    def __run_once(self):
+        tiles = self.params[cf.TILES]
+        mst_files = [Path(self.params[cf.TMPDIR]).joinpath('mst_mat_{}.npy'.format(t.index)) for t in tiles]
+        process._copy_mlooked(self.params)
+        process._create_ifg_dict(self.params)
+        save_numpy_phase(self.ifg_paths, self.params)
+        mst.mst_calc_wrapper(self.params)
+        assert all(m.exists() for m in mst_files)
+        return [os.stat(o).st_mtime for o in mst_files]

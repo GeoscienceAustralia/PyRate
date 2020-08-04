@@ -19,8 +19,7 @@ This Python module implements the minimum spanning tree
 functionality for selecting interferometric observations.
 """
 # pylint: disable=invalid-name
-from os.path import join
-
+from pathlib import Path
 from itertools import product
 from numpy import array, nan, isnan, float32, empty, sum as nsum
 import numpy as np
@@ -290,9 +289,11 @@ def mst_calc_wrapper(params):
         """
         Convenient inner loop for mst tile saving
         """
+        mst_file_process_n = Path(params[cf.TMPDIR]).joinpath('mst_mat_{}.npy'.format(i))
+        if mst_file_process_n.exists():
+            return
         mst_tile = mst_multiprocessing(tile, dest_tifs, preread_ifgs, params)
         # locally save the mst_mat
-        mst_file_process_n = join(params[cf.TMPDIR], 'mst_mat_{}.npy'.format(i))
         np.save(file=mst_file_process_n, arr=mst_tile)
 
     process_tiles = mpiops.array_split(tiles)

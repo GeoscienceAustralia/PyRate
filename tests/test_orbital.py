@@ -217,6 +217,7 @@ class TestIndependentCorrection:
         params[cf.NAN_CONVERSION] = False
         params[cf.OUT_DIR] = tempfile.mkdtemp()
         params[cf.ORBITAL_FIT_LOOKS_X] = 1
+        params[cf.ORBITAL_FIT_LOOKS_Y] = 1
         for i in self.ifgs:
             i.mm_converted = True
         remove_orbital_error(self.ifgs, params)
@@ -263,6 +264,12 @@ class TestIndependentCorrection:
 class TestError:
     """Tests for the networked correction method"""
 
+    @classmethod
+    def setup_method(cls):
+        out_dir = tempfile.mkdtemp()
+        cls.params = common.min_params(out_dir)
+        cls.ifgs = small5_mock_ifgs()
+
     def test_invalid_ifgs_arg(self):
         # min requirement is 1 ifg, can still subtract one epoch from the other
         with pytest.raises(OrbitalError):
@@ -270,26 +277,25 @@ class TestError:
 
     def test_invalid_degree_arg(self):
         # test failure of a few different args for 'degree'
-        ifgs = small5_mock_ifgs()
         for d in range(-5, 1):
             with pytest.raises(OrbitalError):
-                get_network_design_matrix(ifgs, d, True)
+                get_network_design_matrix(self.ifgs, d, True)
         for d in range(4, 7):
             with pytest.raises(OrbitalError):
-                get_network_design_matrix(ifgs, d, True)
+                get_network_design_matrix(self.ifgs, d, True)
 
     def test_invalid_method(self):
         # test failure of a few different args for 'method'
-        ifgs = small5_mock_ifgs()
-        params = dict()
-        params[cf.ORBITAL_FIT_DEGREE] = PLANAR
-        params[cf.PARALLEL] = False
-        params[cf.ORBFIT_OFFSET] = True
-        params[cf.OUT_DIR] = tempfile.mkdtemp()
         for m in [None, 5, -1, -3, 45.8]:
-            params[cf.ORBITAL_FIT_METHOD] = m
+            self.params[cf.ORBITAL_FIT_METHOD] = m
             with pytest.raises(OrbitalError):
-                remove_orbital_error(ifgs, params)
+                remove_orbital_error(self.ifgs, self.params)
+
+    def test_different_looks_raise(self):
+        self.params[cf.ORBITAL_FIT_LOOKS_X] = 1
+        self.params[cf.ORBITAL_FIT_LOOKS_Y] = 5
+        with pytest.raises(OrbitalError):
+            remove_orbital_error(self.ifgs, self.params)
 
 
 class TestNetworkDesignMatrixTests:
@@ -965,22 +971,3 @@ class TestOrbErrorCorrectionsReappliedDoesNotChangePhaseData:
             i.open()
         phase_now = [i.phase_data for i in ifgs]
         np.testing.assert_array_equal(phase_now, phase_prev)
-
-    def test_same_looks_work(self):
-        assert self.params[cf.ORBITAL_FIT_LOOKS_X] == self.params[cf.ORBITAL_FIT_LOOKS_Y]
-        remove_orbital_error(self.ifg_paths, self.params)
-
-    def test_different_looks_raise(self):
-        self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2 * self.params[cf.ORBITAL_FIT_LOOKS_X]
-        with pytest.raises(OrbitalError):
-            remove_orbital_error(self.ifg_paths, self.params)
-
-    def test_unsuppoted_method_raises(self):
-        self.params[cf.ORBITAL_FIT_METHOD] = 3
-        with pytest.raises(OrbitalError):
-            remove_orbital_error(self.ifg_paths, self.params)
-
-    def test_unsuppoted_degree_raises(self):
-        self.params[cf.ORBITAL_FIT_METHOD] = 10
-        with pytest.raises(OrbitalError):
-            remove_orbital_error(self.ifg_paths, self.params)
