@@ -352,8 +352,7 @@ def maxvar_vcm_calc_wrapper(params):
     process_maxvar = {}
     for n, i in prcs_ifgs:
         log.debug(f'Calculating maxvar for {n} of process ifgs {len(prcs_ifgs)} of total {len(ifg_paths)}')
-        process_maxvar[n] = cvd(i, params, r_dist, calc_alpha=True, write_vals=True, save_acg=True)[0]
-
+        process_maxvar[int(n)] = cvd(i, params, r_dist, calc_alpha=True, write_vals=True, save_acg=True)[0]
     maxvar_d = shared.join_dicts(mpiops.comm.allgather(process_maxvar))
     maxvar = [v[1] for v in sorted(maxvar_d.items(), key=lambda s: s[0])]
 

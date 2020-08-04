@@ -17,6 +17,7 @@
 This Python module contains tests for the covariance.py PyRate module.
 """
 import os
+import shutil
 from pathlib import Path
 import pytest
 from numpy import array
@@ -185,8 +186,8 @@ legacy_maxvar = [15.4156637191772,
 
 class TestLegacyEquality:
     @classmethod
-    @pytest.fixture(autouse=True)
-    def setup_class(cls, roipac_params):
+    def setup_class(cls):
+        roipac_params = Configuration(TEST_CONF_ROIPAC).__dict__
         from copy import deepcopy
         params = deepcopy(roipac_params)
         shared.mkdir_p(params[cf.TMPDIR])
@@ -229,8 +230,7 @@ class TestLegacyEquality:
 
     @classmethod
     def teardown_class(cls):
-        # roipac_params tears down itself
-        pass
+        shutil.rmtree(cls.params[cf.OUT_DIR])
 
     def test_legacy_maxvar_equality_small_test_files(self):
         np.testing.assert_array_almost_equal(self.maxvar, legacy_maxvar, decimal=3)
