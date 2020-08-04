@@ -323,13 +323,9 @@ def linear_rate_pixel(y, t):
     :rtype: int
     """
 
-    # insert leading zero (not saved in tscuml by default)
-    y = np.insert(y, 0, 0., axis=0)
-
     # test for equal length of input vectors
     if len(y) != len(t):
-        raise TimeSeriesError("linear_rate_pixel: y and t are not equal "
-                              "length after adding zero element to y")
+        raise TimeSeriesError("linear_rate_pixel: y and t are not equal length")
 
     # remove nan elements from both arrays
     t = t[~isnan(y)]
@@ -446,6 +442,7 @@ def timeseries_calc_wrapper(params):
         # optional save of tsincr npy tiles
         if params["savetsincr"] == 1:
             np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)), arr=tsincr)
+        tscuml = np.insert(tscuml, 0, 0, axis=2) # add zero epoch to tscuml 3D array
         linrate, intercept, r_squared, std_err, samples = linear_rate_array(tscuml, ifg_parts, params)
         np.save(file=os.path.join(output_dir, 'linear_rate_{}.npy'.format(t.index)), arr=linrate)
         np.save(file=os.path.join(output_dir, 'linear_intercept_{}.npy'.format(t.index)), arr=intercept)
