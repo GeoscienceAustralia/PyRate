@@ -974,3 +974,13 @@ class TestOrbErrorCorrectionsReappliedDoesNotChangePhaseData:
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2 * self.params[cf.ORBITAL_FIT_LOOKS_X]
         with pytest.raises(OrbitalError):
             remove_orbital_error(self.ifg_paths, self.params)
+
+    def test_unsuppoted_method_raises(self):
+        self.params[cf.ORBITAL_FIT_METHOD] = 3
+        with pytest.raises(OrbitalError):
+            remove_orbital_error(self.ifg_paths, self.params)
+
+    def test_unsuppoted_degree_raises(self):
+        self.params[cf.ORBITAL_FIT_METHOD] = 10
+        with pytest.raises(OrbitalError):
+            remove_orbital_error(self.ifg_paths, self.params)
