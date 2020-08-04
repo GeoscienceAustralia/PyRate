@@ -31,16 +31,6 @@ from pyrate.core.logger import pyratelogger as log
 MAIN_PROCESS = 0
 
 
-def _join_dicts(dicts: List[dict]) -> dict:
-    """
-    Function to concatenate dictionaries
-    """
-    if dicts is None:  # pragma: no cover
-        return {}
-    assembled_dict = {k: v for D in dicts for k, v in D.items()}
-    return assembled_dict
-
-
 def est_ref_phase_patch_median(ifg_paths, params, refpx, refpy):
     """
     Reference phase estimation, calculated as the median within a patch around

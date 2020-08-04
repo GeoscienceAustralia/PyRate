@@ -20,7 +20,6 @@ This Python module runs the main PyRate processing workflow
 import shutil
 import os
 from os.path import join
-from typing import List
 from pathlib import Path
 import pickle as cp
 from pyrate.core import (shared, algorithm, mpiops, config as cf)
@@ -31,20 +30,10 @@ from pyrate.core.mst import mst_calc_wrapper
 from pyrate.core.orbital import orb_fit_calc_wrapper
 from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
-from pyrate.core.shared import PrereadIfg, get_tiles, mpi_vs_multiprocess_logging
+from pyrate.core.shared import PrereadIfg, get_tiles, mpi_vs_multiprocess_logging, join_dicts
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core.stack import stack_calc_wrapper
 from pyrate.core.timeseries import timeseries_calc_wrapper
-
-
-def _join_dicts(dicts: List[dict]) -> dict:
-    """
-    Function to concatenate dictionaries
-    """
-    if dicts is None:  # pragma: no cover
-        return {}
-    assembled_dict = {k: v for D in dicts for k, v in D.items()}
-    return assembled_dict
 
 
 def _create_ifg_dict(params):
@@ -78,7 +67,7 @@ def _create_ifg_dict(params):
             metadata=ifg.meta_data
         )
         ifg.close()
-    ifgs_dict = _join_dicts(mpiops.comm.allgather(ifgs_dict))
+    ifgs_dict = join_dicts(mpiops.comm.allgather(ifgs_dict))
 
     ifgs_dict = mpiops.run_once(__save_ifgs_dict_with_headers_and_epochs, dest_tifs, ifgs_dict, params, process_tifs)
 

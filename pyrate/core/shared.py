@@ -1341,3 +1341,13 @@ def dem_or_ifg(data_path):
         return Ifg(data_path)
     else:
         return DEM(data_path)
+
+
+def join_dicts(dicts: List[dict]) -> dict:
+    """
+    Function to concatenate dictionaries
+    """
+    if dicts is None:  # pragma: no cover
+        return {}
+    assembled_dict = {k: v for D in dicts for k, v in D.items()}
+    return assembled_dict
