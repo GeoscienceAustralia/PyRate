@@ -507,36 +507,40 @@ class TestRefPhsEstReusedFromDisc:
 
     def test_ref_phase_used_from_disc_on_rerun(self, ref_est_method):
         self.params = Configuration(self.conf).__dict__
-        process._copy_mlooked(self.params)
-        process._update_params_with_tiles(self.params)
-        process._create_ifg_dict(self.params)
-        self.params[cf.REFX_FOUND], self.params[cf.REFY_FOUND] = ref_pixel_calc_wrapper(self.params)
-
         self.params[cf.REF_EST_METHOD] = ref_est_method
-        ref_phase_est_wrapper(self.params)
-        multi_paths = self.params[cf.INTERFEROGRAM_FILES]
-        ifg_paths = [p.tmp_sampled_path for p in multi_paths]
-        ifgs = [Ifg(i) for i in ifg_paths]
-        for i in ifgs:
-            i.open()
-        phase_prev = [i.phase_data for i in ifgs]
+        process._update_params_with_tiles(self.params)
 
-        # assert ref_ph_file present
-        ref_phs_file = Configuration.ref_phs_file(self.params)
-        assert ref_phs_file.exists()
-        time_written = os.stat(ref_phs_file).st_mtime
+        phase_prev, time_written = self.__run_once()
 
-        # and again
-        process._copy_mlooked(self.params)
-        ref_phase_est_wrapper(self.params)
-        ifgs = [Ifg(i) for i in ifg_paths]
-        for i in ifgs:
-            i.open()
-        phase_now = [i.phase_data for i in ifgs]
-        time_written_1 = os.stat(ref_phs_file).st_mtime
+        # run again
+        phase_now, time_written_1 = self.__run_once()
+
+        # and once more
+        phase_again, time_written_2 = self.__run_once()
 
         # assert no new file was written
         assert time_written_1 == time_written
+        assert time_written_2 == time_written
 
         # assert phase data is unchanged after applying ref_ph correction from disc
         np.testing.assert_array_equal(phase_now, phase_prev)
+        np.testing.assert_array_equal(phase_now, phase_again)
+
+    def __run_once(self):
+        ref_phs_file = Configuration.ref_phs_file(self.params)
+        process._copy_mlooked(self.params)
+        multi_paths = self.params[cf.INTERFEROGRAM_FILES]
+        ifg_paths = [p.tmp_sampled_path for p in multi_paths]
+        ifgs = [Ifg(i) for i in ifg_paths]
+        self.params[cf.REFX_FOUND], self.params[cf.REFY_FOUND] = ref_pixel_calc_wrapper(self.params)
+        process._create_ifg_dict(self.params)
+        ref_phase_est_wrapper(self.params)
+        for i in ifgs:
+            i.open()
+        phase_prev = [i.phase_data for i in ifgs]
+        # assert ref_ph_file present
+        assert ref_phs_file.exists()
+        time_written = os.stat(ref_phs_file).st_mtime
+        for i in ifgs:
+            i.close()
+        return phase_prev, time_written
