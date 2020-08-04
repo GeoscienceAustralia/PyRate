@@ -303,29 +303,29 @@ class TestLinearRatePixel:
     """
 
     def test_linear_rate_pixel_clean(self):
-        y = array([2, 4, 6, 8, 10])
+        y = array([0, 2, 4, 6, 8, 10])
         t = array([0, 1, 2, 3, 4, 5])
         exp = (2.0, 0.0, 1.0, 0.0, 6)
         res = linear_rate_pixel(y, t)
         assert res == exp
 
     def test_linear_rate_pixel_neg_rate(self):
-        y = array([-2, -4, -6, -8, -10])
+        y = array([0, -2, -4, -6, -8, -10])
         t = array([0, 1, 2, 3, 4, 5])
         exp = (-2.0, 0.0, 1.0, 0.0, 6)
         res = linear_rate_pixel(y, t)
         assert res == exp
 
     def test_linear_rate_pixel_outlier(self):
-        y = array([2, 4, 6, 8, 20])
+        y = array([0, 2, 4, 6, 8, 20])
         t = array([0, 1, 2, 3, 4, 5])
         exp = (3.428571, -1.904761, 0.812030, 0.824786, 6)
         res = linear_rate_pixel(y, t)
         assert res == pytest.approx(exp, rel=1e-6)
 
     def test_linear_rate_pixel_noise(self):
-        y = array([2, 4, 6, 8, 10])
-        r = y + np.random.rand(5) # add different uniform noise each time
+        y = array([0, 2, 4, 6, 8, 10])
+        r = y + np.random.rand(6) # add different uniform noise each time
         t = array([0, 1, 2, 3, 4, 5])
         exprate = 2.0
         explsqd = 1.0
@@ -338,13 +338,13 @@ class TestLinearRatePixel:
     def test_linear_rate_pixel_exception(self):
         # input vectors should not be equal length
         y = array([2, 4, 6, 8, 10])
-        t = array([1, 2, 3, 4, 5])
+        t = array([0, 1, 2, 3, 4, 5])
         with pytest.raises(TimeSeriesError):
             res = linear_rate_pixel(y, t)
 
     def test_linear_rate_pixel_nans(self):
         # at least two obs are required for line fitting
-        y = array([nan, nan, nan, nan, nan])
+        y = array([0, nan, nan, nan, nan, nan])
         t = array([0, 1, 2, 3, 4, 5])
         exp = (nan, nan, nan, nan, nan)
         res = linear_rate_pixel(y, t)
