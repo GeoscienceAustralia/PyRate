@@ -90,7 +90,7 @@ def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
     ts_aps = mpiops.run_once(spatial_low_pass_filter, ts_hp, ifg, params)
     tsincr -= ts_aps
 
-    mpiops.run_once(_ts_to_ifgs, tsincr, preread_ifgs)
+    _ts_to_ifgs(tsincr, preread_ifgs)
 
 
 def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
@@ -155,9 +155,13 @@ def _ts_to_ifgs(tsincr, preread_ifgs):
     """
     log.debug('Reconstructing interferometric observations from time series')
     ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
-    _, n = get_epochs(ifgs)
+    _, n = mpiops.run_once(get_epochs, ifgs)
     index_first, index_second = n[:len(ifgs)], n[len(ifgs):]
-    for i, ifg in enumerate(ifgs):
+
+    num_ifgs_tuples = mpiops.array_split(list(enumerate(ifgs)))
+    num_ifgs_tuples = [(int(num), ifg) for num, ifg in num_ifgs_tuples]
+
+    for i, ifg in num_ifgs_tuples:
         phase = np.sum(tsincr[:, :, index_first[i]: index_second[i]], axis=2)
         _save_aps_corrected_phase(ifg.tmp_path, phase)
 
