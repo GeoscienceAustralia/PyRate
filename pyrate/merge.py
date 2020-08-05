@@ -38,17 +38,18 @@ def main(params: dict) -> None:
     """
     # setup paths
     mpiops.run_once(_merge_stack, params)
-    create_png_and_kml_from_tif(params[cf.OUT_DIR], output_type='stack_rate')
-    create_png_and_kml_from_tif(params[cf.OUT_DIR], output_type='stack_error')
+    mpiops.run_once(create_png_and_kml_from_tif, params[cf.OUT_DIR], output_type='stack_rate')
+    mpiops.run_once(create_png_and_kml_from_tif, params[cf.OUT_DIR], output_type='stack_error')
 
     if params[cf.TIME_SERIES_CAL]:
         _merge_timeseries(params, 'tscuml')
-        _merge_linrate(params)
-        create_png_and_kml_from_tif(params[cf.OUT_DIR], output_type='linear_rate')
-        create_png_and_kml_from_tif(params[cf.OUT_DIR], output_type='linear_error')
-        create_png_and_kml_from_tif(params[cf.OUT_DIR], output_type='linear_rsquared')
+        mpiops.run_once(_merge_linrate, params)
+        mpiops.run_once(create_png_and_kml_from_tif, params[cf.OUT_DIR], output_type='linear_rate')
+        mpiops.run_once(create_png_and_kml_from_tif, params[cf.OUT_DIR], output_type='linear_error')
+        mpiops.run_once(create_png_and_kml_from_tif, params[cf.OUT_DIR], output_type='linear_rsquared')
         # optional save of merged tsincr products
-        if params["savetsincr"] == 1: _merge_timeseries(params, 'tsincr')
+        if params["savetsincr"] == 1:
+            _merge_timeseries(params, 'tsincr')
 
 
 def _merge_stack(params: dict) -> None:
@@ -92,7 +93,7 @@ def _merge_linrate(params: dict) -> None:
 
     # save geotiff and numpy array files
     for out, ot in zip([rate, rsq, error, intercept, samples], ['linear_rate', 'linear_rsquared', 'linear_error',
-                                        'linear_intercept', 'linear_samples']):
+                        'linear_intercept', 'linear_samples']):
         _save_merged_files(ifgs_dict, params[cf.OUT_DIR], out, ot, savenpy=params["savenpy"])
 
 
