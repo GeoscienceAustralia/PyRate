@@ -115,6 +115,24 @@ class MultiplePaths:
                               str(params[cf.ORBITAL_FIT_LOOKS_X])]) +
                     '_orbfit.npy')
 
+    @staticmethod
+    def aps_error_path(ifg_path: Union[str, Path], params) -> Path:
+        if isinstance(ifg_path, str):
+            ifg_path = Path(ifg_path)
+        return Path(params[cf.OUT_DIR], cf.APS_ERROR_DIR,
+                    ifg_path.stem + '_' +
+                    '_'.join([str(x) for x in [
+                        params[cf.SLPF_METHOD],
+                        params[cf.SLPF_CUTOFF],
+                        params[cf.SLPF_ORDER],
+                        params[cf.SLPF_NANFILL],
+                        params[cf.SLPF_NANFILL_METHOD],
+                        params[cf.TLPF_METHOD],
+                        params[cf.TLPF_CUTOFF],
+                        params[cf.TLPF_PTHR]
+                        ]
+                    ]) + '_aps_error.npy')
+
     def __str__(self):  # pragma: no cover
         st = ""
         if self.unwrapped_path is not None:
@@ -206,6 +224,10 @@ class Configuration:
         # create orbfit error dir
         self.orb_error_dir = Path(self.outdir).joinpath(ORB_ERROR_DIR)
         self.orb_error_dir.mkdir(parents=True, exist_ok=True)
+
+        # create aps error dir
+        self.aps_error_dir = Path(self.outdir).joinpath(cf.APS_ERROR_DIR)
+        self.aps_error_dir.mkdir(parents=True, exist_ok=True)
 
         # create temp multilooked files dir
         self.temp_mlooked_dir = Path(self.outdir).joinpath(TEMP_MLOOKED_DIR)

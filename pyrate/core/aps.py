@@ -34,6 +34,7 @@ from pyrate.core.algorithm import get_epochs
 from pyrate.core.shared import Ifg
 from pyrate.core.timeseries import time_series
 from pyrate.merge import assemble_tiles
+from pyrate.configuration import MultiplePaths
 
 
 def wrap_spatio_temporal_filter(params):
@@ -59,16 +60,13 @@ def wrap_spatio_temporal_filter(params):
     tsincr = _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles)
     mpiops.comm.barrier()
 
-    ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
-    ifg.open()
-    spatio_temporal_filter(tsincr, ifg, params, preread_ifgs)
-    ifg.close()
+    spatio_temporal_filter(tsincr, ifg_paths, params, preread_ifgs)
     mpiops.comm.barrier()
 
     shared.save_numpy_phase(ifg_paths, params)
 
 
-def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
+def spatio_temporal_filter(tsincr, ifg_paths, params, preread_ifgs):
     """
     Applies a spatio-temporal filter to remove the atmospheric phase screen
     (APS) and saves the corrected interferograms. Before performing this step,
@@ -84,13 +82,16 @@ def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
 
     :return: None, corrected interferograms are saved to disk
     """
+    ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
+    ifg.open()
     epochlist = mpiops.run_once(get_epochs, preread_ifgs)[0]
     ts_lp = mpiops.run_once(temporal_low_pass_filter, tsincr, epochlist, params)
     ts_hp = tsincr - ts_lp
     ts_aps = mpiops.run_once(spatial_low_pass_filter, ts_hp, ifg, params)
     tsincr -= ts_aps
 
-    _ts_to_ifgs(tsincr, preread_ifgs)
+    _ts_to_ifgs(tsincr, preread_ifgs, params)
+    ifg.close()
 
 
 def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
@@ -109,8 +110,7 @@ def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
 
     nvels = None
     for t in process_tiles:
-        log.debug('Calculating time series for tile {} during APS '
-                 'correction'.format(t.index))
+        log.debug('Calculating time series for tile {} during APS correction'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_tile = np.load(os.path.join(params[cf.TMPDIR], 'mst_mat_{}.npy'.format(t.index)))
         tsincr = time_series(ifg_parts, new_params, vcmt=None, mst=mst_tile)[0]
@@ -141,7 +141,7 @@ def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
     return tsincr_g
 
 
-def _ts_to_ifgs(tsincr, preread_ifgs):
+def _ts_to_ifgs(tsincr, preread_ifgs, params):
     """
     Function that converts an incremental displacement time series into
     interferometric phase observations. Used to re-construct an interferogram
@@ -162,7 +162,9 @@ def _ts_to_ifgs(tsincr, preread_ifgs):
     num_ifgs_tuples = [(int(num), ifg) for num, ifg in num_ifgs_tuples]
 
     for i, ifg in num_ifgs_tuples:
+        aps_correction_on_disc = MultiplePaths.aps_error_path(ifg.tmp_path, params)
         phase = np.sum(tsincr[:, :, index_first[i]: index_second[i]], axis=2)
+        np.save(file=aps_correction_on_disc, arr=phase)
         _save_aps_corrected_phase(ifg.tmp_path, phase)
 
 

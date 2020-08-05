@@ -301,6 +301,7 @@ INT_KEYS = [APS_CORRECTION, APS_METHOD]
 # filenames reused in  many parts of the program
 REF_PIXEL_FILE = 'ref_pixel_file'
 ORB_ERROR_DIR = 'orb_error'
+APS_ERROR_DIR = 'aps_error'
 MST_DIR = 'mst_dir'
 TEMP_MLOOKED_DIR = 'temp_mlooked_dir'
 
