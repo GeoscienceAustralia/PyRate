@@ -57,12 +57,18 @@ def wrap_spatio_temporal_filter(params):
         log.debug('Finished APS correction')
         return  # return if True condition returned
 
-    tsincr = _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles)
-    mpiops.comm.barrier()
+    aps_error_files_on_disc = [MultiplePaths.aps_error_path(i, params) for i in ifg_paths]
+    if all(a.exists() for a in aps_error_files_on_disc):
+        log.warn("=======reusing aps error saved on disc========")
+        for ifg_path, a in mpiops.array_split(list(zip(ifg_paths, aps_error_files_on_disc))):
+            phase = np.load(a)
+            _save_aps_corrected_phase(ifg_path, phase)
+    else:
+        tsincr = _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles)
+        mpiops.comm.barrier()
 
-    spatio_temporal_filter(tsincr, ifg_paths, params, preread_ifgs)
+        spatio_temporal_filter(tsincr, ifg_paths, params, preread_ifgs)
     mpiops.comm.barrier()
-
     shared.save_numpy_phase(ifg_paths, params)
 
 
