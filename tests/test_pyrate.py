@@ -150,6 +150,7 @@ class TestPyRate:
                 p.tmp_sampled_path = p.converted_path
             params["rows"], params["cols"] = 2, 2
             params[cf.REF_PIXEL_FILE] = Configuration.ref_pixel_path(params)
+            Path(params[cf.OUT_DIR]).joinpath(cf.APS_ERROR_DIR).mkdir(exist_ok=True, parents=True)
             process.process_ifgs(params)
 
             if not hasattr(cls, 'ifgs'):
