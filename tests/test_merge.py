@@ -22,17 +22,16 @@ from subprocess import check_call
 import itertools
 import pytest
 from pathlib import Path
-
 import pyrate.configuration
-from pyrate.merge import _create_png_from_tif
+from pyrate.merge import create_png_and_kml_from_tif
 from pyrate.core import config as cf
-from pyrate.merge import _merge_stack
+from pyrate.merge import _merge_stack, _merge_linrate
 from pyrate.configuration import Configuration
 from tests.common import manipulate_test_conf
 
 
 @pytest.fixture
-def create_stack_output(tempdir, gamma_conf):
+def create_merge_output(tempdir, gamma_conf):
     tdir = Path(tempdir())
     params = manipulate_test_conf(gamma_conf, tdir)
     output_conf_file = tdir.joinpath('conf.cfg')
@@ -43,25 +42,24 @@ def create_stack_output(tempdir, gamma_conf):
     check_call(f"pyrate process -f {output_conf}", shell=True)
 
     params = Configuration(output_conf).__dict__
-    return params, tdir
+    _merge_stack(params)
+    _merge_linrate(params)
+    return params
 
 
 @pytest.mark.slow
-def test_png_creation(create_stack_output):
-    params, tdir = create_stack_output
-
-    output_folder_path = params[cf.OUT_DIR]
-
-    _merge_stack(params)
-    _create_png_from_tif(output_folder_path)
+def test_file_creation(create_merge_output):
+    params = create_merge_output
 
     # check if color map is created
-    for out_type in ['rate', 'error']:
-        output_color_map_path = os.path.join(output_folder_path, f"colourmap_{out_type}.txt")
+    for ot in ['stack_rate', 'stack_error', 'linear_rate', 'linear_error', 'linear_rsquared']:
+        create_png_and_kml_from_tif(params[cf.OUT_DIR], output_type=ot)
+        output_color_map_path = os.path.join(params[cf.OUT_DIR], f"colourmap_{ot}.txt")
         assert Path(output_color_map_path).exists(), "Output color map file not found at: " + output_color_map_path
 
     # check if merged files are created
-    for _type, output_type in itertools.product(["stack_rate", "stack_error"], ['.tif', '.png', '.kml']):
-        output_image_path = os.path.join(output_folder_path, _type + output_type)
+    for _type, ot in itertools.product(['stack_rate', 'stack_error', 'linear_rate',
+                                        'linear_error', 'linear_rsquared'], ['.tif', '.png', '.kml']):
+        output_image_path = os.path.join(params[cf.OUT_DIR], _type + ot)
         print(f"checking {output_image_path}")
-        assert Path(output_image_path).exists(), f"Output {output_type} file not found at {output_image_path}"
+        assert Path(output_image_path).exists(), f"Output {ot} file not found at {output_image_path}"
