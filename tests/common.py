@@ -59,6 +59,7 @@ SML_TEST_TIF = join(SML_TEST_DIR, 'tif')
 SML_TEST_GAMMA = join(SML_TEST_DIR, 'gamma_obs')  # gamma processed unws
 SML_TEST_ROIPAC = join(SML_TEST_DIR, 'roipac_obs')  # gamma processed unws
 SML_TEST_CONF = join(SML_TEST_DIR, 'conf')
+SML_TEST_LINRATE = join(SML_TEST_DIR, 'linrate')
 SML_TEST_GAMMA_HEADER_LIST = join(SML_TEST_GAMMA, 'headers')
 SML_TEST_ROIPAC_HEADER_LIST = join(SML_TEST_ROIPAC, 'headers')
 

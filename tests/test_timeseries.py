@@ -32,7 +32,7 @@ import tests.common as common
 from pyrate.core import config as cf, mst, covariance
 from pyrate import process, prepifg, conv2tif
 from pyrate.configuration import Configuration
-from pyrate.core.timeseries import time_series, linear_rate_pixel, TimeSeriesError
+from pyrate.core.timeseries import time_series, linear_rate_pixel, linear_rate_array, TimeSeriesError
 
 
 def default_params():
@@ -349,4 +349,49 @@ class TestLinearRatePixel:
         exp = (nan, nan, nan, nan, nan)
         res = linear_rate_pixel(y, t)
         assert res == exp
+
+
+class TestLinearRateArray:
+    """
+    Tests the array loop wrapper for the linear regression algorithm using real data
+    """
+
+    @classmethod
+    @pytest.fixture(autouse=True)
+    def setup_class(cls, roipac_params):
+        cls.params = roipac_params
+        cls.ifgs = common.small_data_setup()
+
+        # read in input (tscuml) and expected output arrays
+        tscuml_path = os.path.join(common.SML_TEST_LINRATE, "tscuml_0.npy")
+        ts = np.load(tscuml_path)
+        cls.tscuml = np.insert(ts, 0, 0, axis=2) # add zero epoch to tscuml 3D array
+
+        linrate_path = os.path.join(common.SML_TEST_LINRATE, "linear_rate.npy")
+        cls.linrate = np.load(linrate_path)
+
+        error_path = os.path.join(common.SML_TEST_LINRATE, "linear_error.npy")
+        cls.error = np.load(error_path)
+
+        icpt_path = os.path.join(common.SML_TEST_LINRATE, "linear_intercept.npy")
+        cls.icpt = np.load(icpt_path)
+
+        samp_path = os.path.join(common.SML_TEST_LINRATE, "linear_samples.npy")
+        cls.samp = np.load(samp_path)
+
+        rsq_path = os.path.join(common.SML_TEST_LINRATE, "linear_rsquared.npy")
+        cls.rsq = np.load(rsq_path)
+
+    def test_linear_rate_array(self):
+        """
+        Input and expected output are on disk. This test only tests the linear_rate_array
+        and linear_rate_pixel functions using real data.
+        """
+        l, i, r, e, s = linear_rate_array(self.tscuml, self.ifgs, self.params)
+        # test to 20 decimal places
+        assert_array_almost_equal(self.linrate, l, 1e-20) 
+        assert_array_almost_equal(self.icpt, i, 1e-20)
+        assert_array_almost_equal(self.rsq, r, 1e-20)
+        assert_array_almost_equal(self.error, e, 1e-20)
+        assert_array_almost_equal(self.samp, s, 1e-20)
 
