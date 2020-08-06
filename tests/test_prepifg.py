@@ -30,6 +30,7 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from osgeo import gdal
 
+import pyrate.configuration
 from pyrate.core import config as cf
 from pyrate.core.config import mlooked_path
 from pyrate.core.shared import Ifg, DEM
@@ -58,7 +59,7 @@ def test_prepifg_treats_inputs_and_outputs_read_only(gamma_conf, tempdir, coh_ma
     params = common.manipulate_test_conf(gamma_conf, tdir)
     params[cf.COH_MASK] = coh_mask
     output_conf = tdir.joinpath('conf.cfg')
-    cf.write_config_file(params=params, output_conf_file=output_conf)
+    pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
 
     params = Configuration(output_conf.as_posix()).__dict__
     conv2tif.main(params)
@@ -90,7 +91,7 @@ def test_prepifg_file_types(tempdir, gamma_conf, coh_mask):
     params[cf.PARALLEL] = 0
     output_conf_file = 'conf.conf'
     output_conf = tdir.joinpath(output_conf_file)
-    cf.write_config_file(params=params, output_conf_file=output_conf)
+    pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
     params_s = Configuration(output_conf).__dict__
     conv2tif.main(params_s)
     # reread params from config

@@ -2,6 +2,8 @@ import shutil
 import pytest
 from pathlib import Path
 import numpy as np
+
+import pyrate.configuration
 from pyrate.core import config as cf
 from pyrate import conv2tif, prepifg
 from pyrate.configuration import Configuration
@@ -49,7 +51,7 @@ def modified_config_short(tempdir, local_crop, get_lks, coh_mask):
         print(params)
         # write new temp config
         output_conf = tdir.joinpath(output_conf_file)
-        cf.write_config_file(params=params, output_conf_file=output_conf)
+        pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
 
         return output_conf, params
 
@@ -101,7 +103,7 @@ def modified_config_largetifs(tempdir, local_crop, get_lks, coh_mask):
         print(params)
         # write new temp config
         output_conf = tdir.joinpath(output_conf_file)
-        cf.write_config_file(params=params, output_conf_file=output_conf)
+        pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
 
         return output_conf, params
 

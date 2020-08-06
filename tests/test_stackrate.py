@@ -18,6 +18,7 @@
 This Python module contains tests for the stack.py PyRate module.
 """
 import os
+import shutil
 import pytest
 
 from numpy import eye, array, ones, nan
@@ -31,6 +32,7 @@ import tests.common
 from pyrate.core import shared, config as cf, covariance as vcm_module
 from pyrate.core.stack import stack_rate_pixel, mask_rate
 from pyrate import process, prepifg, conv2tif
+from pyrate.configuration import Configuration
 from tests import common
 from tests.common import SML_TEST_DIR, prepare_ifgs_without_phase, pre_prepare_ifgs
 
@@ -106,9 +108,8 @@ class TestLegacyEquality:
     """
 
     @classmethod
-    @pytest.fixture(autouse=True)
-    def setup_class(cls, roipac_params):
-        params = roipac_params
+    def setup_class(cls):
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         params[cf.TEMP_MLOOKED_DIR] = os.path.join(params[cf.OUT_DIR], cf.TEMP_MLOOKED_DIR)
         conv2tif.main(params)
         prepifg.main(params)
@@ -129,9 +130,10 @@ class TestLegacyEquality:
 
         params[cf.REFX] = refx
         params[cf.REFY] = refy
+        params[cf.ORBFIT_OFFSET] = True
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(copied_dest_paths, params)
         for ifg in ifgs:
             ifg.close()
@@ -165,9 +167,11 @@ class TestLegacyEquality:
         for ifg in ifgs:
             ifg.close()
 
+        cls.params = params
+
     @classmethod
     def teardown_class(cls):
-        "auto clean by fixture"
+        shutil.rmtree(cls.params[cf.OUT_DIR])
 
     def test_stack_rate_full_parallel(self):
         """

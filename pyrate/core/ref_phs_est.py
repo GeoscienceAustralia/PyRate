@@ -196,7 +196,7 @@ def ref_phase_est_wrapper(params):
     Wrapper for reference phase estimation.
     """
     ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
-    refpx, refpy = params[cf.REFX], params[cf.REFY]
+    refpx, refpy = params[cf.REFX_FOUND], params[cf.REFY_FOUND]
     if len(ifg_paths) < 2:
         raise ReferencePhaseError(
             "At least two interferograms required for reference phase correction ({len_ifg_paths} "

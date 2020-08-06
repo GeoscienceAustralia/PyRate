@@ -19,8 +19,6 @@ This Python module contains tests for the timeseries.py PyRate module.
 """
 import os
 import shutil
-import sys
-import tempfile
 import pytest
 from datetime import date, timedelta
 from numpy import nan, asarray, where
@@ -31,7 +29,7 @@ import pyrate.core.orbital
 import pyrate.core.ref_phs_est
 import pyrate.core.refpixel
 import tests.common as common
-from pyrate.core import config as cf, mst, covariance, roipac
+from pyrate.core import config as cf, mst, covariance
 from pyrate import process, prepifg, conv2tif
 from pyrate.configuration import Configuration
 from pyrate.core.timeseries import time_series
@@ -112,9 +110,8 @@ class TestTimeSeries:
 class TestLegacyTimeSeriesEquality:
 
     @classmethod
-    @pytest.fixture(autouse=True)
-    def setup_class(cls, roipac_params):
-        params = roipac_params
+    def setup_class(cls):
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         params[cf.TEMP_MLOOKED_DIR] = os.path.join(params[cf.OUT_DIR], cf.TEMP_MLOOKED_DIR)
         conv2tif.main(params)
         prepifg.main(params)
@@ -134,8 +131,9 @@ class TestLegacyTimeSeriesEquality:
 
         params[cf.REFX] = refx
         params[cf.REFY] = refy
+        params[cf.ORBFIT_OFFSET] = True
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = common.prepare_ifgs_without_phase(copied_dest_paths, params)
         for ifg in ifgs:
             ifg.close()
@@ -171,10 +169,11 @@ class TestLegacyTimeSeriesEquality:
         ts_cum = np.genfromtxt(tscum_path)
         cls.ts_incr = np.reshape(ts_incr, newshape=cls.tsincr_0.shape, order='F')
         cls.ts_cum = np.reshape(ts_cum, newshape=cls.tscum_0.shape, order='F')
+        cls.params = params
 
     @classmethod
     def teardown_class(cls):
-        "auto clean fixture used"
+        shutil.rmtree(cls.params[cf.OUT_DIR])
 
     def test_time_series_equality_parallel_by_rows(self):
         """
@@ -211,9 +210,8 @@ class TestLegacyTimeSeriesEquality:
 class TestLegacyTimeSeriesEqualityMethod2Interp0:
 
     @classmethod
-    @pytest.fixture(autouse=True)
-    def setup_class(cls, roipac_params):
-        params = roipac_params
+    def setup_class(cls):
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         params[cf.TEMP_MLOOKED_DIR] = os.path.join(params[cf.OUT_DIR], cf.TEMP_MLOOKED_DIR)
         conv2tif.main(params)
         prepifg.main(params)
@@ -233,9 +231,10 @@ class TestLegacyTimeSeriesEqualityMethod2Interp0:
 
         params[cf.REFX] = refx
         params[cf.REFY] = refy
+        params[cf.ORBFIT_OFFSET] = True
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = common.prepare_ifgs_without_phase(copied_dest_paths, params)
         for ifg in ifgs:
             ifg.close()
@@ -274,10 +273,11 @@ class TestLegacyTimeSeriesEqualityMethod2Interp0:
 
         cls.ts_incr = np.reshape(ts_incr, newshape=cls.tsincr_0.shape, order='F')
         cls.ts_cum = np.reshape(ts_cum, newshape=cls.tscum_0.shape, order='F')
+        cls.params = params
 
     @classmethod
     def teardown_class(cls):
-        "atuo clean fixture used"
+        shutil.rmtree(cls.params[cf.OUT_DIR])
 
     def test_time_series_equality_parallel_by_rows(self):
 

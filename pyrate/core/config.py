@@ -94,8 +94,10 @@ IFG_YLAST = 'ifgylast'
 # reference pixel parameters
 #: INT; Longitude (decimal degrees) of reference pixel, or if left blank a search will be performed
 REFX = 'refx'
+REFX_FOUND = 'refxfound'
 #: INT; Latitude (decimal degrees) of reference pixel, or if left blank a search will be performed
 REFY = 'refy'
+REFY_FOUND = 'refyfound'
 #: INT; Number of reference pixel grid search nodes in x dimension
 REFNX = "refnx"
 #: INT; Number of reference pixel grid search nodes in y dimension
@@ -142,6 +144,7 @@ ORBITAL_FIT_DEGREE = 'orbfitdegrees'
 ORBITAL_FIT_LOOKS_X = 'orbfitlksx'
 #: INT; Multi look factor for orbital error calculation in y dimension
 ORBITAL_FIT_LOOKS_Y = 'orbfitlksy'
+ORBFIT_OFFSET = 'orbfitoffset'
 
 # Stacking parameters
 #: FLOAT; Threshold ratio between 'model minus observation' residuals and a-priori observation standard deviations for stacking estimate acceptance (otherwise remove furthest outlier and re-iterate)
@@ -296,7 +299,7 @@ DEFAULT_TO_OBS_DIR = [SLC_DIR, COH_FILE_DIR]
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
 # filenames reused in  many parts of the program
-REF_PIXEL_FILE = 'ref_pixel.npy'
+REF_PIXEL_FILE = 'ref_pixel_file'
 ORB_ERROR_DIR = 'orb_error'
 TEMP_MLOOKED_DIR = 'temp_mlooked_dir'
 
@@ -436,32 +439,6 @@ def parse_namelist(nml):
     with open(nml) as f_in:
         lines = [line.rstrip() for line in f_in]
     return filter(None, lines)
-
-
-def write_config_file(params, output_conf_file):
-    """
-    Takes a param object and writes the config file. Reverse of get_conf_params.
-
-    :param dict params: parameter dictionary
-    :param str output_conf_file: output file name
-
-    :return: config file
-    :rtype: list
-    """
-    with open(output_conf_file, 'w') as f:
-        for k, v in params.items():
-            if v is not None:
-                if k == 'process':
-                    f.write(''.join([k, ':\t', '', '\n']))
-                    f.write(''.join(['steps = ', '\n']))
-                    for vv in v:
-                        f.write(''.join(['\t' + str(vv), '\n']))
-                elif isinstance(v, list):
-                    continue
-                else:
-                    f.write(''.join([k, ':\t', str(v), '\n']))
-            else:
-                f.write(''.join([k, ':\t', '', '\n']))
 
 
 def transform_params(params):

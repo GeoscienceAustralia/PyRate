@@ -25,6 +25,7 @@ from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
 from pyrate.core.shared import extract_epochs_from_filename, InputTypes
 from pyrate.core.config import parse_namelist, ConfigException, ORB_ERROR_DIR, TEMP_MLOOKED_DIR
+from pyrate.core import config as cf
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
@@ -78,9 +79,15 @@ def validate_file_list_values(file_list, no_of_epochs):
 
 
 class MultiplePaths:
-    def __init__(self, out_dir: str, file_name: str, ifglksx: int = 1, ifgcropopt: int = 1,
-                 input_type: InputTypes = InputTypes.IFG,  tempdir: Union[Path, str] = TEMP_MLOOKED_DIR):
+    def __init__(self, file_name: str, params: dict, input_type: InputTypes = InputTypes.IFG):
+
         self.input_type = input_type
+        out_dir = params[cf.OUT_DIR]
+        ifglksx = params[cf.IFG_LKSX]
+        ifgcropopt = params[cf.IFG_CROP_OPT]
+        tempdir = params[cf.TEMP_MLOOKED_DIR]
+        if isinstance(tempdir, str):
+            tempdir = Path(tempdir)
         b = Path(file_name)
         if b.suffix == ".tif":
             self.unwrapped_path = None
@@ -93,11 +100,20 @@ class MultiplePaths:
                 b.stem.split('.')[0] + '_' + b.suffix[1:] + input_type.value).with_suffix('.tif')
             self.sampled_path = converted_path.with_name(
                 converted_path.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif")
-        if not isinstance(tempdir, Path):
-            tempdir = Path(out_dir).joinpath(tempdir)
         self.tmp_sampled_path = tempdir.joinpath(self.sampled_path.name).as_posix()
-        self.sampled_path = self.sampled_path.as_posix()
         self.converted_path = converted_path.as_posix()
+        self.sampled_path = self.sampled_path.as_posix()
+
+    @staticmethod
+    def orb_error_path(ifg_path: Union[str, Path], params) -> Path:
+        if isinstance(ifg_path, str):
+            ifg_path = Path(ifg_path)
+        return Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR,
+                    ifg_path.stem + '_' +
+                    '_'.join([str(params[cf.ORBITAL_FIT_METHOD]),
+                              str(params[cf.ORBITAL_FIT_DEGREE]),
+                              str(params[cf.ORBITAL_FIT_LOOKS_X])]) +
+                    '_orbfit.npy')
 
     def __str__(self):  # pragma: no cover
         st = ""
@@ -195,6 +211,8 @@ class Configuration:
         self.temp_mlooked_dir = Path(self.outdir).joinpath(TEMP_MLOOKED_DIR)
         self.temp_mlooked_dir.mkdir(parents=True, exist_ok=True)
 
+        self.ref_pixel_file = self.ref_pixel_path(self.__dict__)
+
         # var no longer used
         self.APS_ELEVATION_EXT = None
         self.APS_INCIDENCE_EXT = None
@@ -216,24 +234,65 @@ class Configuration:
 
         self.interferogram_files = self.__get_files_from_attr('ifgfilelist')
 
-        self.dem_file = MultiplePaths(self.outdir, self.demfile, self.ifglksx, self.ifgcropopt,
-                                      input_type=InputTypes.DEM)
+        self.dem_file = MultiplePaths(self.demfile, self.__dict__, input_type=InputTypes.DEM)
 
         # backward compatibility for string paths
         for key in self.__dict__:
             if isinstance(self.__dict__[key], PurePath):
                 self.__dict__[key] = str(self.__dict__[key])
 
+    @staticmethod
+    def ref_pixel_path(params):
+        return Path(params[cf.OUT_DIR]).joinpath(
+            '_'.join(
+                [str(x) for x in [
+                    'ref_pixel', params[cf.REFX], params[cf.REFY], params[cf.REFNX], params[cf.REFNY],
+                    params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC], 'file.npy'
+                    ]
+                ]
+            )
+        )
+
     def __get_files_from_attr(self, attr, input_type=InputTypes.IFG):
         val = self.__getattribute__(attr)
         files = parse_namelist(val)
-        return [
-            MultiplePaths(self.outdir, p, self.ifglksx, self.ifgcropopt, input_type=input_type,
-                          tempdir=self.temp_mlooked_dir) for p in files
-        ]
+        return [MultiplePaths(p, self.__dict__, input_type=input_type) for p in files]
 
 
 def write_config_parser_file(conf: ConfigParser, output_conf_file: Union[str, Path]):
     """replacement function for write_config_file which uses dict instead of a ConfigParser instance"""
     with open(output_conf_file, 'w') as configfile:
         conf.write(configfile)
+
+
+def write_config_file(params, output_conf_file):
+    """
+    Takes a param object and writes the config file. Reverse of get_conf_params.
+
+    :param dict params: parameter dictionary
+    :param str output_conf_file: output file name
+
+    :return: config file
+    :rtype: list
+    """
+    with open(output_conf_file, 'w') as f:
+        for k, v in params.items():
+            if v is not None:
+                if k == 'process':
+                    f.write(''.join([k, ':\t', '', '\n']))
+                    f.write(''.join(['steps = ', '\n']))
+                    for vv in v:
+                        f.write(''.join(['\t' + str(vv), '\n']))
+                elif isinstance(v, list):
+                    continue
+                else:
+                    if isinstance(v, MultiplePaths):
+                        if v.unwrapped_path is None:
+                            vv = v.converted_path
+                        else:
+                            vv = v.unwrapped_path
+                    else:
+                        vv = v
+                    f.write(''.join([k, ':\t', str(vv), '\n']))
+            else:
+                f.write(''.join([k, ':\t', '', '\n']))

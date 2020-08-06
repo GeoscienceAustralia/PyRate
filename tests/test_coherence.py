@@ -16,6 +16,8 @@ from pyrate.core import ifgconstants as ifc
 from pyrate.configuration import MultiplePaths
 from pyrate import conv2tif
 
+from tests import common
+
 
 def test_small_data_coherence(gamma_params):
 
@@ -75,8 +77,9 @@ def test_coherence_files_not_converted():
 
     # create a coherence mask dataset
     tmpdir = tempfile.mkdtemp()
-    out_dir = Path(tmpdir) # we won't be creating any output coherence mask files as there are already GeoTIFFs
-    coherence_mask_filename = MultiplePaths(out_dir, Path("mask_dataset_01122000.tif").as_posix())
+    out_dir = Path(tmpdir)  # we won't be creating any output coherence mask files as there are already GeoTIFFs
+    params = common.min_params(out_dir)
+    coherence_mask_filename = MultiplePaths(Path("mask_dataset_01122000.tif").as_posix(), params)
     coherence_mask_dataset = driver.Create(coherence_mask_filename.converted_path, 5, 5, 1, gdal.GDT_Float32)
     srs = osr.SpatialReference()
     wkt_projection = srs.ExportToWkt()

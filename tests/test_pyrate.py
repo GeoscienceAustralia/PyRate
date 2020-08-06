@@ -26,11 +26,12 @@ from os.path import join
 from pathlib import Path
 import numpy as np
 
+import pyrate.configuration
 import pyrate.core.shared
 from pyrate.core import shared, config as cf, config, prepifg_helper, mst
 from pyrate.core.shared import dem_or_ifg
 from pyrate import process, prepifg, conv2tif
-from pyrate.configuration import MultiplePaths
+from pyrate.configuration import MultiplePaths, Configuration
 from tests import common
 
 # taken from
@@ -141,11 +142,14 @@ class TestPyRate:
             paths = glob.glob(join(cls.BASE_OUT_DIR, 'geo_*-*.tif'))
             paths = sorted(paths)
             params[cf.PARALLEL] = False
-            params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(cls.BASE_OUT_DIR, p) for p in paths]
+            params[cf.ORBFIT_OFFSET] = True
+            params[cf.TEMP_MLOOKED_DIR] = cls.BASE_OUT_DIR.join(cf.TEMP_MLOOKED_DIR)
+            params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(p, params) for p in paths]
             for p in params[cf.INTERFEROGRAM_FILES]:  # cheat
                 p.sampled_path = p.converted_path
                 p.tmp_sampled_path = p.converted_path
             params["rows"], params["cols"] = 2, 2
+            params[cf.REF_PIXEL_FILE] = Configuration.ref_pixel_path(params)
             process.process_ifgs(params)
 
             if not hasattr(cls, 'ifgs'):
@@ -199,8 +203,8 @@ class TestParallelPyRate:
     """
 
     @classmethod
-    @pytest.fixture(autouse=True)
-    def setup_class(cls, gamma_conf):
+    def setup_class(cls):
+        gamma_conf = common.TEST_CONF_GAMMA
         from tests.common import manipulate_test_conf
         rate_types = ['stack_rate', 'stack_error', 'stack_samples']
         cls.tif_dir = Path(tempfile.mkdtemp())
@@ -219,7 +223,7 @@ class TestParallelPyRate:
 
         output_conf_file = 'gamma.conf'
         output_conf = cls.tif_dir.joinpath(output_conf_file).as_posix()
-        cf.write_config_file(params=params, output_conf_file=output_conf)
+        pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
 
         params = Configuration(output_conf).__dict__
 
@@ -252,7 +256,7 @@ class TestParallelPyRate:
         params[cf.REFX], params[cf.REFY] = -1, -1
         output_conf_file = 'gamma.conf'
         output_conf = cls.tif_dir_s.joinpath(output_conf_file).as_posix()
-        cf.write_config_file(params=params, output_conf_file=output_conf)
+        pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
         params = Configuration(output_conf).__dict__
 
         check_call(f"pyrate conv2tif -f {output_conf}", shell=True)
@@ -265,11 +269,13 @@ class TestParallelPyRate:
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
         cls.rate, cls.error, cls.samples = \
             [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
+        cls.params = params
 
     @classmethod
     def teardown_class(cls):
-        "gamma_params self cleans after use"
+        shutil.rmtree(cls.params[cf.OUT_DIR])
 
+    @pytest.mark.slow
     def test_orbital_correction(self):
         key = 'ORBITAL_ERROR'
         value = 'REMOVED'
@@ -285,6 +291,7 @@ class TestParallelPyRate:
         assert key in md, 'Missing %s in %s' % (key, ifg.data_path)
         assert md[key] == value
 
+    @pytest.mark.slow
     def test_phase_conversion(self):
         # ensure phase has been converted from radians to millimetres
         key = 'DATA_UNITS'
@@ -296,6 +303,7 @@ class TestParallelPyRate:
             i.nodata_value = 0
             self.key_check(i, key, value)
 
+    @pytest.mark.slow
     def test_mst_equal(self):
         np.testing.assert_array_equal(self.mst, self.mst_p)
 
@@ -359,6 +367,7 @@ class TestPrePrepareIfgs:
         shutil.rmtree(cls.tmp_dir2)
         shutil.rmtree(cls.tmp_dir)
 
+    @pytest.mark.slow
     def test_small_data_prep_phase_equality(self):
         for i, j in zip(self.ifgs, self.ifg_ret):
             np.testing.assert_array_almost_equal(i.phase_data, j.phase_data)
@@ -367,6 +376,7 @@ class TestPrePrepareIfgs:
             i.phase_data[4, 2] = 0
             assert (i.phase_data == 0).any()
 
+    @pytest.mark.slow
     def test_small_data_prep_metadata_equality(self):
         for i, j in zip(self.ifgs, self.ifg_ret):
             assert i.meta_data == j.meta_data

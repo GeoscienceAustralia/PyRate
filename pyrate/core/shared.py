@@ -357,6 +357,8 @@ class Ifg(RasterBase):
             self.meta_data[ifc.NAN_STATUS] = ifc.NAN_CONVERTED
             self.nan_converted = True
 
+        # self.write_modified_phase(self.phase_data)
+
     @property
     def phase_band(self):
         """
@@ -413,6 +415,8 @@ class Ifg(RasterBase):
         else:  # pragma: no cover
             msg = 'Phase units are not millimetres or radians'
             raise IfgException(msg)
+
+        # self.write_modified_phase(self.phase_data)
 
     @phase_data.setter
     def phase_data(self, data):
