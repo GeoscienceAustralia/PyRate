@@ -23,7 +23,6 @@ import numpy as np
 from osgeo import gdal
 import subprocess
 from pathlib import Path
-from math import floor
 
 from pyrate.core import shared, stack, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.logger import pyratelogger as log
@@ -38,15 +37,16 @@ def main(params: dict) -> None:
     """
     # setup paths
     mpiops.run_once(_merge_stack, params)
-    mpiops.run_once(create_png_and_kml_from_tif, params[cf.OUT_DIR], output_type='stack_rate')
-    mpiops.run_once(create_png_and_kml_from_tif, params[cf.OUT_DIR], output_type='stack_error')
+    out_types = ['stack_rate', 'stack_error']
 
     if params[cf.TIME_SERIES_CAL]:
         _merge_timeseries(params, 'tscuml')
         mpiops.run_once(_merge_linrate, params)
-        mpiops.run_once(create_png_and_kml_from_tif, params[cf.OUT_DIR], output_type='linear_rate')
-        mpiops.run_once(create_png_and_kml_from_tif, params[cf.OUT_DIR], output_type='linear_error')
-        mpiops.run_once(create_png_and_kml_from_tif, params[cf.OUT_DIR], output_type='linear_rsquared')
+        out_types += ['linear_rate', 'linear_error', 'linear_rsquared']
+
+    for out_type in out_types:
+        mpiops.run_once(create_png_and_kml_from_tif, params[cf.OUT_DIR], output_type=out_type)
+
         # optional save of merged tsincr products
         if params["savetsincr"] == 1:
             _merge_timeseries(params, 'tsincr')
