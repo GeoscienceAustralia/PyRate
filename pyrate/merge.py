@@ -41,15 +41,16 @@ def main(params: dict) -> None:
 
     if params[cf.TIME_SERIES_CAL]:
         _merge_timeseries(params, 'tscuml')
-        mpiops.run_once(_merge_linrate, params)
+        _merge_linrate(params)
         out_types += ['linear_rate', 'linear_error', 'linear_rsquared']
 
-    for out_type in out_types:
-        mpiops.run_once(create_png_and_kml_from_tif, params[cf.OUT_DIR], output_type=out_type)
+    process_out_types = mpiops.array_split(out_types)
+    for out_type in process_out_types:
+        create_png_and_kml_from_tif(params[cf.OUT_DIR], output_type=out_type)
 
-        # optional save of merged tsincr products
-        if params["savetsincr"] == 1:
-            _merge_timeseries(params, 'tsincr')
+    # optional save of merged tsincr products
+    if params["savetsincr"] == 1:
+        _merge_timeseries(params, 'tsincr')
 
 
 def _merge_stack(params: dict) -> None:
@@ -80,21 +81,17 @@ def _merge_linrate(params: dict) -> None:
     """
     Merge linear rate outputs
     """
-    shape, tiles, ifgs_dict = _merge_setup(params)
+    shape, tiles, ifgs_dict = mpiops.run_once(_merge_setup, params)
 
     log.info('Merging and writing Linear Rate product geotiffs')
 
     # read and assemble tile outputs
-    rate = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='linear_rate')
-    rsq = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='linear_rsquared')
-    error = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='linear_error')
-    intercept = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='linear_intercept')
-    samples = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='linear_samples')
-
-    # save geotiff and numpy array files
-    for out, ot in zip([rate, rsq, error, intercept, samples], ['linear_rate', 'linear_rsquared', 'linear_error',
-                        'linear_intercept', 'linear_samples']):
-        _save_merged_files(ifgs_dict, params[cf.OUT_DIR], out, ot, savenpy=params["savenpy"])
+    out_types = ['linear_' + x for x in ['rate', 'rsquared', 'error', 'intercept', 'samples']]
+    process_out_types = mpiops.array_split(out_types)
+    for p_out_type in process_out_types:
+        out = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type=p_out_type)
+        _save_merged_files(ifgs_dict, params[cf.OUT_DIR], out, p_out_type, savenpy=params["savenpy"])
+    mpiops.comm.barrier()
 
 
 def _merge_timeseries(params: dict, tstype: str) -> None:
