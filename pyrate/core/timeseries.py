@@ -35,6 +35,7 @@ from pyrate.core.algorithm import first_second_ids, get_epochs
 from pyrate.core import config as cf, mst as mst_module, mpiops, shared
 from pyrate.core.config import ConfigException
 from pyrate.core.logger import pyratelogger as log
+from pyrate.configuration import Configuration
 
 
 def _time_series_setup(ifgs, params, mst=None):
@@ -436,7 +437,7 @@ def timeseries_calc_wrapper(params):
     for t in process_tiles:
         log.debug("Calculating time series for tile "+str(t.index)+" out of "+str(total_tiles))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
-        mst_tile = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
+        mst_tile = np.load(Configuration.mst_path(params, t.index))
         tsincr, tscuml, _ = time_series(ifg_parts, params, vcmt, mst_tile)
         np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)), arr=tscuml)
         # optional save of tsincr npy tiles

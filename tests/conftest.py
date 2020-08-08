@@ -3,7 +3,7 @@ import random
 import string
 import tempfile
 import pytest
-from pyrate.core import mpiops, config as cf, prepifg_helper, shared
+from pyrate.core import mpiops, config as cf, shared
 from pyrate.configuration import Configuration
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
 from tests.common import ROIPAC_SYSTEM_CONF, GAMMA_SYSTEM_CONF, GEOTIF_SYSTEM_CONF, SML_TEST_COH_LIST

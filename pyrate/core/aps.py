@@ -22,6 +22,7 @@ signals.
 import os
 from copy import deepcopy
 from collections import OrderedDict
+from typing import List
 import numpy as np
 from numpy import isnan
 from scipy.fftpack import fft2, ifft2, fftshift, ifftshift
@@ -34,7 +35,7 @@ from pyrate.core.algorithm import get_epochs
 from pyrate.core.shared import Ifg
 from pyrate.core.timeseries import time_series
 from pyrate.merge import assemble_tiles
-from pyrate.configuration import MultiplePaths
+from pyrate.configuration import MultiplePaths, Configuration
 
 
 def wrap_spatio_temporal_filter(params):
@@ -100,7 +101,7 @@ def spatio_temporal_filter(tsincr, ifg_paths, params, preread_ifgs):
     ifg.close()
 
 
-def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
+def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles: List[shared.Tile]):
     """
     Helper function to obtain time series for spatio-temporal filter
     using SVD method
@@ -118,7 +119,7 @@ def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
     for t in process_tiles:
         log.debug('Calculating time series for tile {} during APS correction'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
-        mst_tile = np.load(os.path.join(params[cf.TMPDIR], 'mst_mat_{}.npy'.format(t.index)))
+        mst_tile = np.load(Configuration.mst_path(params, t.index))
         tsincr = time_series(ifg_parts, new_params, vcmt=None, mst=mst_tile)[0]
         np.save(file=os.path.join(params[cf.TMPDIR], 'tsincr_aps_{}.npy'.format(t.index)), arr=tsincr)
         nvels = tsincr.shape[2]

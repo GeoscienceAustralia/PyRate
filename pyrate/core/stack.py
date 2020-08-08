@@ -29,6 +29,7 @@ from joblib import Parallel, delayed
 from pyrate.core import config as cf, mpiops, shared
 from pyrate.core.shared import joblib_log_level
 from pyrate.core.logger import pyratelogger as log
+from pyrate.configuration import Configuration
 
 
 def stack_rate_array(ifgs, params, vcmt, mst=None):
@@ -222,7 +223,7 @@ def stack_calc_wrapper(params):
     for t in process_tiles:
         log.info('Stacking of tile {}'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
-        mst_grid_n = np.load(os.path.join(output_dir, 'mst_mat_{}.npy'.format(t.index)))
+        mst_grid_n = np.load(Configuration.mst_path(params, t.index))
         rate, error, samples = stack_rate_array(ifg_parts, params, vcmt, mst_grid_n)
         # declare file names
         np.save(file=os.path.join(output_dir, 'stack_rate_{}.npy'.format(t.index)), arr=rate)

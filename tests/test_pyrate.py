@@ -151,6 +151,7 @@ class TestPyRate:
             params["rows"], params["cols"] = 2, 2
             params[cf.REF_PIXEL_FILE] = Configuration.ref_pixel_path(params)
             Path(params[cf.OUT_DIR]).joinpath(cf.APS_ERROR_DIR).mkdir(exist_ok=True, parents=True)
+            Path(params[cf.OUT_DIR]).joinpath(cf.MST_DIR).mkdir(exist_ok=True, parents=True)
             process.process_ifgs(params)
 
             if not hasattr(cls, 'ifgs'):
@@ -240,7 +241,7 @@ class TestParallelPyRate:
         process.process_ifgs(params)
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
-        cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
+        cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.OUT_DIR])
         cls.rate_p, cls.error_p, cls.samples_p = \
             [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
         
@@ -267,7 +268,7 @@ class TestParallelPyRate:
         process.process_ifgs(params)
         cls.refpixel, cls.maxvar, cls.vcmt = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
-        cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
+        cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.OUT_DIR])
         cls.rate, cls.error, cls.samples = \
             [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
         cls.params = params

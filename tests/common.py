@@ -303,12 +303,12 @@ def reconstruct_stack_rate(shape, tiles, output_dir, out_type):
 
 
 def reconstruct_mst(shape, tiles, output_dir):
-    mst_file_0 = os.path.join(output_dir, 'mst_mat_{}.npy'.format(0))
+    mst_file_0 = os.path.join(output_dir, cf.MST_DIR, 'mst_mat_{}.npy'.format(0))
     shape0 = np.load(mst_file_0).shape[0]
 
     mst = np.empty(shape=((shape0,) + shape), dtype=np.float32)
     for i, t in enumerate(tiles):
-        mst_file_n = os.path.join(output_dir, 'mst_mat_{}.npy'.format(i))
+        mst_file_n = os.path.join(output_dir, cf.MST_DIR, 'mst_mat_{}.npy'.format(i))
         mst[:, t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x] = np.load(mst_file_n)
     return mst
