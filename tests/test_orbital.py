@@ -214,6 +214,7 @@ class TestIndependentCorrection:
         params[cf.NAN_CONVERSION] = False
         params[cf.OUT_DIR] = tempfile.mkdtemp()
         params[cf.ORBITAL_FIT_LOOKS_X] = 1
+        params[cf.ORBITAL_FIT_LOOKS_Y] = 1
         for i in self.ifgs:
             i.mm_converted = True
         remove_orbital_error(self.ifgs, params)

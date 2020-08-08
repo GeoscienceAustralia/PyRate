@@ -81,15 +81,20 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
     mpiops.run_once(__degree_and_method_check, params)
     ifg_paths = [i.data_path for i in ifgs] if isinstance(ifgs[0], Ifg) else ifgs
     method = params[cf.ORBITAL_FIT_METHOD]
-    # mlooking is not necessary for independent correction
+    # mlooking is not necessary for independent correction in a computational sense
     # can use multiple procesing if write_to_disc=True
 
     if method == INDEPENDENT_METHOD:
+        log.info('Calculating orbital correction using independent method')
+        #TODO: implement multi-looking for independent orbit method
+        if params[cf.ORBITAL_FIT_LOOKS_X] > 1 or params[cf.ORBITAL_FIT_LOOKS_Y] > 1:
+            log.warning('Multi-looking is not applied in independent orbit method')
         ifgs = [shared.Ifg(p) for p in ifg_paths] if isinstance(ifgs[0], str) else ifgs
         process_ifgs = mpiops.array_split(ifgs)
         for ifg in process_ifgs:
             independent_orbital_correction(ifg, params=params)
-    else:
+    elif method == NETWORK_METHOD:
+        log.info('Calculating orbital correction using network method')
         # Here we do all the multilooking in one process, but in memory
         # can use multiple processes if we write data to disc during
         # remove_orbital_error step
@@ -99,6 +104,8 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
             mlooked = __create_multilooked_dataset_for_network_correction(params)
             _validate_mlooked(mlooked, ifg_paths)
             network_orbital_correction(ifg_paths, params, mlooked)
+    else:
+        raise OrbitalError("Unrecognised orbital correction method")
 
 
 def __create_multilooked_dataset_for_network_correction(params):
@@ -475,7 +482,6 @@ def orb_fit_calc_wrapper(params: dict) -> None:
         log.info('Orbital correction not required!')
         print('Orbital correction not required!')
         return
-    log.info('Calculating orbital correction')
 
     ifg_paths = [p.tmp_sampled_path for p in multi_paths]
 
