@@ -22,11 +22,10 @@ from subprocess import check_call
 import itertools
 import pytest
 from pathlib import Path
-import pyrate.configuration
 from pyrate.merge import create_png_and_kml_from_tif
 from pyrate.core import config as cf
 from pyrate.merge import _merge_stack, _merge_linrate
-from pyrate.configuration import Configuration
+from pyrate.configuration import Configuration, write_config_file
 from tests.common import manipulate_test_conf
 
 
@@ -36,7 +35,7 @@ def create_merge_output(tempdir, gamma_conf):
     params = manipulate_test_conf(gamma_conf, tdir)
     output_conf_file = tdir.joinpath('conf.cfg')
     output_conf = tdir.joinpath(output_conf_file)
-    pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
+    write_config_file(params=params, output_conf_file=output_conf)
     check_call(f"pyrate conv2tif -f {output_conf}", shell=True)
     check_call(f"pyrate prepifg -f {output_conf}", shell=True)
     check_call(f"pyrate process -f {output_conf}", shell=True)

@@ -1,3 +1,23 @@
+#   This Python module is part of the PyRate software package.
+#
+#   Copyright 2020 Geoscience Australia
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+"""
+This Python module contains regression tests for comparing output from serial,
+parallel and MPI PyRate runs.
+"""
 import os
 import shutil
 import pytest
@@ -130,6 +150,17 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "tscuml_*.npy",
                                params['notiles'])
 
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "linear_rate_*.npy",
+                               params['notiles'])
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "linear_error_*.npy",
+                               params['notiles'])
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "linear_intercept_*.npy",
+                               params['notiles'])
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "linear_rsquared_*.npy",
+                               params['notiles'])
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "linear_samples_*.npy",
+                               params['notiles'])
+
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "stack_rate_*.npy",
                                params['notiles'])
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "stack_error_*.npy",
@@ -142,6 +173,12 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.kml", 2)
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.png", 2)
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.npy", 3)
+    
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.tif", 5)
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.kml", 3)
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.png", 3)
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.npy", 5)
+    
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tscuml*.tif", 12)
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tsincr*.tif", 12)
 
@@ -262,6 +299,13 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     # ifg phase checking in the previous step checks the process pipeline upto APS correction
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tsincr_*.npy", params['notiles'] * 2)
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tscuml_*.npy", params['notiles'])
+
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "linear_rate_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "linear_error_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "linear_samples_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "linear_intercept_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "linear_rsquared_*.npy", params['notiles'])
+
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_rate_*.npy", params['notiles'])
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_error_*.npy", params['notiles'])
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_samples_*.npy", params['notiles'])
@@ -271,6 +315,12 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.kml", 2)
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.png", 2)
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.npy", 3)
+
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "linear*.tif", 5)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "linear*.kml", 3)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "linear*.png", 3)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "linear*.npy", 5)
+
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "tscuml*.tif")
 
     print("==========================xxx===========================")
