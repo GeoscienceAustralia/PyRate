@@ -31,8 +31,9 @@ from pyrate.core.algorithm import ifg_date_lookup
 from pyrate.core.algorithm import ifg_date_index_lookup
 from pyrate.core import config as cf, mpiops
 from pyrate.core.shared import IfgPart, create_tiles
-from pyrate.core.shared import joblib_log_level
+from pyrate.core.shared import joblib_log_level, Tile
 from pyrate.core.logger import pyratelogger as log
+from pyrate.configuration import Configuration
 
 np.seterr(invalid='ignore')  # stops RuntimeWarning in nan conversion
 
@@ -285,11 +286,11 @@ def mst_calc_wrapper(params):
     dest_tifs = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     log.info('Calculating minimum spanning tree matrix')
 
-    def _save_mst_tile(tile, i, preread_ifgs):
+    def _save_mst_tile(tile: Tile, preread_ifgs) -> None:
         """
         Convenient inner loop for mst tile saving
         """
-        mst_file_process_n = Path(params[cf.TMPDIR]).joinpath('mst_mat_{}.npy'.format(i))
+        mst_file_process_n = Configuration.mst_path(params, index=tile.index)
         if mst_file_process_n.exists():
             return
         mst_tile = mst_multiprocessing(tile, dest_tifs, preread_ifgs, params)
@@ -302,10 +303,10 @@ def mst_calc_wrapper(params):
 
     if params[cf.PARALLEL]:
         Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(_save_mst_tile)(t, t.index, preread_ifgs) for t in process_tiles
+            delayed(_save_mst_tile)(t, preread_ifgs) for t in process_tiles
         )
     else:
         for t in process_tiles:
-            _save_mst_tile(t, t.index, preread_ifgs)
+            _save_mst_tile(t, preread_ifgs)
     log.debug('Finished mst calculation for process {}'.format(mpiops.rank))
     mpiops.comm.barrier()

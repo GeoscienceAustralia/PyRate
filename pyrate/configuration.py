@@ -269,15 +269,15 @@ class Configuration:
             '_'.join(
                 [str(x) for x in [
                     'ref_pixel', params[cf.REFX], params[cf.REFY], params[cf.REFNX], params[cf.REFNY],
-                    params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC], 'file.npy'
+                    params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC], '.npy'
                     ]
                 ]
             )
         )
 
     @staticmethod
-    def mst_path(params):
-        return Path(params[cf.TMPDIR]).joinpath('mst_mat.npy')
+    def mst_path(params, index):
+        return Path(params[cf.TMPDIR], cf.MST_DIR).joinpath(f'mst_mat_{index}.npy')
 
     @staticmethod
     def ref_phs_file(params):
@@ -285,7 +285,7 @@ class Configuration:
         # add ref pixel path as when ref pixel changes - ref phs path should also change
         return Path(params[cf.OUT_DIR]).joinpath(
             ref_pixel_path.stem + '_' +
-            '_'.join(['ref_phs', str(params[cf.REF_EST_METHOD]), 'file.npy'])
+            '_'.join(['ref_phs', str(params[cf.REF_EST_METHOD]), '.npy'])
         )
 
     def __get_files_from_attr(self, attr, input_type=InputTypes.IFG):
