@@ -229,6 +229,10 @@ class Configuration:
         self.aps_error_dir = Path(self.outdir).joinpath(cf.APS_ERROR_DIR)
         self.aps_error_dir.mkdir(parents=True, exist_ok=True)
 
+        # create mst dir
+        self.mst_dir = Path(self.outdir).joinpath(cf.MST_DIR)
+        self.mst_dir.mkdir(parents=True, exist_ok=True)
+
         # create temp multilooked files dir
         self.temp_mlooked_dir = Path(self.outdir).joinpath(TEMP_MLOOKED_DIR)
         self.temp_mlooked_dir.mkdir(parents=True, exist_ok=True)
@@ -277,7 +281,7 @@ class Configuration:
 
     @staticmethod
     def mst_path(params, index):
-        return Path(params[cf.TMPDIR], cf.MST_DIR).joinpath(f'mst_mat_{index}.npy')
+        return Path(params[cf.OUT_DIR], cf.MST_DIR).joinpath(f'mst_mat_{index}.npy')
 
     @staticmethod
     def ref_phs_file(params):

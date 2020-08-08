@@ -235,7 +235,7 @@ class TestMSTFilesReusedFromDisc:
 
     def __run_once(self):
         tiles = self.params[cf.TILES]
-        mst_files = [Path(self.params[cf.TMPDIR]).joinpath('mst_mat_{}.npy'.format(t.index)) for t in tiles]
+        mst_files = [Configuration.mst_path(self.params, t.index) for t in tiles]
         process._copy_mlooked(self.params)
         process._create_ifg_dict(self.params)
         save_numpy_phase(self.ifg_paths, self.params)
