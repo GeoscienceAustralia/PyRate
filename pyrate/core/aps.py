@@ -127,7 +127,7 @@ def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles: List[shared.Ti
     nvels = mpiops.comm.bcast(nvels, root=0)
     mpiops.comm.barrier()
     # need to assemble tsincr from all processes
-    tsincr_g = mpiops.run_once(_assemble_tsincr, ifg_paths, params, preread_ifgs, tiles, nvels)
+    tsincr_g = _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels)
     log.debug('Finished calculating time series for spatio-temporal filter')
     return tsincr_g
 
@@ -137,15 +137,13 @@ def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
     Helper function to reconstruct time series images from tiles
     """
     # pre-allocate dest 3D array
-    shape = preread_ifgs[ifg_paths[0]].shape + (nvels,)
-    tsincr_g = np.empty(shape=shape, dtype=np.float32)
-    # shape of one 2D time-slice array
-    s = preread_ifgs[ifg_paths[0]].shape
-    # loop over the time slices and assemble dest 3D array
-    for i in range(nvels):
-        tsincr_g[:, :, i] = assemble_tiles(s, params[cf.TMPDIR], tiles, out_type='tsincr_aps', index=i)
-
-    return tsincr_g
+    shape = preread_ifgs[ifg_paths[0]].shape
+    tsincr_p = {}
+    process_nvels = mpiops.array_split(range(nvels))
+    for i in process_nvels:
+        tsincr_p[i] = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='tsincr_aps', index=i)
+    tsincr_g = shared.join_dicts(mpiops.comm.allgather(tsincr_p))
+    return np.dstack([v[1] for v in sorted(tsincr_g.items())])
 
 
 def _ts_to_ifgs(tsincr, preread_ifgs, params):

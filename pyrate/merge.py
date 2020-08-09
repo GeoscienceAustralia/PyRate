@@ -234,9 +234,9 @@ def assemble_tiles(s, dir, tiles, out_type, index=None):
     for t in tiles:
         tile_file = Path(join(dir, out_type + '_'+str(t.index)+'.npy'))
         tile = np.load(file=tile_file)
-        if index is None: #2D array
+        if index is None:  #2D array
             merged_array[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = tile
-        else: #3D array
+        else:  #3D array
             merged_array[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = tile[:, :, index]
 
     log.debug('Finished assembling tiles for {}'.format(out_type))

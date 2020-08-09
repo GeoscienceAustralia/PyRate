@@ -19,6 +19,7 @@
 pyrate basic workflow for all supported input datasets
 
 """
+import shutil
 from subprocess import check_call
 from pathlib import Path
 import pytest
@@ -41,6 +42,7 @@ def test_workflow(system_conf):
         log_file_name = 'pyrate.log.' + stage
         files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
         assert len(files) == 1
+    shutil.rmtree(params[cf.OUT_DIR])
 
 
 @pytest.mark.slow
@@ -68,3 +70,4 @@ def test_single_workflow(gamma_conf):
                           Path(ifg.data_path).stem + '_orbfit.npy')
                        for ifg in ifgs]
     assert all(orbfits_on_disc)
+    shutil.rmtree(params[cf.OUT_DIR])
