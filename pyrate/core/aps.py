@@ -92,7 +92,7 @@ def spatio_temporal_filter(tsincr, ifg_paths, params, preread_ifgs):
     ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
     ifg.open()
     epochlist = mpiops.run_once(get_epochs, preread_ifgs)[0]
-    ts_lp = mpiops.run_once(temporal_low_pass_filter, tsincr, epochlist, params)
+    ts_lp = temporal_low_pass_filter(tsincr, epochlist, params)
     ts_hp = tsincr - ts_lp
     ts_aps = mpiops.run_once(spatial_low_pass_filter, ts_hp, ifg, params)
     tsincr -= ts_aps
@@ -332,15 +332,21 @@ def _tlpfilter(nanmat, rows, cols, cutoff, span, threshold, tsincr, func):
     """
     Wrapper function for temporal low pass filter
     """
-    tsfilt_incr = np.empty_like(tsincr, dtype=np.float32) * np.nan
-    for i in range(rows):
+    tsfilt_incr_each_row = {}
+    process_rows = mpiops.array_split(list(range(rows)))
+
+    for r in process_rows:
+        tsfilt_incr_each_row[r] = np.empty(tsincr.shape[1:], dtype=np.float32) * np.nan
         for j in range(cols):
-            sel = np.nonzero(nanmat[i, j, :])[0]  # don't select if nan
+            sel = np.nonzero(nanmat[r, j, :])[0]  # don't select if nan
             m = len(sel)
             if m >= threshold:
                 for k in range(m):
                     yr = span[sel] - span[sel[k]]
                     wgt = func(m, yr, cutoff)
                     wgt /= np.sum(wgt)
-                    tsfilt_incr[i, j, sel[k]] = np.sum(tsincr[i, j, sel] * wgt)
+                    tsfilt_incr_each_row[r][j, sel[k]] = np.sum(tsincr[r, j, sel] * wgt)
+
+    tsfilt_incr_combined = shared.join_dicts(mpiops.comm.allgather(tsfilt_incr_each_row))
+    tsfilt_incr = np.array([v[1] for v in tsfilt_incr_combined.items()])
     return tsfilt_incr
