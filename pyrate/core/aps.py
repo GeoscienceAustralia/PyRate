@@ -258,8 +258,7 @@ def _slpfilter(phase, ifg, r_dist, params):
         _, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha=True)
         cutoff = 1.0/alpha
     rows, cols = ifg.shape
-    return _slp_filter(phase, cutoff, rows, cols,
-                       ifg.x_size, ifg.y_size, params)
+    return _slp_filter(phase, cutoff, rows, cols, ifg.x_size, ifg.y_size, params)
 
 
 def _slp_filter(phase, cutoff, rows, cols, x_size, y_size, params):

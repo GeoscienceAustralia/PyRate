@@ -5,9 +5,21 @@ import numpy as np
 from pyrate import conv2tif, prepifg, correct
 from pyrate.configuration import Configuration, MultiplePaths
 import pyrate.core.config as cf
-from pyrate.core.aps import wrap_spatio_temporal_filter
+from pyrate.core.aps import wrap_spatio_temporal_filter, _interpolate_nans
 from pyrate.core import shared
 from tests import common
+
+
+@pytest.fixture(params=["linear", "nearest", "cubic"])
+def slpnanfill_method(request):
+    return request.param
+
+
+def test_interpolate_nans(slpnanfill_method):
+    arr = np.random.rand(20, 10, 5)
+    arr[arr < 0.1] = np.nan  # insert some nans
+    _interpolate_nans(arr, method=slpnanfill_method)
+    assert np.sum(np.isnan(arr)) == 0  # should not be any nans
 
 
 def test_slpfilter():
