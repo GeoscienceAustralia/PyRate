@@ -19,6 +19,7 @@ Variance/Covariance matrix functionality.
 """
 # coding: utf-8
 from os.path import basename, join
+from collections import OrderedDict
 from numpy import array, where, isnan, real, imag, sqrt, meshgrid
 from numpy import zeros, vstack, ceil, mean, exp, reshape
 from numpy.linalg import norm
@@ -36,8 +37,6 @@ from pyrate.core.logger import pyratelogger as log
 
 MAIN_PROCESS = 0
 DISTFACT = 1000
-
-
 
 
 def _pendiffexp(alphamod, cvdav):
@@ -64,8 +63,7 @@ def _unique_points(points):  # pragma: no cover
     return vstack([array(u) for u in set(points)])
 
 
-def cvd(ifg_path, params, r_dist, calc_alpha=False,
-        write_vals=False, save_acg=False):
+def cvd(ifg_path, params, r_dist, calc_alpha=False, write_vals=False, save_acg=False):
     """
     Calculate the 1D covariance function of an entire interferogram as the
     radial average of its 2D autocorrelation.
@@ -101,8 +99,7 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False,
     else:
         phase = ifg.phase_data
 
-    maxvar, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha,
-                                   save_acg=save_acg, params=params)
+    maxvar, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=save_acg, params=params)
 
     if write_vals:
         _add_metadata(ifg, maxvar, alpha)
@@ -297,7 +294,6 @@ def get_vcmt(ifgs, maxvar):
     # of one matches second of another
 
     if isinstance(ifgs, dict):
-        from collections import OrderedDict
         ifgs = {k: v for k, v in ifgs.items() if isinstance(v, PrereadIfg)}
         ifgs = OrderedDict(sorted(ifgs.items()))
         # pylint: disable=redefined-variable-type

@@ -28,7 +28,7 @@ from tests.common import MockIfg, small5_mock_ifgs, small_data_setup
 from pyrate.core import algorithm, config as cf, mst
 from pyrate.core.shared import IfgPart, Tile, Ifg, save_numpy_phase
 from pyrate.configuration import Configuration
-from pyrate import conv2tif, prepifg, process
+from pyrate import conv2tif, prepifg, correct
 from tests import common
 from tests.common import UnitTestAdaptation, TEST_CONF_GAMMA
 
@@ -227,7 +227,7 @@ class TestMSTFilesReusedFromDisc:
         shutil.rmtree(cls.params[cf.OUT_DIR])
 
     def test_ref_phase_used_from_disc_on_rerun(self):
-        process._update_params_with_tiles(self.params)
+        correct._update_params_with_tiles(self.params)
         times_written = self.__run_once()
         times_written_1 = self.__run_once()
 
@@ -236,8 +236,8 @@ class TestMSTFilesReusedFromDisc:
     def __run_once(self):
         tiles = self.params[cf.TILES]
         mst_files = [Configuration.mst_path(self.params, t.index) for t in tiles]
-        process._copy_mlooked(self.params)
-        process._create_ifg_dict(self.params)
+        correct._copy_mlooked(self.params)
+        correct._create_ifg_dict(self.params)
         save_numpy_phase(self.ifg_paths, self.params)
         mst.mst_calc_wrapper(self.params)
         assert all(m.exists() for m in mst_files)

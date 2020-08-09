@@ -31,7 +31,7 @@ import pyrate.core.refpixel
 import tests.common
 from pyrate.core import shared, config as cf, covariance as vcm_module
 from pyrate.core.stack import stack_rate_pixel, mask_rate
-from pyrate import process, prepifg, conv2tif
+from pyrate import correct, prepifg, conv2tif
 from pyrate.configuration import Configuration
 from tests import common
 from tests.common import SML_TEST_DIR, prepare_ifgs_without_phase, pre_prepare_ifgs
@@ -119,7 +119,7 @@ class TestLegacyEquality:
         xlks, _, crop = cf.transform_params(params)
 
         dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
-        process._copy_mlooked(params)
+        correct._copy_mlooked(params)
         copied_dest_paths = [os.path.join(params[cf.TEMP_MLOOKED_DIR], os.path.basename(d)) for d in dest_paths]
         del dest_paths
         # start run_pyrate copy
@@ -137,7 +137,7 @@ class TestLegacyEquality:
         ifgs = prepare_ifgs_without_phase(copied_dest_paths, params)
         for ifg in ifgs:
             ifg.close()
-        process._update_params_with_tiles(params)
+        correct._update_params_with_tiles(params)
         _, ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = vcm_module.RDist(ifgs[0])()

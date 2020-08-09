@@ -29,7 +29,7 @@ import pyrate.core.refpixel
 from pyrate.core import config as cf
 from pyrate.core.refpixel import ref_pixel, _step, RefPixelError, ref_pixel_calc_wrapper
 from pyrate.core import shared, ifgconstants as ifc
-from pyrate import process, conv2tif, prepifg
+from pyrate import correct, conv2tif, prepifg
 from pyrate.configuration import Configuration
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
 from tests.common import small_data_setup, MockIfg, copy_small_ifg_file_list, \
@@ -422,7 +422,7 @@ class TestRefPixelReuseLoadsSameFileAndPixels:
         params = Configuration(cls.conf).__dict__
         prepifg.main(params)
         params = Configuration(cls.conf).__dict__
-        process._copy_mlooked(params)
+        correct._copy_mlooked(params)
         cls.params = params
 
     @classmethod

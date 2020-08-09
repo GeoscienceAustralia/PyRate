@@ -2,7 +2,7 @@ import os
 import shutil
 import pytest
 import numpy as np
-from pyrate import conv2tif, prepifg, process
+from pyrate import conv2tif, prepifg, correct
 from pyrate.configuration import Configuration, MultiplePaths
 import pyrate.core.config as cf
 from pyrate.core.aps import wrap_spatio_temporal_filter
@@ -77,16 +77,16 @@ class TestAPSErrorCorrectionsOnDiscReused:
         params = Configuration(cls.conf).__dict__
         prepifg.main(params)
         cls.params = Configuration(cls.conf).__dict__
-        process._copy_mlooked(cls.params)
-        process._update_params_with_tiles(cls.params)
-        process._create_ifg_dict(cls.params)
+        correct._copy_mlooked(cls.params)
+        correct._update_params_with_tiles(cls.params)
+        correct._create_ifg_dict(cls.params)
         multi_paths = cls.params[cf.INTERFEROGRAM_FILES]
         cls.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
         cls.ifgs = [shared.Ifg(i) for i in cls.ifg_paths]
         for i in cls.ifgs:
             i.open()
         shared.save_numpy_phase(cls.ifg_paths, cls.params)
-        process.mst_calc_wrapper(cls.params)
+        correct.mst_calc_wrapper(cls.params)
 
     @classmethod
     def teardown_method(cls):

@@ -24,7 +24,7 @@ import time
 from pathlib import Path
 
 from pyrate.constants import CLI_DESCRIPTION
-from pyrate import conv2tif, prepifg, process, merge
+from pyrate import conv2tif, prepifg, correct, merge
 from pyrate.core.logger import pyratelogger as log, configure_stage_log
 from pyrate.core import config as cf
 from pyrate.core import mpiops
@@ -94,7 +94,7 @@ def main():
         prepifg.main(params)
 
     if args.command == "process":
-        process.main(params)
+        correct.main(params)
 
     if args.command == "merge":
         merge.main(params)
@@ -107,10 +107,10 @@ def main():
         params = mpiops.run_once(_params_from_conf, args.config_file)
         prepifg.main(params)
 
-        log.info("***********PROCESS**************")
+        log.info("***********CORRECT**************")
         # reset params as prepifg modifies params
         params = mpiops.run_once(_params_from_conf, args.config_file)
-        process.main(params)
+        correct.main(params)
 
         # process might modify params too
         params = mpiops.run_once(_params_from_conf, args.config_file)

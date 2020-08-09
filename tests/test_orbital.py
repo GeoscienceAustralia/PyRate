@@ -44,7 +44,7 @@ from pyrate.core.orbital import _get_num_params, remove_orbital_error, network_o
 from pyrate.core.shared import Ifg, mkdir_p
 from pyrate.core.shared import nanmedian
 from pyrate.core import roipac
-from pyrate import process, conv2tif, prepifg
+from pyrate import correct, conv2tif, prepifg
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.core.config import ORB_ERROR_DIR
 from tests import common
@@ -730,7 +730,7 @@ class TestLegacyComparisonTestsOrbfitMethod1:
         pass
 
     def test_orbital_correction_legacy_equality(self):
-        from pyrate import process
+        from pyrate import correct
         from pyrate.configuration import MultiplePaths
 
         multi_paths = [MultiplePaths(p, params=self.params) for p in self.ifg_paths]
@@ -740,10 +740,10 @@ class TestLegacyComparisonTestsOrbfitMethod1:
         self.params[cf.INTERFEROGRAM_FILES] = multi_paths
         self.params['rows'], self.params['cols'] = 2, 3
         Path(self.BASE_DIR).joinpath('tmpdir').mkdir(exist_ok=True, parents=True)
-        process._copy_mlooked(self.params)
-        process._update_params_with_tiles(self.params)
-        process._create_ifg_dict(self.params)
-        process._copy_mlooked(self.params)
+        correct._copy_mlooked(self.params)
+        correct._update_params_with_tiles(self.params)
+        correct._create_ifg_dict(self.params)
+        correct._copy_mlooked(self.params)
         pyrate.core.orbital.orb_fit_calc_wrapper(self.params)
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
@@ -818,8 +818,8 @@ class TestLegacyComparisonTestsOrbfitMethod2:
         shutil.rmtree(cls.BASE_DIR, ignore_errors=True)
 
     def test_orbital_correction_legacy_equality_orbfit_method_2(self):
-        process._copy_mlooked(self.params)
-        process._create_ifg_dict(self.params)
+        correct._copy_mlooked(self.params)
+        correct._create_ifg_dict(self.params)
         remove_orbital_error(self.new_data_paths, self.params)
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
@@ -852,8 +852,8 @@ class TestLegacyComparisonTestsOrbfitMethod2:
         self.params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
-        process._copy_mlooked(self.params)
-        process._create_ifg_dict(self.params)
+        correct._copy_mlooked(self.params)
+        correct._create_ifg_dict(self.params)
         remove_orbital_error(self.new_data_paths, self.params)
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
@@ -888,8 +888,8 @@ class TestOrbErrorCorrectionsOnDiscReused:
         params = Configuration(cls.conf).__dict__
         prepifg.main(params)
         cls.params = Configuration(cls.conf).__dict__
-        process._copy_mlooked(cls.params)
-        process._create_ifg_dict(cls.params)
+        correct._copy_mlooked(cls.params)
+        correct._create_ifg_dict(cls.params)
 
     @classmethod
     def teardown_class(cls):
@@ -940,8 +940,8 @@ class TestOrbErrorCorrectionsReappliedDoesNotChangePhaseData:
         params = Configuration(cls.conf).__dict__
         prepifg.main(params)
         cls.params = Configuration(cls.conf).__dict__
-        process._copy_mlooked(cls.params)
-        process._create_ifg_dict(cls.params)
+        correct._copy_mlooked(cls.params)
+        correct._create_ifg_dict(cls.params)
         multi_paths = cls.params[cf.INTERFEROGRAM_FILES]
         cls.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
 
@@ -960,11 +960,11 @@ class TestOrbErrorCorrectionsReappliedDoesNotChangePhaseData:
         phase_prev = [i.phase_data for i in ifgs]
 
         # orb correct once more
-        process._copy_mlooked(self.params)
+        correct._copy_mlooked(self.params)
         remove_orbital_error(self.ifg_paths, self.params)
 
         # and again
-        process._copy_mlooked(self.params)
+        correct._copy_mlooked(self.params)
         remove_orbital_error(self.ifg_paths, self.params)
         ifgs = [Ifg(i) for i in self.ifg_paths]
         for i in ifgs:

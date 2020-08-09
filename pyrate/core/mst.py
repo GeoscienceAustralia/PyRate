@@ -41,8 +41,6 @@ np.seterr(invalid='ignore')  # stops RuntimeWarning in nan conversion
 # TODO: document weighting by either Nan fraction OR variance
 
 
-
-
 def mst_from_ifgs(ifgs):
     """
     Returns a Minimum Spanning Tree (MST) network from the given interferograms

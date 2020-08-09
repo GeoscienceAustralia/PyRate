@@ -27,7 +27,7 @@ from numpy.testing import assert_array_almost_equal
 import pyrate.core.ref_phs_est
 import pyrate.core.refpixel
 from pyrate.core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
-from pyrate import process, prepifg, conv2tif
+from pyrate import correct, prepifg, conv2tif
 from pyrate.core.covariance import cvd, get_vcmt, RDist
 from pyrate.configuration import Configuration, MultiplePaths
 import pyrate.core.orbital
@@ -205,9 +205,9 @@ class TestLegacyEquality:
         for i in dest_paths:
             Path(i).chmod(0o664)  # assign write permission as conv2tif output is readonly
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
-        process._copy_mlooked(params)
-        process._update_params_with_tiles(params)
-        process._create_ifg_dict(params)
+        correct._copy_mlooked(params)
+        correct._update_params_with_tiles(params)
+        correct._create_ifg_dict(params)
         pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
         params[cf.ORBFIT_OFFSET] = True
         pyrate.core.orbital.remove_orbital_error(ifgs, params)

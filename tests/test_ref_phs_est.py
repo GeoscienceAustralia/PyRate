@@ -30,7 +30,7 @@ from pyrate.core.ref_phs_est import ReferencePhaseError, ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.orbital import remove_orbital_error
 from pyrate.core.shared import CorrectionStatusError, Ifg
-from pyrate import prepifg, process, conv2tif
+from pyrate import prepifg, correct, conv2tif
 from pyrate.configuration import MultiplePaths, Configuration
 from tests import common
 from tests.common import TEST_CONF_GAMMA
@@ -100,8 +100,8 @@ class TestRefPhsTests:
         self.params[cf.REF_CHIP_SIZE], self.params[cf.REF_MIN_FRAC] = 21, 0.5
         self.params['rows'], self.params['cols'] = 3, 2
         self.params[cf.REF_PIXEL_FILE] = Configuration.ref_pixel_path(self.params)
-        process._update_params_with_tiles(self.params)
-        process.ref_pixel_calc_wrapper(self.params)
+        correct._update_params_with_tiles(self.params)
+        correct.ref_pixel_calc_wrapper(self.params)
        
     def teardown_method(self):
         shutil.rmtree(self.params[cf.OUT_DIR])
@@ -190,7 +190,7 @@ class TestRefPhsEstimationLegacyTestMethod1Serial:
             p.tmp_sampled_path = p.sampled_path
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
-        process._update_params_with_tiles(params)
+        correct._update_params_with_tiles(params)
         cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
         cls.params = params
 
@@ -275,7 +275,7 @@ class TestRefPhsEstimationLegacyTestMethod1Parallel:
             p.tmp_sampled_path = p.sampled_path
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
-        process._update_params_with_tiles(params)
+        correct._update_params_with_tiles(params)
         cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
         cls.params = params
 
@@ -360,7 +360,7 @@ class TestRefPhsEstimationLegacyTestMethod2Serial:
             p.tmp_sampled_path = p.sampled_path
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
-        process._update_params_with_tiles(params)
+        correct._update_params_with_tiles(params)
 
         cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
         cls.params = params
@@ -447,7 +447,7 @@ class TestRefPhsEstimationLegacyTestMethod2Parallel:
             p.tmp_sampled_path = p.sampled_path
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
-        process._update_params_with_tiles(params)
+        correct._update_params_with_tiles(params)
         cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
         cls.params = params
 
@@ -508,7 +508,7 @@ class TestRefPhsEstReusedFromDisc:
     def test_ref_phase_used_from_disc_on_rerun(self, ref_est_method):
         self.params = Configuration(self.conf).__dict__
         self.params[cf.REF_EST_METHOD] = ref_est_method
-        process._update_params_with_tiles(self.params)
+        correct._update_params_with_tiles(self.params)
 
         phase_prev, time_written = self.__run_once()
 
@@ -528,12 +528,12 @@ class TestRefPhsEstReusedFromDisc:
 
     def __run_once(self):
         ref_phs_file = Configuration.ref_phs_file(self.params)
-        process._copy_mlooked(self.params)
+        correct._copy_mlooked(self.params)
         multi_paths = self.params[cf.INTERFEROGRAM_FILES]
         ifg_paths = [p.tmp_sampled_path for p in multi_paths]
         ifgs = [Ifg(i) for i in ifg_paths]
         self.params[cf.REFX_FOUND], self.params[cf.REFY_FOUND] = ref_pixel_calc_wrapper(self.params)
-        process._create_ifg_dict(self.params)
+        correct._create_ifg_dict(self.params)
         ref_phase_est_wrapper(self.params)
         for i in ifgs:
             i.open()
