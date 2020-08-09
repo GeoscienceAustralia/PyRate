@@ -97,7 +97,7 @@ executable program ``pyrate`` is created in the system path:
 
     >> pyrate --help
     usage: pyrate [-h] [-v {DEBUG,INFO,WARNING,ERROR}]
-                  {conv2tif,prepifg,process,merge,workflow} ...
+                  {conv2tif,prepifg,correct,merge,workflow} ...
 
     PyRate workflow:
 
@@ -110,7 +110,7 @@ executable program ``pyrate`` is created in the system path:
     more details.
 
     positional arguments:
-      {conv2tif,prepifg,process,merge,workflow}
+      {conv2tif,prepifg,correct,merge,workflow}
         conv2tif            Convert interferograms to geotiff.
         prepifg             Perform multilooking and cropping on geotiffs.
         process             Main processing workflow including corrections, time series and stacking computation.
@@ -273,8 +273,8 @@ and stacking analysis.
 
 ::
 
-    >> pyrate process --help
-    usage: pyrate process [-h] -f CONFIG_FILE
+    >> pyrate correct --help
+    usage: pyrate correct [-h] -f CONFIG_FILE
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -285,7 +285,7 @@ The ``process`` step is used as follows:
 
 ::
 
-    >> pyrate process -f path/to/config_file
+    >> pyrate correct -f path/to/config_file
 
 
 Optionally, an orbital error correction and a spatio-temporal filter
@@ -428,7 +428,7 @@ by using ``mpirun``:
     # Modify '-n' based on the number of processors available.
     mpirun -n 4 pyrate conv2tif -f path/to/config_file
     mpirun -n 4 pyrate prepifg -f path/to/config_file
-    mpirun -n 4 pyrate process -f path/to/config_file
+    mpirun -n 4 pyrate correct -f path/to/config_file
     mpirun -n 4 pyrate merge -f path/to/config_file
 
 .. note::

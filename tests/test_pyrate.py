@@ -135,7 +135,7 @@ class TestPyRate:
             # Turn off validation because we're in a different working dir
             #  and relative paths in config won't be work.
             params = config.get_config_params(common.TEST_CONF_ROIPAC)
-            params['process'] = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack']
+            params['correct'] = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack']
             params[cf.OUT_DIR] = cls.BASE_OUT_DIR
             params[cf.PROCESSOR] = 0  # roipac
             params[cf.APS_CORRECTION] = 0
@@ -152,7 +152,7 @@ class TestPyRate:
             params[cf.REF_PIXEL_FILE] = Configuration.ref_pixel_path(params)
             Path(params[cf.OUT_DIR]).joinpath(cf.APS_ERROR_DIR).mkdir(exist_ok=True, parents=True)
             Path(params[cf.OUT_DIR]).joinpath(cf.MST_DIR).mkdir(exist_ok=True, parents=True)
-            correct.process_ifgs(params)
+            correct.correct_ifgs(params)
 
             if not hasattr(cls, 'ifgs'):
                 cls.ifgs = get_ifgs(out_dir=cls.BASE_OUT_DIR)
@@ -238,7 +238,7 @@ class TestParallelPyRate:
         ifgs = common.small_data_setup()
         correct._copy_mlooked(params)
         tiles = pyrate.core.shared.get_tiles(cls.sampled_paths[0], rows, cols)
-        correct.process_ifgs(params)
+        correct.correct_ifgs(params)
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.OUT_DIR])
@@ -265,7 +265,7 @@ class TestParallelPyRate:
         check_call(f"pyrate prepifg -f {output_conf}", shell=True)
 
         correct._copy_mlooked(params)
-        correct.process_ifgs(params)
+        correct.correct_ifgs(params)
         cls.refpixel, cls.maxvar, cls.vcmt = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.OUT_DIR])

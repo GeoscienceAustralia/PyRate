@@ -9,15 +9,15 @@ from tests import common
 
 
 def test_unsupported_process_steps_raises(gamma_params):
-    gamma_params['process'] = ['orbfit2', 'something_other_step']
+    gamma_params['correct'] = ['orbfit2', 'something_other_step']
     with pytest.raises(ConfigException):
-        correct.process_ifgs(gamma_params)
+        correct.correct_ifgs(gamma_params)
 
 
 def test_supported_process_steps_dont_raise(gamma_params):
     supported_stpes = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack']
-    assert all([s in gamma_params['process'] for s in supported_stpes])
-    correct.__validate_process_steps(params=gamma_params)
+    assert all([s in gamma_params['correct'] for s in supported_stpes])
+    correct.__validate_correct_steps(params=gamma_params)
 
 
 def test_process_treats_prepif_outputs_readonly(gamma_conf, tempdir, coh_mask):

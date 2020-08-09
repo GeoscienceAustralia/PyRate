@@ -72,7 +72,7 @@ This will install the above-listed Python dependencies and compile the executabl
 
     >> pyrate --help
     usage: pyrate [-h] [-v {DEBUG,INFO,WARNING,ERROR}]
-                  {conv2tif,prepifg,process,merge,workflow} ...
+                  {conv2tif,prepifg,correct,merge,workflow} ...
 
     PyRate workflow:
 
@@ -85,7 +85,7 @@ This will install the above-listed Python dependencies and compile the executabl
     more details.
 
     positional arguments:
-      {conv2tif,prepifg,process,merge,workflow}
+      {conv2tif,prepifg,correct,merge,workflow}
         conv2tif            Convert interferograms to geotiff.
         prepifg             Perform multilooking and cropping on geotiffs.
         process             Main processing workflow including corrections, time series and stacking computation.

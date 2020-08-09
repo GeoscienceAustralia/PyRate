@@ -15,7 +15,7 @@
 #   limitations under the License.
 # coding: utf-8
 """
-This Python module runs the main PyRate processing workflow
+This Python module runs the main PyRate correction workflow
 """
 import shutil
 import os
@@ -101,7 +101,7 @@ def __save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, proce
 
 
 def _copy_mlooked(params):
-    log.info("Copying input files into tempdir for manipulation during process steps")
+    log.info("Copying input files into tempdir for manipulation during correct steps")
     mpaths = params[cf.INTERFEROGRAM_FILES]
     process_mpaths = mpiops.array_split(mpaths)
     for p in process_mpaths:
@@ -120,15 +120,15 @@ def main(params):
     :return: vcmt: Variance-covariance matrix array
     :rtype: ndarray
     """
-    mpi_vs_multiprocess_logging("process", params)
+    mpi_vs_multiprocess_logging("correct", params)
 
     if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
         params[cf.PARALLEL] = False
 
-    # Make a copy of the multi-looked files for manipulation during process steps
+    # Make a copy of the multi-looked files for manipulation during correct steps
     _copy_mlooked(params)
 
-    return process_ifgs(params)
+    return correct_ifgs(params)
 
 
 def _update_params_with_tiles(params: dict) -> None:
@@ -139,7 +139,7 @@ def _update_params_with_tiles(params: dict) -> None:
     params[cf.TILES] = tiles
 
 
-process_steps = {
+correct_steps = {
     'orbfit': orb_fit_calc_wrapper,
     'refphase': ref_phase_est_wrapper,
     'mst': mst_calc_wrapper,
@@ -150,7 +150,7 @@ process_steps = {
 }
 
 
-def process_ifgs(params: dict) -> None:
+def correct_ifgs(params: dict) -> None:
     """
     Top level function to perform PyRate workflow on given interferograms
     :param dict params: Dictionary of configuration parameters
@@ -162,22 +162,22 @@ def process_ifgs(params: dict) -> None:
     :rtype: ndarray
     """
 
-    __validate_process_steps(params)
+    __validate_correct_steps(params)
 
     # house keeping
     _update_params_with_tiles(params)
     _create_ifg_dict(params)
     params[cf.REFX_FOUND], params[cf.REFY_FOUND] = ref_pixel_calc_wrapper(params)
 
-    # run through the process steps in user specified sequence
-    for step in params['process']:
-        process_steps[step](params)
+    # run through the correct steps in user specified sequence
+    for step in params['correct']:
+        correct_steps[step](params)
 
-    log.info('Finished process workflow steps')
+    log.info('Finished correct workflow steps')
 
 
-def __validate_process_steps(params):
-    for step in params['process']:
-        if step not in process_steps.keys():
-            raise ConfigException(f"{step} is not a supported process step. \n"
-                                  f"Supported steps are {process_steps.keys()}")
+def __validate_correct_steps(params):
+    for step in params['correct']:
+        if step not in correct_steps.keys():
+            raise ConfigException(f"{step} is not a supported correct step. \n"
+                                  f"Supported steps are {correct_steps.keys()}")

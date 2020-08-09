@@ -120,7 +120,7 @@ class TestLegacyTimeSeriesEquality:
 
         xlks, _, crop = cf.transform_params(params)
 
-        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[cf.OUT_DIR], params)
         correct._copy_mlooked(params)
         copied_dest_paths = [os.path.join(params[cf.TEMP_MLOOKED_DIR], os.path.basename(d)) for d in dest_paths]
         del dest_paths
@@ -220,7 +220,7 @@ class TestLegacyTimeSeriesEqualityMethod2Interp0:
 
         xlks, _, crop = cf.transform_params(params)
 
-        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[cf.OUT_DIR], params)
         correct._copy_mlooked(params)
         copied_dest_paths = [os.path.join(params[cf.TEMP_MLOOKED_DIR], os.path.basename(d)) for d in dest_paths]
         del dest_paths

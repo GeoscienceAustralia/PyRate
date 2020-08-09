@@ -58,10 +58,10 @@ def main():
     parser_prepifg.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                 help="Pass configuration file", required=True)
 
-    parser_process = subparsers.add_parser(
-        'process', help='Main processing workflow including corrections, time series and stacking computation.',
+    parser_correct = subparsers.add_parser(
+        'correct', help='Main correction workflow including corrections, time series and stacking computation.',
         add_help=True)
-    parser_process.add_argument('-f', '--config_file', action="store", type=str, default=None,
+    parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                 help="Pass configuration file", required=True)
 
     parser_merge = subparsers.add_parser('merge', help="Reassemble computed tiles and save as geotiffs.",
@@ -93,7 +93,7 @@ def main():
     if args.command == "prepifg":
         prepifg.main(params)
 
-    if args.command == "process":
+    if args.command == "correct":
         correct.main(params)
 
     if args.command == "merge":

@@ -408,7 +408,7 @@ def _get_mlooked_files(gamma_conf, tdir, refx, refy):
     conv2tif.main(params)
     params = Configuration(output_conf).__dict__
     prepifg.main(params)
-    stdout = run(f"pyrate process -f {output_conf}", shell=True, capture_output=True, text=True)
+    stdout = run(f"pyrate correct -f {output_conf}", shell=True, capture_output=True, text=True)
     return params, stdout
 
 

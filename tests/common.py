@@ -501,7 +501,7 @@ def copytree(src, dst, symlinks=False, ignore=None):
             shutil.copy2(s, d)
 
 
-def repair_params_for_process_tests(out_dir, params):
+def repair_params_for_correct_tests(out_dir, params):
     base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
     headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
     params[cf.INTERFEROGRAM_FILES] = params[cf.INTERFEROGRAM_FILES][:-2]

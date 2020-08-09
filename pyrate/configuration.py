@@ -163,11 +163,11 @@ class Configuration:
         # make output path, if not provided will error
         Path(self.outdir).mkdir(exist_ok=True, parents=True)
 
-        # custom process sequence if 'process' section is provided in config
-        if 'process' in parser and 'steps' in parser['process']:
-            self.__dict__['process'] = list(filter(None, parser['process'].get('steps').splitlines()))
+        # custom correct sequence if 'correct' section is provided in config
+        if 'correct' in parser and 'steps' in parser['correct']:
+            self.__dict__['correct'] = list(filter(None, parser['correct'].get('steps').splitlines()))
         else:
-            self.__dict__['process'] = [
+            self.__dict__['correct'] = [
                 'orbfit',
                 'refphase',
                 'mst',
@@ -317,7 +317,7 @@ def write_config_file(params, output_conf_file):
     with open(output_conf_file, 'w') as f:
         for k, v in params.items():
             if v is not None:
-                if k == 'process':
+                if k == 'correct':
                     f.write(''.join([k, ':\t', '', '\n']))
                     f.write(''.join(['steps = ', '\n']))
                     for vv in v:
