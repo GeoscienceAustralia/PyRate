@@ -302,25 +302,17 @@ def temporal_low_pass_filter(tsincr, epochlist, params):
     """
     log.info('Applying temporal low-pass filter')
     nanmat = ~isnan(tsincr)
-    tsfilt_incr = np.empty_like(tsincr, dtype=np.float32) * np.nan
     intv = np.diff(epochlist.spans)  # time interval for the neighboring epoch
     span = epochlist.spans[: tsincr.shape[2]] + intv/2  # accumulated time
     rows, cols = tsincr.shape[:2]
     cutoff = params[cf.TLPF_CUTOFF]
     method = params[cf.TLPF_METHOD]
     threshold = params[cf.TLPF_PTHR]
-    if method == 1:  # gaussian filter
-        func = gauss
-    elif method == 2:  # triangular filter
-        func = _triangle
-    else:
-        func = mean_filter
-
-    _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr, tsincr, func)
+    tsfilt_incr = _tlpfilter(nanmat, rows, cols, cutoff, span, threshold, tsincr, tlpf_methods[method])
     log.debug("Finished applying temporal low-pass filter")
     return tsfilt_incr
 
-# Throwaway function to define Gaussian filter weights
+
 gauss = lambda m, yr, cutoff: np.exp(-(yr / cutoff) ** 2 / 2)
 
 
@@ -332,14 +324,17 @@ def _triangle(m, yr, cutoff):
     wgt[wgt < 0] = 0
     return wgt
 
-# Throwaway function to define Mean filter weights
+
 mean_filter = lambda m, yr, cutoff: np.ones(m)
 
+tlpf_methods = {1: gauss, 2: _triangle, 3: mean_filter}
 
-def _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr, tsincr, func):
+
+def _tlpfilter(nanmat, rows, cols, cutoff, span, threshold, tsincr, func):
     """
     Wrapper function for temporal low pass filter
     """
+    tsfilt_incr = np.empty_like(tsincr, dtype=np.float32) * np.nan
     for i in range(rows):
         for j in range(cols):
             sel = np.nonzero(nanmat[i, j, :])[0]  # don't select if nan
@@ -350,3 +345,4 @@ def _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr, tsincr,
                     wgt = func(m, yr, cutoff)
                     wgt /= np.sum(wgt)
                     tsfilt_incr[i, j, sel[k]] = np.sum(tsincr[i, j, sel] * wgt)
+    return tsfilt_incr
