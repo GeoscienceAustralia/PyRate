@@ -94,7 +94,7 @@ def spatio_temporal_filter(tsincr, ifg_paths, params, preread_ifgs):
     epochlist = mpiops.run_once(get_epochs, preread_ifgs)[0]
     ts_lp = temporal_low_pass_filter(tsincr, epochlist, params)
     ts_hp = tsincr - ts_lp
-    ts_aps = mpiops.run_once(spatial_low_pass_filter, ts_hp, ifg, params)
+    ts_aps = spatial_low_pass_filter(ts_hp, ifg, params)
     tsincr -= ts_aps
 
     _ts_to_ifgs(tsincr, preread_ifgs, params)
@@ -209,8 +209,16 @@ def spatial_low_pass_filter(ts_lp, ifg, params):
         # optionally interpolate, operation is inplace
         _interpolate_nans(ts_lp, params[cf.SLPF_NANFILL_METHOD])
     r_dist = RDist(ifg)()
-    for i in range(ts_lp.shape[2]):
-        ts_lp[:, :, i] = _slpfilter(ts_lp[:, :, i], ifg, r_dist, params)
+    nvels = ts_lp.shape[2]
+
+    process_nvel = mpiops.array_split(range(nvels))
+    process_ts_lp = {}
+
+    for i in process_nvel:
+        process_ts_lp[i] = _slpfilter(ts_lp[:, :, i], ifg, r_dist, params)
+
+    ts_lp_d = shared.join_dicts(mpiops.comm.allgather(process_ts_lp))
+    ts_lp = np.dstack([v[1] for v in sorted(ts_lp_d.items())])
     log.debug('Finished applying spatial low pass filter')
     return ts_lp
 
