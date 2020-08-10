@@ -99,15 +99,15 @@ def test_prepifg_file_types(tempdir, gamma_conf, coh_mask):
     prepifg.main(params_s)
     ifg_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_ifg.tif'))
     assert len(ifg_files) == 17
-    mlooked_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_ifg_1rlks_1cr.tif'))
+    mlooked_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_ifg_1lksx_1lksy_1cr.tif'))
     assert len(mlooked_files) == 17
     coh_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_cc_coh.tif'))
-    mlooked_coh_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_cc_coh_1rlks_1cr.tif'))
+    mlooked_coh_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_cc_coh_1lksx_1lksy_1cr.tif'))
     if coh_mask:
         assert len(coh_files) == 17
         assert len(mlooked_coh_files) == 17
     dem_file = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_dem.tif'))[0]
-    mlooked_dem_file = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_dem_1rlks_1cr.tif'))[0]
+    mlooked_dem_file = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_dem_1lksx_1lksy_1cr.tif'))[0]
     import itertools
 
     # assert coherence and ifgs have correct metadata
@@ -121,10 +121,10 @@ def test_prepifg_file_types(tempdir, gamma_conf, coh_mask):
         if i.name.endswith('_coh.tif'):
             assert md[ifc.DATA_TYPE] == ifc.COH
             continue
-        if i.name.endswith('_cc_coh_1rlks_1cr.tif'):
+        if i.name.endswith('_cc_coh_1lksx_1lksy_1cr.tif'):
             assert md[ifc.DATA_TYPE] == ifc.MULTILOOKED_COH
             continue
-        if i.name.endswith('_ifg_1rlks_1cr.tif'):
+        if i.name.endswith('_ifg_1lksx_1lksy_1cr.tif'):
             if coh_mask:
                 assert md[ifc.DATA_TYPE] == ifc.COHERENCE
             else:
@@ -208,14 +208,14 @@ class TestPrepifgOutput(UnitTestAdaptation):
 
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.headers = [roipac.roipac_header(i.data_path, params) for i in cls.ifgs]
-        paths = ["geo_060619-061002_unw_1rlks_1cr.tif",
-                 "geo_060619-061002_unw_1rlks_2cr.tif",
-                 "geo_060619-061002_unw_1rlks_3cr.tif",
-                 "geo_060619-061002_unw_4rlks_3cr.tif",
-                 "geo_070326-070917_unw_1rlks_1cr.tif",
-                 "geo_070326-070917_unw_1rlks_2cr.tif",
-                 "geo_070326-070917_unw_1rlks_3cr.tif",
-                 "geo_070326-070917_unw_4rlks_3cr.tif"]
+        paths = ["geo_060619-061002_unw_1lksx_1lksy_1cr.tif",
+                 "geo_060619-061002_unw_1lksx_1lksy_2cr.tif",
+                 "geo_060619-061002_unw_1lksx_1lksy_3cr.tif",
+                 "geo_060619-061002_unw_4lksx_4lksy_3cr.tif",
+                 "geo_070326-070917_unw_1lksx_1lksy_1cr.tif",
+                 "geo_070326-070917_unw_1lksx_1lksy_2cr.tif",
+                 "geo_070326-070917_unw_1lksx_1lksy_3cr.tif",
+                 "geo_070326-070917_unw_4lksx_4lksy_3cr.tif"]
         cls.exp_files = [join(cls.random_dir, p) for p in paths]
 
     @staticmethod
@@ -264,7 +264,7 @@ class TestPrepifgOutput(UnitTestAdaptation):
     def test_multilooked_projection_same_as_geotiff(self):
         xlooks = ylooks = 1
         prepare_ifgs(self.ifg_paths, MAXIMUM_CROP, xlooks, ylooks, headers=self.headers)
-        mlooked_paths = [mlooked_path(f, crop_out=MAXIMUM_CROP, looks=xlooks)
+        mlooked_paths = [mlooked_path(f, crop_opt=MAXIMUM_CROP, xlooks=xlooks, ylooks=ylooks)
                          for f in self.ifg_paths]
         self.assert_projection_equal(self.ifg_paths + mlooked_paths)
 
@@ -429,7 +429,7 @@ class TestPrepifgOutput(UnitTestAdaptation):
 
         # verify DEM has been correctly processed
         # ignore output values as resampling has already been tested for phase
-        exp_dem_path = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed_4rlks_3cr.tif')
+        exp_dem_path = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed_4lksx_4lksy_3cr.tif')
         self.assertTrue(exists(exp_dem_path))
         orignal_dem = DEM(SML_TEST_DEM_TIF)
         orignal_dem.open()
@@ -464,7 +464,7 @@ class TestPrepifgOutput(UnitTestAdaptation):
                      thresh=1.0, user_exts=cext, headers=self.headers)
 
         for i in self.ifg_paths:
-            mlooked_ifg = mlooked_path(i, xlooks, CUSTOM_CROP)
+            mlooked_ifg = mlooked_path(i, xlooks, ylooks, CUSTOM_CROP)
             ds1 = DEM(mlooked_ifg)
             ds1.open()
             ds2 = DEM(i)
@@ -570,7 +570,7 @@ class TestSameSizeTests(UnitTestAdaptation):
         xlooks = ylooks = 2
         prepare_ifgs(ifg_data_paths, ALREADY_SAME_SIZE, xlooks, ylooks, self.headers)
 
-        looks_paths = [mlooked_path(d, looks=xlooks, crop_out=ALREADY_SAME_SIZE) for d in ifg_data_paths]
+        looks_paths = [mlooked_path(d, xlooks=xlooks, ylooks=ylooks, crop_opt=ALREADY_SAME_SIZE) for d in ifg_data_paths]
         mlooked = [Ifg(i) for i in looks_paths]
         for m in mlooked:
             m.open()
@@ -584,16 +584,16 @@ class TestSameSizeTests(UnitTestAdaptation):
 
 def test_mlooked_path():
     path = 'geo_060619-061002_unw.tif'
-    assert mlooked_path(path, looks=2, crop_out=4) == \
-        'geo_060619-061002_unw_2rlks_4cr.tif'
+    assert mlooked_path(path, xlooks=2, ylooks=2, crop_opt=4) == \
+        'geo_060619-061002_unw_2lksx_2lksy_4cr.tif'
 
     path = 'some/dir/geo_060619-061002_unw.tif'
-    assert mlooked_path(path, looks=4, crop_out=2) == \
-        'some/dir/geo_060619-061002_unw_4rlks_2cr.tif'
+    assert mlooked_path(path, xlooks=4, ylooks=2, crop_opt=2) == \
+        'some/dir/geo_060619-061002_unw_4lksx_2lksy_2cr.tif'
 
-    path = 'some/dir/geo_060619-061002_4rlks.tif'
-    assert mlooked_path(path, looks=4, crop_out=8) == \
-        'some/dir/geo_060619-061002_4rlks_4rlks_8cr.tif'
+    path = 'some/dir/geo_060619-061002_4lksx.tif'
+    assert mlooked_path(path, xlooks=4, ylooks=2, crop_opt=8) == \
+        'some/dir/geo_060619-061002_4lksx_4lksx_2lksy_8cr.tif'
 
 
 # class LineOfSightTests(unittest.TestCase):
@@ -678,7 +678,7 @@ class TestLegacyEqualityTestRoipacSmallTestData(UnitTestAdaptation):
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.headers = [roipac.roipac_header(i.data_path, params) for i in cls.ifgs]
         prepare_ifgs(cls.ifg_paths, crop_opt=1, xlooks=1, ylooks=1, headers=cls.headers)
-        looks_paths = [mlooked_path(d, looks=1, crop_out=1)
+        looks_paths = [mlooked_path(d, xlooks=1, ylooks=1, crop_opt=1)
                        for d in cls.ifg_paths]
         cls.ifgs_with_nan = [Ifg(i) for i in looks_paths]
         for ifg in cls.ifgs_with_nan:
