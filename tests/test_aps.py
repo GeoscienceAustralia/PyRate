@@ -18,6 +18,7 @@ def slpnanfill_method(request):
 def test_interpolate_nans(slpnanfill_method):
     arr = np.random.rand(20, 10, 5)
     arr[arr < 0.1] = np.nan  # insert some nans
+    assert np.sum(np.isnan(arr)) != 0  # some nans present
     _interpolate_nans(arr, method=slpnanfill_method)
     assert np.sum(np.isnan(arr)) == 0  # should not be any nans
 

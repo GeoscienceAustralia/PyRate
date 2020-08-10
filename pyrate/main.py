@@ -64,6 +64,18 @@ def main():
     parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                 help="Pass configuration file", required=True)
 
+    parser_correct = subparsers.add_parser(
+        'timeseries', help='Timeseries workflow including corrections, time series and stacking computation.',
+        add_help=True)
+    parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
+                                help="Pass configuration file", required=True)
+
+    parser_correct = subparsers.add_parser(
+        'stack', help='Stack workflow including corrections, time series and stacking computation.',
+        add_help=True)
+    parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
+                                help="Pass configuration file", required=True)
+
     parser_merge = subparsers.add_parser('merge', help="Reassemble computed tiles and save as geotiffs.",
                                          add_help=True)
     parser_merge.add_argument('-f', '--config_file', action="store", type=str, default=None,
@@ -96,6 +108,14 @@ def main():
     if args.command == "correct":
         correct.main(params)
 
+    if args.command == "timeseries":
+        params = mpiops.run_once(correct.load_params_from_disc, params)
+        correct.timeseries(params)
+
+    if args.command == "stack":
+        params = mpiops.run_once(correct.load_params_from_disc, params)
+        correct.stack(params)
+
     if args.command == "merge":
         merge.main(params)
 
@@ -111,6 +131,16 @@ def main():
         # reset params as prepifg modifies params
         params = mpiops.run_once(_params_from_conf, args.config_file)
         correct.main(params)
+
+        log.info("***********TIMESERIES**************")
+        params = mpiops.run_once(_params_from_conf, args.config_file)
+        params = mpiops.run_once(correct.load_params_from_disc, params)
+        correct.timeseries(params)
+
+        log.info("***********STACK**************")
+        params = mpiops.run_once(_params_from_conf, args.config_file)
+        params = mpiops.run_once(correct.load_params_from_disc, params)
+        correct.stack(params)
 
         # process might modify params too
         params = mpiops.run_once(_params_from_conf, args.config_file)

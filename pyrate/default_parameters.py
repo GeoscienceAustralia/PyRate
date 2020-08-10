@@ -453,7 +453,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": [1, 0],
         "Required": False
     },
-    "process": {
+    "correct": {
         "DataType": list,
         "DefaultValue": ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack'],
         "MinValue": None,

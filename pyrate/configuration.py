@@ -173,8 +173,6 @@ class Configuration:
                 'mst',
                 'apscorrect',
                 'maxvar',
-                'timeseries',
-                'stack'
             ]
 
         # Validate required parameters exist.

@@ -35,6 +35,8 @@ from pyrate.core.logger import pyratelogger as log
 from pyrate.core.stack import stack_calc_wrapper
 from pyrate.core.timeseries import timeseries_calc_wrapper
 
+MAIN_PROCESS = 0
+
 
 def _create_ifg_dict(params):
     """
@@ -145,9 +147,27 @@ correct_steps = {
     'mst': mst_calc_wrapper,
     'apscorrect': wrap_spatio_temporal_filter,
     'maxvar': maxvar_vcm_calc_wrapper,
-    'timeseries': timeseries_calc_wrapper,
-    'stack': stack_calc_wrapper
+    # 'timeseries': timeseries_calc_wrapper,
+    # 'stack': stack_calc_wrapper
 }
+
+
+def timeseries(params: dict) -> None:
+    timeseries_calc_wrapper(params)
+
+
+def stack(params: dict) -> None:
+    stack_calc_wrapper(params)
+
+
+def load_params_from_disc(params: dict) -> dict:
+    params_file = Path(params[cf.OUT_DIR], 'correction.params')
+    if not params_file.exists():
+        raise FileNotFoundError("Params file not found on disc. Please run 'correct'")
+
+    with open(params_file, 'rb') as f:
+        params = cp.load(f)
+    return params
 
 
 def correct_ifgs(params: dict) -> None:
@@ -173,7 +193,12 @@ def correct_ifgs(params: dict) -> None:
     for step in params['correct']:
         correct_steps[step](params)
 
-    log.info('Finished correct workflow steps')
+    # export params
+    if mpiops.rank == MAIN_PROCESS:
+        with open(Path(params[cf.OUT_DIR], 'correction.params'), 'wb') as f:
+            cp.dump(params, f)
+        log.info('Correction params saved on disc')
+        log.info('Finished correct workflow steps')
 
 
 def __validate_correct_steps(params):
