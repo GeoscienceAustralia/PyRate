@@ -270,7 +270,7 @@ def _merge_setup(params):
     xlks, _, crop = cf.transform_params(params)
     base_unw_paths = []
 
-    for p in Path(params[cf.OUT_DIR]).rglob("*rlks_*cr.tif"):
+    for p in Path(params[cf.OUT_DIR]).rglob("*lksx_*cr.tif"):
         if "dem" not in str(p):
             base_unw_paths.append(str(p))
 

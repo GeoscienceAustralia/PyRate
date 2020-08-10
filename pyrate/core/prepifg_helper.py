@@ -180,7 +180,7 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, header, wri
 
     # cut, average, resample the final output layers
     op = output_tiff_filename(raster.data_path, out_path)
-    looks_path = cf.mlooked_path(op, xlooks, crop_opt)
+    looks_path = cf.mlooked_path(op, xlooks, ylooks, crop_opt)
 
     #     # Add missing/updated metadata to resampled ifg/DEM
     #     new_lyr = type(ifg)(looks_path)

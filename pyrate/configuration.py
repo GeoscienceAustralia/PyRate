@@ -84,6 +84,7 @@ class MultiplePaths:
         self.input_type = input_type
         out_dir = params[cf.OUT_DIR]
         ifglksx = params[cf.IFG_LKSX]
+        ifglksy = params[cf.IFG_LKSY]
         ifgcropopt = params[cf.IFG_CROP_OPT]
         tempdir = params[cf.TEMP_MLOOKED_DIR]
         if isinstance(tempdir, str):
@@ -93,13 +94,13 @@ class MultiplePaths:
             self.unwrapped_path = None
             converted_path = b  # original file
             self.sampled_path = Path(out_dir).joinpath(
-                b.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif")
+                b.stem + '_' + str(ifglksx) + "lksx_" + str(ifglksy) + "lksy_" + str(ifgcropopt) + "cr.tif")
         else:
             self.unwrapped_path = b.as_posix()
             converted_path = Path(out_dir).joinpath(
                 b.stem.split('.')[0] + '_' + b.suffix[1:] + input_type.value).with_suffix('.tif')
             self.sampled_path = converted_path.with_name(
-                converted_path.stem + '_' + str(ifglksx) + "rlks_" + str(ifgcropopt) + "cr.tif")
+                converted_path.stem + '_' + str(ifglksx) + "lksx_" + str(ifglksy) + "lksy_" + str(ifgcropopt) + "cr.tif")
         self.tmp_sampled_path = tempdir.joinpath(self.sampled_path.name).as_posix()
         self.converted_path = converted_path.as_posix()
         self.sampled_path = self.sampled_path.as_posix()
@@ -112,7 +113,8 @@ class MultiplePaths:
                     ifg_path.stem + '_' +
                     '_'.join([str(params[cf.ORBITAL_FIT_METHOD]),
                               str(params[cf.ORBITAL_FIT_DEGREE]),
-                              str(params[cf.ORBITAL_FIT_LOOKS_X])]) +
+                              str(params[cf.ORBITAL_FIT_LOOKS_X]),
+                              str(params[cf.ORBITAL_FIT_LOOKS_Y])]) +
                     '_orbfit.npy')
 
     def __str__(self):  # pragma: no cover

@@ -540,6 +540,7 @@ class TestNetworkCorrectionTests:
         params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
         params[cf.ORBITAL_FIT_DEGREE] = deg
         params[cf.ORBITAL_FIT_LOOKS_X] = 1
+        params[cf.ORBITAL_FIT_LOOKS_Y] = 1
         params[cf.PARALLEL] = False
         params[cf.OUT_DIR] = tempfile.mkdtemp()
         params[cf.ORBFIT_OFFSET] = offset
@@ -609,6 +610,7 @@ class TestNetworkCorrectionTestsMultilooking:
         params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
         params[cf.ORBITAL_FIT_DEGREE] = deg
         params[cf.ORBITAL_FIT_LOOKS_X] = 1
+        params[cf.ORBITAL_FIT_LOOKS_Y] = 1
         params[cf.PARALLEL] = False
         params[cf.ORBFIT_OFFSET] = offset
         params[cf.PREREAD_IFGS] = None
@@ -748,7 +750,7 @@ class TestLegacyComparisonTestsOrbfitMethod1:
             for k, j in enumerate([m.tmp_sampled_path for m in multi_paths]):
                 ifg = Ifg(j)
                 ifg.open()
-                if os.path.basename(j).split('_unw_1rlks_1cr.')[0] == os.path.basename(f).split(
+                if os.path.basename(j).split('_unw_1lksx_1lksy_1cr.')[0] == os.path.basename(f).split(
                         '_orb_planar_1lks_method1_')[1].split('.')[0]:
                     count += 1
                     # all numbers equal

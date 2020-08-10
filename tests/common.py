@@ -619,6 +619,7 @@ def min_params(out_dir):
     params = {}
     params[cf.OUT_DIR] = out_dir
     params[cf.IFG_LKSX] = 1
+    params[cf.IFG_LKSY] = 1
     params[cf.IFG_CROP_OPT] = 4
     params[cf.TEMP_MLOOKED_DIR] = Path(tempfile.mkdtemp())
     params[cf.ORBITAL_FIT_LOOKS_X] = 10
