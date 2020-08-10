@@ -504,19 +504,20 @@ def coherence_paths_for(path: str, params: dict, tif=False) -> str:
     return coh_file_paths[0]
 
 
-def mlooked_path(path, looks, crop_out):
+def mlooked_path(path, xlooks, ylooks, crop_opt):
     """
     Adds suffix to ifg path, for creating a new path for multilooked files.
 
     :param str path: original interferogram path
-    :param int looks: number of range looks applied
-    :param int crop_out: crop option applied
+    :param int xlooks: number of X looks applied
+    :param int ylooks: number of Y looks applied
+    :param int crop_opt: crop option applied
 
     :return: multilooked file name
     :rtype: str
     """
     base, ext = splitext(path)
-    return "{base}_{looks}rlks_{crop_out}cr{ext}".format(base=base, looks=looks, crop_out=crop_out, ext=ext)
+    return "{base}_{xlooks}lksx_{ylooks}lksy_{crop_opt}cr{ext}".format(base=base, xlooks=xlooks, ylooks=ylooks, crop_opt=crop_opt, ext=ext)
 
 
 def get_dest_paths(base_paths, crop, params, looks):
@@ -534,7 +535,7 @@ def get_dest_paths(base_paths, crop, params, looks):
 
     dest_mlooked_ifgs = [mlooked_path(os.path.basename(q).split('.')[0] + '_'
                                       + os.path.basename(q).split('.')[1] +
-                                      '.tif', looks=looks, crop_out=crop)
+                                      '.tif', looks=looks, crop_opt=crop)
                          for q in base_paths]
 
     return [os.path.join(params[OUT_DIR], p) for p in dest_mlooked_ifgs]

@@ -31,6 +31,7 @@ from osgeo import gdal
 from pyrate.core.gdal_python import crop_resample_average
 from pyrate.core import config as cf
 from pyrate.core.shared import output_tiff_filename, dem_or_ifg, Ifg, DEM
+from pyrate.core.logger import pyratelogger as log
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
@@ -179,10 +180,7 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, header, wri
 
     # cut, average, resample the final output layers
     op = output_tiff_filename(raster.data_path, out_path)
-    looks_path = cf.mlooked_path(op, ylooks, crop_opt)
-
-    if xlooks != ylooks:
-        raise ValueError('X and Y looks mismatch')
+    looks_path = cf.mlooked_path(op, xlooks, ylooks, crop_opt)
 
     #     # Add missing/updated metadata to resampled ifg/DEM
     #     new_lyr = type(ifg)(looks_path)
@@ -226,6 +224,9 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, thresh=0.
     :return: out_ds: destination gdal dataset object
     :rtype: List[gdal.Dataset]
     """
+    if xlooks != ylooks:
+        log.warning('X and Y multi-look factors are not equal')
+
     # use metadata check to check whether it's a dem or ifg
     rasters = [dem_or_ifg(r) for r in raster_data_paths]
     exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)

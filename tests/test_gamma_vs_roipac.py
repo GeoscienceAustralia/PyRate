@@ -105,7 +105,7 @@ def __assert_same_files_produced(dir1, dir2, ext, num_files):
             else:
                 assert mdj[k] == mdi[k]
 
-        if i.data_path.__contains__("_{looks}rlks_{crop}cr".format(looks=1, crop=1)):
+        if i.data_path.__contains__("_{looks}lksy_{crop}cr".format(looks=1, crop=1)):
             # these are multilooked tifs
             # test that DATA_STEP is MULTILOOKED
             assert mdi[ifc.DATA_TYPE] == ifc.MULTILOOKED

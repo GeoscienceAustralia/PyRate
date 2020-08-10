@@ -303,7 +303,7 @@ class TestHeaderCombination:
             func(* args)
 
 
-glob_prefix = "*utm_unw_ifg_1rlks_1cr.tif"
+glob_prefix = "*utm_unw_ifg_1lksx_1lksy_1cr.tif"
 
 
 @pytest.fixture(scope='module')

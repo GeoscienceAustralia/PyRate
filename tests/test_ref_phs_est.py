@@ -219,7 +219,7 @@ class TestRefPhsEstimationLegacyTestMethod1Serial:
                 LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw_ifg_1rlks')[0]:
+                        os.path.split(j.data_path)[-1].split('_unw_ifg_1lksx')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,
@@ -302,7 +302,7 @@ class TestRefPhsEstimationLegacyTestMethod1Parallel:
                 LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw_ifg_1rlks')[0]:
+                        os.path.split(j.data_path)[-1].split('_unw_ifg_1lksx')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(
@@ -385,7 +385,7 @@ class TestRefPhsEstimationLegacyTestMethod2Serial:
                 LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected_method2')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw_ifg_1rlks')[0]:
+                        os.path.split(j.data_path)[-1].split('_unw_ifg_1lksx')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,
@@ -471,7 +471,7 @@ class TestRefPhsEstimationLegacyTestMethod2Parallel:
                 LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
                 if f.split('_corrected_method2')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw_ifg_1rlks')[0]:
+                        os.path.split(j.data_path)[-1].split('_unw_ifg_1lksx')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(
