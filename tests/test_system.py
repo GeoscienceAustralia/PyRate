@@ -34,11 +34,13 @@ def test_workflow(system_conf):
     check_call(f"mpirun -n 3 pyrate conv2tif -f {system_conf}", shell=True)
     check_call(f"mpirun -n 3 pyrate prepifg -f {system_conf}", shell=True)
     check_call(f"mpirun -n 3 pyrate correct -f {system_conf}", shell=True)
+    check_call(f"mpirun -n 3 pyrate timeseries -f {system_conf}", shell=True)
+    check_call(f"mpirun -n 3 pyrate stack -f {system_conf}", shell=True)
     check_call(f"mpirun -n 3 pyrate merge -f {system_conf}", shell=True)
 
     # assert logs generated in the outdir
     params = Configuration(system_conf).__dict__
-    for stage in ['conv2tif', 'prepifg', 'correct', 'merge']:
+    for stage in ['conv2tif', 'prepifg', 'correct', 'timeseries', 'stack', 'merge']:
         log_file_name = 'pyrate.log.' + stage
         files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
         assert len(files) == 1

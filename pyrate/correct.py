@@ -124,9 +124,6 @@ def main(params):
     """
     mpi_vs_multiprocess_logging("correct", params)
 
-    if mpiops.size > 1:  # turn of multiprocessing during mpi jobs
-        params[cf.PARALLEL] = False
-
     # Make a copy of the multi-looked files for manipulation during correct steps
     _copy_mlooked(params)
 
@@ -153,10 +150,12 @@ correct_steps = {
 
 
 def timeseries(params: dict) -> None:
+    mpi_vs_multiprocess_logging("timeseries", params)
     timeseries_calc_wrapper(params)
 
 
 def stack(params: dict) -> None:
+    mpi_vs_multiprocess_logging("stack", params)
     stack_calc_wrapper(params)
 
 
