@@ -15,7 +15,7 @@ def test_unsupported_process_steps_raises(gamma_params):
 
 
 def test_supported_process_steps_dont_raise(gamma_params):
-    supported_stpes = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack']
+    supported_stpes = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar']
     assert all([s in gamma_params['correct'] for s in supported_stpes])
     correct.__validate_correct_steps(params=gamma_params)
 
@@ -52,6 +52,6 @@ def test_process_treats_prepif_outputs_readonly(gamma_conf, tempdir, coh_mask):
     params = Configuration(output_conf).__dict__
     correct.main(params)
 
-    # check all after process steps multilooked files are still readonly
+    # check all after correct steps multilooked files are still readonly
     for c in cropped:
         assert c.stat().st_mode == 33060
