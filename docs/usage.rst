@@ -281,7 +281,7 @@ and stacking analysis.
       -f CONFIG_FILE, --config_file CONFIG_FILE
                             Pass configuration file
 
-The ``process`` step is used as follows:
+The ``correct`` step is used as follows:
 
 ::
 
@@ -429,6 +429,8 @@ by using ``mpirun``:
     mpirun -n 4 pyrate conv2tif -f path/to/config_file
     mpirun -n 4 pyrate prepifg -f path/to/config_file
     mpirun -n 4 pyrate correct -f path/to/config_file
+    mpirun -n 4 pyrate timeseries -f input_parameters.conf
+    mpirun -n 4 pyrate stack -f input_parameters.conf
     mpirun -n 4 pyrate merge -f path/to/config_file
 
 .. note::

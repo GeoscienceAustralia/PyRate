@@ -135,7 +135,7 @@ class TestPyRate:
             # Turn off validation because we're in a different working dir
             #  and relative paths in config won't be work.
             params = config.get_config_params(common.TEST_CONF_ROIPAC)
-            params['correct'] = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack']
+            params['correct'] = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar']
             params[cf.OUT_DIR] = cls.BASE_OUT_DIR
             params[cf.PROCESSOR] = 0  # roipac
             params[cf.APS_CORRECTION] = 0
@@ -239,6 +239,8 @@ class TestParallelPyRate:
         correct._copy_mlooked(params)
         tiles = pyrate.core.shared.get_tiles(cls.sampled_paths[0], rows, cols)
         correct.correct_ifgs(params)
+        correct.timeseries(params)
+        correct.stack(params)
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.OUT_DIR])
@@ -266,6 +268,8 @@ class TestParallelPyRate:
 
         correct._copy_mlooked(params)
         correct.correct_ifgs(params)
+        correct.timeseries(params)
+        correct.stack(params)
         cls.refpixel, cls.maxvar, cls.vcmt = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.OUT_DIR])

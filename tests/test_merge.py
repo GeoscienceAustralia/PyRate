@@ -39,6 +39,8 @@ def create_merge_output(tempdir, gamma_conf):
     check_call(f"pyrate conv2tif -f {output_conf}", shell=True)
     check_call(f"pyrate prepifg -f {output_conf}", shell=True)
     check_call(f"pyrate correct -f {output_conf}", shell=True)
+    check_call(f"pyrate timeseries -f {output_conf}", shell=True)
+    check_call(f"pyrate stack -f {output_conf}", shell=True)
 
     params = Configuration(output_conf).__dict__
     _merge_stack(params)

@@ -36,6 +36,8 @@ example config file and the small dataset included in the repository:
     pyrate conv2tif -f input_parameters.conf
     pyrate prepifg -f input_parameters.conf
     pyrate correct -f input_parameters.conf
+    pyrate timeseries -f input_parameters.conf
+    pyrate stack -f input_parameters.conf
     pyrate merge -f input_parameters.conf
 
 If the installation has been successful, this workflow will complete without 

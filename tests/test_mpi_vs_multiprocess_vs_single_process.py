@@ -106,6 +106,8 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
 
     try:
         check_call(f"mpirun -n 3 pyrate correct -f {mpi_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate timeseries -f {mpi_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate stack -f {mpi_conf}", shell=True)
     except CalledProcessError as c:
         print(c)
         if TRAVIS:
@@ -244,6 +246,8 @@ def create_mpi_files():
 
         try:
             check_call(f"mpirun -n 3 pyrate correct -f {mpi_conf}", shell=True)
+            check_call(f"mpirun -n 3 pyrate timeseries -f {mpi_conf}", shell=True)
+            check_call(f"mpirun -n 3 pyrate stack -f {mpi_conf}", shell=True)
         except CalledProcessError as c:
             print(c)
             if TRAVIS:
