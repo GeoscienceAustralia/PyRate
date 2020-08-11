@@ -211,13 +211,16 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, fl
     """
     Multiprocessing wrapper for prepifg
     """
-    xlooks, ylooks, crop = cf.transform_params(params)
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
-    header = find_header(m_path, params)
-    header[ifc.INPUT_TYPE] = m_path.input_type
+    hdr = find_header(m_path, params)
+    hdr[ifc.INPUT_TYPE] = m_path.input_type
+    xlooks, ylooks, crop = cf.transform_params(params)
+    hdr[ifc.IFG_LKSX] = xlooks
+    hdr[ifc.IFG_LKSY] = ylooks
+    hdr[ifc.IFG_CROP] = crop
 
     # If we're performing coherence masking, find the coherence file for this IFG.
-    if params[cf.COH_MASK] and shared._is_interferogram(header):
+    if params[cf.COH_MASK] and shared._is_interferogram(hdr):
         coherence_path = cf.coherence_paths_for(m_path.converted_path, params, tif=True)
         coherence_thresh = params[cf.COH_THRESH]
     else:
@@ -228,7 +231,7 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, fl
         return m_path.converted_path, coherence_path, m_path.sampled_path
     else:
         prepifg_helper.prepare_ifg(m_path.converted_path, xlooks, ylooks, exts, thresh, crop,
-                                   out_path=params[cf.OUT_DIR], header=header, coherence_path=coherence_path,
+                                   out_path=params[cf.OUT_DIR], header=hdr, coherence_path=coherence_path,
                                    coherence_thresh=coherence_thresh)
         Path(m_path.sampled_path).chmod(0o444)  # readonly output
 

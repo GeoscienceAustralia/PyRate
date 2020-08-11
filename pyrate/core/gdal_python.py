@@ -348,6 +348,12 @@ def crop_resample_average(
             else:
                 raise TypeError(f'Data Type metadata {v} not recognised')
 
+    # insert prepifg mlook and crop params as metadata
+    if ifc.MULTILOOKED or ifc.MULTILOOKED_COH or ifc.MLOOKED_DEM or ifc.MLOOKED_INC in md.values():
+        md[ifc.IFG_LKSX] = hdr[ifc.IFG_LKSX]
+        md[ifc.IFG_LKSY] = hdr[ifc.IFG_LKSY]
+        md[ifc.IFG_CROP] = hdr[ifc.IFG_CROP]
+
     # In-memory GDAL driver doesn't support compression so turn it off.
     creation_opts = ['compress=packbits'] if out_driver_type != 'MEM' else []
     out_ds = shared.gdal_dataset(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
