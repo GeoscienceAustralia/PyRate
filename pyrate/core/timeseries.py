@@ -323,10 +323,6 @@ def linear_rate_pixel(y, t):
     :rtype: int
     """
 
-    # test for equal length of input vectors
-    if len(y) != len(t):
-        raise TimeSeriesError("linear_rate_pixel: y and t are not equal length")
-
     # remove nan elements from both arrays
     t = t[~isnan(y)]
     y = y[~isnan(y)]    
@@ -371,6 +367,10 @@ def linear_rate_array(tscuml, ifgs, params):
     # get cumulative time per epoch
     t = asarray(epochlist.spans)
 
+    # test for equal length of input vectors
+    if tscuml.shape[2] != len(t):
+        raise TimeSeriesError("linear_rate_pixel: nvels and t are not equal length")
+
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
     if parallel:
@@ -394,7 +394,8 @@ def linear_rate_array(tscuml, ifgs, params):
         samples = np.empty([nrows, ncols], dtype=np.float32)
         for i in range(nrows):
             for j in range(ncols):
-                linrate[i, j], intercept[i, j], rsquared[i, j], error[i, j], samples[i, j] = linear_rate_pixel(tscuml[i, j, :], t)
+                linrate[i, j], intercept[i, j], rsquared[i, j], error[i, j], samples[i, j] = \
+                    linear_rate_pixel(tscuml[i, j, :], t)
 
     return linrate, intercept, rsquared, error, samples
 
