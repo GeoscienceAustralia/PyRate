@@ -324,11 +324,12 @@ def linear_rate_pixel(y, t):
     """
 
     # remove nan elements from both arrays
-    t = t[~isnan(y)]
-    y = y[~isnan(y)]    
-    nsamp = len(y)
+    mask = ~isnan(y)  # Mask to exclude nan elements
+    t = t[mask]
+    y = y[mask]    
 
     # break out if not enough time series obs for line fitting
+    nsamp = len(y)
     if nsamp < 2:
         return nan, nan, nan, nan, nan
 
