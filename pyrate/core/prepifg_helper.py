@@ -111,6 +111,9 @@ def _check_looks(xlooks, ylooks):
               "Looks must be an integer greater than zero" % (xlooks, ylooks)
         raise PreprocessError(msg)
 
+    if xlooks != ylooks:
+        log.warning('X and Y multi-look factors are not equal')
+
 
 def _check_resolution(ifgs):
     """
@@ -224,9 +227,6 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, thresh=0.
     :return: out_ds: destination gdal dataset object
     :rtype: List[gdal.Dataset]
     """
-    if xlooks != ylooks:
-        log.warning('X and Y multi-look factors are not equal')
-
     # use metadata check to check whether it's a dem or ifg
     rasters = [dem_or_ifg(r) for r in raster_data_paths]
     exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)
