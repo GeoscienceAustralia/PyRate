@@ -97,14 +97,16 @@ executable program ``pyrate`` is created in the system path:
 
     >> pyrate --help
     usage: pyrate [-h] [-v {DEBUG,INFO,WARNING,ERROR}]
-                  {conv2tif,prepifg,correct,merge,workflow} ...
+                  {conv2tif,prepifg,correct,timeseires,stack,merge,workflow} ...
 
     PyRate workflow:
 
         Step 1: conv2tif
         Step 2: prepifg
-        Step 3: process
-        Step 4: merge
+        Step 3: correct
+        Step 4: timeseries
+        Step 5: stack
+        Step 6: merge
 
     Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for
     more details.
@@ -113,7 +115,9 @@ executable program ``pyrate`` is created in the system path:
       {conv2tif,prepifg,correct,merge,workflow}
         conv2tif            Convert interferograms to geotiff.
         prepifg             Perform multilooking and cropping on geotiffs.
-        process             Main processing workflow including corrections, time series and stacking computation.
+        correct             Main processing workflow including corrections
+        timeseries          Timeseries computation
+        stack               Stacking computation
         merge               Reassemble computed tiles and save as geotiffs.
         workflow            Run all the PyRate processes
 
