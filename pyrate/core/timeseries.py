@@ -323,24 +323,26 @@ def linear_rate_pixel(y, t):
     :rtype: int
     """
 
+    # Check that vectors are of the same length
+    if len(y) != len(t):
+        raise TimeSeriesError('linear_rate_pixel: y and t are not equal length')        
+    
     # Mask to exclude nan elements
     mask = ~isnan(y)
-    # remove nan elements from both arrays
+    
+    # Remove nan elements from both arrays
     y = y[mask]    
-    try:
-        t = t[mask]
-    except IndexError:
-        raise TimeSeriesError("linear_rate_pixel: y and t are not equal length")
-
-    # break out of func if not enough time series obs for line fitting
+    t = t[mask]
+        
+    # Break out of func if not enough time series obs for line fitting
     nsamp = len(y)
     if nsamp < 2:
         return nan, nan, nan, nan, nan
 
-    # compute linear regression of tscuml 
+    # Compute linear regression of tscuml 
     linrate, intercept, r_value, p_value, std_err = linregress(t, y)
 
-    return linrate, intercept, r_value**2, std_err, int(nsamp)
+    return linrate, intercept, r_value**2, std_err, nsamp
 
 
 def linear_rate_array(tscuml, ifgs, params):
