@@ -325,9 +325,11 @@ def linear_rate_pixel(y, t):
 
     while True:
         try:
+            # Mask to exclude nan elements
+            mask = ~isnan(y)
             # remove nan elements from both arrays
-            t = t[~isnan(y)]
-            y = y[~isnan(y)]
+            t = t[mask]
+            y = y[mask]    
             break
         except IndexError:
             raise TimeSeriesError("linear_rate_pixel: y and t are not equal length")
