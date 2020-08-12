@@ -73,7 +73,7 @@ To run the test suite, enter these commands in the terminal::
    pip install -r requirements-test.txt
    python -m pytest tests
 
-To run one test, use this command::
+To run one test (e.g. test_timeseries.py), use this command::
 
    python -m pytest tests/test_timeseries.py
 
