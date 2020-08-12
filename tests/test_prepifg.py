@@ -135,7 +135,7 @@ def test_prepifg_file_types(tempdir, gamma_conf, coh_mask):
             continue
         if i.name.endswith('_ifg_1lksx_1lksy_1cr.tif'):
             if coh_mask:
-                assert md[ifc.DATA_TYPE] == ifc.COHERENCE
+                assert md[ifc.DATA_TYPE] == ifc.MLOOKED_COH_MASKED_IFG
                 assert md[ifc.IFG_LKSX] == '1'
                 assert md[ifc.IFG_LKSY] == '1'
                 assert md[ifc.IFG_CROP] == '1'

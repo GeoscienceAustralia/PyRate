@@ -336,7 +336,7 @@ def crop_resample_average(
         if k == ifc.DATA_TYPE:
             # update data type metadata
             if (v == ifc.ORIG) and (coherence_path is not None):
-                md.update({ifc.DATA_TYPE: ifc.COHERENCE})
+                md.update({ifc.DATA_TYPE: ifc.MLOOKED_COH_MASKED_IFG})
             elif (v == ifc.ORIG) and (coherence_path is None):
                 md.update({ifc.DATA_TYPE: ifc.MULTILOOKED})
             elif v == ifc.COH:
@@ -349,7 +349,7 @@ def crop_resample_average(
                 raise TypeError(f'Data Type metadata {v} not recognised')
 
     # insert prepifg mlook and crop params as metadata
-    if ifc.COHERENCE or ifc.MULTILOOKED or ifc.MULTILOOKED_COH \
+    if ifc.MLOOKED_COH_MASKED_IFG or ifc.MULTILOOKED or ifc.MULTILOOKED_COH \
             or ifc.MLOOKED_DEM or ifc.MLOOKED_INC in md.values():
         if ifc.IFG_LKSX in hdr: md[ifc.IFG_LKSX] = hdr[ifc.IFG_LKSX]
         if ifc.IFG_LKSY in hdr: md[ifc.IFG_LKSY] = hdr[ifc.IFG_LKSY]
