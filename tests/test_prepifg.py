@@ -117,18 +117,33 @@ def test_prepifg_file_types(tempdir, gamma_conf, coh_mask):
         md = ifg.meta_data
         if i.name.endswith('_ifg.tif'):
             assert md[ifc.DATA_TYPE] == ifc.ORIG
+            assert ifc.IFG_LKSX not in md
+            assert ifc.IFG_LKSY not in md
+            assert ifc.IFG_CROP not in md
             continue
         if i.name.endswith('_coh.tif'):
             assert md[ifc.DATA_TYPE] == ifc.COH
+            assert ifc.IFG_LKSX not in md
+            assert ifc.IFG_LKSY not in md
+            assert ifc.IFG_CROP not in md
             continue
         if i.name.endswith('_cc_coh_1lksx_1lksy_1cr.tif'):
             assert md[ifc.DATA_TYPE] == ifc.MULTILOOKED_COH
+            assert md[ifc.IFG_LKSX] == '1'
+            assert md[ifc.IFG_LKSY] == '1'
+            assert md[ifc.IFG_CROP] == '1'
             continue
         if i.name.endswith('_ifg_1lksx_1lksy_1cr.tif'):
             if coh_mask:
                 assert md[ifc.DATA_TYPE] == ifc.COHERENCE
+                assert md[ifc.IFG_LKSX] == '1'
+                assert md[ifc.IFG_LKSY] == '1'
+                assert md[ifc.IFG_CROP] == '1'
             else:
                 assert md[ifc.DATA_TYPE] == ifc.MULTILOOKED
+                assert md[ifc.IFG_LKSX] == '1'
+                assert md[ifc.IFG_LKSY] == '1'
+                assert md[ifc.IFG_CROP] == '1'
             continue
 
     # assert dem has correct metadata
@@ -136,11 +151,17 @@ def test_prepifg_file_types(tempdir, gamma_conf, coh_mask):
     dem.open()
     md = dem.dataset.GetMetadata()
     assert md[ifc.DATA_TYPE] == ifc.DEM
+    assert ifc.IFG_LKSX not in md
+    assert ifc.IFG_LKSY not in md
+    assert ifc.IFG_CROP not in md
 
     dem = DEM(mlooked_dem_file.as_posix())
     dem.open()
     md = dem.dataset.GetMetadata()
     assert md[ifc.DATA_TYPE] == ifc.MLOOKED_DEM
+    assert ifc.IFG_LKSX in md
+    assert ifc.IFG_LKSY in md
+    assert ifc.IFG_CROP in md
     shutil.rmtree(tdir)
 
 
