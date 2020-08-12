@@ -323,16 +323,14 @@ def linear_rate_pixel(y, t):
     :rtype: int
     """
 
-    while True:
-        try:
-            # Mask to exclude nan elements
-            mask = ~isnan(y)
-            # remove nan elements from both arrays
-            t = t[mask]
-            y = y[mask]    
-            break
-        except IndexError:
-            raise TimeSeriesError("linear_rate_pixel: y and t are not equal length")
+    # Mask to exclude nan elements
+    mask = ~isnan(y)
+    # remove nan elements from both arrays
+    y = y[mask]    
+    try:
+        t = t[mask]
+    except IndexError:
+        raise TimeSeriesError("linear_rate_pixel: y and t are not equal length")
 
     # break out of func if not enough time series obs for line fitting
     nsamp = len(y)
