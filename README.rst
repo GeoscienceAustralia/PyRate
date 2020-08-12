@@ -68,6 +68,17 @@ To install from source in Linux, enter these commands in a terminal:
 
 This will install the above-listed Python dependencies and compile the executable program ``pyrate``:
 
+To run the test suite, enter these commands in the terminal::
+
+   pip install -r requirements-test.txt
+   python -m pytest tests
+
+To run one test (e.g. test_timeseries.py), use this command::
+
+   python -m pytest tests/test_timeseries.py
+
+To learn more about using PyRate, type this command:
+
 ::
 
     >> pyrate --help
