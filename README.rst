@@ -70,14 +70,10 @@ This will install the above-listed Python dependencies and compile the executabl
 
 To run the test suite, enter these commands in the terminal::
 
-::
-
 pip install -r requirements-test.txt
 python -m pytest tests
 
 To run one test, use this command::
-
-::
 
 python -m pytest tests/test_timeseries.py
 
