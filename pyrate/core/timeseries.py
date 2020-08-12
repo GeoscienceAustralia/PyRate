@@ -323,12 +323,16 @@ def linear_rate_pixel(y, t):
     :rtype: int
     """
 
+    # Mask to exclude nan elements
+    mask = ~isnan(y)
     # remove nan elements from both arrays
-    mask = ~isnan(y)  # Mask to exclude nan elements
-    t = t[mask]
     y = y[mask]    
+    try:
+        t = t[mask]
+    except IndexError:
+        raise TimeSeriesError("linear_rate_pixel: y and t are not equal length")
 
-    # break out if not enough time series obs for line fitting
+    # break out of func if not enough time series obs for line fitting
     nsamp = len(y)
     if nsamp < 2:
         return nan, nan, nan, nan, nan
@@ -370,7 +374,7 @@ def linear_rate_array(tscuml, ifgs, params):
 
     # test for equal length of input vectors
     if tscuml.shape[2] != len(t):
-        raise TimeSeriesError("linear_rate_pixel: nvels and t are not equal length")
+        raise TimeSeriesError("linear_rate_array: tscuml and nepochs are not equal length")
 
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions

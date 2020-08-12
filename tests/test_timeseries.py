@@ -336,7 +336,7 @@ class TestLinearRatePixel:
         assert experr == pytest.approx(err, rel=1e-1)
 
     def test_linear_rate_pixel_exception(self):
-        # input vectors should not be equal length
+        # input vectors should be equal length
         y = array([2, 4, 6, 8, 10])
         t = array([0, 1, 2, 3, 4, 5])
         with pytest.raises(TimeSeriesError):
@@ -364,8 +364,9 @@ class TestLinearRateArray:
 
         # read in input (tscuml) and expected output arrays
         tscuml_path = os.path.join(common.SML_TEST_LINRATE, "tscuml_0.npy")
-        ts = np.load(tscuml_path)
-        cls.tscuml = np.insert(ts, 0, 0, axis=2) # add zero epoch to tscuml 3D array
+        cls.tscuml0 = np.load(tscuml_path)
+        # add zero epoch to tscuml 3D array
+        cls.tscuml = np.insert(cls.tscuml0, 0, 0, axis=2) 
 
         linrate_path = os.path.join(common.SML_TEST_LINRATE, "linear_rate.npy")
         cls.linrate = np.load(linrate_path)
@@ -394,4 +395,9 @@ class TestLinearRateArray:
         assert_array_almost_equal(self.rsq, r, 1e-20)
         assert_array_almost_equal(self.error, e, 1e-20)
         assert_array_almost_equal(self.samp, s, 1e-20)
+
+    def test_linear_rate_array_exception(self):
+        # depth of tscuml should equal nepochs
+        with pytest.raises(TimeSeriesError):
+            res = linear_rate_array(self.tscuml0, self.ifgs, self.params)
 
