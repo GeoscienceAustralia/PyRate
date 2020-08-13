@@ -21,7 +21,7 @@ import os
 import shutil
 import pytest
 from datetime import date, timedelta
-from numpy import nan, asarray, where
+from numpy import nan, asarray, where, array
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
@@ -32,7 +32,7 @@ import tests.common as common
 from pyrate.core import config as cf, mst, covariance
 from pyrate import process, prepifg, conv2tif
 from pyrate.configuration import Configuration
-from pyrate.core.timeseries import time_series
+from pyrate.core.timeseries import time_series, linear_rate_pixel, linear_rate_array, TimeSeriesError
 
 
 def default_params():
@@ -294,3 +294,110 @@ class TestLegacyTimeSeriesEqualityMethod2Interp0:
         np.testing.assert_array_almost_equal(self.ts_incr, self.tsincr_0, decimal=3)
 
         np.testing.assert_array_almost_equal(self.ts_cum, self.tscum_0, decimal=3)
+
+
+class TestLinearRatePixel:
+    """
+    Tests the linear regression algorithm for determining the best
+    fitting velocity from a cumulative time series
+    """
+
+    def test_linear_rate_pixel_clean(self):
+        y = array([0, 2, 4, 6, 8, 10])
+        t = array([0, 1, 2, 3, 4, 5])
+        exp = (2.0, 0.0, 1.0, 0.0, 6)
+        res = linear_rate_pixel(y, t)
+        assert res == exp
+
+    def test_linear_rate_pixel_neg_rate(self):
+        y = array([0, -2, -4, -6, -8, -10])
+        t = array([0, 1, 2, 3, 4, 5])
+        exp = (-2.0, 0.0, 1.0, 0.0, 6)
+        res = linear_rate_pixel(y, t)
+        assert res == exp
+
+    def test_linear_rate_pixel_outlier(self):
+        y = array([0, 2, 4, 6, 8, 20])
+        t = array([0, 1, 2, 3, 4, 5])
+        exp = (3.428571, -1.904761, 0.812030, 0.824786, 6)
+        res = linear_rate_pixel(y, t)
+        assert res == pytest.approx(exp, rel=1e-6)
+
+    def test_linear_rate_pixel_noise(self):
+        y = array([0, 2, 4, 6, 8, 10])
+        r = y + np.random.rand(6) # add different uniform noise each time
+        t = array([0, 1, 2, 3, 4, 5])
+        exprate = 2.0
+        explsqd = 1.0
+        experr = 0.0
+        rate, _, lsqd, err, _ = linear_rate_pixel(y, t)
+        assert exprate == pytest.approx(rate, rel=1e-1)
+        assert explsqd == pytest.approx(lsqd, rel=1e-1)
+        assert experr == pytest.approx(err, rel=1e-1)
+
+    def test_linear_rate_pixel_exception(self):
+        # input vectors should be equal length
+        y = array([2, 4, 6, 8, 10])
+        t = array([0, 1, 2, 3, 4, 5])
+        with pytest.raises(TimeSeriesError):
+            res = linear_rate_pixel(y, t)
+
+    def test_linear_rate_pixel_nans(self):
+        # at least two obs are required for line fitting
+        y = array([0, nan, nan, nan, nan, nan])
+        t = array([0, 1, 2, 3, 4, 5])
+        exp = (nan, nan, nan, nan, nan)
+        res = linear_rate_pixel(y, t)
+        assert res == exp
+
+
+class TestLinearRateArray:
+    """
+    Tests the array loop wrapper for the linear regression algorithm using real data
+    """
+
+    @classmethod
+    @pytest.fixture(autouse=True)
+    def setup_class(cls, roipac_params):
+        cls.params = roipac_params
+        cls.ifgs = common.small_data_setup()
+
+        # read in input (tscuml) and expected output arrays
+        tscuml_path = os.path.join(common.SML_TEST_LINRATE, "tscuml_0.npy")
+        cls.tscuml0 = np.load(tscuml_path)
+        # add zero epoch to tscuml 3D array
+        cls.tscuml = np.insert(cls.tscuml0, 0, 0, axis=2) 
+
+        linrate_path = os.path.join(common.SML_TEST_LINRATE, "linear_rate.npy")
+        cls.linrate = np.load(linrate_path)
+
+        error_path = os.path.join(common.SML_TEST_LINRATE, "linear_error.npy")
+        cls.error = np.load(error_path)
+
+        icpt_path = os.path.join(common.SML_TEST_LINRATE, "linear_intercept.npy")
+        cls.icpt = np.load(icpt_path)
+
+        samp_path = os.path.join(common.SML_TEST_LINRATE, "linear_samples.npy")
+        cls.samp = np.load(samp_path)
+
+        rsq_path = os.path.join(common.SML_TEST_LINRATE, "linear_rsquared.npy")
+        cls.rsq = np.load(rsq_path)
+
+    def test_linear_rate_array(self):
+        """
+        Input and expected output are on disk. This test only tests the linear_rate_array
+        and linear_rate_pixel functions using real data.
+        """
+        l, i, r, e, s = linear_rate_array(self.tscuml, self.ifgs, self.params)
+        # test to 20 decimal places
+        assert_array_almost_equal(self.linrate, l, 1e-20) 
+        assert_array_almost_equal(self.icpt, i, 1e-20)
+        assert_array_almost_equal(self.rsq, r, 1e-20)
+        assert_array_almost_equal(self.error, e, 1e-20)
+        assert_array_almost_equal(self.samp, s, 1e-20)
+
+    def test_linear_rate_array_exception(self):
+        # depth of tscuml should equal nepochs
+        with pytest.raises(TimeSeriesError):
+            res = linear_rate_array(self.tscuml0, self.ifgs, self.params)
+

@@ -28,6 +28,7 @@ from numpy import (where, isnan, nan, diff, zeros,
 from numpy.linalg import matrix_rank, pinv, cholesky
 import numpy as np
 from scipy.linalg import qr
+from scipy.stats import linregress
 from joblib import Parallel, delayed
 from pyrate.core.shared import joblib_log_level
 from pyrate.core.algorithm import first_second_ids, get_epochs
@@ -36,7 +37,7 @@ from pyrate.core.config import ConfigException
 from pyrate.core.logger import pyratelogger as log
 
 
-def _time_series_setup(ifgs, mst, params):
+def _time_series_setup(ifgs, params, mst=None):
     """
     Convenience function for setting up time series computation parameters
     """
@@ -103,7 +104,7 @@ def _validate_params(params, tsmethod):
     else:
         pthresh = params[cf.TIME_SERIES_PTHRESH]
         if pthresh < 0.0 or pthresh > 1000:
-            raise ValueError(
+            raise TimeSeriesError(
                 "minimum number of coherent observations for a pixel"
                 " TIME_SERIES_PTHRESH setting must be >= 0.0 and <= 1000")
     return pthresh, smfactor, smorder
@@ -138,7 +139,7 @@ def time_series(ifgs, params, vcmt=None, mst=None):
 
     b0_mat, interp, p_thresh, sm_factor, sm_order, ts_method, ifg_data, mst, \
         ncols, nrows, nvelpar, parallel, span, tsvel_matrix = \
-        _time_series_setup(ifgs, mst, params)
+        _time_series_setup(ifgs, params, mst)
 
     if parallel:
         log.info('Calculating timeseries in parallel')
@@ -218,7 +219,7 @@ def _time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
             # Use SVD method
             tsvel = _solve_ts_svd(nvelpar, velflag, ifgv, b_mat)
         else:
-            raise ValueError("Unrecognised time series method")
+            raise TimeSeriesError("Unrecognised time series method")
         return tsvel
     else:
         return np.empty(nvelpar) * np.nan
@@ -302,6 +303,108 @@ def _solve_ts_lap(nvelpar, velflag, ifgv, mat_b, smorder, smfactor, sel, vcmt):
     return tsvel
 
 
+def linear_rate_pixel(y, t):
+    """
+    Calculate best fitting linear rate to cumulative displacement
+    time series for one pixel using linear regression.
+
+    :param ndarray y: 1-dimensional vector of cumulative displacement time series
+    :param ndarray t: 1-dimensional vector of cumulative time at each epoch
+
+    :return: linrate: Linear rate; gradient of fitted line.
+    :rtype: float
+    :return intercept: Y-axis intercept of fitted line at t = 0
+    :rtype: float
+    :return: rsquared: R-squared value of the linear regression
+    :rtype: float
+    :return: error: Standard error of the linear regression
+    :rtype: float
+    :return: samples: Number of observations used in linear regression
+    :rtype: int
+    """
+
+    # Mask to exclude nan elements
+    mask = ~isnan(y)
+    # remove nan elements from both arrays
+    y = y[mask]    
+    try:
+        t = t[mask]
+    except IndexError:
+        raise TimeSeriesError("linear_rate_pixel: y and t are not equal length")
+
+    # break out of func if not enough time series obs for line fitting
+    nsamp = len(y)
+    if nsamp < 2:
+        return nan, nan, nan, nan, nan
+
+    # compute linear regression of tscuml 
+    linrate, intercept, r_value, p_value, std_err = linregress(t, y)
+
+    return linrate, intercept, r_value**2, std_err, int(nsamp)
+
+
+def linear_rate_array(tscuml, ifgs, params):
+    """
+    This function loops over all pixels in a 3-dimensional cumulative
+    time series array and calculates the linear rate (line of best fit)
+    for each pixel using linear regression.
+
+    :param ndarray tscuml: 3-dimensional cumulative time series array
+    :param list ifgs: list of interferogram class objects.
+    :param dict params: Configuration parameters
+
+    :return: linrate: Linear rate map from linear regression
+    :rtype: ndarray
+    :return: intercept: Array of Y-axis intercepts from linear regression
+    :rtype: ndarray
+    :return: rsquared: Array of R-squared value of the linear regression
+    :rtype: ndarray
+    :return: error: Array of standard errors of the linear regression
+    :rtype: ndarray
+    :return: samples: Number of observations used in linear regression for each pixel
+    :rtype: ndarray
+    """
+    b0_mat, interp, p_thresh, sm_factor, sm_order, ts_method, ifg_data, mst, \
+        ncols, nrows, nvelpar, parallel, span, tsvel_matrix = \
+        _time_series_setup(ifgs, params)
+
+    epochlist = get_epochs(ifgs)[0]
+    # get cumulative time per epoch
+    t = asarray(epochlist.spans)
+
+    # test for equal length of input vectors
+    if tscuml.shape[2] != len(t):
+        raise TimeSeriesError("linear_rate_array: tscuml and nepochs are not equal length")
+
+    # pixel-by-pixel calculation.
+    # nested loops to loop over the 2 image dimensions
+    if parallel:
+        log.info('Calculating linear regression of cumulative time series in parallel')
+        res = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+                delayed(linear_rate_pixel)(tscuml[r, c, :], t) for r, c in itertools.product(range(nrows), range(ncols))
+        )
+        res = np.array(res)
+        linrate = res[:, 0].reshape(nrows, ncols)
+        intercept = res[:, 1].reshape(nrows, ncols)
+        rsquared = res[:, 2].reshape(nrows, ncols)
+        error = res[:, 3].reshape(nrows, ncols)
+        samples = res[:, 4].reshape(nrows, ncols)
+    else:
+        log.info('Calculating linear regression of cumulative time series in serial')
+        # preallocate empty arrays for results
+        linrate = np.empty([nrows, ncols], dtype=float32)
+        rsquared = np.empty([nrows, ncols], dtype=float32)
+        error = np.empty([nrows, ncols], dtype=float32)
+        intercept = np.empty([nrows, ncols], dtype=np.float32)
+        samples = np.empty([nrows, ncols], dtype=np.float32)
+        for i in range(nrows):
+            for j in range(ncols):
+                linrate[i, j], intercept[i, j], rsquared[i, j], error[i, j], samples[i, j] = \
+                    linear_rate_pixel(tscuml[i, j, :], t)
+
+    return linrate, intercept, rsquared, error, samples
+
+
 def _missing_option_error(option):
     """
     Convenience function for raising similar missing option errors.
@@ -345,5 +448,12 @@ def timeseries_calc_wrapper(params):
         # optional save of tsincr npy tiles
         if params["savetsincr"] == 1:
             np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)), arr=tsincr)
+        tscuml = np.insert(tscuml, 0, 0, axis=2) # add zero epoch to tscuml 3D array
+        linrate, intercept, r_squared, std_err, samples = linear_rate_array(tscuml, ifg_parts, params)
+        np.save(file=os.path.join(output_dir, 'linear_rate_{}.npy'.format(t.index)), arr=linrate)
+        np.save(file=os.path.join(output_dir, 'linear_intercept_{}.npy'.format(t.index)), arr=intercept)
+        np.save(file=os.path.join(output_dir, 'linear_rsquared_{}.npy'.format(t.index)), arr=r_squared)
+        np.save(file=os.path.join(output_dir, 'linear_error_{}.npy'.format(t.index)), arr=std_err)
+        np.save(file=os.path.join(output_dir, 'linear_samples_{}.npy'.format(t.index)), arr=samples)
     mpiops.comm.barrier()
     log.debug("Finished timeseries calc!")
