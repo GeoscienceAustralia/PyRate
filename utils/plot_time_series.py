@@ -18,6 +18,14 @@ import statsmodels.api as sm
 import xarray as xr
 from datetime import datetime as dt
 import warnings
+import sys
+
+if len(sys.argv) != 2:
+    print('Exiting: Provide abs path to <outdir> as command line argument')
+    exit()
+else:
+    path = sys.argv[1]
+    print(f"Looking for PyRate products in: {path}")
 
 # %% Calc model
 def calc_model(dph, imdates_ordinal, xvalues, model):
@@ -52,9 +60,6 @@ def calc_model(dph, imdates_ordinal, xvalues, model):
 
     return yvalues
 
-# path = "/home/547/co9432/PyRate/out/"
-# path = "/g/data/dg9/INSAR_ANALYSIS/ORANGE/S1/PYRATE/obs/out/" # ORANGE STACK
-path = "/g/data/dg9/INSAR_ANALYSIS/EROMANGA/S1/PYRATE/obs/out/"
 filelist = []
 
 # Search for cumulative displacement time series output tiff files
