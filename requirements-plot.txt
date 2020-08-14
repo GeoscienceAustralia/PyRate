@@ -1,0 +1,4 @@
+rasterio
+matplotlib 
+statsmodels
+xarray
