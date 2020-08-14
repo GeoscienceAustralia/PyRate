@@ -68,7 +68,7 @@ for i in filelist: print(i)
 # pre-allocate a 3D numpy array to read the tiff raster bands in to. include first 'zero' time slice
 src = rasterio.open(os.path.join(path, filelist[1]))
 data = src.read()
-cuml = np.zeros((len(filelist)+1, src.shape[0], src.shape[1]))
+tscuml = np.zeros((len(filelist)+1, src.shape[0], src.shape[1]))
 
 # pre-allocate first (zero) epoch
 dates = [dt.strptime(filelist[1][7:17], '%Y-%m-%d')] # 1st epoch
@@ -79,7 +79,7 @@ for i, file in enumerate(filelist):
     # print(i,file)
     src = rasterio.open(os.path.join(path, file))
     data = src.read()
-    cuml[i+1, :, :] = np.squeeze(data, axis=(0,))
+    tscuml[i+1, :, :] = np.squeeze(data, axis=(0,))
     temp = dt.strptime(src.tags()['EPOCH_DATE'], '%Y-%m-%d')
     dates.append(dt.strptime(src.tags()['EPOCH_DATE'], '%Y-%m-%d'))
     imdates_ordinal.append(temp.toordinal())
@@ -90,10 +90,10 @@ imdates_dt = dates
 bounds = src.bounds
 x_coord = np.linspace(bounds[0], bounds[2], src.width)
 y_coord = np.linspace(bounds[1], bounds[3], src.height)
-dac = xr.DataArray(cuml, coords={'time': dates, 'lon': x_coord, 'lat': y_coord}, dims=['time', 'lat', 'lon'])
+dac = xr.DataArray(tscuml, coords={'time': dates, 'lon': x_coord, 'lat': y_coord}, dims=['time', 'lat', 'lon'])
 ds = xr.Dataset()
 ds['tscuml'] = dac
-n_im, length, width = cuml.shape
+n_im, length, width = tscuml.shape
 
 # choose final time slice
 time_slice = len(dates)-1
@@ -137,13 +137,13 @@ point_x = refx1
 point_y = refy1
 
 ## Plot figure of Velocity and Cumulative displacement
-# for last cum
+# for last epoch
 auto_crange: float = 99.8
-refvalue_lastcum = np.nanmean(cuml[-1, refy1:refy2, refx1:refx2]) # reference values
-dmin_auto = np.nanpercentile((cuml[-1, :, :]), 100-auto_crange)
-dmax_auto = np.nanpercentile((cuml[-1, :, :]), auto_crange)
-dmin = dmin_auto - refvalue_lastcum
-dmax = dmax_auto - refvalue_lastcum
+refvalue_lastepoch = np.nanmean(tscuml[-1, refy1:refy2, refx1:refx2]) # reference values
+dmin_auto = np.nanpercentile((tscuml[-1, :, :]), 100 - auto_crange)
+dmax_auto = np.nanpercentile((tscuml[-1, :, :]), auto_crange)
+dmin = dmin_auto - refvalue_lastepoch
+dmax = dmax_auto - refvalue_lastepoch
 
 #from last velocity
 refvalue_vel = np.nanmean(vel[0, refy1:refy2 + 1, refx1:refx2 + 1])
@@ -152,7 +152,7 @@ vmax_auto = np.nanpercentile(vel[0, :, :], auto_crange)
 vmin = vmin_auto - refvalue_vel
 vmax = vmax_auto - refvalue_vel
 
-# plotting cum disp and vel
+# plotting tscuml disp and vel
 figsize = (7,7)
 pv = plt.figure('Velocity / Cumulative Displacement', figsize)
 axv = pv.add_axes([0.15,0.15,0.75,0.83])
@@ -190,7 +190,7 @@ radio_vel = RadioButtons(axrad_vel, tuple(mapdict_data.keys()))
 for label in radio_vel.labels:
     label.set_fontsize(10)
 
-cum_disp_flag = False
+tscuml_disp_flag = False
 climauto = True
 
 # %% Set ref function
@@ -219,12 +219,12 @@ def line_select_callback(eclick, erelease):
 
     ### Change clim
     if climauto:  ## auto
-        refvalue_lastcum = np.nanmean(cuml[-1, refy1:refy2, refx1:refx2])  # reference values
-        dmin = dmin_auto - refvalue_lastcum
-        dmax = dmax_auto - refvalue_lastcum
+        refvalue_lastepoch = np.nanmean(tscuml[-1, refy1:refy2, refx1:refx2])  # reference values
+        dmin = dmin_auto - refvalue_lastepoch
+        dmax = dmax_auto - refvalue_lastepoch
 
     ### Update draw
-    if not cum_disp_flag:  ## vel or noise indice # Chandra
+    if not tscuml_disp_flag:  ## vel or noise indice # Chandra
         val_selected = radio_vel.value_selected
         val_ind = list(mapdict_data.keys()).index(val_selected)
         radio_vel.set_active(val_ind)
@@ -244,8 +244,8 @@ plt.connect('key_press_event', RS)
 vlimauto = True
 #val_ind = list(mapdict_data.keys())
 def show_vel(val_ind):
-    global vmin, vmax, cum_disp_flag
-    cum_disp_flag = False
+    global vmin, vmax, tscuml_disp_flag
+    tscuml_disp_flag = False
 
     if 'Vel' in val_ind:  ## Velocity
         # data = mapdict_data[val_ind[0]]
@@ -292,21 +292,20 @@ except:
 
 dstr_ref = imdates_dt[0].strftime('%Y/%m/%d') # reference image date
 def tim_slidupdate(val):
-    global cum_disp_flag
+    global tscuml_disp_flag
     timein = tslider.val
     timenearest = np.argmin(np.abs(mdates.date2num(imdates_dt) - timein))
 
     dstr = imdates_dt[timenearest].strftime('%Y/%m/%d')
     axv.set_title('%s (Ref: %s)' % (dstr, dstr_ref))
 
-    newv = (cuml[timenearest, :, :])
-    # newv = (cuml[timenearest, :, :])
+    newv = (tscuml[timenearest, :, :])
     cax.set_data(newv)
     cax.set_cmap(cmap)
     cax.set_clim(dmin, dmax)
     # cax.set_clim(-100, 100)
     cbr.set_label('mm')
-    cum_disp_flag = True
+    tscuml_disp_flag = True
 
     pv.canvas.draw()
 
@@ -359,7 +358,7 @@ pax2, = axv.plot([point_y], [point_x], 'Pk')
 lastevent = []
 geocod_flag = False
 # label1 = '1: No filter'
-label1 = 'PyRate: tscuml '
+label1 = 'tscuml'
 ylen = []
 
 def printcoords(event):
@@ -414,9 +413,9 @@ def printcoords(event):
             label.set_horizontalalignment('right')
 
     ### If not masked
-    ### cumfile
+    ### tscuml file
     vel1p = vel[0, ii, jj] #- np.nanmean((vel[0,refy1:refy2, refx1:refx2]))
-    dph = cuml[:,ii,jj]
+    dph = tscuml[:,ii,jj]
 
     ## fit function
     lines1 = [0, 0, 0, 0]
