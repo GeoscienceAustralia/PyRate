@@ -71,7 +71,7 @@ data = src.read()
 tscuml = np.zeros((len(filelist)+1, src.shape[0], src.shape[1]))
 
 # pre-allocate first (zero) epoch
-dates = [dt.strptime(filelist[1][7:17], '%Y-%m-%d')] # 1st epoch
+dates = [dt.strptime(filelist[0][7:17], '%Y-%m-%d')] # 1st epoch
 imdates_ordinal = [dates[0].toordinal()]
 
 # reading *tif files and generate cumulative variable
@@ -116,7 +116,7 @@ time_slice = len(dates)-1
 
 
 # Reading velocity data
-src2 = rasterio.open(os.path.join(path, 'stack_rate.tif'))
+src2 = rasterio.open(os.path.join(path, 'linear_rate.tif'))
 vel = src2.read()
 bounds2 = src2.bounds
 x_coord2 = np.linspace(bounds2[0], bounds2[2], src2.width)
@@ -161,7 +161,7 @@ axt2 = pv.text(0.01, 0.99, 'Left-doubleclick:\n Plot time series\nRight-drag:\n 
 axt = pv.text(0.01, 0.78, 'Ref area:\n X {}:{}\n Y {}:{}\n (start from 0)'.format(refx1, refx2, refy1, refy2),
               fontsize=8, va='bottom')
 
-cmap = plt.set_cmap('gist_rainbow')
+cmap = plt.set_cmap('bwr_r')
 cax = axv.imshow(vs.vel, clim=[vmin, vmax], cmap=cmap)
 #cax = axv.imshow(vs.vel, cmap, alpha=1, origin='upper',extent=[vs.coords['lon'].min(), vs.coords['lon'].max(), vs.coords['lat'].min(), vs.coords['lat'].max()], clim=(-100, 100)) #for displacement
 #cax = axv.imshow(ds.tscuml[1], cmap, alpha=1, origin='upper',extent=[ds.coords['lon'].min(), ds.coords['lon'].max(), ds.coords['lat'].min(), ds.coords['lat'].max()], clim=(-100, 100)) #for displacement
@@ -387,8 +387,8 @@ def printcoords(event):
     axts.cla()
     axts.grid(zorder=0)
     axts.set_axisbelow(True)
-    axts.set_xlabel('Time')
-    axts.set_ylabel('Displacement (mm)')
+    axts.set_xlabel('Date')
+    axts.set_ylabel('Cumulative Displacement (mm)')
 
     ### Get values of noise indices and incidence angle
     noisetxt = ''
@@ -424,8 +424,7 @@ def printcoords(event):
         yvalues = calc_model(dph, imdates_ordinal, xvalues, model)
         lines1[model], = axts.plot(xvalues, yvalues, 'r-', visible=vis, alpha=0.6, zorder=3)
 
-    # axts.scatter(imdates_dt, dph, label=label1, c='b', alpha=0.6, zorder=5)
-    axts.scatter(imdates_ordinal, dph, label=label1, c='b', alpha=0.6, zorder=5)
+    axts.scatter(imdates_dt, dph, label=label1, c='b', alpha=0.6, zorder=5)
     axts.set_title('vel = {:.1f} mm/yr @({}, {})'.format(vel1p, jj, ii), fontsize=10)
     # axts.set_ylim(-100,100) # Chandra added
 
