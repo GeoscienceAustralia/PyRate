@@ -20,12 +20,13 @@ parsed in a PyRate configuration file.
 from configparser import ConfigParser
 from pathlib import Path, PurePath
 from typing import Union
-from pyrate.constants import NO_OF_PARALLEL_PROCESSES
+from pyrate.constants import NO_OF_PARALLEL_PROCESSES, sixteen_digits_pattern, twelve_digits_pattern
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
 from pyrate.core.shared import extract_epochs_from_filename, InputTypes
 from pyrate.core.config import parse_namelist, ConfigException, ORB_ERROR_DIR, TEMP_MLOOKED_DIR
 from pyrate.core import config as cf
+import re
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
@@ -83,24 +84,30 @@ class MultiplePaths:
 
         self.input_type = input_type
         out_dir = params[cf.OUT_DIR]
-        ifglksx = params[cf.IFG_LKSX]
-        ifglksy = params[cf.IFG_LKSY]
-        ifgcropopt = params[cf.IFG_CROP_OPT]
         tempdir = params[cf.TEMP_MLOOKED_DIR]
         if isinstance(tempdir, str):
             tempdir = Path(tempdir)
         b = Path(file_name)
+
+        if input_type in [InputTypes.IFG, InputTypes.COH]:
+            d = re.search(sixteen_digits_pattern, b.stem)
+            if d is None: # could be 6 digit epoch dates
+                d = re.search(twelve_digits_pattern, b.stem)
+            if d is None:
+                raise ValueError("Ifg/Coh filenames do not contain two 8- or 6-digit date strings")
+            filestr = d.group() + '_'
+        else:
+            filestr = ''
+
         if b.suffix == ".tif":
             self.unwrapped_path = None
             converted_path = b  # original file
-            self.sampled_path = Path(out_dir).joinpath(
-                b.stem + '_' + str(ifglksx) + "lksx_" + str(ifglksy) + "lksy_" + str(ifgcropopt) + "cr.tif")
+            self.sampled_path = Path(out_dir).joinpath(filestr + input_type.value + '.tif')
         else:
             self.unwrapped_path = b.as_posix()
             converted_path = Path(out_dir).joinpath(
-                b.stem.split('.')[0] + '_' + b.suffix[1:] + input_type.value).with_suffix('.tif')
-            self.sampled_path = converted_path.with_name(
-                converted_path.stem + '_' + str(ifglksx) + "lksx_" + str(ifglksy) + "lksy_" + str(ifgcropopt) + "cr.tif")
+                    b.stem.split('.')[0] + '_' + b.suffix[1:]).with_suffix('.tif')
+            self.sampled_path = converted_path.with_name(filestr + input_type.value + '.tif')
         self.tmp_sampled_path = tempdir.joinpath(self.sampled_path.name).as_posix()
         self.converted_path = converted_path.as_posix()
         self.sampled_path = self.sampled_path.as_posix()

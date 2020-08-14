@@ -28,7 +28,6 @@ from osgeo import gdal
 from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac, ifgconstants as ifc
 from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core.logger import pyratelogger as log
-from pyrate.core.shared import output_tiff_filename
 from pyrate.configuration import MultiplePaths
 
 GAMMA = 1
@@ -231,7 +230,7 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, fl
         return m_path.converted_path, coherence_path, m_path.sampled_path
     else:
         prepifg_helper.prepare_ifg(m_path.converted_path, xlooks, ylooks, exts, thresh, crop,
-                                   out_path=params[cf.OUT_DIR], header=hdr, coherence_path=coherence_path,
+                                   out_path=m_path.sampled_path, header=hdr, coherence_path=coherence_path,
                                    coherence_thresh=coherence_thresh)
         Path(m_path.sampled_path).chmod(0o444)  # readonly output
 

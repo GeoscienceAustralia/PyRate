@@ -30,7 +30,7 @@ from osgeo import gdal
 
 from pyrate.core.gdal_python import crop_resample_average
 from pyrate.core import config as cf
-from pyrate.core.shared import output_tiff_filename, dem_or_ifg, Ifg, DEM
+from pyrate.core.shared import dem_or_ifg, Ifg, DEM
 from pyrate.core.logger import pyratelogger as log
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
@@ -181,10 +181,6 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, header, wri
     if do_multilook:
         resolution = [xlooks * raster.x_step, ylooks * raster.y_step]
 
-    # cut, average, resample the final output layers
-    op = output_tiff_filename(raster.data_path, out_path)
-    looks_path = cf.mlooked_path(op, xlooks, ylooks, crop_opt)
-
     #     # Add missing/updated metadata to resampled ifg/DEM
     #     new_lyr = type(ifg)(looks_path)
     #     new_lyr.open(readonly=True)
@@ -196,14 +192,14 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, header, wri
     #         #    reproject()
     driver_type = 'GTiff' if write_to_disk else 'MEM'
     resampled_data, out_ds = crop_resample_average(
-        input_tif=raster.data_path, extents=exts, new_res=resolution, output_file=looks_path, thresh=thresh,
+        input_tif=raster.data_path, extents=exts, new_res=resolution, output_file=out_path, thresh=thresh,
         out_driver_type=driver_type, hdr=header, coherence_path=coherence_path, coherence_thresh=coherence_thresh
     )
 
     return resampled_data, out_ds
 
 
-# TODO: crop options 0 = no cropping? get rid of same size
+# TODO: deprecate the following wrapper function
 def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, thresh=0.5, user_exts=None, write_to_disc=True,
                  out_path=None):
     """
