@@ -13,12 +13,11 @@ import matplotlib.dates as mdates
 import matplotlib.backend_bases
 import numpy as np
 import fnmatch
-import os
+import os, sys, re
 import statsmodels.api as sm
 import xarray as xr
 from datetime import datetime as dt
 import warnings
-import sys
 
 if len(sys.argv) != 2:
     print('Exiting: Provide abs path to <outdir> as command line argument')
@@ -59,49 +58,53 @@ def calc_model(dph, imdates_ordinal, xvalues, model):
     yvalues = result.predict(An)
 
     return yvalues
+#################################
 
-filelist = []
+# Reading velocity data
+with rasterio.open(os.path.join(path, 'linear_rate.tif')) as src2:
+    vel = src2.read()
+    bounds2 = src2.bounds
+    x_coord2 = np.linspace(bounds2[0], bounds2[2], src2.width)
+    y_coord2 = np.linspace(bounds2[1], bounds2[3], src2.height)
+    # grab list of time series dates from metadata
+    ed = src2.tags()['EPOCH_DATE']
 
-# Search for cumulative displacement time series output tiff files
-for file in os.listdir(path):
-    if fnmatch.fnmatch(file, 'tscuml_*.tif'):
-        filelist.append(file)
+# convert metadata string to list of strings
+date_str = re.findall(r'\'(.+?)\'', ed)
 
-filelist.sort()
-for i in filelist: print(i)
+# make velocity xarray
+dac2 = xr.DataArray(vel[0,:,:], coords={'lon': x_coord2, 'lat': y_coord2}, dims=['lat', 'lon'])
+vs = xr.Dataset()
+vs['vel'] = dac2
 
-# pre-allocate a 3D numpy array to read the tiff raster bands in to. include first 'zero' time slice
-src = rasterio.open(os.path.join(path, filelist[1]))
-data = src.read()
-tscuml = np.zeros((len(filelist)+1, src.shape[0], src.shape[1]))
-
-# pre-allocate first (zero) epoch
-dates = [dt.strptime(filelist[0][7:17], '%Y-%m-%d')] # 1st epoch
-imdates_ordinal = [dates[0].toordinal()]
+# pre-allocate a 3D numpy array to read the tscuml tiff raster bands to
+# include first 'zero' time slice, which PyRate does not save to disk
+tscuml = np.zeros((len(date_str), vel.shape[1], vel.shape[2]))
 
 # reading *tif files and generate cumulative variable
-for i, file in enumerate(filelist):
-    # print(i,file)
-    src = rasterio.open(os.path.join(path, file))
-    data = src.read()
+print('Reading tscuml files:')
+for i, d in enumerate(date_str[1:]):
+    print(i+1, 'tscuml_' + d + '.tif')
+    with rasterio.open(os.path.join(path, 'tscuml_' + d + '.tif')) as src:
+        data = src.read()
+        # calculate image bounds
+        bounds = src.bounds
+        x_coord = np.linspace(bounds[0], bounds[2], src.width)
+        y_coord = np.linspace(bounds[1], bounds[3], src.height)
     tscuml[i+1, :, :] = np.squeeze(data, axis=(0,))
-    temp = dt.strptime(src.tags()['EPOCH_DATE'], '%Y-%m-%d')
-    dates.append(dt.strptime(src.tags()['EPOCH_DATE'], '%Y-%m-%d'))
-    imdates_ordinal.append(temp.toordinal())
 
-imdates_dt = dates
+# convert date strings to datetime objects
+imdates_dt = [dt.strptime(x, '%Y-%m-%d') for x in date_str]
+imdates_ordinal = [x.toordinal() for x in imdates_dt]
 
-# calculate image bounds
-bounds = src.bounds
-x_coord = np.linspace(bounds[0], bounds[2], src.width)
-y_coord = np.linspace(bounds[1], bounds[3], src.height)
-dac = xr.DataArray(tscuml, coords={'time': dates, 'lon': x_coord, 'lat': y_coord}, dims=['time', 'lat', 'lon'])
+# make tscuml xarray
+dac = xr.DataArray(tscuml, coords={'time': imdates_dt, 'lon': x_coord, 'lat': y_coord}, dims=['time', 'lat', 'lon'])
 ds = xr.Dataset()
 ds['tscuml'] = dac
 n_im, length, width = tscuml.shape
 
 # choose final time slice
-time_slice = len(dates)-1
+time_slice = len(imdates_dt)-1
 
 ####  ANIMATION of displacement
 # import matplotlib.animation as animation
@@ -119,16 +122,6 @@ time_slice = len(dates)-1
 # plt.show()
 #######
 
-
-# Reading velocity data
-src2 = rasterio.open(os.path.join(path, 'linear_rate.tif'))
-vel = src2.read()
-bounds2 = src2.bounds
-x_coord2 = np.linspace(bounds2[0], bounds2[2], src2.width)
-y_coord2 = np.linspace(bounds2[1], bounds2[3], src2.height)
-dac2 = xr.DataArray(vel[0,:,:], coords={'lon': x_coord2, 'lat': y_coord2}, dims=['lat', 'lon'])
-vs = xr.Dataset()
-vs['vel'] = dac2
 
 ## set reference area and initial point
 refx1 = int(len(x_coord2)/ 2)
