@@ -37,7 +37,7 @@ def test_process_treats_prepif_outputs_readonly(gamma_conf, tempdir, coh_mask):
     prepifg.main(params)
     cropped = list(Path(params[cf.OUT_DIR]).glob('*cr.tif'))
 
-    if coh_mask:  # 17 + 1 dem + 17 coh files
+    if params[cf.COH_FILE_LIST] is not None:  # 17 + 1 dem + 17 coh files
         assert len(cropped) == 35
     else:  # 17 + 1 dem
         assert len(cropped) == 18

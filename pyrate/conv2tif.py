@@ -57,7 +57,7 @@ def main(params):
 
     base_ifg_paths = params[cf.INTERFEROGRAM_FILES]
 
-    if params[cf.COH_MASK]:
+    if params[cf.COH_FILE_LIST] is not None:
         base_ifg_paths.extend(params[cf.COHERENCE_FILE_PATHS])
 
     if params[cf.DEM_FILE] is not None:  # optional DEM conversion
