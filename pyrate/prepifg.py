@@ -57,6 +57,10 @@ def main(params):
     if params[cf.COH_FILE_LIST] is not None:
         ifg_paths.extend(params[cf.COHERENCE_FILE_PATHS])
 
+    if params[cf.COH_FILE_LIST] is None and params[cf.COH_MASK]:
+        raise FileNotFoundError("Cannot apply coherence masking: no coherence file list "
+                                "supplied (parameter 'cohfilelist')")
+
     shared.mkdir_p(params[cf.OUT_DIR])  # create output dir
 
     user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
