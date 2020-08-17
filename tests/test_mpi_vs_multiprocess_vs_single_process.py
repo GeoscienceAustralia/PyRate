@@ -285,13 +285,13 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw_ifg.tif", 17)
 
     # if coherence masking, compare coh files were converted
-    if params[cf.COH_MASK]:
+    if params[cf.COH_FILE_LIST]:
         assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_coh.tif", 17)
         print("coherence files compared")
 
     # prepifg + correct steps that overwrite tifs test
     # 17 mlooked ifgs + 1 dem + 17 mlooked coherence files
-    if params[cf.COH_MASK]:
+    if params[cf.COH_FILE_LIST]:
         assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 35)
     else:
         assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
