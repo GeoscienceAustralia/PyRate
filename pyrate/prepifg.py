@@ -217,7 +217,7 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, fl
     header[ifc.INPUT_TYPE] = m_path.input_type
 
     # If we're performing coherence masking, find the coherence file for this IFG.
-    if (params[cf.COH_FILE_LIST] is not None) and shared._is_interferogram(header):
+    if params[cf.COH_MASK] and shared._is_interferogram(header):
         coherence_path = cf.coherence_paths_for(m_path.converted_path, params, tif=True)
         coherence_thresh = params[cf.COH_THRESH]
     else:
