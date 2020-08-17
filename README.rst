@@ -29,9 +29,7 @@ The following dependencies need to be on your system prior to PyRate installatio
 
 The versions of each package stated above have been tested to work.
 
-Python dependencies are:
-
-::
+Python dependencies are::
 
     Cython==0.29.16
     Pillow==7.1.1
@@ -49,15 +47,11 @@ Install
 
 Details of all install options are given in the `PyRate documentation <http://geoscienceaustralia.github.io/PyRate>`_.
 
-`PyRate` and its Python dependencies can be installed directly from the `Python Package Index (PyPI) <https://pypi.org/project/Py-Rate/>`_:
-
-::
+`PyRate` and its Python dependencies can be installed directly from the `Python Package Index (PyPI) <https://pypi.org/project/Py-Rate/>`_::
 
     pip install Py-Rate
 
-To install from source in Linux, enter these commands in a terminal:
-
-::
+Alternatively, to install from source and create an executable program in Linux, enter these commands in a terminal::
 
     cd ~
     git clone https://github.com/GeoscienceAustralia/PyRate.git
@@ -66,9 +60,8 @@ To install from source in Linux, enter these commands in a terminal:
     cd ~/PyRate
     python3 setup.py install
 
-This will install the above-listed Python dependencies and compile the executable program ``pyrate``:
-
-::
+This will install the above-listed Python dependencies and compile the executable program ``pyrate``.
+To learn more about using PyRate, type ``pyrate`` command in the terminal::
 
     >> pyrate --help
     usage: pyrate [-h] [-v {DEBUG,INFO,WARNING,ERROR}]
@@ -100,4 +93,16 @@ This will install the above-listed Python dependencies and compile the executabl
       -h, --help            show this help message and exit
       -v {DEBUG,INFO,WARNING,ERROR}, --verbosity {DEBUG,INFO,WARNING,ERROR}
                             Increase output verbosity
+
+Test
+----
+
+To run the test suite, enter these commands in the terminal::
+
+   pip install -r requirements-test.txt
+   python -m pytest tests
+
+To run the tests for a single module (e.g. test_timeseries.py), use this command::
+
+   python -m pytest tests/test_timeseries.py
 

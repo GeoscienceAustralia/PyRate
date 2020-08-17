@@ -111,6 +111,9 @@ def _check_looks(xlooks, ylooks):
               "Looks must be an integer greater than zero" % (xlooks, ylooks)
         raise PreprocessError(msg)
 
+    if xlooks != ylooks:
+        log.warning('X and Y multi-look factors are not equal')
+
 
 def _check_resolution(ifgs):
     """
