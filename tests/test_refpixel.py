@@ -466,9 +466,9 @@ def x_y_pixel():
     dem.open()
     Y = dem.nrows
     X = dem.ncols
-    x = np.random.choice(range(X), 3)
-    y = np.random.choice(range(Y), 3)
-    return itertools.product(x, y)  # returns a matrix of 3x3 x, y pairs
+    x = np.random.choice(range(X), 5)
+    y = np.random.choice(range(Y), 5)
+    return itertools.product(x, y)  # returns a matrix of 5x5 random x, y pairs
 
 
 def test_convert_pixel_value_to_geographic_coordinate(x_y_pixel):
@@ -479,7 +479,9 @@ def test_convert_pixel_value_to_geographic_coordinate(x_y_pixel):
         lon, lat = convert_pixel_value_to_geographic_coordinate(x, y, transform)
         out = run(f"gdallocationinfo -geoloc {SML_TEST_DEM_TIF} {lon} {lat}", shell=True, capture_output=True,
                   text=True).stdout
-        assert f"({x}P,{y}L" in out
+        xs = (x, x+1, x-1)
+        ys = (y, y+1, y-1)
+        assert any(f"({xx}P,{yy}L" in out for xx, yy in itertools.product(xs, ys))
 
 
 def test_convert_geographic_coordinate_to_pixel_value(x_y_pixel):
