@@ -16,7 +16,6 @@
 """
 This Python module contains tests for the orbital.py PyRate module.
 """
-
 import os
 import shutil
 import tempfile
