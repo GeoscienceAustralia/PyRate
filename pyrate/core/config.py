@@ -182,8 +182,6 @@ SLPF_NANFILL = 'slpnanfill'
 SLPF_NANFILL_METHOD = 'slpnanfill_method'
 
 # Time series parameters
-#: BOOL (1/0); Perform time series calculation (1: yes, 0: no)
-TIME_SERIES_CAL = 'tscal'
 #: INT (1/2); Method for time series inversion (1: Laplacian Smoothing; 2: SVD)
 TIME_SERIES_METHOD = 'tsmethod'
 #: INT; Number of required input observations per pixel for time series inversion
@@ -266,7 +264,6 @@ PARAM_CONVERSION = {
     SLPF_ORDER: (int, 1),
     SLPF_NANFILL: (int, 0),
 
-    TIME_SERIES_CAL: (int, 0),
     # pixel thresh based on nepochs? not every project may have 20 epochs
     TIME_SERIES_PTHRESH: (int, 3),
     TIME_SERIES_SM_FACTOR: (float, -1.0),
@@ -615,10 +612,6 @@ _PARAM_VALIDATION = {
     APSEST: (
         lambda a: a in (0, 1),
         f"'{APSEST}': must select option 0 or 1."
-    ),
-    TIME_SERIES_CAL: (
-        lambda a: a in (0, 1),
-        f"'{TIME_SERIES_CAL}': must select option 0 or 1."
     ),
     PARALLEL: (
         lambda a: a in (0, 1),

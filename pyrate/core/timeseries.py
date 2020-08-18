@@ -428,9 +428,6 @@ def timeseries_calc_wrapper(params):
     preread_ifgs = params[cf.PREREAD_IFGS]
     vcmt = params[cf.VCMT]
     ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
-    if params[cf.TIME_SERIES_CAL] == 0:
-        log.info('Time Series Calculation not required')
-        return
 
     if params[cf.TIME_SERIES_METHOD] == 1:
         log.info('Calculating time series using Laplacian Smoothing method')

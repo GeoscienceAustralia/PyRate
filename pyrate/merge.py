@@ -39,10 +39,9 @@ def main(params: dict) -> None:
     mpiops.run_once(_merge_stack, params)
     out_types = ['stack_rate', 'stack_error']
 
-    if params[cf.TIME_SERIES_CAL]:
-        _merge_timeseries(params, 'tscuml')
-        _merge_linrate(params)
-        out_types += ['linear_rate', 'linear_error', 'linear_rsquared']
+    _merge_timeseries(params, 'tscuml')
+    _merge_linrate(params)
+    out_types += ['linear_rate', 'linear_error', 'linear_rsquared']
 
     process_out_types = mpiops.array_split(out_types)
     for out_type in process_out_types:

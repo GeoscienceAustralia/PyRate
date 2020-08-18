@@ -308,8 +308,7 @@ Non-optional pre-processing steps include:
 - Assembly of the variance-covariance matrix.
 
 Following the above processing steps the time series and stacking
-calculations are run. Time series is optional, controlled by the 
-``tscal`` parameter. Stacking is not optional.
+calculations are run. Both time series and stacking steps are optional. 
 
 
 ``merge``: Reassemble the tiles

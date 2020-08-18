@@ -373,14 +373,6 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
-    "tscal": {
-        "DataType": int,
-        "DefaultValue": 0,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": [0, 1],
-        "Required": False
-    },
     "tsmethod": {
         "DataType": int,
         "DefaultValue": 2,
