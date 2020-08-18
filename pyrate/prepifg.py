@@ -54,8 +54,12 @@ def main(params):
     if params[cf.DEM_FILE] is not None:  # optional DEM conversion
         ifg_paths.append(params[cf.DEM_FILE_PATH])
 
-    if params[cf.COH_MASK]:
+    if params[cf.COH_FILE_LIST] is not None:
         ifg_paths.extend(params[cf.COHERENCE_FILE_PATHS])
+
+    if params[cf.COH_FILE_LIST] is None and params[cf.COH_MASK]:
+        raise FileNotFoundError("Cannot apply coherence masking: no coherence file list "
+                                "supplied (parameter 'cohfilelist')")
 
     shared.mkdir_p(params[cf.OUT_DIR])  # create output dir
 

@@ -394,7 +394,7 @@ def test_error_msg_refpixel_out_of_bounds(tempdir, gamma_conf):
 def test_gamma_ref_pixel_search_vs_lat_lon(tempdir, gamma_conf):
     params_1, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=-1, refy=-1)
     params_2, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=150.941666654, refy=-34.218333314)
-    assert_two_dirs_equal(params_1[cf.OUT_DIR], params_2[cf.OUT_DIR], f"*{params_1[cf.IFG_CROP_OPT]}cr.tif", 18)
+    assert_two_dirs_equal(params_1[cf.OUT_DIR], params_2[cf.OUT_DIR], f"*{params_1[cf.IFG_CROP_OPT]}cr.tif", 35)
 
 
 def _get_mlooked_files(gamma_conf, tdir, refx, refy):

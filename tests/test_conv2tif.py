@@ -64,13 +64,13 @@ def test_tifs_placed_in_out_dir(gamma_params):
     # Test tifs in obs dir
     conv2tif.main(gamma_params)
     tifs = glob.glob(os.path.join(gamma_params[cf.OUT_DIR], '*.tif'))
-    assert len(tifs) == 18
+    assert len(tifs) == 35
 
 
 def test_num_gamma_tifs_equals_num_unws(gamma_params):
     gtifs = conv2tif.main(gamma_params)
-    # 17 unws + dem
-    assert len(gtifs) == 18
+    # 17 unws + dem + 17 cohfiles
+    assert len(gtifs) == 35
 
     for g, _ in gtifs:   # assert all output from conv2tfi are readonly
         assert Path(g).stat().st_mode == 33060

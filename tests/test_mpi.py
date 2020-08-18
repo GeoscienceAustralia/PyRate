@@ -51,9 +51,9 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, roipac_or_gamma_conf):
     # dest_paths = [p.sampled_path for p in params[cf.INTERFEROGRAM_FILES]]
     # run conv2tif and prepifg, create the dest_paths files
     conv2tif.main(params)
-    params[cf.INTERFEROGRAM_FILES].pop()
+    params = configuration.Configuration(output_conf).__dict__
     prepifg.main(params)
-    params[cf.INTERFEROGRAM_FILES].pop()
+    params = configuration.Configuration(output_conf).__dict__
     correct._copy_mlooked(params=params)
     correct._update_params_with_tiles(params)
     correct._create_ifg_dict(params=params)
