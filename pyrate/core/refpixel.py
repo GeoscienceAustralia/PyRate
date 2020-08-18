@@ -122,7 +122,7 @@ def convert_geographic_coordinate_to_pixel_value(lon, lat, transform):
     refx = round((lon - xOrigin) / pixelWidth)
     refy = round((yOrigin - lat) / pixelHeight)
 
-    return refx, refy
+    return int(refx), int(refy)
 
 
 # TODO: move error checking to config step (for fail fast)
