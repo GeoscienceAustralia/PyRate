@@ -471,6 +471,7 @@ def x_y_pixel():
     return itertools.product(x, y)  # returns a matrix of 5x5 random x, y pairs
 
 
+@pytest.mark.skipif(PYTHON3P6, reason='Skipped in python3p6')
 def test_convert_pixel_value_to_geographic_coordinate(x_y_pixel):
     dem = shared.DEM(SML_TEST_DEM_TIF)
     dem.open()
@@ -484,6 +485,7 @@ def test_convert_pixel_value_to_geographic_coordinate(x_y_pixel):
         assert any(f"({xx}P,{yy}L" in out for xx, yy in itertools.product(xs, ys))
 
 
+@pytest.mark.skipif(PYTHON3P6, reason='Skipped in python3p6')
 def test_convert_geographic_coordinate_to_pixel_value(x_y_pixel):
     dem = shared.DEM(SML_TEST_DEM_TIF)
     dem.open()
