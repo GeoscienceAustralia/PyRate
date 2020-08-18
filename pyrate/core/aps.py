@@ -60,7 +60,7 @@ def wrap_spatio_temporal_filter(params):
 
     aps_error_files_on_disc = [MultiplePaths.aps_error_path(i, params) for i in ifg_paths]
     if all(a.exists() for a in aps_error_files_on_disc):
-        log.warn("=======reusing aps error saved on disc========")
+        log.warning("Reusing APS errors from previous run!!!")
         for ifg_path, a in mpiops.array_split(list(zip(ifg_paths, aps_error_files_on_disc))):
             phase = np.load(a)
             _save_aps_corrected_phase(ifg_path, phase)

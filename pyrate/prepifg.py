@@ -71,7 +71,7 @@ def main(params):
     process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     do_prepifg(process_ifgs_paths, exts, params)
     mpiops.comm.barrier()
-    log.info("Finished prepifg")
+    log.info("Finished 'prepifg' step")
 
 
 def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float, float], params: dict) -> None:
@@ -90,7 +90,7 @@ def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float
                                     "interferograms to geotiffs.")
 
     if params[cf.LARGE_TIFS]:
-        log.info("Using gdal system calls to process prepifg")
+        log.info("Using gdal system calls to execute 'prepifg' step")
         ifg = prepifg_helper.dem_or_ifg(multi_paths[0].converted_path)
         ifg.open()
         xlooks, ylooks = params[cf.IFG_LKSX], params[cf.IFG_LKSY]

@@ -1317,13 +1317,13 @@ def extract_epochs_from_filename(filename_with_epochs: str) -> List[str]:
 
 def mpi_vs_multiprocess_logging(step, params):
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
-        log.info(f"Running {step} step using MPI processing. Disabling parallel processing.")
+        log.info(f"Running '{step}' step using MPI processing. Disabling parallel processing.")
         params[cf.PARALLEL] = 0
     else:
         if params[cf.PARALLEL] == 1:
-            log.info(f"Running {step} step in parallel using {params[cf.PROCESSES]} processes")
+            log.info(f"Running '{step}' step in parallel using {params[cf.PROCESSES]} processes")
         else:
-            log.info(f"Running {step} step in serial")
+            log.info(f"Running '{step}' step in serial")
 
 
 def dem_or_ifg(data_path):

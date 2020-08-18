@@ -197,7 +197,7 @@ def correct_ifgs(params: dict) -> None:
         with open(Path(params[cf.OUT_DIR], 'correction.params'), 'wb') as f:
             cp.dump(params, f)
         log.info('Correction params saved on disc')
-        log.info('Finished correct workflow steps')
+        log.info("Finished 'correct' step")
 
 
 def __validate_correct_steps(params):
