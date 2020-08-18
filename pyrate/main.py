@@ -49,39 +49,44 @@ def main():
     subparsers = parser.add_subparsers(dest='command')
     subparsers.required = True
 
-    parser_conv2tif = subparsers.add_parser('conv2tif', help='Convert interferograms to geotiff.', add_help=True)
+    parser_conv2tif = subparsers.add_parser('conv2tif', help='Convert interferograms to geotiff.',
+        add_help=True)
     parser_conv2tif.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                  help="Pass configuration file", required=True)
 
-    parser_prepifg = subparsers.add_parser('prepifg', help='Perform multilooking and cropping on geotiffs.',
-                                           add_help=True)
+    parser_prepifg = subparsers.add_parser(
+        'prepifg', help='Perform multilooking, cropping and coherence masking to interferogram geotiffs.',
+        add_help=True)
     parser_prepifg.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                 help="Pass configuration file", required=True)
 
     parser_correct = subparsers.add_parser(
-        'correct', help='Main correction workflow including corrections, time series and stacking computation.',
+        'correct', help='Calculate and apply corrections to interferogram phase data.',
         add_help=True)
     parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                 help="Pass configuration file", required=True)
 
     parser_correct = subparsers.add_parser(
-        'timeseries', help='Timeseries workflow including corrections, time series and stacking computation.',
+        'timeseries', help='Timeseries inversion of interferogram phase data.',
         add_help=True)
     parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                 help="Pass configuration file", required=True)
 
     parser_correct = subparsers.add_parser(
-        'stack', help='Stack workflow including corrections, time series and stacking computation.',
+        'stack', help='Stacking of interferogram phase data.',
         add_help=True)
     parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                 help="Pass configuration file", required=True)
 
-    parser_merge = subparsers.add_parser('merge', help="Reassemble computed tiles and save as geotiffs.",
-                                         add_help=True)
+    parser_merge = subparsers.add_parser(
+        'merge', help="Reassemble computed tiles and save as geotiffs.",
+        add_help=True)
     parser_merge.add_argument('-f', '--config_file', action="store", type=str, default=None,
                               help="Pass configuration file", required=False)
 
-    parser_workflow = subparsers.add_parser('workflow', help="Run all the PyRate processes", add_help=True)
+    parser_workflow = subparsers.add_parser(
+        'workflow', help="Sequentially run all the PyRate processing steps.",
+        add_help=True)
     parser_workflow.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                  help="Pass configuration file", required=False)
 
@@ -142,9 +147,8 @@ def main():
         params = mpiops.run_once(correct.load_params_from_disc, params)
         correct.stack(params)
 
-        # process might modify params too
-        params = mpiops.run_once(_params_from_conf, args.config_file)
         log.info("***********MERGE**************")
+        params = mpiops.run_once(_params_from_conf, args.config_file)
         merge.main(params)
 
     log.debug("--- %s seconds ---" % (time.time() - start_time))
