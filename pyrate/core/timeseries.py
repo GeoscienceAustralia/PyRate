@@ -424,34 +424,41 @@ def timeseries_calc_wrapper(params):
     """
     MPI wrapper for time series calculation.
     """
-    tiles = params[cf.TILES]
-    preread_ifgs = params[cf.PREREAD_IFGS]
-    vcmt = params[cf.VCMT]
-    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
-
     if params[cf.TIME_SERIES_METHOD] == 1:
         log.info('Calculating time series using Laplacian Smoothing method')
     elif params[cf.TIME_SERIES_METHOD] == 2:
         log.info('Calculating time series using SVD method')
 
-    output_dir = params[cf.TMPDIR]
-    total_tiles = len(tiles)
+    tiles = params[cf.TILES]
     process_tiles = mpiops.array_split(tiles)
-    for t in process_tiles:
-        log.debug("Calculating time series for tile "+str(t.index)+" out of "+str(total_tiles))
-        ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
-        mst_tile = np.load(Configuration.mst_path(params, t.index))
-        tsincr, tscuml, _ = time_series(ifg_parts, params, vcmt, mst_tile)
-        np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)), arr=tscuml)
-        # optional save of tsincr npy tiles
-        if params["savetsincr"] == 1:
-            np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)), arr=tsincr)
-        tscuml = np.insert(tscuml, 0, 0, axis=2) # add zero epoch to tscuml 3D array
-        linrate, intercept, r_squared, std_err, samples = linear_rate_array(tscuml, ifg_parts, params)
-        np.save(file=os.path.join(output_dir, 'linear_rate_{}.npy'.format(t.index)), arr=linrate)
-        np.save(file=os.path.join(output_dir, 'linear_intercept_{}.npy'.format(t.index)), arr=intercept)
-        np.save(file=os.path.join(output_dir, 'linear_rsquared_{}.npy'.format(t.index)), arr=r_squared)
-        np.save(file=os.path.join(output_dir, 'linear_error_{}.npy'.format(t.index)), arr=std_err)
-        np.save(file=os.path.join(output_dir, 'linear_samples_{}.npy'.format(t.index)), arr=samples)
+
+    if params[cf.PARALLEL]:
+        Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+            delayed(__calc_time_series_for_tile)(t, params=params) for t in process_tiles)
+    else:
+        for t in process_tiles:
+            __calc_time_series_for_tile(t, params)
     mpiops.comm.barrier()
     log.debug("Finished timeseries calc!")
+
+
+def __calc_time_series_for_tile(tile, params):
+    preread_ifgs = params[cf.PREREAD_IFGS]
+    vcmt = params[cf.VCMT]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    output_dir = params[cf.TMPDIR]
+    log.debug(f"Calculating time series for tile {tile.index}")
+    ifg_parts = [shared.IfgPart(p, tile, preread_ifgs, params) for p in ifg_paths]
+    mst_tile = np.load(Configuration.mst_path(params, tile.index))
+    tsincr, tscuml, _ = time_series(ifg_parts, params, vcmt, mst_tile)
+    np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(tile.index)), arr=tscuml)
+    # optional save of tsincr npy tiles
+    if params["savetsincr"] == 1:
+        np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(tile.index)), arr=tsincr)
+    tscuml = np.insert(tscuml, 0, 0, axis=2)  # add zero epoch to tscuml 3D array
+    linrate, intercept, r_squared, std_err, samples = linear_rate_array(tscuml, ifg_parts, params)
+    np.save(file=os.path.join(output_dir, 'linear_rate_{}.npy'.format(tile.index)), arr=linrate)
+    np.save(file=os.path.join(output_dir, 'linear_intercept_{}.npy'.format(tile.index)), arr=intercept)
+    np.save(file=os.path.join(output_dir, 'linear_rsquared_{}.npy'.format(tile.index)), arr=r_squared)
+    np.save(file=os.path.join(output_dir, 'linear_error_{}.npy'.format(tile.index)), arr=std_err)
+    np.save(file=os.path.join(output_dir, 'linear_samples_{}.npy'.format(tile.index)), arr=samples)
