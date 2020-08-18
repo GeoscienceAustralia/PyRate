@@ -17,7 +17,7 @@
 This Python module does post-processing steps to assemble the
 stack rate and time series outputs and save as geotiff files
 """
-from os.path import join, isfile
+from os.path import join, isfile, exists
 import pickle
 import numpy as np
 from osgeo import gdal
@@ -36,21 +36,35 @@ def main(params: dict) -> None:
     PyRate merge main function. Assembles product tiles in to
     single geotiff files
     """
-    # setup paths
-    mpiops.run_once(_merge_stack, params)
-    out_types = ['stack_rate', 'stack_error']
+    out_types = []
+    stfile = join(params[cf.TMPDIR], 'stack_rate_0.npy')
+    if exists(stfile):
+        # setup paths
+        mpiops.run_once(_merge_stack, params)
+        out_types += ['stack_rate', 'stack_error']
+    else:
+        log.warning('Not merging stack products; {} does not exist'.format(stfile))
 
-    _merge_timeseries(params, 'tscuml')
-    _merge_linrate(params)
-    out_types += ['linear_rate', 'linear_error', 'linear_rsquared']
+    tsfile = join(params[cf.TMPDIR], 'tscuml_0.npy')
+    if exists(tsfile):
+        _merge_timeseries(params, 'tscuml')
+        _merge_linrate(params)
+        out_types += ['linear_rate', 'linear_error', 'linear_rsquared']
 
-    process_out_types = mpiops.array_split(out_types)
-    for out_type in process_out_types:
-        create_png_and_kml_from_tif(params[cf.OUT_DIR], output_type=out_type)
+        # optional save of merged tsincr products
+        if params["savetsincr"] == 1:
+            _merge_timeseries(params, 'tsincr')
+    else:
+        log.warning('Not merging time series products; {} does not exist'.format(tsfile))
 
-    # optional save of merged tsincr products
-    if params["savetsincr"] == 1:
-        _merge_timeseries(params, 'tsincr')
+
+    if len(out_types) > 0:
+        process_out_types = mpiops.array_split(out_types)
+        for out_type in process_out_types:
+            create_png_and_kml_from_tif(params[cf.OUT_DIR], output_type=out_type)
+    else:
+        log.warning('Exiting: no products to merge')
+
 
 
 def _merge_stack(params: dict) -> None:
@@ -298,10 +312,10 @@ def _merge_setup(params):
     Convenience function for Merge set up steps
     """
     # setup paths
-    xlks, _, crop = cf.transform_params(params)
+    #xlks, ylks, crop = cf.transform_params(params)
     base_unw_paths = []
 
-    for p in Path(params[cf.OUT_DIR]).rglob("*lksx_*cr.tif"):
+    for p in Path(params[cf.OUT_DIR]).rglob("*lksx_*lksy_*cr.tif"):
         if "dem" not in str(p):
             base_unw_paths.append(str(p))
 
