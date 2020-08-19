@@ -473,9 +473,7 @@ def x_y_pixel():
 
 @pytest.mark.skipif(PYTHON3P6, reason='Skipped in python3p6')
 def test_convert_pixel_value_to_geographic_coordinate(x_y_pixel):
-    dem = shared.DEM(SML_TEST_DEM_TIF)
-    dem.open()
-    transform = dem.dataset.GetGeoTransform()
+    transform = dem_transform()
     for x, y in x_y_pixel:
         lon, lat = convert_pixel_value_to_geographic_coordinate(x, y, transform)
         out = run(f"gdallocationinfo -geoloc {SML_TEST_DEM_TIF} {lon} {lat}", shell=True, capture_output=True,
@@ -485,11 +483,16 @@ def test_convert_pixel_value_to_geographic_coordinate(x_y_pixel):
         assert any(f"({xx}P,{yy}L" in out for xx, yy in itertools.product(xs, ys))
 
 
-@pytest.mark.skipif(PYTHON3P6, reason='Skipped in python3p6')
-def test_convert_geographic_coordinate_to_pixel_value(x_y_pixel):
+def dem_transform():
     dem = shared.DEM(SML_TEST_DEM_TIF)
     dem.open()
     transform = dem.dataset.GetGeoTransform()
+    return transform
+
+
+@pytest.mark.skipif(PYTHON3P6, reason='Skipped in python3p6')
+def test_convert_geographic_coordinate_to_pixel_value(x_y_pixel):
+    transform = dem_transform()
     for x, y in x_y_pixel:
         lon, lat = convert_pixel_value_to_geographic_coordinate(x, y, transform)
         xp, yp = convert_geographic_coordinate_to_pixel_value(lon, lat, transform)
