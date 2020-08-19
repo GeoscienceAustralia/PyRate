@@ -30,9 +30,9 @@ import numpy as np
 from scipy.linalg import qr
 from scipy.stats import linregress
 from joblib import Parallel, delayed
-from pyrate.core.shared import joblib_log_level
+from pyrate.core.shared import joblib_log_level, tiles_split
 from pyrate.core.algorithm import first_second_ids, get_epochs
-from pyrate.core import config as cf, mst as mst_module, mpiops, shared
+from pyrate.core import config as cf, mst as mst_module, shared
 from pyrate.core.config import ConfigException
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration
@@ -429,16 +429,7 @@ def timeseries_calc_wrapper(params):
     elif params[cf.TIME_SERIES_METHOD] == 2:
         log.info('Calculating time series using SVD method')
 
-    tiles = params[cf.TILES]
-    process_tiles = mpiops.array_split(tiles)
-
-    if params[cf.PARALLEL]:
-        Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(__calc_time_series_for_tile)(t, params=params) for t in process_tiles)
-    else:
-        for t in process_tiles:
-            __calc_time_series_for_tile(t, params)
-    mpiops.comm.barrier()
+    tiles_split(__calc_time_series_for_tile, params)
     log.debug("Finished timeseries calc!")
 
 

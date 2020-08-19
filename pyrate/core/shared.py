@@ -24,6 +24,7 @@ from typing import List, Union
 
 import errno
 import math
+from joblib import Parallel, delayed
 from math import floor
 import os
 from os.path import basename, join
@@ -1351,3 +1352,15 @@ def join_dicts(dicts: List[dict]) -> dict:
         return {}
     assembled_dict = {k: v for D in dicts for k, v in D.items()}
     return assembled_dict
+
+
+def tiles_split(func, params):
+    tiles = params[cf.TILES]
+    process_tiles = mpiops.array_split(tiles)
+    if params[cf.PARALLEL]:
+        Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+            delayed(func)(t, params=params) for t in process_tiles)
+    else:
+        for t in process_tiles:
+            func(t, params)
+    mpiops.comm.barrier()
