@@ -211,7 +211,13 @@ class Configuration:
         if hasattr(self, 'rows') and hasattr(self, 'cols'):
             self.rows, self.cols = int(self.rows), int(self.cols)
         else:
-            self.rows, self.cols = [int(num) for num in factorise_integer(NO_OF_PARALLEL_PROCESSES)]
+            if NO_OF_PARALLEL_PROCESSES > 1: # i.e. mpirun
+                self.rows, self.cols = [int(num) for num in factorise_integer(NO_OF_PARALLEL_PROCESSES)]
+            else:
+                if self.parallel: # i.e. joblib parallelism
+                    self.rows, self.cols = [int(num) for num in factorise_integer(self.processes)]
+                else: # i.e. serial
+                    self.rows, self.cols = 1, 1
 
         # create a temporary directory if not supplied
         if not hasattr(self, 'tmpdir'):
