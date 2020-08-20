@@ -418,9 +418,11 @@ def printcoords(event):
     ## fit function
     lines1 = [0, 0, 0, 0]
     xvalues = np.arange(imdates_ordinal[0], imdates_ordinal[-1], 10)
+    xdates = [dt.fromordinal(pp) for pp in xvalues]
     for model, vis in enumerate(visibilities):
         yvalues = calc_model(dph, imdates_ordinal, xvalues, model)
-        lines1[model], = axts.plot(xvalues, yvalues, 'r-', visible=vis, alpha=0.6, zorder=3)
+        #lines1[model], = axts.plot(xvalues, yvalues, 'r-', visible=vis, alpha=0.6, zorder=3)
+        lines1[model], = axts.plot(xdates, yvalues, 'r-', visible=vis, alpha=0.6, zorder=3)
 
     axts.scatter(imdates_dt, dph, label=label1, c='b', alpha=0.6, zorder=5)
     axts.set_title('vel = {:.1f} mm/yr @({}, {})'.format(vel1p, jj, ii), fontsize=10)
