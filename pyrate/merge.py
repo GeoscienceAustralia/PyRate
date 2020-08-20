@@ -261,7 +261,7 @@ def _save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=N
     else:
         dest = join(outdir, out_type + ".tif")
         npy_file = join(outdir, out_type + '.npy')
-        md[ifc.EPOCH_DATE] = epochlist.dates
+        md[ifc.EPOCH_DATE] = [d.strftime('%Y-%m-%d') for d in epochlist.dates]
 
     if out_type == 'stack_rate':
         md[ifc.DATA_TYPE] = ifc.STACKRATE
@@ -269,10 +269,22 @@ def _save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=N
         md[ifc.DATA_TYPE] = ifc.STACKERROR
     elif out_type == 'stack_samples':
         md[ifc.DATA_TYPE] = ifc.STACKSAMP
+    elif out_type == 'linear_rate':
+        md[ifc.DATA_TYPE] = ifc.LINRATE
+    elif out_type == 'linear_error':
+        md[ifc.DATA_TYPE] = ifc.LINERROR
+    elif out_type == 'linear_samples':
+        md[ifc.DATA_TYPE] = ifc.LINSAMP
+    elif out_type == 'linear_intercept':
+        md[ifc.DATA_TYPE] = ifc.LINICPT
+    elif out_type == 'linear_rsquared':
+        md[ifc.DATA_TYPE] = ifc.LINRSQ
     elif out_type == 'tsincr':
         md[ifc.DATA_TYPE] = ifc.INCR
-    else: #tscuml
+    elif out_type == 'tscuml':
         md[ifc.DATA_TYPE] = ifc.CUML
+    else:
+        log.warning('Output type "{}" not recognised'.format(out_type))
 
     shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
     if savenpy:
