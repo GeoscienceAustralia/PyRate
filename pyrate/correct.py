@@ -103,7 +103,7 @@ def __save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, proce
 
 
 def _copy_mlooked(params):
-    log.info("Copying input files into tempdir for manipulation during correct steps")
+    log.info("Copying input files into tempdir for manipulation during 'correct' steps")
     mpaths = params[cf.INTERFEROGRAM_FILES]
     process_mpaths = mpiops.array_split(mpaths)
     for p in process_mpaths:
@@ -203,5 +203,5 @@ def correct_ifgs(params: dict) -> None:
 def __validate_correct_steps(params):
     for step in params['correct']:
         if step not in correct_steps.keys():
-            raise ConfigException(f"{step} is not a supported correct step. \n"
+            raise ConfigException(f"{step} is not a supported 'correct' step. \n"
                                   f"Supported steps are {correct_steps.keys()}")
