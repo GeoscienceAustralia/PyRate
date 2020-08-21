@@ -94,7 +94,7 @@ def configure_stage_log(verbosity, step_name, log_file_name='pyrate.log.'):
 
     log_file_name = run_once(str.__add__, log_file_name, step_name + '.' + datetime.now().isoformat())
 
-    ch = logging.StreamHandler()
+    ch = MPIStreamHandler()
     ch.setLevel(verbosity)
     ch.setFormatter(formatter)
 
@@ -113,5 +113,13 @@ def warn_with_traceback(message, category, filename, lineno, line=None):
     """
     traceback.print_stack()
     log = sys.stderr
-    log.write(warnings.formatwarning(
-        message, category, filename, lineno, line))
+    log.write(warnings.formatwarning(message, category, filename, lineno, line))
+
+
+class MPIStreamHandler(logging.StreamHandler):
+    """
+    Only logs messages from Node 0
+    """
+    def emit(self, record):
+        if rank == 0:
+            super().emit(record)
