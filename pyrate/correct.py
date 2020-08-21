@@ -32,8 +32,6 @@ from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.shared import PrereadIfg, get_tiles, mpi_vs_multiprocess_logging, join_dicts
 from pyrate.core.logger import pyratelogger as log
-from pyrate.core.stack import stack_calc_wrapper
-from pyrate.core.timeseries import timeseries_calc_wrapper
 
 MAIN_PROCESS = 0
 
@@ -144,29 +142,7 @@ correct_steps = {
     'mst': mst_calc_wrapper,
     'apscorrect': wrap_spatio_temporal_filter,
     'maxvar': maxvar_vcm_calc_wrapper,
-    # 'timeseries': timeseries_calc_wrapper,
-    # 'stack': stack_calc_wrapper
 }
-
-
-def timeseries(params: dict) -> None:
-    mpi_vs_multiprocess_logging("timeseries", params)
-    timeseries_calc_wrapper(params)
-
-
-def stack(params: dict) -> None:
-    mpi_vs_multiprocess_logging("stack", params)
-    stack_calc_wrapper(params)
-
-
-def load_params_from_disc(params: dict) -> dict:
-    params_file = Path(params[cf.OUT_DIR], 'correction.params')
-    if not params_file.exists():
-        raise FileNotFoundError("Params file not found on disc. Please run 'correct'")
-
-    with open(params_file, 'rb') as f:
-        params = cp.load(f)
-    return params
 
 
 def correct_ifgs(params: dict) -> None:

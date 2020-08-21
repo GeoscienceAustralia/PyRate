@@ -23,9 +23,9 @@ from typing import Union
 from pyrate.constants import NO_OF_PARALLEL_PROCESSES
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
-from pyrate.core.shared import extract_epochs_from_filename, InputTypes
+from pyrate.core.shared import extract_epochs_from_filename, InputTypes, get_tiles
 from pyrate.core.config import parse_namelist, ConfigException, ORB_ERROR_DIR, TEMP_MLOOKED_DIR
-from pyrate.core import config as cf
+from pyrate.core import config as cf, mpiops
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
@@ -290,6 +290,10 @@ class Configuration:
         return Path(params[cf.OUT_DIR], cf.MST_DIR).joinpath(f'mst_mat_{index}.npy')
 
     @staticmethod
+    def vcmt_path(params):
+        return Path(params[cf.OUT_DIR], cf.MAXVAR).with_suffix('.npy')
+
+    @staticmethod
     def ref_phs_file(params):
         ref_pixel_path = Configuration.ref_pixel_path(params)
         # add ref pixel path as when ref pixel changes - ref phs path should also change
@@ -302,6 +306,14 @@ class Configuration:
         val = self.__getattribute__(attr)
         files = parse_namelist(val)
         return [MultiplePaths(p, self.__dict__, input_type=input_type) for p in files]
+
+    # @staticmethod
+    # def add_tiles(params):
+    #     ifg_path = params[cf.INTERFEROGRAM_FILES][0].sampled_path
+    #     rows, cols = params["rows"], params["cols"]
+    #     tiles = mpiops.run_once(get_tiles, ifg_path, rows, cols)
+    #     # add tiles to params
+    #     params[cf.TILES] = tiles
 
 
 def write_config_parser_file(conf: ConfigParser, output_conf_file: Union[str, Path]):

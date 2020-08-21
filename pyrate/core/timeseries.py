@@ -402,7 +402,9 @@ def timeseries_calc_wrapper(params):
         log.info('Calculating time series using Laplacian Smoothing method')
     elif params[cf.TIME_SERIES_METHOD] == 2:
         log.info('Calculating time series using SVD method')
-
+    if not Configuration.vcmt_path(params).exists():
+        raise FileNotFoundError("VCMT is not found on disc. Have you run correct step?")
+    params[cf.VCMT] = np.load(Configuration.vcmt_path(params))
     tiles_split(__calc_time_series_for_tile, params)
     log.debug("Finished timeseries calc!")
 

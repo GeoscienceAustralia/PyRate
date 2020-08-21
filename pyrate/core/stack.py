@@ -20,14 +20,11 @@ stacking method.
 """
 import os
 
-import itertools
-
 from scipy.linalg import solve, cholesky, qr, inv
 from numpy import nan, isnan, sqrt, diag, delete, array, float32, size
 import numpy as np
-from joblib import Parallel, delayed
-from pyrate.core import config as cf, mpiops, shared
-from pyrate.core.shared import joblib_log_level, tiles_split
+from pyrate.core import config as cf, shared
+from pyrate.core.shared import tiles_split
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration
 
@@ -199,6 +196,9 @@ def stack_calc_wrapper(params):
     Wrapper for stacking on a set of tiles.
     """
     log.info('Calculating rate map via stacking')
+    if not Configuration.vcmt_path(params).exists():
+        raise FileNotFoundError("VCMT is not found on disc. Have you run correct step?")
+    params[cf.VCMT] = np.load(Configuration.vcmt_path(params))
     tiles_split(_stacking_for_tile, params)
     log.debug("Finished stacking calc!")
 
