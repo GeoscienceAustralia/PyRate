@@ -1355,13 +1355,13 @@ def join_dicts(dicts: List[dict]) -> dict:
     return assembled_dict
 
 
-def tiles_split(func, params):
+def tiles_split(func, params, *args, **kwargs):
     tiles = params[cf.TILES]
     process_tiles = mpiops.array_split(tiles)
     if params[cf.PARALLEL]:
         Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(func)(t, params=params) for t in process_tiles)
+            delayed(func)(t, params, *args, **kwargs) for t in process_tiles)
     else:
         for t in process_tiles:
-            func(t, params)
+            func(t, params, *args, **kwargs)
     mpiops.comm.barrier()
