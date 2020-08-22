@@ -19,7 +19,7 @@ This Python module implements pixel-by-pixel rate
 stacking method.
 """
 import os
-
+import pickle as cp
 from scipy.linalg import solve, cholesky, qr, inv
 from numpy import nan, isnan, sqrt, diag, delete, array, float32, size
 import numpy as np
@@ -198,7 +198,9 @@ def stack_calc_wrapper(params):
     log.info('Calculating rate map via stacking')
     if not Configuration.vcmt_path(params).exists():
         raise FileNotFoundError("VCMT is not found on disc. Have you run correct step?")
+    params[cf.PREREAD_IFGS] = cp.load(open(Configuration.preread_ifgs(params), 'rb'))
     params[cf.VCMT] = np.load(Configuration.vcmt_path(params))
+    params[cf.TILES] = Configuration.get_tiles(params)
     tiles_split(_stacking_for_tile, params)
     log.debug("Finished stacking calc!")
 

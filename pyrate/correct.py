@@ -19,7 +19,6 @@ This Python module runs the main PyRate correction workflow
 """
 import shutil
 import os
-from os.path import join
 from pathlib import Path
 import pickle as cp
 from pyrate.core import (shared, algorithm, mpiops, config as cf)
@@ -32,6 +31,7 @@ from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.shared import PrereadIfg, get_tiles, mpi_vs_multiprocess_logging, join_dicts
 from pyrate.core.logger import pyratelogger as log
+from pyrate.configuration import Configuration
 
 MAIN_PROCESS = 0
 
@@ -81,7 +81,7 @@ def __save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, proce
     if not os.path.exists(tmpdir):
         shared.mkdir_p(tmpdir)
 
-    preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
+    preread_ifgs_file = Configuration.preread_ifgs(params)
     nifgs = len(dest_tifs)
     # add some extra information that's also useful later
     gt, md, wkt = shared.get_geotiff_header_info(process_tifs[0].tmp_sampled_path)
@@ -167,13 +167,7 @@ def correct_ifgs(params: dict) -> None:
     # run through the correct steps in user specified sequence
     for step in params['correct']:
         correct_steps[step](params)
-
-    # export params
-    if mpiops.rank == MAIN_PROCESS:
-        with open(Path(params[cf.OUT_DIR], 'correction.params'), 'wb') as f:
-            cp.dump(params, f)
-        log.info('Correction params saved on disc')
-        log.info("Finished 'correct' step")
+    log.info("Finished 'correct' step")
 
 
 def __validate_correct_steps(params):

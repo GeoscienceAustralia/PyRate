@@ -26,6 +26,7 @@ from pathlib import Path
 
 from pyrate.core import shared, stack, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.logger import pyratelogger as log
+from pyrate.configuration import Configuration
 
 gdal.SetCacheMax(64)
 
@@ -312,7 +313,7 @@ def _merge_setup(params):
         dest_tifs = base_unw_paths # cf.get_dest_paths(base_unw_paths, crop, params, xlks)
 
     # load previously saved preread_ifgs dict
-    preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
+    preread_ifgs_file = Configuration.preread_ifgs(params)
     ifgs_dict = pickle.load(open(preread_ifgs_file, 'rb'))
     ifgs = [v for v in ifgs_dict.values() if isinstance(v, shared.PrereadIfg)]
     shape = ifgs[0].shape

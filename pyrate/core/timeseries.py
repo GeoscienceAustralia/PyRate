@@ -21,8 +21,7 @@ inversion in PyRate.
 # pylint: disable=too-many-arguments
 import os
 
-import itertools
-
+import pickle as cp
 from numpy import (where, isnan, nan, diff, zeros,
                    float32, cumsum, dot, delete, asarray)
 from numpy.linalg import matrix_rank, pinv, cholesky
@@ -404,7 +403,9 @@ def timeseries_calc_wrapper(params):
         log.info('Calculating time series using SVD method')
     if not Configuration.vcmt_path(params).exists():
         raise FileNotFoundError("VCMT is not found on disc. Have you run correct step?")
+    params[cf.PREREAD_IFGS] = cp.load(open(Configuration.preread_ifgs(params), 'rb'))
     params[cf.VCMT] = np.load(Configuration.vcmt_path(params))
+    params[cf.TILES] = Configuration.get_tiles(params)
     tiles_split(__calc_time_series_for_tile, params)
     log.debug("Finished timeseries calc!")
 

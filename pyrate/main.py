@@ -118,11 +118,9 @@ def main():
         correct.main(params)
 
     if args.command == "timeseries":
-        params = mpiops.run_once(load_params_from_disc, params)
         timeseries(params)
 
     if args.command == "stack":
-        params = mpiops.run_once(load_params_from_disc, params)
         stack(params)
 
     if args.command == "merge":
@@ -143,12 +141,10 @@ def main():
 
         log.info("***********TIMESERIES**************")
         params = mpiops.run_once(_params_from_conf, args.config_file)
-        params = mpiops.run_once(load_params_from_disc, params)
         timeseries(params)
 
         log.info("***********STACK**************")
         params = mpiops.run_once(_params_from_conf, args.config_file)
-        params = mpiops.run_once(load_params_from_disc, params)
         stack(params)
 
         log.info("***********MERGE**************")
@@ -156,16 +152,6 @@ def main():
         merge.main(params)
 
     log.debug("--- %s seconds ---" % (time.time() - start_time))
-
-
-def load_params_from_disc(params: dict) -> dict:
-    params_file = Path(params[cf.OUT_DIR], 'correction.params')
-    if not params_file.exists():
-        raise FileNotFoundError("Params file not found on disc. Please run 'correct'")
-
-    with open(params_file, 'rb') as f:
-        params = cp.load(f)
-    return params
 
 
 def timeseries(params: dict) -> None:

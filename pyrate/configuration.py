@@ -286,8 +286,12 @@ class Configuration:
         )
 
     @staticmethod
-    def mst_path(params, index):
+    def mst_path(params, index) -> Path:
         return Path(params[cf.OUT_DIR], cf.MST_DIR).joinpath(f'mst_mat_{index}.npy')
+
+    @staticmethod
+    def preread_ifgs(params: dict) -> Path:
+        return Path(params[cf.TMPDIR], 'preread_ifgs.pk')
 
     @staticmethod
     def vcmt_path(params):
@@ -302,18 +306,16 @@ class Configuration:
             '_'.join(['ref_phs', str(params[cf.REF_EST_METHOD]), '.npy'])
         )
 
+    @staticmethod
+    def get_tiles(params):
+        ifg_path = params[cf.INTERFEROGRAM_FILES][0].sampled_path
+        rows, cols = params['rows'], params['cols']
+        return get_tiles(ifg_path, rows, cols)
+
     def __get_files_from_attr(self, attr, input_type=InputTypes.IFG):
         val = self.__getattribute__(attr)
         files = parse_namelist(val)
         return [MultiplePaths(p, self.__dict__, input_type=input_type) for p in files]
-
-    # @staticmethod
-    # def add_tiles(params):
-    #     ifg_path = params[cf.INTERFEROGRAM_FILES][0].sampled_path
-    #     rows, cols = params["rows"], params["cols"]
-    #     tiles = mpiops.run_once(get_tiles, ifg_path, rows, cols)
-    #     # add tiles to params
-    #     params[cf.TILES] = tiles
 
 
 def write_config_parser_file(conf: ConfigParser, output_conf_file: Union[str, Path]):
