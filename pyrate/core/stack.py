@@ -218,4 +218,3 @@ def _stacking_for_tile(tile, params):
     np.save(file=os.path.join(output_dir, 'stack_rate_{}.npy'.format(tile.index)), arr=rate)
     np.save(file=os.path.join(output_dir, 'stack_error_{}.npy'.format(tile.index)), arr=error)
     np.save(file=os.path.join(output_dir, 'stack_samples_{}.npy'.format(tile.index)), arr=samples)
-

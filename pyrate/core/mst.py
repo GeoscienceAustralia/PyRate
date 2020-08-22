@@ -30,7 +30,7 @@ from joblib import Parallel, delayed
 from pyrate.core.algorithm import ifg_date_lookup
 from pyrate.core.algorithm import ifg_date_index_lookup
 from pyrate.core import config as cf, mpiops
-from pyrate.core.shared import IfgPart, create_tiles
+from pyrate.core.shared import IfgPart, create_tiles, tiles_split
 from pyrate.core.shared import joblib_log_level, Tile
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration
@@ -279,15 +279,15 @@ def mst_calc_wrapper(params):
     """
     MPI wrapper function for MST calculation
     """
-    tiles = params[cf.TILES]
-    preread_ifgs = params[cf.PREREAD_IFGS]
-    dest_tifs = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+
     log.info('Calculating minimum spanning tree matrix')
 
-    def _save_mst_tile(tile: Tile, preread_ifgs) -> None:
+    def _save_mst_tile(tile: Tile, params: dict) -> None:
         """
         Convenient inner loop for mst tile saving
         """
+        preread_ifgs = params[cf.PREREAD_IFGS]
+        dest_tifs = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
         mst_file_process_n = Configuration.mst_path(params, index=tile.index)
         if mst_file_process_n.exists():
             return
@@ -295,16 +295,6 @@ def mst_calc_wrapper(params):
         # locally save the mst_mat
         np.save(file=mst_file_process_n, arr=mst_tile)
 
-    process_tiles = mpiops.array_split(tiles)
-    if mpiops.size > 1:
-        params[cf.PARALLEL] = 0
+    tiles_split(_save_mst_tile, params)
 
-    if params[cf.PARALLEL]:
-        Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(_save_mst_tile)(t, preread_ifgs) for t in process_tiles
-        )
-    else:
-        for t in process_tiles:
-            _save_mst_tile(t, preread_ifgs)
     log.debug('Finished mst calculation for process {}'.format(mpiops.rank))
-    mpiops.comm.barrier()
