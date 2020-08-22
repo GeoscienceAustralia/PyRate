@@ -1,11 +1,24 @@
-#!/usr/bin/python3
-
-'''
-This script has been copied from LiCSBAS package and modified for PyRate package.
-See: https://github.com/yumorishita/LiCSBAS/blob/master/bin/LiCSBAS_plot_ts.py
-'''
-
-# plotting PyRate velocity and ts files
+#   This Python module is part of the PyRate software package.
+#
+#   Copyright 2020 Geoscience Australia
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+"""
+This python script can be used to plot PyRate linear-rate and cumulative time series
+products.
+This script is a version of a script in the LiCSBAS package; see
+https://github.com/yumorishita/LiCSBAS/blob/master/bin/LiCSBAS_plot_ts.py
+"""
 import rasterio
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, RadioButtons, RectangleSelector, CheckButtons
@@ -26,8 +39,11 @@ else:
     path = sys.argv[1]
     print(f"Looking for PyRate products in: {path}")
 
-# %% Calc model
+
 def calc_model(dph, imdates_ordinal, xvalues, model, vel1p, intercept1p):
+    """
+    Function to calculate model to fit cumulative time series data for one pixel
+    """
     imdates_years = np.divide(imdates_ordinal,365.25) # imdates_ordinal / 365.25
     xvalues_years = xvalues / 365.25
 
@@ -146,9 +162,9 @@ vmax = vmax_auto - refvalue_vel
 
 # plotting tscuml disp and vel
 figsize = (7,7)
-pv = plt.figure('Velocity / Cumulative Displacement', figsize)
+pv = plt.figure('PyRate: linear_rate / tscuml map viewer', figsize)
 axv = pv.add_axes([0.15,0.15,0.75,0.83])
-axv.set_title('Linear velocity')
+axv.set_title('linear_rate')
 axt2 = pv.text(0.01, 0.99, 'Left-doubleclick:\n Plot time series\nRight-drag:\n Change ref area', fontsize=8, va='top')
 axt = pv.text(0.01, 0.78, 'Ref area:\n X {}:{}\n Y {}:{}\n (start from 0)'.format(refx1, refx2, refy1, refy2),
               fontsize=8, va='bottom')
@@ -174,8 +190,10 @@ for label in radio_vel.labels:
 tscuml_disp_flag = False
 climauto = True
 
-# %% Set ref function
 def line_select_callback(eclick, erelease):
+    """
+    Set ref function
+    """
     global refx1, refx2, refy1, refy2, dmin, dmax   ## global cannot change existing values... why?
 
     x1, y1 = eclick.xdata, eclick.ydata
@@ -265,7 +283,7 @@ def tim_slidupdate(val):
     timenearest = np.argmin(np.abs(mdates.date2num(imdates_dt) - timein))
 
     dstr = imdates_dt[timenearest].strftime('%Y/%m/%d')
-    axv.set_title('Displacement map: %s (Ref: %s)' % (dstr, dstr_ref))
+    axv.set_title('tscuml: %s (Ref: %s)' % (dstr, dstr_ref))
 
     newv = (tscuml[timenearest, :, :])
     cax.set_data(newv)
@@ -279,7 +297,7 @@ def tim_slidupdate(val):
 tslider.on_changed(tim_slidupdate)
 
 ##### Plot figure of time-series at a point
-pts = plt.figure('Time-series', (9,5))
+pts = plt.figure('PyRate: pixel time-series graph', (9,5))
 axts = pts.add_axes([0.12, 0.14, 0.7, 0.8])
 
 axts.scatter(imdates_dt, np.zeros(len(imdates_dt)), c='b', alpha=0.6)
@@ -430,10 +448,4 @@ with warnings.catch_warnings(): ## To silence user warning
     warnings.simplefilter('ignore', UserWarning)
     plt.show()
 pv.canvas.mpl_disconnect(cid)
-
-#####################
-
-
-
-
 
