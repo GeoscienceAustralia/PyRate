@@ -245,7 +245,9 @@ def find_header(path: MultiplePaths, params: dict):
     if (processor == GAMMA) or (processor == GEOTIF):
         header = gamma.gamma_header(tif_path, params)
     elif processor == ROIPAC:
-        log.info("Warning: ROI_PAC support will be deprecated in a future PyRate release")
+        import warnings
+        warnings.warn("Warning: ROI_PAC support will be deprecated in a future PyRate release",
+                      category=DeprecationWarning)
         header = roipac.roipac_header(tif_path, params)
     else:
         raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
