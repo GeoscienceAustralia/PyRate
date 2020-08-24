@@ -21,18 +21,16 @@ inversion in PyRate.
 # pylint: disable=too-many-arguments
 import os
 
-import itertools
-
+import pickle as cp
 from numpy import (where, isnan, nan, diff, zeros,
                    float32, cumsum, dot, delete, asarray)
 from numpy.linalg import matrix_rank, pinv, cholesky
 import numpy as np
 from scipy.linalg import qr
 from scipy.stats import linregress
-from joblib import Parallel, delayed
-from pyrate.core.shared import joblib_log_level
+from pyrate.core.shared import tiles_split
 from pyrate.core.algorithm import first_second_ids, get_epochs
-from pyrate.core import config as cf, mst as mst_module, mpiops, shared
+from pyrate.core import config as cf, mst as mst_module, shared
 from pyrate.core.config import ConfigException
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration
@@ -49,8 +47,6 @@ def _time_series_setup(ifgs, params, mst=None):
     # if mst is not a single tree then do interpolation
     interp = 0 if mst_module.mst_from_ifgs(ifgs)[1] else 1
 
-    # Parallel Processing parameters
-    parallel = params[cf.PARALLEL]
     # Time Series parameters
     tsmethod = params[cf.TIME_SERIES_METHOD]
 
@@ -84,7 +80,7 @@ def _time_series_setup(ifgs, params, mst=None):
     if mst is None:
         mst = ~isnan(ifg_data)
     return b0_mat, interp, pthresh, smfactor, smorder, tsmethod, ifg_data, \
-        mst, ncols, nrows, nvelpar, parallel, span, tsvel_matrix
+        mst, ncols, nrows, nvelpar, span, tsvel_matrix
 
 
 def _validate_params(params, tsmethod):
@@ -137,27 +133,17 @@ def time_series(ifgs, params, vcmt=None, mst=None):
     :return: tsvel_matrix: velocity for each epoch interval.
     :rtype: ndarray
     """
-
     b0_mat, interp, p_thresh, sm_factor, sm_order, ts_method, ifg_data, mst, \
-        ncols, nrows, nvelpar, parallel, span, tsvel_matrix = \
+        ncols, nrows, nvelpar, span, tsvel_matrix = \
         _time_series_setup(ifgs, params, mst)
 
-    if parallel:
-        log.info('Calculating timeseries in parallel')
-        res = np.array(Parallel(n_jobs=params[cf.PROCESSES], 
-                                verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(_time_series_by_pixel)(i, j, b0_mat, sm_factor, sm_order,
-                                           ifg_data, mst, nvelpar, p_thresh,
-                                           interp, vcmt, ts_method)
-            for (i, j) in itertools.product(range(nrows), range(ncols))))
-        tsvel_matrix = np.reshape(res, newshape=(nrows, ncols, res.shape[1]))
-    else:
-        log.info('Calculating timeseries in serial')
-        for row in range(nrows):
-            for col in range(ncols):
-                tsvel_matrix[row, col] = _time_series_by_pixel(
-                    row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
-                    nvelpar, p_thresh, interp, vcmt, ts_method)
+    # pixel-by-pixel calculation.
+    # nested loops to loop over the 2 image dimensions
+    for row in range(nrows):
+        for col in range(ncols):
+            tsvel_matrix[row, col] = _time_series_pixel(
+                row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
+                nvelpar, p_thresh, interp, vcmt, ts_method)
 
     tsvel_matrix = where(tsvel_matrix == 0, nan, tsvel_matrix)
     # SB: do the span multiplication as a numpy linalg operation, MUCH faster
@@ -183,10 +169,10 @@ def _remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):
     return b_mat, ifgv, sel, rmrow
 
 
-def _time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
+def _time_series_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
                           nvelpar, p_thresh, interp, vcmt, method):
     """
-    Wrapper function for splitting time series computation by pixels.
+    Wrapper function to compute time series for single pixel.
     """
     # check pixel for non-redundant ifgs
     sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
@@ -212,12 +198,10 @@ def _time_series_by_pixel(row, col, b0_mat, sm_factor, sm_order, ifg_data, mst,
             b_mat = b_mat[:, ~np.isclose(velflag, 0.0)]
         else:
             velflag = np.ones(nvelpar)
-        if method == 1:
-            # Use Laplacian smoothing method
+        if method == 1: # Use Laplacian smoothing method
             tsvel = _solve_ts_lap(nvelpar, velflag, ifgv, b_mat,
                                   sm_order, sm_factor, sel, vcmt)
-        elif method == 2:
-            # Use SVD method
+        elif method == 2: # Use SVD method
             tsvel = _solve_ts_svd(nvelpar, velflag, ifgv, b_mat)
         else:
             raise TimeSeriesError("Unrecognised time series method")
@@ -366,7 +350,7 @@ def linear_rate_array(tscuml, ifgs, params):
     :rtype: ndarray
     """
     b0_mat, interp, p_thresh, sm_factor, sm_order, ts_method, ifg_data, mst, \
-        ncols, nrows, nvelpar, parallel, span, tsvel_matrix = \
+        ncols, nrows, nvelpar, span, tsvel_matrix = \
         _time_series_setup(ifgs, params)
 
     epochlist = get_epochs(ifgs)[0]
@@ -377,31 +361,19 @@ def linear_rate_array(tscuml, ifgs, params):
     if tscuml.shape[2] != len(t):
         raise TimeSeriesError("linear_rate_array: tscuml and nepochs are not equal length")
 
+    # preallocate empty arrays for results
+    linrate = np.empty([nrows, ncols], dtype=float32)
+    rsquared = np.empty([nrows, ncols], dtype=float32)
+    error = np.empty([nrows, ncols], dtype=float32)
+    intercept = np.empty([nrows, ncols], dtype=np.float32)
+    samples = np.empty([nrows, ncols], dtype=np.float32)
+
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
-    if parallel:
-        log.info('Calculating linear regression of cumulative time series in parallel')
-        res = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-                delayed(linear_rate_pixel)(tscuml[r, c, :], t) for r, c in itertools.product(range(nrows), range(ncols))
-        )
-        res = np.array(res)
-        linrate = res[:, 0].reshape(nrows, ncols)
-        intercept = res[:, 1].reshape(nrows, ncols)
-        rsquared = res[:, 2].reshape(nrows, ncols)
-        error = res[:, 3].reshape(nrows, ncols)
-        samples = res[:, 4].reshape(nrows, ncols)
-    else:
-        log.info('Calculating linear regression of cumulative time series in serial')
-        # preallocate empty arrays for results
-        linrate = np.empty([nrows, ncols], dtype=float32)
-        rsquared = np.empty([nrows, ncols], dtype=float32)
-        error = np.empty([nrows, ncols], dtype=float32)
-        intercept = np.empty([nrows, ncols], dtype=np.float32)
-        samples = np.empty([nrows, ncols], dtype=np.float32)
-        for i in range(nrows):
-            for j in range(ncols):
-                linrate[i, j], intercept[i, j], rsquared[i, j], error[i, j], samples[i, j] = \
-                    linear_rate_pixel(tscuml[i, j, :], t)
+    for i in range(nrows):
+        for j in range(ncols):
+            linrate[i, j], intercept[i, j], rsquared[i, j], error[i, j], samples[i, j] = \
+                linear_rate_pixel(tscuml[i, j, :], t)
 
     return linrate, intercept, rsquared, error, samples
 
@@ -422,36 +394,43 @@ class TimeSeriesError(Exception):
 
 def timeseries_calc_wrapper(params):
     """
-    MPI wrapper for time series calculation.
+    Wrapper for time series calculation on a set of tiles.
     """
-    tiles = params[cf.TILES]
-    preread_ifgs = params[cf.PREREAD_IFGS]
-    vcmt = params[cf.VCMT]
-    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
-
     if params[cf.TIME_SERIES_METHOD] == 1:
         log.info('Calculating time series using Laplacian Smoothing method')
     elif params[cf.TIME_SERIES_METHOD] == 2:
         log.info('Calculating time series using SVD method')
-
-    output_dir = params[cf.TMPDIR]
-    total_tiles = len(tiles)
-    process_tiles = mpiops.array_split(tiles)
-    for t in process_tiles:
-        log.debug("Calculating time series for tile "+str(t.index)+" out of "+str(total_tiles))
-        ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
-        mst_tile = np.load(Configuration.mst_path(params, t.index))
-        tsincr, tscuml, _ = time_series(ifg_parts, params, vcmt, mst_tile)
-        np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(t.index)), arr=tscuml)
-        # optional save of tsincr npy tiles
-        if params["savetsincr"] == 1:
-            np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(t.index)), arr=tsincr)
-        tscuml = np.insert(tscuml, 0, 0, axis=2) # add zero epoch to tscuml 3D array
-        linrate, intercept, r_squared, std_err, samples = linear_rate_array(tscuml, ifg_parts, params)
-        np.save(file=os.path.join(output_dir, 'linear_rate_{}.npy'.format(t.index)), arr=linrate)
-        np.save(file=os.path.join(output_dir, 'linear_intercept_{}.npy'.format(t.index)), arr=intercept)
-        np.save(file=os.path.join(output_dir, 'linear_rsquared_{}.npy'.format(t.index)), arr=r_squared)
-        np.save(file=os.path.join(output_dir, 'linear_error_{}.npy'.format(t.index)), arr=std_err)
-        np.save(file=os.path.join(output_dir, 'linear_samples_{}.npy'.format(t.index)), arr=samples)
-    mpiops.comm.barrier()
+    if not Configuration.vcmt_path(params).exists():
+        raise FileNotFoundError("VCMT is not found on disc. Have you run the 'correct' step?")
+    params[cf.PREREAD_IFGS] = cp.load(open(Configuration.preread_ifgs(params), 'rb'))
+    params[cf.VCMT] = np.load(Configuration.vcmt_path(params))
+    params[cf.TILES] = Configuration.get_tiles(params)
+    tiles_split(__calc_time_series_for_tile, params)
     log.debug("Finished timeseries calc!")
+
+
+def __calc_time_series_for_tile(tile, params):
+    """
+    Wrapper for time series calculation on a single tile
+    """
+    preread_ifgs = params[cf.PREREAD_IFGS]
+    vcmt = params[cf.VCMT]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    output_dir = params[cf.TMPDIR]
+    log.debug(f"Calculating time series for tile {tile.index}")
+    ifg_parts = [shared.IfgPart(p, tile, preread_ifgs, params) for p in ifg_paths]
+    mst_tile = np.load(Configuration.mst_path(params, tile.index))
+    tsincr, tscuml, _ = time_series(ifg_parts, params, vcmt, mst_tile)
+    np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(tile.index)), arr=tscuml)
+    # optional save of tsincr npy tiles
+    if params["savetsincr"] == 1:
+        np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(tile.index)), arr=tsincr)
+    tscuml = np.insert(tscuml, 0, 0, axis=2)  # add zero epoch to tscuml 3D array
+    log.info('Calculating linear regression of cumulative time series')
+    linrate, intercept, r_squared, std_err, samples = linear_rate_array(tscuml, ifg_parts, params)
+    np.save(file=os.path.join(output_dir, 'linear_rate_{}.npy'.format(tile.index)), arr=linrate)
+    np.save(file=os.path.join(output_dir, 'linear_intercept_{}.npy'.format(tile.index)), arr=intercept)
+    np.save(file=os.path.join(output_dir, 'linear_rsquared_{}.npy'.format(tile.index)), arr=r_squared)
+    np.save(file=os.path.join(output_dir, 'linear_error_{}.npy'.format(tile.index)), arr=std_err)
+    np.save(file=os.path.join(output_dir, 'linear_samples_{}.npy'.format(tile.index)), arr=samples)
+

@@ -19,15 +19,12 @@ This Python module implements pixel-by-pixel rate
 stacking method.
 """
 import os
-
-import itertools
-
+import pickle as cp
 from scipy.linalg import solve, cholesky, qr, inv
 from numpy import nan, isnan, sqrt, diag, delete, array, float32, size
 import numpy as np
-from joblib import Parallel, delayed
-from pyrate.core import config as cf, mpiops, shared
-from pyrate.core.shared import joblib_log_level
+from pyrate.core import config as cf, shared
+from pyrate.core.shared import tiles_split
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration
 
@@ -50,25 +47,13 @@ def stack_rate_array(ifgs, params, vcmt, mst=None):
     :return: samples: Number of observations used in rate calculation for each pixel
     :rtype: ndarray
     """
-    nsig, pthresh, cols, error, mst, obs, parallel, _, rate, rows, samples, span = _stack_setup(ifgs, mst, params)
+    nsig, pthresh, cols, error, mst, obs, rate, rows, samples, span = _stack_setup(ifgs, mst, params)
 
     # pixel-by-pixel calculation.
     # nested loops to loop over the 2 image dimensions
-    if parallel:
-        log.info('Calculating stack rate in parallel')
-        res = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(stack_rate_pixel)(obs[:, r, c], mst[:, r, c], vcmt, span, nsig, pthresh) for r, c in itertools.product(range(rows), range(cols))
-        )
-        res = np.array(res)
-
-        rate = res[:, 0].reshape(rows, cols)
-        error = res[:, 1].reshape(rows, cols)
-        samples = res[:, 2].reshape(rows, cols)
-    else:
-        log.info('Calculating stack rate in serial')
-        for i in range(rows):
-            for j in range(cols):
-                rate[i, j], error[i, j], samples[i, j] = stack_rate_pixel(obs[:, i, j], mst[:, i, j], vcmt, span, nsig, pthresh)
+    for i in range(rows):
+        for j in range(cols):
+            rate[i, j], error[i, j], samples[i, j] = stack_rate_pixel(obs[:, i, j], mst[:, i, j], vcmt, span, nsig, pthresh)
 
     return rate, error, samples
 
@@ -184,9 +169,6 @@ def _stack_setup(ifgs, mst, params):
     """
     Convenience function for stack rate setup
     """
-    # MULTIPROCESSING parameters
-    parallel = params[cf.PARALLEL]
-    processes = params[cf.PROCESSES]
     # stack rate parameters from config file
     # n-sigma ratio used to threshold 'model minus observation' residuals
     nsig = params[cf.LR_NSIG]
@@ -206,28 +188,35 @@ def _stack_setup(ifgs, mst, params):
     error = np.empty([rows, cols], dtype=float32)
     rate = np.empty([rows, cols], dtype=float32)
     samples = np.empty([rows, cols], dtype=np.float32)
-    return nsig, pthresh, cols, error, mst, obs, parallel, processes, rate, rows, samples, span
+    return nsig, pthresh, cols, error, mst, obs, rate, rows, samples, span
 
 
 def stack_calc_wrapper(params):
     """
-    MPI wrapper for stacking calculation
+    Wrapper for stacking on a set of tiles.
     """
-    tiles = params[cf.TILES]
+    log.info('Calculating rate map via stacking')
+    if not Configuration.vcmt_path(params).exists():
+        raise FileNotFoundError("VCMT is not found on disc. Have you run the 'correct' step?")
+    params[cf.PREREAD_IFGS] = cp.load(open(Configuration.preread_ifgs(params), 'rb'))
+    params[cf.VCMT] = np.load(Configuration.vcmt_path(params))
+    params[cf.TILES] = Configuration.get_tiles(params)
+    tiles_split(_stacking_for_tile, params)
+    log.debug("Finished stacking calc!")
+
+
+def _stacking_for_tile(tile, params):
+    """
+    Wrapper for stacking calculation on a single tile
+    """
     preread_ifgs = params[cf.PREREAD_IFGS]
     vcmt = params[cf.VCMT]
     ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
-    process_tiles = mpiops.array_split(tiles)
-    log.info('Calculating rate map from stacking')
     output_dir = params[cf.TMPDIR]
-    for t in process_tiles:
-        log.info('Stacking of tile {}'.format(t.index))
-        ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
-        mst_grid_n = np.load(Configuration.mst_path(params, t.index))
-        rate, error, samples = stack_rate_array(ifg_parts, params, vcmt, mst_grid_n)
-        # declare file names
-        np.save(file=os.path.join(output_dir, 'stack_rate_{}.npy'.format(t.index)), arr=rate)
-        np.save(file=os.path.join(output_dir, 'stack_error_{}.npy'.format(t.index)), arr=error)
-        np.save(file=os.path.join(output_dir, 'stack_samples_{}.npy'.format(t.index)), arr=samples)
-    mpiops.comm.barrier()
-    log.debug("Finished stack rate calc!")
+    log.debug(f"Stacking of tile {tile.index}")
+    ifg_parts = [shared.IfgPart(p, tile, preread_ifgs, params) for p in ifg_paths]
+    mst_tile = np.load(Configuration.mst_path(params, tile.index))
+    rate, error, samples = stack_rate_array(ifg_parts, params, vcmt, mst_tile)
+    np.save(file=os.path.join(output_dir, 'stack_rate_{}.npy'.format(tile.index)), arr=rate)
+    np.save(file=os.path.join(output_dir, 'stack_error_{}.npy'.format(tile.index)), arr=error)
+    np.save(file=os.path.join(output_dir, 'stack_samples_{}.npy'.format(tile.index)), arr=samples)

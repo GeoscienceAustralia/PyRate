@@ -19,6 +19,7 @@ This Python module defines executable run configuration for the PyRate software
 
 import os
 import argparse
+import pickle as cp
 from argparse import RawTextHelpFormatter
 import time
 from pathlib import Path
@@ -29,6 +30,9 @@ from pyrate.core.logger import pyratelogger as log, configure_stage_log
 from pyrate.core import config as cf
 from pyrate.core import mpiops
 from pyrate.configuration import Configuration
+from pyrate.core.shared import mpi_vs_multiprocess_logging
+from pyrate.core.stack import stack_calc_wrapper
+from pyrate.core.timeseries import timeseries_calc_wrapper
 
 
 def _params_from_conf(config_file):
@@ -114,12 +118,10 @@ def main():
         correct.main(params)
 
     if args.command == "timeseries":
-        params = mpiops.run_once(correct.load_params_from_disc, params)
-        correct.timeseries(params)
+        timeseries(params)
 
     if args.command == "stack":
-        params = mpiops.run_once(correct.load_params_from_disc, params)
-        correct.stack(params)
+        stack(params)
 
     if args.command == "merge":
         merge.main(params)
@@ -139,13 +141,11 @@ def main():
 
         log.info("***********TIMESERIES**************")
         params = mpiops.run_once(_params_from_conf, args.config_file)
-        params = mpiops.run_once(correct.load_params_from_disc, params)
-        correct.timeseries(params)
+        timeseries(params)
 
         log.info("***********STACK**************")
         params = mpiops.run_once(_params_from_conf, args.config_file)
-        params = mpiops.run_once(correct.load_params_from_disc, params)
-        correct.stack(params)
+        stack(params)
 
         log.info("***********MERGE**************")
         params = mpiops.run_once(_params_from_conf, args.config_file)
@@ -154,5 +154,16 @@ def main():
     log.debug("--- %s seconds ---" % (time.time() - start_time))
 
 
+def timeseries(params: dict) -> None:
+    mpi_vs_multiprocess_logging("timeseries", params)
+    timeseries_calc_wrapper(params)
+
+
+def stack(params: dict) -> None:
+    mpi_vs_multiprocess_logging("stack", params)
+    stack_calc_wrapper(params)
+
+
 if __name__ == "__main__":
     main()
+

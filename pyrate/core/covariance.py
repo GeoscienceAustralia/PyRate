@@ -31,6 +31,7 @@ from pyrate.core import shared, ifgconstants as ifc, config as cf, mpiops
 from pyrate.core.shared import PrereadIfg, Ifg
 from pyrate.core.algorithm import first_second_ids
 from pyrate.core.logger import pyratelogger as log
+from pyrate.configuration import Configuration
 
 # pylint: disable=too-many-arguments
 # distance division factor of 1000 converts to km and is needed to match legacy output
@@ -355,4 +356,5 @@ def maxvar_vcm_calc_wrapper(params):
     vcmt = mpiops.run_once(get_vcmt, preread_ifgs, maxvar)
     log.debug("Finished maxvar and vcm calc!")
     params[cf.MAXVAR], params[cf.VCMT] = maxvar, vcmt
+    np.save(Configuration.vcmt_path(params), arr=vcmt)
     return maxvar, vcmt

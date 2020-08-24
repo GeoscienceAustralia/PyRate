@@ -27,6 +27,7 @@ import numpy as np
 
 import pyrate.configuration
 import pyrate.core.shared
+import pyrate.main
 from pyrate.core import shared, config as cf, config, prepifg_helper, mst
 from pyrate.core.shared import dem_or_ifg
 from pyrate import correct, prepifg, conv2tif
@@ -238,8 +239,8 @@ class TestParallelPyRate:
         correct._copy_mlooked(params)
         tiles = pyrate.core.shared.get_tiles(cls.sampled_paths[0], rows, cols)
         correct.correct_ifgs(params)
-        correct.timeseries(params)
-        correct.stack(params)
+        pyrate.main.timeseries(params)
+        pyrate.main.stack(params)
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.OUT_DIR])
@@ -267,8 +268,8 @@ class TestParallelPyRate:
 
         correct._copy_mlooked(params)
         correct.correct_ifgs(params)
-        correct.timeseries(params)
-        correct.stack(params)
+        pyrate.main.timeseries(params)
+        pyrate.main.stack(params)
         cls.refpixel, cls.maxvar, cls.vcmt = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.OUT_DIR])

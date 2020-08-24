@@ -23,9 +23,9 @@ from typing import Union
 from pyrate.constants import NO_OF_PARALLEL_PROCESSES
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
-from pyrate.core.shared import extract_epochs_from_filename, InputTypes
+from pyrate.core.shared import extract_epochs_from_filename, InputTypes, get_tiles
 from pyrate.core.config import parse_namelist, ConfigException, ORB_ERROR_DIR, TEMP_MLOOKED_DIR
-from pyrate.core import config as cf
+from pyrate.core import config as cf, mpiops
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
@@ -211,7 +211,13 @@ class Configuration:
         if hasattr(self, 'rows') and hasattr(self, 'cols'):
             self.rows, self.cols = int(self.rows), int(self.cols)
         else:
-            self.rows, self.cols = [int(num) for num in factorise_integer(NO_OF_PARALLEL_PROCESSES)]
+            if NO_OF_PARALLEL_PROCESSES > 1: # i.e. mpirun
+                self.rows, self.cols = [int(num) for num in factorise_integer(NO_OF_PARALLEL_PROCESSES)]
+            else:
+                if self.parallel: # i.e. joblib parallelism
+                    self.rows, self.cols = [int(num) for num in factorise_integer(self.processes)]
+                else: # i.e. serial
+                    self.rows, self.cols = 1, 1
 
         # create a temporary directory if not supplied
         if not hasattr(self, 'tmpdir'):
@@ -280,8 +286,16 @@ class Configuration:
         )
 
     @staticmethod
-    def mst_path(params, index):
+    def mst_path(params, index) -> Path:
         return Path(params[cf.OUT_DIR], cf.MST_DIR).joinpath(f'mst_mat_{index}.npy')
+
+    @staticmethod
+    def preread_ifgs(params: dict) -> Path:
+        return Path(params[cf.TMPDIR], 'preread_ifgs.pk')
+
+    @staticmethod
+    def vcmt_path(params):
+        return Path(params[cf.OUT_DIR], cf.VCMT).with_suffix('.npy')
 
     @staticmethod
     def ref_phs_file(params):
@@ -291,6 +305,12 @@ class Configuration:
             ref_pixel_path.stem + '_' +
             '_'.join(['ref_phs', str(params[cf.REF_EST_METHOD]), '.npy'])
         )
+
+    @staticmethod
+    def get_tiles(params):
+        ifg_path = params[cf.INTERFEROGRAM_FILES][0].sampled_path
+        rows, cols = params['rows'], params['cols']
+        return get_tiles(ifg_path, rows, cols)
 
     def __get_files_from_attr(self, attr, input_type=InputTypes.IFG):
         val = self.__getattribute__(attr)
