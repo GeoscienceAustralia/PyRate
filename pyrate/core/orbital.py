@@ -78,7 +78,7 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
     files. The network method assumes the given ifgs have already been reduced
     to a minimum spanning tree network.
     """
-    mpiops.run_once(__degree_and_method_check, params)
+    mpiops.run_once(__orb_params_check, params)
     ifg_paths = [i.data_path for i in ifgs] if isinstance(ifgs[0], Ifg) else ifgs
     method = params[cf.ORBITAL_FIT_METHOD]
     # mlooking is not necessary for independent correction in a computational sense
@@ -130,12 +130,18 @@ def __create_multilooked_dataset_for_network_correction(params):
     return mlooked
 
 
-def __degree_and_method_check(params):
+def __orb_params_check(params):
     """
     Convenience function to perform orbital correction.
     """
     degree = params[cf.ORBITAL_FIT_DEGREE]
     method = params[cf.ORBITAL_FIT_METHOD]
+    orbfitlksx = params[cf.ORBITAL_FIT_LOOKS_X]
+    orbfitlksy = params[cf.ORBITAL_FIT_LOOKS_Y]
+
+    if orbfitlksx != orbfitlksy:
+        msg = f"Invalid looks of {orbfitlksx} and {orbfitlksy} for orbital correction"
+        raise OrbitalError(msg)
     if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
         msg = "Invalid degree of %s for orbital correction" % cf.ORB_DEGREE_NAMES.get(degree)
         raise OrbitalError(msg)
@@ -260,7 +266,7 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
     # all orbit corrections available?
     if isinstance(ifg_paths[0], str):
         if __check_and_apply_orberrors_found_on_disc(ifg_paths, params):
-            log.info("Reused previously calculated orbfit error")
+            log.warning("Reusing orbfit errors from previous run!!!")
             return
         # all corrections are available in numpy files already saved - return
         ifgs = [shared.Ifg(i) for i in ifg_paths]
@@ -480,7 +486,6 @@ def orb_fit_calc_wrapper(params: dict) -> None:
     multi_paths = params[cf.INTERFEROGRAM_FILES]
     if not params[cf.ORBITAL_FIT]:
         log.info('Orbital correction not required!')
-        print('Orbital correction not required!')
         return
 
     ifg_paths = [p.tmp_sampled_path for p in multi_paths]

@@ -19,19 +19,22 @@ This Python module contains tests for the refpixel.py PyRate module.
 import os
 import copy
 import shutil
-from subprocess import check_call, run
+from subprocess import run
 from pathlib import Path
 import pytest
+import itertools
+import numpy as np
 from numpy import nan, mean, std, isnan
 
 import pyrate.configuration
 import pyrate.core.refpixel
 from pyrate.core import config as cf
-from pyrate.core.refpixel import ref_pixel, _step, RefPixelError, ref_pixel_calc_wrapper
+from pyrate.core.refpixel import ref_pixel, _step, RefPixelError, ref_pixel_calc_wrapper, \
+    convert_geographic_coordinate_to_pixel_value, convert_pixel_value_to_geographic_coordinate
 from pyrate.core import shared, ifgconstants as ifc
-from pyrate import process, conv2tif, prepifg
+from pyrate import correct, conv2tif, prepifg
 from pyrate.configuration import Configuration
-from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
+from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA, SML_TEST_DEM_TIF
 from tests.common import small_data_setup, MockIfg, copy_small_ifg_file_list, \
     copy_and_setup_small_data, manipulate_test_conf, assert_two_dirs_equal, PYTHON3P6
 
@@ -394,7 +397,7 @@ def test_error_msg_refpixel_out_of_bounds(tempdir, gamma_conf):
 def test_gamma_ref_pixel_search_vs_lat_lon(tempdir, gamma_conf):
     params_1, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=-1, refy=-1)
     params_2, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=150.941666654, refy=-34.218333314)
-    assert_two_dirs_equal(params_1[cf.OUT_DIR], params_2[cf.OUT_DIR], f"*{params_1[cf.IFG_CROP_OPT]}cr.tif", 18)
+    assert_two_dirs_equal(params_1[cf.OUT_DIR], params_2[cf.OUT_DIR], f"*{params_1[cf.IFG_CROP_OPT]}cr.tif", 35)
 
 
 def _get_mlooked_files(gamma_conf, tdir, refx, refy):
@@ -408,7 +411,7 @@ def _get_mlooked_files(gamma_conf, tdir, refx, refy):
     conv2tif.main(params)
     params = Configuration(output_conf).__dict__
     prepifg.main(params)
-    stdout = run(f"pyrate process -f {output_conf}", shell=True, capture_output=True, text=True)
+    stdout = run(f"pyrate correct -f {output_conf}", shell=True, capture_output=True, text=True)
     return params, stdout
 
 
@@ -422,7 +425,7 @@ class TestRefPixelReuseLoadsSameFileAndPixels:
         params = Configuration(cls.conf).__dict__
         prepifg.main(params)
         params = Configuration(cls.conf).__dict__
-        process._copy_mlooked(params)
+        correct._copy_mlooked(params)
         cls.params = params
 
     @classmethod
@@ -455,3 +458,42 @@ class TestRefPixelReuseLoadsSameFileAndPixels:
         assert self.params[cf.REFX], self.params[cf.REFY] == ref_pixel
         assert self.params[cf.REFX_FOUND] == 38
         assert self.params[cf.REFY_FOUND] == 58
+
+
+@pytest.fixture(scope='module')
+def x_y_pixel():
+    dem = shared.DEM(SML_TEST_DEM_TIF)
+    dem.open()
+    Y = dem.nrows
+    X = dem.ncols
+    x = np.random.choice(range(X), 5)
+    y = np.random.choice(range(Y), 5)
+    return itertools.product(x, y)  # returns a matrix of 5x5 random x, y pairs
+
+
+@pytest.mark.skipif(PYTHON3P6, reason='Skipped in python3p6')
+def test_convert_pixel_value_to_geographic_coordinate(x_y_pixel):
+    transform = dem_transform()
+    for x, y in x_y_pixel:
+        lon, lat = convert_pixel_value_to_geographic_coordinate(x, y, transform)
+        out = run(f"gdallocationinfo -geoloc {SML_TEST_DEM_TIF} {lon} {lat}", shell=True, capture_output=True,
+                  text=True).stdout
+        xs = (x, x+1, x-1)
+        ys = (y, y+1, y-1)
+        assert any(f"({xx}P,{yy}L" in out for xx, yy in itertools.product(xs, ys))
+
+
+def dem_transform():
+    dem = shared.DEM(SML_TEST_DEM_TIF)
+    dem.open()
+    transform = dem.dataset.GetGeoTransform()
+    return transform
+
+
+@pytest.mark.skipif(PYTHON3P6, reason='Skipped in python3p6')
+def test_convert_geographic_coordinate_to_pixel_value(x_y_pixel):
+    transform = dem_transform()
+    for x, y in x_y_pixel:
+        lon, lat = convert_pixel_value_to_geographic_coordinate(x, y, transform)
+        xp, yp = convert_geographic_coordinate_to_pixel_value(lon, lat, transform)
+        assert (xp == x) & (yp == y)

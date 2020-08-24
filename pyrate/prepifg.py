@@ -53,8 +53,12 @@ def main(params):
     if params[cf.DEM_FILE] is not None:  # optional DEM conversion
         ifg_paths.append(params[cf.DEM_FILE_PATH])
 
-    if params[cf.COH_MASK]:
+    if params[cf.COH_FILE_LIST] is not None:
         ifg_paths.extend(params[cf.COHERENCE_FILE_PATHS])
+
+    if params[cf.COH_FILE_LIST] is None and params[cf.COH_MASK]:
+        raise FileNotFoundError("Cannot apply coherence masking: no coherence file list "
+                                "supplied (parameter 'cohfilelist')")
 
     shared.mkdir_p(params[cf.OUT_DIR])  # create output dir
 
@@ -66,7 +70,7 @@ def main(params):
     process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     do_prepifg(process_ifgs_paths, exts, params)
     mpiops.comm.barrier()
-    log.info("Finished prepifg")
+    log.info("Finished 'prepifg' step")
 
 
 def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float, float], params: dict) -> None:
@@ -85,7 +89,7 @@ def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float
                                     "interferograms to geotiffs.")
 
     if params[cf.LARGE_TIFS]:
-        log.info("Using gdal system calls to process prepifg")
+        log.info("Using gdal system calls to execute 'prepifg' step")
         ifg = prepifg_helper.dem_or_ifg(multi_paths[0].converted_path)
         ifg.open()
         xlooks, ylooks = params[cf.IFG_LKSX], params[cf.IFG_LKSY]

@@ -28,7 +28,7 @@ import pyrate.core.covariance
 import pyrate.core.orbital
 import pyrate.core.ref_phs_est
 import pyrate.core.refpixel
-from pyrate import process, prepifg, conv2tif, configuration
+from pyrate import correct, prepifg, conv2tif, configuration
 from pyrate.core import mpiops, config as cf
 from tests import common
 from tests.common import SML_TEST_DIR
@@ -51,12 +51,12 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, roipac_or_gamma_conf):
     # dest_paths = [p.sampled_path for p in params[cf.INTERFEROGRAM_FILES]]
     # run conv2tif and prepifg, create the dest_paths files
     conv2tif.main(params)
-    params[cf.INTERFEROGRAM_FILES].pop()
+    params = configuration.Configuration(output_conf).__dict__
     prepifg.main(params)
-    params[cf.INTERFEROGRAM_FILES].pop()
-    process._copy_mlooked(params=params)
-    process._update_params_with_tiles(params)
-    process._create_ifg_dict(params=params)
+    params = configuration.Configuration(output_conf).__dict__
+    correct._copy_mlooked(params=params)
+    correct._update_params_with_tiles(params)
+    correct._create_ifg_dict(params=params)
     pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
     pyrate.core.orbital.orb_fit_calc_wrapper(params)
     pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)

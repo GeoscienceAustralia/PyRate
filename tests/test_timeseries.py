@@ -30,7 +30,7 @@ import pyrate.core.ref_phs_est
 import pyrate.core.refpixel
 import tests.common as common
 from pyrate.core import config as cf, mst, covariance
-from pyrate import process, prepifg, conv2tif
+from pyrate import correct, prepifg, conv2tif
 from pyrate.configuration import Configuration
 from pyrate.core.timeseries import time_series, linear_rate_pixel, linear_rate_array, TimeSeriesError
 
@@ -120,8 +120,8 @@ class TestLegacyTimeSeriesEquality:
 
         xlks, _, crop = cf.transform_params(params)
 
-        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
-        process._copy_mlooked(params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[cf.OUT_DIR], params)
+        correct._copy_mlooked(params)
         copied_dest_paths = [os.path.join(params[cf.TEMP_MLOOKED_DIR], os.path.basename(d)) for d in dest_paths]
         del dest_paths
         # start run_pyrate copy
@@ -137,7 +137,7 @@ class TestLegacyTimeSeriesEquality:
         ifgs = common.prepare_ifgs_without_phase(copied_dest_paths, params)
         for ifg in ifgs:
             ifg.close()
-        process._update_params_with_tiles(params)
+        correct._update_params_with_tiles(params)
         _, ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = covariance.RDist(ifgs[0])()
@@ -220,8 +220,8 @@ class TestLegacyTimeSeriesEqualityMethod2Interp0:
 
         xlks, _, crop = cf.transform_params(params)
 
-        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
-        process._copy_mlooked(params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[cf.OUT_DIR], params)
+        correct._copy_mlooked(params)
         copied_dest_paths = [os.path.join(params[cf.TEMP_MLOOKED_DIR], os.path.basename(d)) for d in dest_paths]
         del dest_paths
         # start run_pyrate copy
@@ -239,7 +239,7 @@ class TestLegacyTimeSeriesEqualityMethod2Interp0:
         for ifg in ifgs:
             ifg.close()
 
-        process._update_params_with_tiles(params)
+        correct._update_params_with_tiles(params)
         _, ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = covariance.RDist(ifgs[0])()
@@ -390,7 +390,7 @@ class TestLinearRateArray:
         """
         l, i, r, e, s = linear_rate_array(self.tscuml, self.ifgs, self.params)
         # test to 20 decimal places
-        assert_array_almost_equal(self.linrate, l, 1e-20) 
+        assert_array_almost_equal(self.linrate, l, 1e-20)
         assert_array_almost_equal(self.icpt, i, 1e-20)
         assert_array_almost_equal(self.rsq, r, 1e-20)
         assert_array_almost_equal(self.error, e, 1e-20)

@@ -47,7 +47,10 @@ def test_files_are_same(tempdir, get_config):
 
     # prepifg output equal
     __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR],
-                                 f"*{roipac_params[cf.IFG_CROP_OPT]}cr.tif", 18)
+                                 f"*_ifg_*{roipac_params[cf.IFG_CROP_OPT]}cr.tif", 17)
+
+    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR],
+                                 f"*_dem_*{roipac_params[cf.IFG_CROP_OPT]}cr.tif", 1)
 
     # clean up
     shutil.rmtree(roipac_params[cf.OBS_DIR])
@@ -113,5 +116,6 @@ def __assert_same_files_produced(dir1, dir2, ext, num_files):
         else:
             assert mdi[ifc.DATA_TYPE] == ifc.ORIG
             assert mdj[ifc.DATA_TYPE] == ifc.ORIG
-
+    if not all_gamma_ifgs:  # checking for dem
+        return
     assert c + 1 == len(all_gamma_ifgs)

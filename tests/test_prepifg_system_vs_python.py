@@ -130,7 +130,7 @@ def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, crea
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw_ifg.tif", 17)
 
     # if coherence masking, compare coh files were converted
-    if params[cf.COH_MASK]:
+    if params[cf.COH_FILE_LIST] is not None:
         assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_coh.tif", 17)
         print("coherence files compared")
         # 17 ifgs + 1 dem + 17 mlooked file

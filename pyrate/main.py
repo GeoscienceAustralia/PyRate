@@ -19,16 +19,20 @@ This Python module defines executable run configuration for the PyRate software
 
 import os
 import argparse
+import pickle as cp
 from argparse import RawTextHelpFormatter
 import time
 from pathlib import Path
 
 from pyrate.constants import CLI_DESCRIPTION
-from pyrate import conv2tif, prepifg, process, merge
+from pyrate import conv2tif, prepifg, correct, merge
 from pyrate.core.logger import pyratelogger as log, configure_stage_log
 from pyrate.core import config as cf
 from pyrate.core import mpiops
 from pyrate.configuration import Configuration
+from pyrate.core.shared import mpi_vs_multiprocess_logging
+from pyrate.core.stack import stack_calc_wrapper
+from pyrate.core.timeseries import timeseries_calc_wrapper
 
 
 def _params_from_conf(config_file):
@@ -49,27 +53,44 @@ def main():
     subparsers = parser.add_subparsers(dest='command')
     subparsers.required = True
 
-    parser_conv2tif = subparsers.add_parser('conv2tif', help='Convert interferograms to geotiff.', add_help=True)
+    parser_conv2tif = subparsers.add_parser('conv2tif', help='Convert interferograms to geotiff.',
+        add_help=True)
     parser_conv2tif.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                  help="Pass configuration file", required=True)
 
-    parser_prepifg = subparsers.add_parser('prepifg', help='Perform multilooking and cropping on geotiffs.',
-                                           add_help=True)
+    parser_prepifg = subparsers.add_parser(
+        'prepifg', help='Perform multilooking, cropping and coherence masking to interferogram geotiffs.',
+        add_help=True)
     parser_prepifg.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                 help="Pass configuration file", required=True)
 
-    parser_process = subparsers.add_parser(
-        'process', help='Main processing workflow including corrections, time series and stacking computation.',
+    parser_correct = subparsers.add_parser(
+        'correct', help='Calculate and apply corrections to interferogram phase data.',
         add_help=True)
-    parser_process.add_argument('-f', '--config_file', action="store", type=str, default=None,
+    parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                 help="Pass configuration file", required=True)
 
-    parser_merge = subparsers.add_parser('merge', help="Reassemble computed tiles and save as geotiffs.",
-                                         add_help=True)
+    parser_correct = subparsers.add_parser(
+        'timeseries', help='Timeseries inversion of interferogram phase data.',
+        add_help=True)
+    parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
+                                help="Pass configuration file", required=True)
+
+    parser_correct = subparsers.add_parser(
+        'stack', help='Stacking of interferogram phase data.',
+        add_help=True)
+    parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
+                                help="Pass configuration file", required=True)
+
+    parser_merge = subparsers.add_parser(
+        'merge', help="Reassemble computed tiles and save as geotiffs.",
+        add_help=True)
     parser_merge.add_argument('-f', '--config_file', action="store", type=str, default=None,
                               help="Pass configuration file", required=False)
 
-    parser_workflow = subparsers.add_parser('workflow', help="Run all the PyRate processes", add_help=True)
+    parser_workflow = subparsers.add_parser(
+        'workflow', help="Sequentially run all the PyRate processing steps.",
+        add_help=True)
     parser_workflow.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                  help="Pass configuration file", required=False)
 
@@ -93,8 +114,14 @@ def main():
     if args.command == "prepifg":
         prepifg.main(params)
 
-    if args.command == "process":
-        process.main(params)
+    if args.command == "correct":
+        correct.main(params)
+
+    if args.command == "timeseries":
+        timeseries(params)
+
+    if args.command == "stack":
+        stack(params)
 
     if args.command == "merge":
         merge.main(params)
@@ -107,17 +134,34 @@ def main():
         params = mpiops.run_once(_params_from_conf, args.config_file)
         prepifg.main(params)
 
-        log.info("***********PROCESS**************")
+        log.info("***********CORRECT**************")
         # reset params as prepifg modifies params
         params = mpiops.run_once(_params_from_conf, args.config_file)
-        process.main(params)
+        correct.main(params)
 
-        # process might modify params too
+        log.info("***********TIMESERIES**************")
         params = mpiops.run_once(_params_from_conf, args.config_file)
+        timeseries(params)
+
+        log.info("***********STACK**************")
+        params = mpiops.run_once(_params_from_conf, args.config_file)
+        stack(params)
+
         log.info("***********MERGE**************")
+        params = mpiops.run_once(_params_from_conf, args.config_file)
         merge.main(params)
 
     log.debug("--- %s seconds ---" % (time.time() - start_time))
+
+
+def timeseries(params: dict) -> None:
+    mpi_vs_multiprocess_logging("timeseries", params)
+    timeseries_calc_wrapper(params)
+
+
+def stack(params: dict) -> None:
+    mpi_vs_multiprocess_logging("stack", params)
+    stack_calc_wrapper(params)
 
 
 if __name__ == "__main__":

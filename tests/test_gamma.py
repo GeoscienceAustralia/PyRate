@@ -346,7 +346,8 @@ def series_ifgs(gamma_conf):
 
     params_s = Configuration(output_conf).__dict__
 
-    gtif_paths = conv2tif.main(params_s)
+    conv2tif.main(params_s)
+
     prepifg.main(params_s)
 
     parallel_df = list(Path(tdir).joinpath('out').glob(glob_prefix))
@@ -365,7 +366,7 @@ def test_equality(series_ifgs, parallel_ifgs):
         np.testing.assert_array_almost_equal(s.phase_data, p.phase_data)
 
 
-def test_meta_data_exist(series_ifgs, parallel_ifgs):
+def test_meta_data_exists(series_ifgs, parallel_ifgs):
     for i, (s, p) in enumerate(zip(series_ifgs, parallel_ifgs)):
         print(s, p)
         # all metadata equal

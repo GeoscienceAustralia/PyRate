@@ -18,11 +18,10 @@
 This Python module contains regression tests for comparing output from serial,
 parallel and MPI PyRate runs.
 """
-import os
 import shutil
 import pytest
 from pathlib import Path
-from subprocess import check_call, check_output, CalledProcessError
+from subprocess import check_call, CalledProcessError
 import numpy as np
 
 import pyrate.configuration
@@ -106,11 +105,13 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
     check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
 
     try:
-        check_call(f"mpirun -n 3 pyrate process -f {mpi_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate correct -f {mpi_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate timeseries -f {mpi_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate stack -f {mpi_conf}", shell=True)
     except CalledProcessError as c:
         print(c)
         if TRAVIS:
-            pytest.skip("Skipping as part of process error")
+            pytest.skip("Skipping as part of correction error")
     check_call(f"mpirun -n 3 pyrate merge -f {mpi_conf}", shell=True)
 
     mr_conf, params_m = modified_config(gamma_conf, 1, 'multiprocess_conf.conf')
@@ -140,8 +141,8 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
     assert_same_files_produced(params[cf.TEMP_MLOOKED_DIR], params_m[cf.TEMP_MLOOKED_DIR],
                                params_s[cf.TEMP_MLOOKED_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 17)
 
-    # prepifg + process steps that overwrite tifs test
-    # ifg phase checking in the previous step checks the process pipeline upto APS correction
+    # prepifg + correct steps that overwrite tifs test
+    # ifg phase checking in the previous step checks the correct pipeline upto APS correction
 
     # 2 x because of aps files
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "tsincr_*.npy",
@@ -244,7 +245,9 @@ def create_mpi_files():
         check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
 
         try:
-            check_call(f"mpirun -n 3 pyrate process -f {mpi_conf}", shell=True)
+            check_call(f"mpirun -n 3 pyrate correct -f {mpi_conf}", shell=True)
+            check_call(f"mpirun -n 3 pyrate timeseries -f {mpi_conf}", shell=True)
+            check_call(f"mpirun -n 3 pyrate stack -f {mpi_conf}", shell=True)
         except CalledProcessError as c:
             print(c)
             if TRAVIS:
@@ -282,13 +285,13 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw_ifg.tif", 17)
 
     # if coherence masking, compare coh files were converted
-    if params[cf.COH_MASK]:
+    if params[cf.COH_FILE_LIST]:
         assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_coh.tif", 17)
         print("coherence files compared")
 
-    # prepifg + process steps that overwrite tifs test
+    # prepifg + correct steps that overwrite tifs test
     # 17 mlooked ifgs + 1 dem + 17 mlooked coherence files
-    if params[cf.COH_MASK]:
+    if params[cf.COH_FILE_LIST]:
         assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 35)
     else:
         assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
@@ -296,7 +299,7 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     assert_two_dirs_equal(params[cf.TEMP_MLOOKED_DIR], params_p[cf.TEMP_MLOOKED_DIR],
                           f"*{params[cf.IFG_CROP_OPT]}cr.tif", 17)
 
-    # ifg phase checking in the previous step checks the process pipeline upto APS correction
+    # ifg phase checking in the previous step checks the correct pipeline upto APS correction
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tsincr_*.npy", params['notiles'] * 2)
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tscuml_*.npy", params['notiles'])
 

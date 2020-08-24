@@ -20,13 +20,12 @@ parsed in a PyRate configuration file.
 from configparser import ConfigParser
 from pathlib import Path, PurePath
 from typing import Union
-from pyrate.constants import NO_OF_PARALLEL_PROCESSES, sixteen_digits_pattern, twelve_digits_pattern
+from pyrate.constants import NO_OF_PARALLEL_PROCESSES
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
-from pyrate.core.shared import extract_epochs_from_filename, InputTypes
+from pyrate.core.shared import extract_epochs_from_filename, InputTypes, get_tiles
 from pyrate.core.config import parse_namelist, ConfigException, ORB_ERROR_DIR, TEMP_MLOOKED_DIR
-from pyrate.core import config as cf
-import re
+from pyrate.core import config as cf, mpiops
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
@@ -84,30 +83,24 @@ class MultiplePaths:
 
         self.input_type = input_type
         out_dir = params[cf.OUT_DIR]
+        ifglksx = params[cf.IFG_LKSX]
+        ifglksy = params[cf.IFG_LKSY]
+        ifgcropopt = params[cf.IFG_CROP_OPT]
         tempdir = params[cf.TEMP_MLOOKED_DIR]
         if isinstance(tempdir, str):
             tempdir = Path(tempdir)
         b = Path(file_name)
-
-        if input_type in [InputTypes.IFG, InputTypes.COH]:
-            d = re.search(sixteen_digits_pattern, b.stem)
-            if d is None: # could be 6 digit epoch dates
-                d = re.search(twelve_digits_pattern, b.stem)
-            if d is None:
-                raise ValueError("Ifg/Coh filenames do not contain two 8- or 6-digit date strings")
-            filestr = d.group() + '_'
-        else:
-            filestr = ''
-
         if b.suffix == ".tif":
             self.unwrapped_path = None
             converted_path = b  # original file
-            self.sampled_path = Path(out_dir).joinpath(filestr + input_type.value + '.tif')
+            self.sampled_path = Path(out_dir).joinpath(
+                b.stem + '_' + str(ifglksx) + "lksx_" + str(ifglksy) + "lksy_" + str(ifgcropopt) + "cr.tif")
         else:
             self.unwrapped_path = b.as_posix()
             converted_path = Path(out_dir).joinpath(
-                    b.stem.split('.')[0] + '_' + b.suffix[1:]).with_suffix('.tif')
-            self.sampled_path = converted_path.with_name(filestr + input_type.value + '.tif')
+                b.stem.split('.')[0] + '_' + b.suffix[1:] + input_type.value).with_suffix('.tif')
+            self.sampled_path = converted_path.with_name(
+                converted_path.stem + '_' + str(ifglksx) + "lksx_" + str(ifglksy) + "lksy_" + str(ifgcropopt) + "cr.tif")
         self.tmp_sampled_path = tempdir.joinpath(self.sampled_path.name).as_posix()
         self.converted_path = converted_path.as_posix()
         self.sampled_path = self.sampled_path.as_posix()
@@ -123,6 +116,24 @@ class MultiplePaths:
                               str(params[cf.ORBITAL_FIT_LOOKS_X]),
                               str(params[cf.ORBITAL_FIT_LOOKS_Y])]) +
                     '_orbfit.npy')
+
+    @staticmethod
+    def aps_error_path(ifg_path: Union[str, Path], params) -> Path:
+        if isinstance(ifg_path, str):
+            ifg_path = Path(ifg_path)
+        return Path(params[cf.OUT_DIR], cf.APS_ERROR_DIR,
+                    ifg_path.stem + '_' +
+                    '_'.join([str(x) for x in [
+                        params[cf.SLPF_METHOD],
+                        params[cf.SLPF_CUTOFF],
+                        params[cf.SLPF_ORDER],
+                        params[cf.SLPF_NANFILL],
+                        params[cf.SLPF_NANFILL_METHOD],
+                        params[cf.TLPF_METHOD],
+                        params[cf.TLPF_CUTOFF],
+                        params[cf.TLPF_PTHR]
+                        ]
+                    ]) + '_aps_error.npy')
 
     def __str__(self):  # pragma: no cover
         st = ""
@@ -154,18 +165,16 @@ class Configuration:
         # make output path, if not provided will error
         Path(self.outdir).mkdir(exist_ok=True, parents=True)
 
-        # custom process sequence if 'process' section is provided in config
-        if 'process' in parser and 'steps' in parser['process']:
-            self.__dict__['process'] = list(filter(None, parser['process'].get('steps').splitlines()))
+        # custom correct sequence if 'correct' section is provided in config
+        if 'correct' in parser and 'steps' in parser['correct']:
+            self.__dict__['correct'] = list(filter(None, parser['correct'].get('steps').splitlines()))
         else:
-            self.__dict__['process'] = [
+            self.__dict__['correct'] = [
                 'orbfit',
                 'refphase',
                 'mst',
                 'apscorrect',
                 'maxvar',
-                'timeseries',
-                'stack'
             ]
 
         # Validate required parameters exist.
@@ -202,7 +211,13 @@ class Configuration:
         if hasattr(self, 'rows') and hasattr(self, 'cols'):
             self.rows, self.cols = int(self.rows), int(self.cols)
         else:
-            self.rows, self.cols = [int(num) for num in factorise_integer(NO_OF_PARALLEL_PROCESSES)]
+            if NO_OF_PARALLEL_PROCESSES > 1: # i.e. mpirun
+                self.rows, self.cols = [int(num) for num in factorise_integer(NO_OF_PARALLEL_PROCESSES)]
+            else:
+                if self.parallel: # i.e. joblib parallelism
+                    self.rows, self.cols = [int(num) for num in factorise_integer(self.processes)]
+                else: # i.e. serial
+                    self.rows, self.cols = 1, 1
 
         # create a temporary directory if not supplied
         if not hasattr(self, 'tmpdir'):
@@ -215,6 +230,14 @@ class Configuration:
         # create orbfit error dir
         self.orb_error_dir = Path(self.outdir).joinpath(ORB_ERROR_DIR)
         self.orb_error_dir.mkdir(parents=True, exist_ok=True)
+
+        # create aps error dir
+        self.aps_error_dir = Path(self.outdir).joinpath(cf.APS_ERROR_DIR)
+        self.aps_error_dir.mkdir(parents=True, exist_ok=True)
+
+        # create mst dir
+        self.mst_dir = Path(self.outdir).joinpath(cf.MST_DIR)
+        self.mst_dir.mkdir(parents=True, exist_ok=True)
 
         # create temp multilooked files dir
         self.temp_mlooked_dir = Path(self.outdir).joinpath(TEMP_MLOOKED_DIR)
@@ -256,11 +279,38 @@ class Configuration:
             '_'.join(
                 [str(x) for x in [
                     'ref_pixel', params[cf.REFX], params[cf.REFY], params[cf.REFNX], params[cf.REFNY],
-                    params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC], 'file.npy'
+                    params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC], '.npy'
                     ]
                 ]
             )
         )
+
+    @staticmethod
+    def mst_path(params, index) -> Path:
+        return Path(params[cf.OUT_DIR], cf.MST_DIR).joinpath(f'mst_mat_{index}.npy')
+
+    @staticmethod
+    def preread_ifgs(params: dict) -> Path:
+        return Path(params[cf.TMPDIR], 'preread_ifgs.pk')
+
+    @staticmethod
+    def vcmt_path(params):
+        return Path(params[cf.OUT_DIR], cf.VCMT).with_suffix('.npy')
+
+    @staticmethod
+    def ref_phs_file(params):
+        ref_pixel_path = Configuration.ref_pixel_path(params)
+        # add ref pixel path as when ref pixel changes - ref phs path should also change
+        return Path(params[cf.OUT_DIR]).joinpath(
+            ref_pixel_path.stem + '_' +
+            '_'.join(['ref_phs', str(params[cf.REF_EST_METHOD]), '.npy'])
+        )
+
+    @staticmethod
+    def get_tiles(params):
+        ifg_path = params[cf.INTERFEROGRAM_FILES][0].sampled_path
+        rows, cols = params['rows'], params['cols']
+        return get_tiles(ifg_path, rows, cols)
 
     def __get_files_from_attr(self, attr, input_type=InputTypes.IFG):
         val = self.__getattribute__(attr)
@@ -287,7 +337,7 @@ def write_config_file(params, output_conf_file):
     with open(output_conf_file, 'w') as f:
         for k, v in params.items():
             if v is not None:
-                if k == 'process':
+                if k == 'correct':
                     f.write(''.join([k, ':\t', '', '\n']))
                     f.write(''.join(['steps = ', '\n']))
                     for vv in v:

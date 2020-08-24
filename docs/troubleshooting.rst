@@ -13,7 +13,7 @@ Corrections being skipped
 
 ::
 
-    >> pyrate process -f input_parameters.conf
+    >> pyrate correct -f input_parameters.conf
     16:43:16 main 97 24732 INFO 0/0 Verbosity set to INFO.
     16:43:16 shared 1294 24732 INFO 0/0 Running process serially
     16:43:17 process 86 24732 INFO 0/0 Found 13 unique epochs in the 17 interferogram network

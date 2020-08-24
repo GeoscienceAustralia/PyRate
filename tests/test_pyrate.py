@@ -28,9 +28,10 @@ import numpy as np
 
 import pyrate.configuration
 import pyrate.core.shared
+import pyrate.main
 from pyrate.core import shared, config as cf, config, prepifg_helper, mst
 from pyrate.core.shared import dem_or_ifg
-from pyrate import process, prepifg, conv2tif
+from pyrate import correct, prepifg, conv2tif
 from pyrate.configuration import MultiplePaths, Configuration
 from tests import common
 
@@ -135,7 +136,7 @@ class TestPyRate:
             # Turn off validation because we're in a different working dir
             #  and relative paths in config won't be work.
             params = config.get_config_params(common.TEST_CONF_ROIPAC)
-            params['process'] = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack']
+            params['correct'] = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar']
             params[cf.OUT_DIR] = cls.BASE_OUT_DIR
             params[cf.PROCESSOR] = 0  # roipac
             params[cf.APS_CORRECTION] = 0
@@ -150,7 +151,9 @@ class TestPyRate:
                 p.tmp_sampled_path = p.converted_path
             params["rows"], params["cols"] = 2, 2
             params[cf.REF_PIXEL_FILE] = Configuration.ref_pixel_path(params)
-            process.process_ifgs(params)
+            Path(params[cf.OUT_DIR]).joinpath(cf.APS_ERROR_DIR).mkdir(exist_ok=True, parents=True)
+            Path(params[cf.OUT_DIR]).joinpath(cf.MST_DIR).mkdir(exist_ok=True, parents=True)
+            correct.correct_ifgs(params)
 
             if not hasattr(cls, 'ifgs'):
                 cls.ifgs = get_ifgs(out_dir=cls.BASE_OUT_DIR)
@@ -234,12 +237,14 @@ class TestParallelPyRate:
         cls.sampled_paths = [p.tmp_sampled_path for p in params[cf.INTERFEROGRAM_FILES]]
 
         ifgs = common.small_data_setup()
-        process._copy_mlooked(params)
+        correct._copy_mlooked(params)
         tiles = pyrate.core.shared.get_tiles(cls.sampled_paths[0], rows, cols)
-        process.process_ifgs(params)
+        correct.correct_ifgs(params)
+        pyrate.main.timeseries(params)
+        pyrate.main.stack(params)
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
-        cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
+        cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.OUT_DIR])
         cls.rate_p, cls.error_p, cls.samples_p = \
             [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
         
@@ -262,11 +267,13 @@ class TestParallelPyRate:
         check_call(f"pyrate conv2tif -f {output_conf}", shell=True)
         check_call(f"pyrate prepifg -f {output_conf}", shell=True)
 
-        process._copy_mlooked(params)
-        process.process_ifgs(params)
+        correct._copy_mlooked(params)
+        correct.correct_ifgs(params)
+        pyrate.main.timeseries(params)
+        pyrate.main.stack(params)
         cls.refpixel, cls.maxvar, cls.vcmt = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
-        cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.TMPDIR])
+        cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.OUT_DIR])
         cls.rate, cls.error, cls.samples = \
             [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[cf.TMPDIR], t) for t in rate_types]
         cls.params = params

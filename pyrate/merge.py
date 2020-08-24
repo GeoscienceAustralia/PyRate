@@ -26,6 +26,7 @@ from pathlib import Path
 
 from pyrate.core import shared, stack, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.logger import pyratelogger as log
+from pyrate.configuration import Configuration
 
 gdal.SetCacheMax(64)
 
@@ -39,10 +40,9 @@ def main(params: dict) -> None:
     mpiops.run_once(_merge_stack, params)
     out_types = ['stack_rate', 'stack_error']
 
-    if params[cf.TIME_SERIES_CAL]:
-        _merge_timeseries(params, 'tscuml')
-        _merge_linrate(params)
-        out_types += ['linear_rate', 'linear_error', 'linear_rsquared']
+    _merge_timeseries(params, 'tscuml')
+    _merge_linrate(params)
+    out_types += ['linear_rate', 'linear_error', 'linear_rsquared']
 
     process_out_types = mpiops.array_split(out_types)
     for out_type in process_out_types:
@@ -234,9 +234,9 @@ def assemble_tiles(s, dir, tiles, out_type, index=None):
     for t in tiles:
         tile_file = Path(join(dir, out_type + '_'+str(t.index)+'.npy'))
         tile = np.load(file=tile_file)
-        if index is None: #2D array
+        if index is None:  #2D array
             merged_array[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = tile
-        else: #3D array
+        else:  #3D array
             merged_array[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = tile[:, :, index]
 
     log.debug('Finished assembling tiles for {}'.format(out_type))
@@ -313,7 +313,7 @@ def _merge_setup(params):
         dest_tifs = base_unw_paths
 
     # load previously saved preread_ifgs dict
-    preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
+    preread_ifgs_file = Configuration.preread_ifgs(params)
     ifgs_dict = pickle.load(open(preread_ifgs_file, 'rb'))
     ifgs = [v for v in ifgs_dict.values() if isinstance(v, shared.PrereadIfg)]
     shape = ifgs[0].shape

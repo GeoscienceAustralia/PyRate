@@ -33,13 +33,14 @@ from tests.common import manipulate_test_conf
 def create_merge_output(tempdir, gamma_conf):
     tdir = Path(tempdir())
     params = manipulate_test_conf(gamma_conf, tdir)
-    print(params[cf.TIME_SERIES_CAL])
     output_conf_file = tdir.joinpath('conf.cfg')
     output_conf = tdir.joinpath(output_conf_file)
     write_config_file(params=params, output_conf_file=output_conf)
     check_call(f"pyrate conv2tif -f {output_conf}", shell=True)
     check_call(f"pyrate prepifg -f {output_conf}", shell=True)
-    check_call(f"pyrate process -f {output_conf}", shell=True)
+    check_call(f"pyrate correct -f {output_conf}", shell=True)
+    check_call(f"pyrate timeseries -f {output_conf}", shell=True)
+    check_call(f"pyrate stack -f {output_conf}", shell=True)
 
     params = Configuration(output_conf).__dict__
     _merge_stack(params)

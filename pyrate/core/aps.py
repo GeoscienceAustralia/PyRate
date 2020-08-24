@@ -22,6 +22,7 @@ signals.
 import os
 from copy import deepcopy
 from collections import OrderedDict
+from typing import List
 import numpy as np
 from numpy import isnan
 from scipy.fftpack import fft2, ifft2, fftshift, ifftshift
@@ -34,6 +35,7 @@ from pyrate.core.algorithm import get_epochs
 from pyrate.core.shared import Ifg
 from pyrate.core.timeseries import time_series
 from pyrate.merge import assemble_tiles
+from pyrate.configuration import MultiplePaths, Configuration
 
 
 def wrap_spatio_temporal_filter(params):
@@ -56,19 +58,22 @@ def wrap_spatio_temporal_filter(params):
         log.debug('Finished APS correction')
         return  # return if True condition returned
 
-    tsincr = _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles)
-    mpiops.comm.barrier()
+    aps_error_files_on_disc = [MultiplePaths.aps_error_path(i, params) for i in ifg_paths]
+    if all(a.exists() for a in aps_error_files_on_disc):
+        log.warning("Reusing APS errors from previous run!!!")
+        for ifg_path, a in mpiops.array_split(list(zip(ifg_paths, aps_error_files_on_disc))):
+            phase = np.load(a)
+            _save_aps_corrected_phase(ifg_path, phase)
+    else:
+        tsincr = _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles)
+        mpiops.comm.barrier()
 
-    ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
-    ifg.open()
-    spatio_temporal_filter(tsincr, ifg, params, preread_ifgs)
-    ifg.close()
+        spatio_temporal_filter(tsincr, ifg_paths, params, preread_ifgs)
     mpiops.comm.barrier()
-
     shared.save_numpy_phase(ifg_paths, params)
 
 
-def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
+def spatio_temporal_filter(tsincr, ifg_paths, params, preread_ifgs):
     """
     Applies a spatio-temporal filter to remove the atmospheric phase screen
     (APS) and saves the corrected interferograms. Before performing this step,
@@ -84,16 +89,19 @@ def spatio_temporal_filter(tsincr, ifg, params, preread_ifgs):
 
     :return: None, corrected interferograms are saved to disk
     """
+    ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
+    ifg.open()
     epochlist = mpiops.run_once(get_epochs, preread_ifgs)[0]
-    ts_lp = mpiops.run_once(temporal_low_pass_filter, tsincr, epochlist, params)
+    ts_lp = temporal_low_pass_filter(tsincr, epochlist, params)
     ts_hp = tsincr - ts_lp
-    ts_aps = mpiops.run_once(spatial_low_pass_filter, ts_hp, ifg, params)
+    ts_aps = spatial_low_pass_filter(ts_hp, ifg, params)
     tsincr -= ts_aps
 
-    mpiops.run_once(_ts_to_ifgs, tsincr, preread_ifgs)
+    _ts_to_ifgs(tsincr, preread_ifgs, params)
+    ifg.close()
 
 
-def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
+def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles: List[shared.Tile]):
     """
     Helper function to obtain time series for spatio-temporal filter
     using SVD method
@@ -109,10 +117,9 @@ def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
 
     nvels = None
     for t in process_tiles:
-        log.debug('Calculating time series for tile {} during APS '
-                 'correction'.format(t.index))
+        log.debug('Calculating time series for tile {} during APS correction'.format(t.index))
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
-        mst_tile = np.load(os.path.join(params[cf.TMPDIR], 'mst_mat_{}.npy'.format(t.index)))
+        mst_tile = np.load(Configuration.mst_path(params, t.index))
         tsincr = time_series(ifg_parts, new_params, vcmt=None, mst=mst_tile)[0]
         np.save(file=os.path.join(params[cf.TMPDIR], 'tsincr_aps_{}.npy'.format(t.index)), arr=tsincr)
         nvels = tsincr.shape[2]
@@ -120,7 +127,7 @@ def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles):
     nvels = mpiops.comm.bcast(nvels, root=0)
     mpiops.comm.barrier()
     # need to assemble tsincr from all processes
-    tsincr_g = mpiops.run_once(_assemble_tsincr, ifg_paths, params, preread_ifgs, tiles, nvels)
+    tsincr_g = _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels)
     log.debug('Finished calculating time series for spatio-temporal filter')
     return tsincr_g
 
@@ -130,18 +137,16 @@ def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
     Helper function to reconstruct time series images from tiles
     """
     # pre-allocate dest 3D array
-    shape = preread_ifgs[ifg_paths[0]].shape + (nvels,)
-    tsincr_g = np.empty(shape=shape, dtype=np.float32)
-    # shape of one 2D time-slice array
-    s = preread_ifgs[ifg_paths[0]].shape
-    # loop over the time slices and assemble dest 3D array
-    for i in range(nvels):
-        tsincr_g[:, :, i] = assemble_tiles(s, params[cf.TMPDIR], tiles, out_type='tsincr_aps', index=i)
-
-    return tsincr_g
+    shape = preread_ifgs[ifg_paths[0]].shape
+    tsincr_p = {}
+    process_nvels = mpiops.array_split(range(nvels))
+    for i in process_nvels:
+        tsincr_p[i] = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='tsincr_aps', index=i)
+    tsincr_g = shared.join_dicts(mpiops.comm.allgather(tsincr_p))
+    return np.dstack([v[1] for v in sorted(tsincr_g.items())])
 
 
-def _ts_to_ifgs(tsincr, preread_ifgs):
+def _ts_to_ifgs(tsincr, preread_ifgs, params):
     """
     Function that converts an incremental displacement time series into
     interferometric phase observations. Used to re-construct an interferogram
@@ -155,10 +160,16 @@ def _ts_to_ifgs(tsincr, preread_ifgs):
     """
     log.debug('Reconstructing interferometric observations from time series')
     ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
-    _, n = get_epochs(ifgs)
+    _, n = mpiops.run_once(get_epochs, ifgs)
     index_first, index_second = n[:len(ifgs)], n[len(ifgs):]
-    for i, ifg in enumerate(ifgs):
+
+    num_ifgs_tuples = mpiops.array_split(list(enumerate(ifgs)))
+    num_ifgs_tuples = [(int(num), ifg) for num, ifg in num_ifgs_tuples]
+
+    for i, ifg in num_ifgs_tuples:
+        aps_correction_on_disc = MultiplePaths.aps_error_path(ifg.tmp_path, params)
         phase = np.sum(tsincr[:, :, index_first[i]: index_second[i]], axis=2)
+        np.save(file=aps_correction_on_disc, arr=phase)
         _save_aps_corrected_phase(ifg.tmp_path, phase)
 
 
@@ -198,8 +209,16 @@ def spatial_low_pass_filter(ts_lp, ifg, params):
         # optionally interpolate, operation is inplace
         _interpolate_nans(ts_lp, params[cf.SLPF_NANFILL_METHOD])
     r_dist = RDist(ifg)()
-    for i in range(ts_lp.shape[2]):
-        ts_lp[:, :, i] = _slpfilter(ts_lp[:, :, i], ifg, r_dist, params)
+    nvels = ts_lp.shape[2]
+
+    process_nvel = mpiops.array_split(range(nvels))
+    process_ts_lp = {}
+
+    for i in process_nvel:
+        process_ts_lp[i] = _slpfilter(ts_lp[:, :, i], ifg, r_dist, params)
+
+    ts_lp_d = shared.join_dicts(mpiops.comm.allgather(process_ts_lp))
+    ts_lp = np.dstack([v[1] for v in sorted(ts_lp_d.items())])
     log.debug('Finished applying spatial low pass filter')
     return ts_lp
 
@@ -245,8 +264,7 @@ def _slpfilter(phase, ifg, r_dist, params):
         _, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha=True)
         cutoff = 1.0/alpha
     rows, cols = ifg.shape
-    return _slp_filter(phase, cutoff, rows, cols,
-                       ifg.x_size, ifg.y_size, params)
+    return _slp_filter(phase, cutoff, rows, cols, ifg.x_size, ifg.y_size, params)
 
 
 def _slp_filter(phase, cutoff, rows, cols, x_size, y_size, params):
@@ -290,25 +308,17 @@ def temporal_low_pass_filter(tsincr, epochlist, params):
     """
     log.info('Applying temporal low-pass filter')
     nanmat = ~isnan(tsincr)
-    tsfilt_incr = np.empty_like(tsincr, dtype=np.float32) * np.nan
     intv = np.diff(epochlist.spans)  # time interval for the neighboring epoch
     span = epochlist.spans[: tsincr.shape[2]] + intv/2  # accumulated time
     rows, cols = tsincr.shape[:2]
     cutoff = params[cf.TLPF_CUTOFF]
     method = params[cf.TLPF_METHOD]
     threshold = params[cf.TLPF_PTHR]
-    if method == 1:  # gaussian filter
-        func = gauss
-    elif method == 2:  # triangular filter
-        func = _triangle
-    else:
-        func = mean_filter
-
-    _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr, tsincr, func)
+    tsfilt_incr = _tlpfilter(nanmat, rows, cols, cutoff, span, threshold, tsincr, tlpf_methods[method])
     log.debug("Finished applying temporal low-pass filter")
     return tsfilt_incr
 
-# Throwaway function to define Gaussian filter weights
+
 gauss = lambda m, yr, cutoff: np.exp(-(yr / cutoff) ** 2 / 2)
 
 
@@ -320,21 +330,31 @@ def _triangle(m, yr, cutoff):
     wgt[wgt < 0] = 0
     return wgt
 
-# Throwaway function to define Mean filter weights
+
 mean_filter = lambda m, yr, cutoff: np.ones(m)
 
+tlpf_methods = {1: gauss, 2: _triangle, 3: mean_filter}
 
-def _tlpfilter(cols, cutoff, nanmat, rows, span, threshold, tsfilt_incr, tsincr, func):
+
+def _tlpfilter(nanmat, rows, cols, cutoff, span, threshold, tsincr, func):
     """
     Wrapper function for temporal low pass filter
     """
-    for i in range(rows):
+    tsfilt_incr_each_row = {}
+    process_rows = mpiops.array_split(list(range(rows)))
+
+    for r in process_rows:
+        tsfilt_incr_each_row[r] = np.empty(tsincr.shape[1:], dtype=np.float32) * np.nan
         for j in range(cols):
-            sel = np.nonzero(nanmat[i, j, :])[0]  # don't select if nan
+            sel = np.nonzero(nanmat[r, j, :])[0]  # don't select if nan
             m = len(sel)
             if m >= threshold:
                 for k in range(m):
                     yr = span[sel] - span[sel[k]]
                     wgt = func(m, yr, cutoff)
                     wgt /= np.sum(wgt)
-                    tsfilt_incr[i, j, sel[k]] = np.sum(tsincr[i, j, sel] * wgt)
+                    tsfilt_incr_each_row[r][j, sel[k]] = np.sum(tsincr[r, j, sel] * wgt)
+
+    tsfilt_incr_combined = shared.join_dicts(mpiops.comm.allgather(tsfilt_incr_each_row))
+    tsfilt_incr = np.array([v[1] for v in tsfilt_incr_combined.items()])
+    return tsfilt_incr
