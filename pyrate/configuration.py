@@ -295,7 +295,7 @@ class Configuration:
 
     @staticmethod
     def vcmt_path(params):
-        return Path(params[cf.OUT_DIR], cf.MAXVAR).with_suffix('.npy')
+        return Path(params[cf.OUT_DIR], cf.VCMT).with_suffix('.npy')
 
     @staticmethod
     def ref_phs_file(params):

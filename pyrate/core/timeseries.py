@@ -402,7 +402,7 @@ def timeseries_calc_wrapper(params):
     elif params[cf.TIME_SERIES_METHOD] == 2:
         log.info('Calculating time series using SVD method')
     if not Configuration.vcmt_path(params).exists():
-        raise FileNotFoundError("VCMT is not found on disc. Have you run correct step?")
+        raise FileNotFoundError("VCMT is not found on disc. Have you run the 'correct' step?")
     params[cf.PREREAD_IFGS] = cp.load(open(Configuration.preread_ifgs(params), 'rb'))
     params[cf.VCMT] = np.load(Configuration.vcmt_path(params))
     params[cf.TILES] = Configuration.get_tiles(params)
