@@ -78,48 +78,50 @@ def calc_model(dph, imdates_ordinal, xvalues, model, vel1p, intercept1p):
     return yvalues
 #################################
 
-# Reading velocity data
-with rasterio.open(os.path.join(path, 'linear_rate.tif')) as src2:
-    vel = src2.read()
-    bounds2 = src2.bounds
-    x_coord2 = np.linspace(bounds2[0], bounds2[2], src2.width)
-    y_coord2 = np.linspace(bounds2[1], bounds2[3], src2.height)
-    # grab list of time series dates from metadata
-    ed = src2.tags()['EPOCH_DATE']
+def readtif(tifname: str):
+    """
+    wrapper for rasterio tif reading
+    """
+    print(f"Reading file: {tifname}")
+    with rasterio.open(tifname) as src:
+        img = src.read()
+        bounds = src.bounds
+        md = src.tags()
 
-# convert metadata string to list of strings
-date_str = re.findall(r'\'(.+?)\'', ed)
+    x_coord = np.linspace(bounds[0], bounds[2], src.width)
+    y_coord = np.linspace(bounds[1], bounds[3], src.height)
+
+    return img, x_coord, y_coord, md
+###############################
+
+# reading velocity data from linear_rate product
+vel, x_coord, y_coord, md = readtif(os.path.join(path, 'linear_rate.tif'))
+
+# read regression intercept from linear_intercept product
+intercept, _, _, _ = readtif(os.path.join(path, 'linear_intercept.tif'))
+
+# convert time series dates from metadata string to list of strings
+date_str = re.findall(r'\'(.+?)\'', md['EPOCH_DATE'])
+
+# convert date strings to datetime objects
+imdates_dt = [dt.strptime(x, '%Y-%m-%d') for x in date_str]
+imdates_ordinal = [x.toordinal() for x in imdates_dt]
 
 # make velocity xarray
-dac2 = xr.DataArray(vel[0,:,:], coords={'lon': x_coord2, 'lat': y_coord2}, dims=['lat', 'lon'])
+dac2 = xr.DataArray(vel[0,:,:], coords={'lon': x_coord, 'lat': y_coord}, dims=['lat', 'lon'])
 vs = xr.Dataset()
 vs['vel'] = dac2
 longitude = vs.coords['lon']
 latitude = vs.coords['lat']
 
-# linear intercept *tif file
-src = rasterio.open(os.path.join(path, 'linear_intercept.tif'))
-intercept = src.read()
-
 # pre-allocate a 3D numpy array to read the tscuml tiff raster bands to
 # include first 'zero' time slice, which PyRate does not save to disk
 tscuml = np.zeros((len(date_str), vel.shape[1], vel.shape[2]))
 
-# reading *tif files and generate cumulative variable
-print('Reading tscuml files:')
+# reading tscuml*tif files and add to tscuml variable
 for i, d in enumerate(date_str[1:]):
-    print(i+1, 'tscuml_' + d + '.tif')
-    with rasterio.open(os.path.join(path, 'tscuml_' + d + '.tif')) as src:
-        data = src.read()
-        # calculate image bounds
-        bounds = src.bounds
-        x_coord = np.linspace(bounds[0], bounds[2], src.width)
-        y_coord = np.linspace(bounds[1], bounds[3], src.height)
+    data, x_coord, y_coord, _ = readtif(os.path.join(path, 'tscuml_' + d + '.tif'))
     tscuml[i+1, :, :] = np.squeeze(data, axis=(0,))
-
-# convert date strings to datetime objects
-imdates_dt = [dt.strptime(x, '%Y-%m-%d') for x in date_str]
-imdates_ordinal = [x.toordinal() for x in imdates_dt]
 
 # make tscuml xarray
 dac = xr.DataArray(tscuml, coords={'time': imdates_dt, 'lon': x_coord, 'lat': y_coord}, dims=['time', 'lat', 'lon'])
@@ -130,37 +132,38 @@ n_im, length, width = tscuml.shape
 # choose final time slice
 time_slice = len(imdates_dt)-1
 
-
-## set reference area and initial point
-refx1 = int(len(x_coord2)/ 2)
-refx2 = int(len(x_coord2)/ 2) + 1
-refy1 = int(len(y_coord2)/ 2)
-refy2 = int(len(y_coord2)/ 2) + 1
-
+# set reference area and initial point (scene centre)
+refx1 = int(len(x_coord)/ 2)
+refx2 = int(len(x_coord)/ 2) + 1
+refy1 = int(len(y_coord)/ 2)
+refy2 = int(len(y_coord)/ 2) + 1
 refarea = (refx1,refx2,refy1,refy2)
-
 point_x = refx1
 point_y = refy1
 
-## Plot figure of Velocity and Cumulative displacement
-# for last epoch
-auto_crange: float = 99.8
-refvalue_lastepoch = np.nanmean(tscuml[-1, refy1:refy2, refx1:refx2]) # reference values
-if str(refvalue_lastepoch) == 'nan':
-    refvalue_lastepoch = 0
-dmin_auto = np.nanpercentile((tscuml[-1, :, :]), 100 - auto_crange)
-dmax_auto = np.nanpercentile((tscuml[-1, :, :]), auto_crange)
-dmin = dmin_auto - refvalue_lastepoch
-dmax = dmax_auto - refvalue_lastepoch
 
-#from last velocity
-refvalue_vel = np.nanmean(vel[0, refy1:refy2 + 1, refx1:refx2 + 1])
-vmin_auto = np.nanpercentile(vel[0, :, :], 100 - auto_crange)
-vmax_auto = np.nanpercentile(vel[0, :, :], auto_crange)
-vmin = vmin_auto - refvalue_vel
-vmax = vmax_auto - refvalue_vel
+def get_range(arr, refarea):
+    """
+    determine plot scale range
+    """
+    auto_crange: float = 99.8
+    refvalue = np.nanmean(arr[refarea[0]:refarea[1], refarea[2]:refarea[3]]) # reference values
+    if str(refvalue) == 'nan':
+        refvalue = 0
+    dmin_auto = np.nanpercentile((tscuml[-1, :, :]), 100 - auto_crange)
+    dmax_auto = np.nanpercentile((tscuml[-1, :, :]), auto_crange)
+    dmin = dmin_auto - refvalue
+    dmax = dmax_auto - refvalue
 
-# plotting tscuml disp and vel
+    return dmin, dmax
+
+# range from last tscuml epoch
+dmin, dmax = get_range(tscuml[-1, :, :], refarea)
+
+# range from velocity
+vmin, vmax = get_range(vel[0, :, :], refarea)
+
+# Plot figure of Velocity and Cumulative displacement
 figsize = (7,7)
 pv = plt.figure('PyRate: linear_rate / tscuml map viewer', figsize)
 axv = pv.add_axes([0.15,0.15,0.75,0.83])
@@ -174,7 +177,7 @@ cax = axv.imshow(vs.vel, clim=[vmin, vmax], cmap=cmap)
 cbr = pv.colorbar(cax, orientation='vertical')
 cbr.set_label('mm/yr')
 
-#%% Radio buttom for velocity selection
+# Radio buttom for velocity selection
 mapdict_data = {}
 mapdict_unit = {}
 mapdict_vel = {'Vel': vel}
@@ -182,7 +185,7 @@ mapdict_unit.update([('Vel', 'mm/yr')])
 mapdict_data = mapdict_vel
 
 axrad_vel = pv.add_axes([0.01, 0.3, 0.13, len(mapdict_data)*0.025+0.04])
-### Radio buttons
+# Radio buttons
 radio_vel = RadioButtons(axrad_vel, tuple(mapdict_data.keys()))
 for label in radio_vel.labels:
     label.set_fontsize(10)
@@ -207,15 +210,14 @@ def line_select_callback(eclick, erelease):
         refy1, refy2 = [int(np.round(y1)), int(np.round(y2))]
     elif y1 > y2:
         refy1, refy2 = [int(np.round(y1)), int(np.round(y2))]
+    refarea = (refx1,refx2,refy1,refy2)
 
     axt.set_text('Ref area:\n X {}:{}\n Y {}:{}\n (start from 0)'.format(refx1, refx2, refy1, refy2))
     pv.canvas.draw()
 
     ### Change clim
     if climauto:  ## auto
-        refvalue_lastepoch = np.nanmean(tscuml[-1, refy1:refy2, refx1:refx2])  # reference values
-        dmin = dmin_auto - refvalue_lastepoch
-        dmax = dmax_auto - refvalue_lastepoch
+        dmin, dmax = get_range(tscuml[-1, :, :], refarea)
 
     ### Update draw
     if not tscuml_disp_flag:  ## vel or noise indice # Chandra
@@ -260,6 +262,7 @@ radio_vel.on_clicked(show_vel)
 # Slider for cumulative displacement
 axtim = pv.add_axes([0.1, 0.08, 0.8, 0.05], yticks=[])
 mdt = mdates.date2num(imdates_dt)
+print(mdt)
 tslider = Slider(axtim, 'year', mdates.date2num(imdates_dt[0]), mdates.date2num(imdates_dt[-1]))
 tslider.ax.bar(mdt, np.ones(len(mdt)), facecolor='black', width=4)
 tslider.ax.bar(mdt[0], 1, facecolor='red', width=12)
@@ -417,7 +420,7 @@ def printcoords(event):
             lines1[model], = axts.plot(xdates, yvalues, 'g-', visible=vis, alpha=0.6, zorder=3)
 
     axts.scatter(imdates_dt, dph, label=label1, c='b', alpha=0.6, zorder=5)
-    axts.set_title('vel = {:.1f} mm/yr @({}, {})'.format(vel1p, jj, ii), fontsize=10)
+    axts.set_title('Velocity = {:.1f} mm/yr @({}, {})'.format(vel1p, jj, ii), fontsize=10)
     # axts.set_ylim(-100,100)
 
     ### Y axis
