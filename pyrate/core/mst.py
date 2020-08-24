@@ -29,7 +29,7 @@ from joblib import Parallel, delayed
 
 from pyrate.core.algorithm import ifg_date_lookup
 from pyrate.core.algorithm import ifg_date_index_lookup
-from pyrate.core import config as cf, mpiops
+from pyrate.core import config as cf
 from pyrate.core.shared import IfgPart, create_tiles, tiles_split
 from pyrate.core.shared import joblib_log_level, Tile
 from pyrate.core.logger import pyratelogger as log
@@ -297,4 +297,4 @@ def mst_calc_wrapper(params):
 
     tiles_split(_save_mst_tile, params)
 
-    log.debug('Finished mst calculation for process {}'.format(mpiops.rank))
+    log.debug('Finished minimum spanning tree calculation')
