@@ -18,6 +18,8 @@ This python script can be used to plot PyRate linear-rate and cumulative time se
 products.
 This script is a version of a script in the LiCSBAS package; see
 https://github.com/yumorishita/LiCSBAS/blob/master/bin/LiCSBAS_plot_ts.py
+
+Usage: python3 utils/plot_time_series.py <path to PyRate outdir> 
 """
 import rasterio
 import matplotlib.pyplot as plt
@@ -33,51 +35,16 @@ from datetime import datetime as dt
 import warnings
 
 if len(sys.argv) != 2:
-    print('Exiting: Provide abs path to <outdir> as command line argument')
+    print('Exiting: Provide path to <PyRate outdir> as command line argument')
+    print('')
+    print('Usage: python3 utils/plot_time_series.py <path to PyRate outdir>')
     exit()
 else:
     path = sys.argv[1]
     print(f"Looking for PyRate products in: {path}")
 
 
-def calc_model(dph, imdates_ordinal, xvalues, model, vel1p, intercept1p):
-    """
-    Function to calculate model to fit cumulative time series data for one pixel
-    """
-    imdates_years = np.divide(imdates_ordinal,365.25) # imdates_ordinal / 365.25
-    xvalues_years = xvalues / 365.25
-
-    A = sm.add_constant(imdates_years)  # [1, t]
-    An = sm.add_constant(xvalues_years)  # [1, t]
-    if model == 0:  # PyRate linear fit results
-        # print(" M = ", vel1p, " & C = ", intercept1p )
-        A = np.dot(A, vel1p) + intercept1p
-        An = np.dot(An, vel1p) + intercept1p
-        # pass
-    if model == 1:  # Annual+L
-        sin = np.sin(2 * np.pi * imdates_years)
-        cos = np.cos(2 * np.pi * imdates_years)
-        A = np.concatenate((A, sin[:, np.newaxis], cos[:, np.newaxis]), axis=1)
-        sin = np.sin(2 * np.pi * xvalues_years)
-        cos = np.cos(2 * np.pi * xvalues_years)
-        An = np.concatenate((An, sin[:, np.newaxis], cos[:, np.newaxis]), axis=1)
-    if model == 2:  # Quad
-        A = np.concatenate((A, (imdates_years ** 2)[:, np.newaxis]), axis=1)
-        An = np.concatenate((An, (xvalues_years ** 2)[:, np.newaxis]), axis=1)
-    if model == 3:  # Annual+Q
-        sin = np.sin(2 * np.pi * imdates_years)
-        cos = np.cos(2 * np.pi * imdates_years)
-        A = np.concatenate((A, (imdates_years ** 2)[:, np.newaxis], sin[:, np.newaxis], cos[:, np.newaxis]), axis=1)
-        sin = np.sin(2 * np.pi * xvalues_years)
-        cos = np.cos(2 * np.pi * xvalues_years)
-        An = np.concatenate((An, (xvalues_years ** 2)[:, np.newaxis], sin[:, np.newaxis], cos[:, np.newaxis]), axis=1)
-
-    result = sm.OLS(dph, A, missing='drop').fit()
-    yvalues = result.predict(An)
-
-    return yvalues
-#################################
-
+###############################
 def readtif(tifname: str):
     """
     wrapper for rasterio tif reading
@@ -262,7 +229,6 @@ radio_vel.on_clicked(show_vel)
 # Slider for cumulative displacement
 axtim = pv.add_axes([0.1, 0.08, 0.8, 0.05], yticks=[])
 mdt = mdates.date2num(imdates_dt)
-print(mdt)
 tslider = Slider(axtim, 'year', mdates.date2num(imdates_dt[0]), mdates.date2num(imdates_dt[-1]))
 tslider.ax.bar(mdt, np.ones(len(mdt)), facecolor='black', width=4)
 tslider.ax.bar(mdt[0], 1, facecolor='red', width=12)
@@ -350,8 +316,45 @@ label2 = 'PyRate linear_rate'
 
 ylen = []
 
+
+def calc_model(dph, imdates_ordinal, xvalues, model, vel1p, intercept1p):
+    """
+    Function to calculate model to fit cumulative time series data for one pixel
+    """
+    imdates_years = np.divide(imdates_ordinal,365.25) # imdates_ordinal / 365.25
+    xvalues_years = xvalues / 365.25
+
+    A = sm.add_constant(imdates_years)  # [1, t]
+    An = sm.add_constant(xvalues_years)  # [1, t]
+    if model == 0:  # PyRate linear fit results
+        # print(" M = ", vel1p, " & C = ", intercept1p )
+        A = np.dot(A, vel1p) + intercept1p
+        An = np.dot(An, vel1p) + intercept1p
+        # pass
+    if model == 1:  # Annual+L
+        sin = np.sin(2 * np.pi * imdates_years)
+        cos = np.cos(2 * np.pi * imdates_years)
+        A = np.concatenate((A, sin[:, np.newaxis], cos[:, np.newaxis]), axis=1)
+        sin = np.sin(2 * np.pi * xvalues_years)
+        cos = np.cos(2 * np.pi * xvalues_years)
+        An = np.concatenate((An, sin[:, np.newaxis], cos[:, np.newaxis]), axis=1)
+    if model == 2:  # Quad
+        A = np.concatenate((A, (imdates_years ** 2)[:, np.newaxis]), axis=1)
+        An = np.concatenate((An, (xvalues_years ** 2)[:, np.newaxis]), axis=1)
+    if model == 3:  # Annual+Q
+        sin = np.sin(2 * np.pi * imdates_years)
+        cos = np.cos(2 * np.pi * imdates_years)
+        A = np.concatenate((A, (imdates_years ** 2)[:, np.newaxis], sin[:, np.newaxis], cos[:, np.newaxis]), axis=1)
+        sin = np.sin(2 * np.pi * xvalues_years)
+        cos = np.cos(2 * np.pi * xvalues_years)
+        An = np.concatenate((An, (xvalues_years ** 2)[:, np.newaxis], sin[:, np.newaxis], cos[:, np.newaxis]), axis=1)
+
+    result = sm.OLS(dph, A, missing='drop').fit()
+    return result.predict(An)
+#################################
+
 def printcoords(event):
-    global dph, lines1, lines2, lastevent
+    global dph, lines1, lines2, lastevent, imdates_ordinal, imdates_dt
     # outputting x and y coords to console
     if event.inaxes != axv:
         return
@@ -411,17 +414,26 @@ def printcoords(event):
     lines1 = [0, 0, 0, 0]
     xvalues = np.arange(imdates_ordinal[0], imdates_ordinal[-1], 10)
     xdates = [dt.fromordinal(pp) for pp in xvalues]
-    for model, vis in enumerate(visibilities):
-        yvalues = calc_model(dph, imdates_ordinal, xvalues, model, vel1p, intercept1p)
-        if model == 0:
-            lines1[model], = axts.plot(xdates, yvalues, 'r-', label=label2, visible=vis, alpha=0.6, zorder=3)
-            axts.legend()
-        else:
-            lines1[model], = axts.plot(xdates, yvalues, 'g-', visible=vis, alpha=0.6, zorder=3)
+    # Mask to exclude nan elements
+    mask = ~np.isnan(dph)
+    # remove nan elements from both arrays
+    imo = np.asarray(imdates_ordinal)
+    imo = imo[mask]
+    imt = np.asarray(imdates_dt)
+    imt = imt[mask]
+    dph = dph[mask]
 
-    axts.scatter(imdates_dt, dph, label=label1, c='b', alpha=0.6, zorder=5)
+    for model, vis in enumerate(visibilities):
+        if len(dph) > 1:
+            yvalues = calc_model(dph, imo, xvalues, model, vel1p, intercept1p)
+            if model == 0:
+                lines1[model], = axts.plot(xdates, yvalues, 'r-', label=label2, visible=vis, alpha=0.6, zorder=3)
+                axts.legend()
+            else:
+                lines1[model], = axts.plot(xdates, yvalues, 'g-', visible=vis, alpha=0.6, zorder=3)
+
+    axts.scatter(imt, dph, label=label1, c='b', alpha=0.6, zorder=5)
     axts.set_title('Velocity = {:.1f} mm/yr @({}, {})'.format(vel1p, jj, ii), fontsize=10)
-    # axts.set_ylim(-100,100)
 
     ### Y axis
     if ylen:
