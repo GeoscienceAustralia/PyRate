@@ -22,6 +22,7 @@ https://github.com/yumorishita/LiCSBAS/blob/master/bin/LiCSBAS_plot_ts.py
 Usage: python3 utils/plot_time_series.py <path to PyRate outdir> 
 """
 import rasterio
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, RadioButtons, RectangleSelector, CheckButtons
 import matplotlib.dates as mdates
@@ -139,8 +140,11 @@ axt2 = pv.text(0.01, 0.99, 'Left-doubleclick:\n Plot time series\nRight-drag:\n 
 axt = pv.text(0.01, 0.78, 'Ref area:\n X {}:{}\n Y {}:{}\n (start from 0)'.format(refx1, refx2, refy1, refy2),
               fontsize=8, va='bottom')
 
-cmap = plt.set_cmap('bwr_r')
-cax = axv.imshow(vs.vel, clim=[vmin, vmax], cmap=cmap)
+# create masked array for NaNs
+mvel = np.ma.array(vs.vel, mask=np.isnan(vs.vel))
+cmap = matplotlib.cm.bwr_r
+cmap.set_bad('grey')
+cax = axv.imshow(mvel, clim=[vmin, vmax], cmap=cmap)
 cbr = pv.colorbar(cax, orientation='vertical')
 cbr.set_label('mm/yr')
 
