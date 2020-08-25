@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 import pytest
 
@@ -30,28 +31,35 @@ def test_process_treats_prepif_outputs_readonly(gamma_conf, tempdir, coh_mask):
     pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
     params = Configuration(output_conf).__dict__
     conv2tif.main(params)
-    tifs = list(Path(params[cf.OUT_DIR]).glob('*_unw_ifg.tif'))
+    tifs = list(Path(params[cf.OUT_DIR]).glob('*_unw.tif'))
     assert len(tifs) == 17
+
+    if params[cf.COH_FILE_LIST] is not None:
+        coh_tifs = list(Path(params[cf.OUT_DIR]).glob('*_cc.tif'))
+        assert len(coh_tifs) == 17
 
     params = Configuration(output_conf).__dict__
     prepifg.main(params)
-    cropped = list(Path(params[cf.OUT_DIR]).glob('*cr.tif'))
+    cropped_coh = list(Path(params[cf.OUT_DIR]).glob('*_coh.tif'))
+    cropped_ifgs = list(Path(params[cf.OUT_DIR]).glob('*_ifg.tif'))
+    dem_ifgs = list(Path(params[cf.OUT_DIR]).glob('*_dem.tif'))
 
     if params[cf.COH_FILE_LIST] is not None:  # 17 + 1 dem + 17 coh files
-        assert len(cropped) == 35
+        assert len(cropped_coh) + len(cropped_ifgs) + len(dem_ifgs) == 35
     else:  # 17 + 1 dem
-        assert len(cropped) == 18
+        assert len(cropped_coh) + len(cropped_ifgs) + len(dem_ifgs) == 18
     # check all tifs from conv2tif are still readonly
     for t in tifs:
         assert t.stat().st_mode == 33060
 
     # check all prepifg outputs are readonly
-    for c in cropped:
+    for c in cropped_coh + cropped_ifgs:
         assert c.stat().st_mode == 33060
 
     params = Configuration(output_conf).__dict__
     correct.main(params)
 
     # check all after correct steps multilooked files are still readonly
-    for c in cropped:
+    for c in cropped_coh + cropped_ifgs + dem_ifgs:
         assert c.stat().st_mode == 33060
+    shutil.rmtree(params[cf.OUT_DIR])
