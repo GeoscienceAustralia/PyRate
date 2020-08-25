@@ -100,9 +100,9 @@ Test
 To run the test suite, enter these commands in the terminal::
 
    pip install -r requirements-test.txt
-   python -m pytest tests
+   python3 -m pytest -m "not slow" tests/
 
 To run the tests for a single module (e.g. test_timeseries.py), use this command::
 
-   python -m pytest tests/test_timeseries.py
+   python3 -m pytest tests/test_timeseries.py
 

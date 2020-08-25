@@ -3,6 +3,43 @@
 Release History
 ===============
 
+0.5.0 (2020-08-31)
+------------------
+Added
++++++
+- New functionality "``linear_rate``" to calculate linear regression of
+  cumulative displacement time series for every pixel as part of the ``timeseries`` step.
+- Script for plotting ``timeseries`` and ``linear_rate`` output geotiff products using Matplotlib.
+  To use, additional dependencies listed in ``requirements-plot.txt`` are required.
+- Correction data (except ``maxvar`` and ``vcmt``) applied to the ifg data is saved to disk
+  and re-used on subsequent repeat runs. Corrections are only re-calculated if config
+  parameters change between runs.
+- MPI parallelisation of APS spatio-temporal filter correction.
+- Unit test coverage for refpixel lat/lon to x/y conversion and ``aps`` module.
+
+Fixed
++++++
+- Re-enable ``ifglksx`` and ``ifglksy`` to be different values, resulting in different
+  resolutions in x and y dimensions in multi-looked interferograms.
+- Re-enable ``orbfitlksx`` and ``orbfitlksy`` to be different values, resulting in different
+  resolutions in x and y dimensions during network orbit correction.
+- Screen messages from main process only during MPI runs.
+
+Changed
++++++++
+- ``process`` step has been renamed ``correct``. Stacking and timeseries have been removed from
+  this step and are now invoked by separate ``timeseries`` and ``stack`` command line options.
+- Processing of coherence files by ``conv2tif`` and ``prepifg`` is now triggered by the presence
+  of ``cohfilelist`` in the config file. If the list is present, multilooked/cropped coherence
+  files are saved to disk, regardless of whether ``cohmask`` is 0 or 1.
+- Parallelisation capability is refactored - MPI and multiprocessing both now use a common
+  tiling framework for ``stack``, ``timeseries`` and ``mst`` algorithms.
+
+Removed
++++++++
+- Redundant ``tscal`` config parameter was deprecated - not needed now there is a ``timeseries``
+  step invokable on the command line.
+
 0.4.3 (2020-08-04)
 ------------------
 Added

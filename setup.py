@@ -18,7 +18,7 @@ from setuptools.command.test import test as TestCommand
 from subprocess import check_output
 import platform
 import setuptools
-__version__ = "0.4.3"
+__version__ = "0.5.0"
 
 # Get requirements (and dev requirements for testing) from requirements
 #  txt files. Also ensure we are using correct GDAL version.

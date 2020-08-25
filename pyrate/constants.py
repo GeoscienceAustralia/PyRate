@@ -6,7 +6,7 @@ import numpy as np
 PYRATEPATH = Path(__file__).parent.parent
 
 
-__version__ = "0.4.3"
+__version__ = "0.5.0"
 CLI_DESCRIPTION = """
 PyRate workflow: 
 
