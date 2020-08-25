@@ -5,7 +5,7 @@ import datetime
 import sphinx_rtd_theme
 
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
