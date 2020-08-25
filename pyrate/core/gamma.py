@@ -38,6 +38,17 @@ GAMMA_X_STEP = 'post_lon'
 GAMMA_DATUM = 'ellipsoid_name'
 GAMMA_FREQUENCY = 'radar_frequency'
 GAMMA_INCIDENCE = 'incidence_angle'
+GAMMA_HEADING = 'heading'
+GAMMA_RANGE_PIX = 'range_pixel_spacing'
+GAMMA_RANGE_N = 'range_samples'
+GAMMA_AZIMUTH_PIX = 'azimuth_pixel_spacing'
+GAMMA_AZIMUTH_N = 'azimuth_lines'
+GAMMA_AZIMUTH_LOOKS = 'azimuth_looks'
+GAMMA_PRF = 'prf'
+GAMMA_NEAR_RANGE = 'near_range_slc'
+GAMMA_SAR_EARTH = 'sar_to_earth_center'
+GAMMA_SEMI_MAJOR_AXIS = 'earth_semi_major_axis'
+GAMMA_SEMI_MINOR_AXIS = 'earth_semi_minor_axis'
 RADIANS = 'RADIANS'
 GAMMA = 'GAMMA'
 
@@ -76,6 +87,63 @@ def parse_epoch_header(path):
         msg = 'Unrecognised unit field for incidence_angle: %s'
         raise GammaException(msg % unit)
     subset[ifc.PYRATE_INCIDENCE_DEGREES] = float(incidence)
+
+    sat_heading, unit = lookup[GAMMA_HEADING]
+    if unit != "degrees":  # pragma: no cover
+        msg = 'Unrecognised unit field for heading: %s'
+        raise GammaException(msg % unit)
+    subset[ifc.PYRATE_HEADING_DEGREES] = float(sat_heading)
+
+    range_pix, unit = lookup[GAMMA_RANGE_PIX]
+    if unit != "m":  # pragma: no cover
+        msg = 'Unrecognised unit field for range_pixel_spacing: %s'
+        raise GammaException(msg % unit)
+    subset[ifc.PYRATE_RANGE_PIX_METRES] = float(range_pix)
+
+    range_n = lookup[GAMMA_RANGE_N] # number without a unit in .par file
+    subset[ifc.PYRATE_RANGE_N] = int(range_n[0])
+
+    azimuth_pix, unit = lookup[GAMMA_AZIMUTH_PIX]
+    if unit != "m":  # pragma: no cover
+        msg = 'Unrecognised unit field for azimuth_pixel_spacing: %s'
+        raise GammaException(msg % unit)
+    subset[ifc.PYRATE_AZIMUTH_PIX_METRES] = float(azimuth_pix)
+
+    azimuth_n = lookup[GAMMA_AZIMUTH_N] # number without a unit in .par file
+    subset[ifc.PYRATE_AZIMUTH_N] = int(azimuth_n[0])
+
+    azimuth_looks = lookup[GAMMA_AZIMUTH_LOOKS]  # number without a unit in .par file
+    subset[ifc.PYRATE_AZIMUTH_LOOKS] = int(azimuth_looks[0])
+
+    pulse_rep_freq, unit = lookup[GAMMA_PRF]
+    if unit != "Hz":  # pragma: no cover
+        msg = 'Unrecognised unit field for prf: %s'
+        raise GammaException(msg % unit)
+    subset[ifc.PYRATE_PRF_HERTZ] = float(pulse_rep_freq)
+
+    near_range, unit = lookup[GAMMA_NEAR_RANGE]
+    if unit != "m":  # pragma: no cover
+        msg = 'Unrecognised unit field for near_range_slc: %s'
+        raise GammaException(msg % unit)
+    subset[ifc.PYRATE_NEAR_RANGE_METRES] = float(near_range)
+
+    sar_to_earth, unit = lookup[GAMMA_SAR_EARTH]
+    if unit != "m":  # pragma: no cover
+        msg = 'Unrecognised unit field for sar_to_earth_center: %s'
+        raise GammaException(msg % unit)
+    subset[ifc.PYRATE_SAR_EARTH_METRES] = float(sar_to_earth)
+
+    semi_major_axis, unit = lookup[GAMMA_SEMI_MAJOR_AXIS]
+    if unit != "m":  # pragma: no cover
+        msg = 'Unrecognised unit field for earth_semi_major_axis: %s'
+        raise GammaException(msg % unit)
+    subset[ifc.PYRATE_SEMI_MAJOR_AXIS_METRES] = float(semi_major_axis)
+
+    semi_minor_axis, unit = lookup[GAMMA_SEMI_MINOR_AXIS]
+    if unit != "m":  # pragma: no cover
+        msg = 'Unrecognised unit field for earth_semi_minor_axis: %s'
+        raise GammaException(msg % unit)
+    subset[ifc.PYRATE_SEMI_MINOR_AXIS_METRES] = float(semi_minor_axis)
 
     return subset
 
@@ -188,6 +256,96 @@ def combine_headers(hdr0, hdr1, dem_hdr):
         args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
         msg = "Wavelength mismatch, check both header files for %s & %s"
         raise GammaException(msg % args)
+
+    # use parameter of first image (as done by GAMMA during interferometric processing)
+    heading_ang = hdr0[ifc.PYRATE_HEADING_DEGREES]
+    if np.isclose(heading_ang, hdr1[ifc.PYRATE_HEADING_DEGREES], atol=1e-1):
+        chdr[ifc.PYRATE_HEADING_DEGREES] = heading_ang
+    else:
+        args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
+        msg = "Satellite heading angles differ by more than 1e-1"
+        raise GammaException(msg % args)
+
+    range_pix = hdr0[ifc.PYRATE_RANGE_PIX_METRES]
+    if np.isclose(range_pix, hdr1[ifc.PYRATE_RANGE_PIX_METRES], atol=1e-3):
+        chdr[ifc.PYRATE_RANGE_PIX_METRES] = range_pix
+    else:
+        args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
+        msg = "Range pixel spacing differs by more than 1e-3"
+        raise GammaException(msg % args)
+
+    range_n = hdr0[ifc.PYRATE_RANGE_N]
+    if range_n == hdr1[ifc.PYRATE_RANGE_N]:
+        chdr[ifc.PYRATE_RANGE_N] = range_n
+    else:
+        args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
+        msg = "Number of range pixels mismatch, check both header files for %s & %s"
+        raise GammaException(msg % args)
+
+    azimuth_pix = hdr0[ifc.PYRATE_AZIMUTH_PIX_METRES]
+    if np.isclose(azimuth_pix, hdr1[ifc.PYRATE_AZIMUTH_PIX_METRES], atol=1e-3):
+        chdr[ifc.PYRATE_AZIMUTH_PIX_METRES] = azimuth_pix
+    else:
+        args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
+        msg = "Azimuth pixel spacing differs by more than 1e-3"
+        raise GammaException(msg % args)
+
+    azimuth_n = hdr0[ifc.PYRATE_AZIMUTH_N]
+    if azimuth_n == hdr1[ifc.PYRATE_AZIMUTH_N]:
+        chdr[ifc.PYRATE_AZIMUTH_N] = azimuth_n
+    else:
+        args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
+        msg = "Number of azimuth pixels mismatch, check both header files for %s & %s"
+        raise GammaException(msg % args)
+
+    azimuth_looks = hdr0[ifc.PYRATE_AZIMUTH_LOOKS]
+    if azimuth_looks == hdr1[ifc.PYRATE_AZIMUTH_LOOKS]:
+        chdr[ifc.PYRATE_AZIMUTH_LOOKS] = azimuth_looks
+    else:
+        args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
+        msg = "Number of azimuth looks mismatch, check both header files for %s & %s"
+        raise GammaException(msg % args)
+
+    prf_hertz = hdr0[ifc.PYRATE_PRF_HERTZ]
+    if np.isclose(prf_hertz, hdr1[ifc.PYRATE_PRF_HERTZ], atol=1e-6):
+        chdr[ifc.PYRATE_PRF_HERTZ] = prf_hertz
+    else:
+        args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
+        msg = "Pulse repetition frequency mismatch, check both header files for %s & %s"
+        raise GammaException(msg % args)
+
+    near_range = hdr0[ifc.PYRATE_NEAR_RANGE_METRES]
+    if np.isclose(near_range, hdr1[ifc.PYRATE_NEAR_RANGE_METRES], atol=1e3):
+        chdr[ifc.PYRATE_NEAR_RANGE_METRES] = near_range
+    else:
+        args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
+        msg = "Near range differs by more than 1e3"
+        raise GammaException(msg % args)
+
+    sar_earth = hdr0[ifc.PYRATE_SAR_EARTH_METRES]
+    if np.isclose(sar_earth, hdr1[ifc.PYRATE_SAR_EARTH_METRES], atol=1e3):
+        chdr[ifc.PYRATE_SAR_EARTH_METRES] = sar_earth
+    else:
+        args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
+        msg = "SAR to Earth Center differs by more than 1e3"
+        raise GammaException(msg % args)
+
+    semi_major_axis = hdr0[ifc.PYRATE_SEMI_MAJOR_AXIS_METRES]
+    if np.isclose(semi_major_axis, hdr1[ifc.PYRATE_SEMI_MAJOR_AXIS_METRES], atol=1e-4):
+        chdr[ifc.PYRATE_SEMI_MAJOR_AXIS_METRES] = semi_major_axis
+    else:
+        args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
+        msg = "Earth semi major axis differs by more than 1e-4"
+        raise GammaException(msg % args)
+
+    semi_minor_axis = hdr0[ifc.PYRATE_SEMI_MINOR_AXIS_METRES]
+    if np.isclose(semi_minor_axis, hdr1[ifc.PYRATE_SEMI_MINOR_AXIS_METRES], atol=1e-4):
+        chdr[ifc.PYRATE_SEMI_MINOR_AXIS_METRES] = semi_minor_axis
+    else:
+        args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
+        msg = "Earth semi minor axis differs by more than 1e-4"
+        raise GammaException(msg % args)
+
     # non-cropped, non-multilooked geotif process step information added
     chdr[ifc.DATA_TYPE] = ifc.ORIG
 

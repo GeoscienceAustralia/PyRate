@@ -836,7 +836,13 @@ def collate_metadata(header):
                   ifc.DATA_UNITS]:
             md.update({k: str(header[k])})
         if header[ifc.PYRATE_INSAR_PROCESSOR] == GAMMA:
-            for k in [ifc.FIRST_TIME, ifc.SECOND_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
+            for k in [ifc.FIRST_TIME, ifc.SECOND_TIME,
+                      ifc.PYRATE_INCIDENCE_DEGREES, ifc.PYRATE_HEADING_DEGREES,
+                      ifc.PYRATE_RANGE_PIX_METRES, ifc.PYRATE_RANGE_N,
+                      ifc.PYRATE_AZIMUTH_PIX_METRES, ifc.PYRATE_AZIMUTH_N,
+                      ifc.PYRATE_AZIMUTH_LOOKS, ifc.PYRATE_PRF_HERTZ,
+                      ifc.PYRATE_NEAR_RANGE_METRES, ifc.PYRATE_SAR_EARTH_METRES,
+                      ifc.PYRATE_SEMI_MAJOR_AXIS_METRES, ifc.PYRATE_SEMI_MINOR_AXIS_METRES]:
                 md.update({k: str(header[k])})
 
     if _is_coherence(header):
