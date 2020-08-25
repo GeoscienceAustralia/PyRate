@@ -28,7 +28,9 @@ cd /PyRate && python3 setup.py install
 # Run workflow
 python pyrate/__main__.py  conv2tif -f  pyrate_gamma.conf
 pyrate prepifg -f pyrate_gamma.conf
-pyrate process -f pyrate_gamma.conf
+pyrate correct -f pyrate_gamma.conf
+pyrate timeseries -f pyrate_gamma.conf
+pyrate stack -f pyrate_gamma.conf
 pyrate merge -f pyrate_gamma.conf
 
 ---------------------------------------

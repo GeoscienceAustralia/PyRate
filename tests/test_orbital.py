@@ -16,7 +16,6 @@
 """
 This Python module contains tests for the orbital.py PyRate module.
 """
-
 import os
 import shutil
 import tempfile
@@ -39,12 +38,12 @@ from pyrate.core.algorithm import first_second_ids
 from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
     QUADRATIC, PART_CUBIC
 from pyrate.core.orbital import OrbitalError
-from pyrate.core.orbital import get_design_matrix, get_network_design_matrix
+from pyrate.core.orbital import get_design_matrix, get_network_design_matrix, orb_fit_calc_wrapper
 from pyrate.core.orbital import _get_num_params, remove_orbital_error, network_orbital_correction
 from pyrate.core.shared import Ifg, mkdir_p
 from pyrate.core.shared import nanmedian
 from pyrate.core import roipac
-from pyrate import process, conv2tif, prepifg
+from pyrate import correct, conv2tif, prepifg
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.core.config import ORB_ERROR_DIR
 from tests import common
@@ -63,6 +62,9 @@ NUM_COEF_LOOKUP = {
     PLANAR: 2,
     QUADRATIC: 5,
     PART_CUBIC: 6}
+
+
+
 
 
 class TestSingleDesignMatrixTests:
@@ -261,6 +263,12 @@ class TestIndependentCorrection:
 class TestError:
     """Tests for the networked correction method"""
 
+    @classmethod
+    def setup_method(cls):
+        out_dir = tempfile.mkdtemp()
+        cls.params = common.min_params(out_dir)
+        cls.ifgs = small5_mock_ifgs()
+
     def test_invalid_ifgs_arg(self):
         # min requirement is 1 ifg, can still subtract one epoch from the other
         with pytest.raises(OrbitalError):
@@ -268,26 +276,25 @@ class TestError:
 
     def test_invalid_degree_arg(self):
         # test failure of a few different args for 'degree'
-        ifgs = small5_mock_ifgs()
         for d in range(-5, 1):
             with pytest.raises(OrbitalError):
-                get_network_design_matrix(ifgs, d, True)
+                get_network_design_matrix(self.ifgs, d, True)
         for d in range(4, 7):
             with pytest.raises(OrbitalError):
-                get_network_design_matrix(ifgs, d, True)
+                get_network_design_matrix(self.ifgs, d, True)
 
     def test_invalid_method(self):
         # test failure of a few different args for 'method'
-        ifgs = small5_mock_ifgs()
-        params = dict()
-        params[cf.ORBITAL_FIT_DEGREE] = PLANAR
-        params[cf.PARALLEL] = False
-        params[cf.ORBFIT_OFFSET] = True
-        params[cf.OUT_DIR] = tempfile.mkdtemp()
         for m in [None, 5, -1, -3, 45.8]:
-            params[cf.ORBITAL_FIT_METHOD] = m
+            self.params[cf.ORBITAL_FIT_METHOD] = m
             with pytest.raises(OrbitalError):
-                remove_orbital_error(ifgs, params)
+                remove_orbital_error(self.ifgs, self.params)
+
+    def test_different_looks_raise(self):
+        self.params[cf.ORBITAL_FIT_LOOKS_X] = 1
+        self.params[cf.ORBITAL_FIT_LOOKS_Y] = 5
+        with pytest.raises(OrbitalError):
+            remove_orbital_error(self.ifgs, self.params)
 
 
 class TestNetworkDesignMatrixTests:
@@ -724,7 +731,7 @@ class TestLegacyComparisonTestsOrbfitMethod1:
         pass
 
     def test_orbital_correction_legacy_equality(self):
-        from pyrate import process
+        from pyrate import correct
         from pyrate.configuration import MultiplePaths
 
         multi_paths = [MultiplePaths(p, params=self.params) for p in self.ifg_paths]
@@ -734,10 +741,10 @@ class TestLegacyComparisonTestsOrbfitMethod1:
         self.params[cf.INTERFEROGRAM_FILES] = multi_paths
         self.params['rows'], self.params['cols'] = 2, 3
         Path(self.BASE_DIR).joinpath('tmpdir').mkdir(exist_ok=True, parents=True)
-        process._copy_mlooked(self.params)
-        process._update_params_with_tiles(self.params)
-        process._create_ifg_dict(self.params)
-        process._copy_mlooked(self.params)
+        correct._copy_mlooked(self.params)
+        correct._update_params_with_tiles(self.params)
+        correct._create_ifg_dict(self.params)
+        correct._copy_mlooked(self.params)
         pyrate.core.orbital.orb_fit_calc_wrapper(self.params)
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
@@ -812,8 +819,8 @@ class TestLegacyComparisonTestsOrbfitMethod2:
         shutil.rmtree(cls.BASE_DIR, ignore_errors=True)
 
     def test_orbital_correction_legacy_equality_orbfit_method_2(self):
-        process._copy_mlooked(self.params)
-        process._create_ifg_dict(self.params)
+        correct._copy_mlooked(self.params)
+        correct._create_ifg_dict(self.params)
         remove_orbital_error(self.new_data_paths, self.params)
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
@@ -846,8 +853,8 @@ class TestLegacyComparisonTestsOrbfitMethod2:
         self.params[cf.ORBITAL_FIT_METHOD] = NETWORK_METHOD
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 2
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
-        process._copy_mlooked(self.params)
-        process._create_ifg_dict(self.params)
+        correct._copy_mlooked(self.params)
+        correct._create_ifg_dict(self.params)
         remove_orbital_error(self.new_data_paths, self.params)
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
@@ -882,8 +889,8 @@ class TestOrbErrorCorrectionsOnDiscReused:
         params = Configuration(cls.conf).__dict__
         prepifg.main(params)
         cls.params = Configuration(cls.conf).__dict__
-        process._copy_mlooked(cls.params)
-        process._create_ifg_dict(cls.params)
+        correct._copy_mlooked(cls.params)
+        correct._create_ifg_dict(cls.params)
 
     @classmethod
     def teardown_class(cls):
@@ -934,8 +941,10 @@ class TestOrbErrorCorrectionsReappliedDoesNotChangePhaseData:
         params = Configuration(cls.conf).__dict__
         prepifg.main(params)
         cls.params = Configuration(cls.conf).__dict__
-        process._copy_mlooked(cls.params)
-        process._create_ifg_dict(cls.params)
+        correct._copy_mlooked(cls.params)
+        correct._create_ifg_dict(cls.params)
+        multi_paths = cls.params[cf.INTERFEROGRAM_FILES]
+        cls.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
 
     @classmethod
     def teardown_method(cls):
@@ -944,8 +953,6 @@ class TestOrbErrorCorrectionsReappliedDoesNotChangePhaseData:
     def test_orb_error_multiple_run_does_not_change_phase_data(self, orbfit_method, orbfit_degrees):
         self.params[cf.ORBITAL_FIT_METHOD] = orbfit_method
         self.params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
-        multi_paths = self.params[cf.INTERFEROGRAM_FILES]
-        self.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
         remove_orbital_error(self.ifg_paths, self.params)
         ifgs = [Ifg(i) for i in self.ifg_paths]
         for i in ifgs:
@@ -954,11 +961,11 @@ class TestOrbErrorCorrectionsReappliedDoesNotChangePhaseData:
         phase_prev = [i.phase_data for i in ifgs]
 
         # orb correct once more
-        process._copy_mlooked(self.params)
+        correct._copy_mlooked(self.params)
         remove_orbital_error(self.ifg_paths, self.params)
 
         # and again
-        process._copy_mlooked(self.params)
+        correct._copy_mlooked(self.params)
         remove_orbital_error(self.ifg_paths, self.params)
         ifgs = [Ifg(i) for i in self.ifg_paths]
         for i in ifgs:

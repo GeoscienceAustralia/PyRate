@@ -20,9 +20,10 @@ cd /PyRate && python3 setup.py install
 pyrate conv2tif -f input_parameters.conf
 pyrate prepifg -f input_parameters.conf
 
-
-pyrate process -f input_parameters.conf -c 3 -r 4
-pyrate merge -f input_parameters.conf -c 3 -r 4
+pyrate correct -f input_parameters.conf
+pyrate timeseries -f input_parameters.conf
+pyrate stack -f input_parameters.conf
+pyrate merge -f input_parameters.conf
 
 # Build Sphinx docs
 cd /PyRate/docs && make html

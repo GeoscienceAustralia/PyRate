@@ -19,8 +19,7 @@ This Python module implements the minimum spanning tree
 functionality for selecting interferometric observations.
 """
 # pylint: disable=invalid-name
-from os.path import join
-
+from pathlib import Path
 from itertools import product
 from numpy import array, nan, isnan, float32, empty, sum as nsum
 import numpy as np
@@ -30,17 +29,16 @@ from joblib import Parallel, delayed
 
 from pyrate.core.algorithm import ifg_date_lookup
 from pyrate.core.algorithm import ifg_date_index_lookup
-from pyrate.core import config as cf, mpiops
-from pyrate.core.shared import IfgPart, create_tiles
-from pyrate.core.shared import joblib_log_level
+from pyrate.core import config as cf
+from pyrate.core.shared import IfgPart, create_tiles, tiles_split
+from pyrate.core.shared import joblib_log_level, Tile
 from pyrate.core.logger import pyratelogger as log
+from pyrate.configuration import Configuration
 
 np.seterr(invalid='ignore')  # stops RuntimeWarning in nan conversion
 
 # TODO: may need to implement memory saving row-by-row access
 # TODO: document weighting by either Nan fraction OR variance
-
-
 
 
 def mst_from_ifgs(ifgs):
@@ -281,22 +279,22 @@ def mst_calc_wrapper(params):
     """
     MPI wrapper function for MST calculation
     """
-    tiles = params[cf.TILES]
-    preread_ifgs = params[cf.PREREAD_IFGS]
-    dest_tifs = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
-    process_tiles = mpiops.array_split(tiles)
+
     log.info('Calculating minimum spanning tree matrix')
 
-    def _save_mst_tile(tile, i, preread_ifgs):
+    def _save_mst_tile(tile: Tile, params: dict) -> None:
         """
         Convenient inner loop for mst tile saving
         """
+        preread_ifgs = params[cf.PREREAD_IFGS]
+        dest_tifs = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+        mst_file_process_n = Configuration.mst_path(params, index=tile.index)
+        if mst_file_process_n.exists():
+            return
         mst_tile = mst_multiprocessing(tile, dest_tifs, preread_ifgs, params)
         # locally save the mst_mat
-        mst_file_process_n = join(params[cf.TMPDIR], 'mst_mat_{}.npy'.format(i))
         np.save(file=mst_file_process_n, arr=mst_tile)
 
-    for t in process_tiles:
-        _save_mst_tile(t, t.index, preread_ifgs)
-    log.debug('Finished mst calculation for process {}'.format(mpiops.rank))
-    mpiops.comm.barrier()
+    tiles_split(_save_mst_tile, params)
+
+    log.debug('Finished minimum spanning tree calculation')

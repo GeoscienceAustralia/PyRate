@@ -17,7 +17,7 @@
 This Python module does post-processing steps to assemble the
 stack rate and time series outputs and save as geotiff files
 """
-from os.path import join, isfile
+from os.path import join, isfile, exists
 import pickle
 import numpy as np
 from osgeo import gdal
@@ -26,6 +26,7 @@ from pathlib import Path
 
 from pyrate.core import shared, stack, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.logger import pyratelogger as log
+from pyrate.configuration import Configuration
 
 gdal.SetCacheMax(64)
 
@@ -35,22 +36,35 @@ def main(params: dict) -> None:
     PyRate merge main function. Assembles product tiles in to
     single geotiff files
     """
-    # setup paths
-    mpiops.run_once(_merge_stack, params)
-    out_types = ['stack_rate', 'stack_error']
+    out_types = []
+    stfile = join(params[cf.TMPDIR], 'stack_rate_0.npy')
+    if exists(stfile):
+        # setup paths
+        mpiops.run_once(_merge_stack, params)
+        out_types += ['stack_rate', 'stack_error']
+    else:
+        log.warning('Not merging stack products; {} does not exist'.format(stfile))
 
-    if params[cf.TIME_SERIES_CAL]:
+    tsfile = join(params[cf.TMPDIR], 'tscuml_0.npy')
+    if exists(tsfile):
         _merge_timeseries(params, 'tscuml')
         _merge_linrate(params)
         out_types += ['linear_rate', 'linear_error', 'linear_rsquared']
 
-    process_out_types = mpiops.array_split(out_types)
-    for out_type in process_out_types:
-        create_png_and_kml_from_tif(params[cf.OUT_DIR], output_type=out_type)
+        # optional save of merged tsincr products
+        if params["savetsincr"] == 1:
+            _merge_timeseries(params, 'tsincr')
+    else:
+        log.warning('Not merging time series products; {} does not exist'.format(tsfile))
 
-    # optional save of merged tsincr products
-    if params["savetsincr"] == 1:
-        _merge_timeseries(params, 'tsincr')
+
+    if len(out_types) > 0:
+        process_out_types = mpiops.array_split(out_types)
+        for out_type in process_out_types:
+            create_png_and_kml_from_tif(params[cf.OUT_DIR], output_type=out_type)
+    else:
+        log.warning('Exiting: no products to merge')
+
 
 
 def _merge_stack(params: dict) -> None:
@@ -234,9 +248,9 @@ def assemble_tiles(s, dir, tiles, out_type, index=None):
     for t in tiles:
         tile_file = Path(join(dir, out_type + '_'+str(t.index)+'.npy'))
         tile = np.load(file=tile_file)
-        if index is None: #2D array
+        if index is None:  #2D array
             merged_array[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = tile
-        else: #3D array
+        else:  #3D array
             merged_array[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = tile[:, :, index]
 
     log.debug('Finished assembling tiles for {}'.format(out_type))
@@ -298,10 +312,10 @@ def _merge_setup(params):
     Convenience function for Merge set up steps
     """
     # setup paths
-    xlks, _, crop = cf.transform_params(params)
+    #xlks, ylks, crop = cf.transform_params(params)
     base_unw_paths = []
 
-    for p in Path(params[cf.OUT_DIR]).rglob("*lksx_*cr.tif"):
+    for p in Path(params[cf.OUT_DIR]).rglob("*lksx_*lksy_*cr.tif"):
         if "dem" not in str(p):
             base_unw_paths.append(str(p))
 
@@ -313,7 +327,7 @@ def _merge_setup(params):
         dest_tifs = base_unw_paths # cf.get_dest_paths(base_unw_paths, crop, params, xlks)
 
     # load previously saved preread_ifgs dict
-    preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
+    preread_ifgs_file = Configuration.preread_ifgs(params)
     ifgs_dict = pickle.load(open(preread_ifgs_file, 'rb'))
     ifgs = [v for v in ifgs_dict.values() if isinstance(v, shared.PrereadIfg)]
     shape = ifgs[0].shape

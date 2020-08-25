@@ -1,4 +1,4 @@
-PyRate Process Script
+pyrate correct Script
 ========================
 
 .. automodule:: pyrate.process

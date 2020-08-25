@@ -24,6 +24,7 @@ from typing import List, Union
 
 import errno
 import math
+from joblib import Parallel, delayed
 from math import floor
 import os
 from os.path import basename, join
@@ -1184,11 +1185,10 @@ def save_numpy_phase(ifg_paths, params):
     :return: None, file saved to disk
     """
     tiles = params['tiles']
-    process_ifgs = mpiops.array_split(ifg_paths)
     outdir = params[cf.TMPDIR]
     if not os.path.exists(outdir):
         mkdir_p(outdir)
-    for ifg_path in process_ifgs:
+    for ifg_path in mpiops.array_split(ifg_paths):
         ifg = Ifg(ifg_path)
         ifg.open()
         phase_data = ifg.phase_data
@@ -1318,13 +1318,14 @@ def extract_epochs_from_filename(filename_with_epochs: str) -> List[str]:
 
 def mpi_vs_multiprocess_logging(step, params):
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
-        log.info(f"Running {step} step using MPI processing. Disabling parallel processing.")
+        log.info(f"Running '{step}' step with MPI using {mpiops.size} processes")
+        log.warning("Disabling joblib parallel processing (setting parallel = 0)")
         params[cf.PARALLEL] = 0
     else:
         if params[cf.PARALLEL] == 1:
-            log.info(f"Running {step} step in parallel using {params[cf.PROCESSES]} processes")
+            log.info(f"Running '{step}' step in parallel using {params[cf.PROCESSES]} processes")
         else:
-            log.info(f"Running {step} step in serial")
+            log.info(f"Running '{step}' step in serial")
 
 
 def dem_or_ifg(data_path):
@@ -1342,3 +1343,25 @@ def dem_or_ifg(data_path):
         return Ifg(data_path)
     else:
         return DEM(data_path)
+
+
+def join_dicts(dicts: List[dict]) -> dict:
+    """
+    Function to concatenate dictionaries
+    """
+    if dicts is None:  # pragma: no cover
+        return {}
+    assembled_dict = {k: v for D in dicts for k, v in D.items()}
+    return assembled_dict
+
+
+def tiles_split(func, params, *args, **kwargs):
+    tiles = params[cf.TILES]
+    process_tiles = mpiops.array_split(tiles)
+    if params[cf.PARALLEL]:
+        Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+            delayed(func)(t, params, *args, **kwargs) for t in process_tiles)
+    else:
+        for t in process_tiles:
+            func(t, params, *args, **kwargs)
+    mpiops.comm.barrier()

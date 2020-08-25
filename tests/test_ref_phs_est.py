@@ -29,10 +29,11 @@ from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.ref_phs_est import ReferencePhaseError, ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.orbital import remove_orbital_error
-from pyrate.core.shared import CorrectionStatusError
-from pyrate import prepifg, process, conv2tif
+from pyrate.core.shared import CorrectionStatusError, Ifg
+from pyrate import prepifg, correct, conv2tif
 from pyrate.configuration import MultiplePaths, Configuration
 from tests import common
+from tests.common import TEST_CONF_GAMMA
 
 legacy_ref_phs_method1 = [-18.2191658020020,
                           27.7119445800781,
@@ -99,8 +100,8 @@ class TestRefPhsTests:
         self.params[cf.REF_CHIP_SIZE], self.params[cf.REF_MIN_FRAC] = 21, 0.5
         self.params['rows'], self.params['cols'] = 3, 2
         self.params[cf.REF_PIXEL_FILE] = Configuration.ref_pixel_path(self.params)
-        process._update_params_with_tiles(self.params)
-        process.ref_pixel_calc_wrapper(self.params)
+        correct._update_params_with_tiles(self.params)
+        correct.ref_pixel_calc_wrapper(self.params)
        
     def teardown_method(self):
         shutil.rmtree(self.params[cf.OUT_DIR])
@@ -115,10 +116,15 @@ class TestRefPhsTests:
             ref_phase_est_wrapper(self.params)
 
     def test_metadata(self):
+        for ifg in self.ifgs:
+            ifg.open()
+            assert ifc.PYRATE_REF_PHASE not in ifg.dataset.GetMetadata()
+            ifg.close()
         ref_phase_est_wrapper(self.params)
         for ifg in self.ifgs:
             ifg.open()
             assert ifg.dataset.GetMetadataItem(ifc.PYRATE_REF_PHASE) == ifc.REF_PHASE_REMOVED
+            ifg.close()
     
     def test_mixed_metadata_raises(self):
 
@@ -162,7 +168,7 @@ class TestRefPhsEstimationLegacyTestMethod1Serial:
         params[cf.PARALLEL] = False
         params[cf.ORBFIT_OFFSET] = True
 
-        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[cf.OUT_DIR], params)
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
@@ -184,7 +190,7 @@ class TestRefPhsEstimationLegacyTestMethod1Serial:
             p.tmp_sampled_path = p.sampled_path
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
-        process._update_params_with_tiles(params)
+        correct._update_params_with_tiles(params)
         cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
         cls.params = params
 
@@ -247,7 +253,7 @@ class TestRefPhsEstimationLegacyTestMethod1Parallel:
         params[cf.PARALLEL] = True
         params[cf.ORBFIT_OFFSET] = True
 
-        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[cf.OUT_DIR], params)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -269,7 +275,7 @@ class TestRefPhsEstimationLegacyTestMethod1Parallel:
             p.tmp_sampled_path = p.sampled_path
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
-        process._update_params_with_tiles(params)
+        correct._update_params_with_tiles(params)
         cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
         cls.params = params
 
@@ -332,7 +338,7 @@ class TestRefPhsEstimationLegacyTestMethod2Serial:
         params[cf.PARALLEL] = False
         params[cf.ORBFIT_OFFSET] = True
 
-        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[cf.OUT_DIR], params)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -354,7 +360,7 @@ class TestRefPhsEstimationLegacyTestMethod2Serial:
             p.tmp_sampled_path = p.sampled_path
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
-        process._update_params_with_tiles(params)
+        correct._update_params_with_tiles(params)
 
         cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
         cls.params = params
@@ -419,7 +425,7 @@ class TestRefPhsEstimationLegacyTestMethod2Parallel:
         params[cf.PARALLEL] = 1
         params[cf.ORBFIT_OFFSET] = True
 
-        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[cf.OUT_DIR], params)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -441,7 +447,7 @@ class TestRefPhsEstimationLegacyTestMethod2Parallel:
             p.tmp_sampled_path = p.sampled_path
         params[cf.REFX], params[cf.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
-        process._update_params_with_tiles(params)
+        correct._update_params_with_tiles(params)
         cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
         cls.params = params
 
@@ -482,3 +488,59 @@ class TestRefPhsEstimationLegacyTestMethod2Parallel:
 
     def test_estimate_reference_phase_method2(self):
         np.testing.assert_array_almost_equal(legacy_ref_phs_method2, self.ref_phs, decimal=3)
+
+
+class TestRefPhsEstReusedFromDisc:
+
+    @classmethod
+    def setup_class(cls):
+        cls.conf = TEST_CONF_GAMMA
+        params = Configuration(cls.conf).__dict__
+        conv2tif.main(params)
+        params = Configuration(cls.conf).__dict__
+        prepifg.main(params)
+        cls.params = params
+
+    @classmethod
+    def teardown_class(cls):
+        shutil.rmtree(cls.params[cf.OUT_DIR])
+
+    def test_ref_phase_used_from_disc_on_rerun(self, ref_est_method):
+        self.params = Configuration(self.conf).__dict__
+        self.params[cf.REF_EST_METHOD] = ref_est_method
+        correct._update_params_with_tiles(self.params)
+
+        phase_prev, time_written = self.__run_once()
+
+        # run again
+        phase_now, time_written_1 = self.__run_once()
+
+        # and once more
+        phase_again, time_written_2 = self.__run_once()
+
+        # assert no new file was written
+        assert time_written_1 == time_written
+        assert time_written_2 == time_written
+
+        # assert phase data is unchanged after applying ref_ph correction from disc
+        np.testing.assert_array_equal(phase_now, phase_prev)
+        np.testing.assert_array_equal(phase_now, phase_again)
+
+    def __run_once(self):
+        ref_phs_file = Configuration.ref_phs_file(self.params)
+        correct._copy_mlooked(self.params)
+        multi_paths = self.params[cf.INTERFEROGRAM_FILES]
+        ifg_paths = [p.tmp_sampled_path for p in multi_paths]
+        ifgs = [Ifg(i) for i in ifg_paths]
+        self.params[cf.REFX_FOUND], self.params[cf.REFY_FOUND] = ref_pixel_calc_wrapper(self.params)
+        correct._create_ifg_dict(self.params)
+        ref_phase_est_wrapper(self.params)
+        for i in ifgs:
+            i.open()
+        phase_prev = [i.phase_data for i in ifgs]
+        # assert ref_ph_file present
+        assert ref_phs_file.exists()
+        time_written = os.stat(ref_phs_file).st_mtime
+        for i in ifgs:
+            i.close()
+        return phase_prev, time_written

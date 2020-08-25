@@ -97,23 +97,27 @@ executable program ``pyrate`` is created in the system path:
 
     >> pyrate --help
     usage: pyrate [-h] [-v {DEBUG,INFO,WARNING,ERROR}]
-                  {conv2tif,prepifg,process,merge,workflow} ...
+                  {conv2tif,prepifg,correct,timeseires,stack,merge,workflow} ...
 
     PyRate workflow:
 
         Step 1: conv2tif
         Step 2: prepifg
-        Step 3: process
-        Step 4: merge
+        Step 3: correct
+        Step 4: timeseries
+        Step 5: stack
+        Step 6: merge
 
     Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for
     more details.
 
     positional arguments:
-      {conv2tif,prepifg,process,merge,workflow}
+      {conv2tif,prepifg,correct,merge,workflow}
         conv2tif            Convert interferograms to geotiff.
         prepifg             Perform multilooking and cropping on geotiffs.
-        process             Main processing workflow including corrections, time series and stacking computation.
+        correct             Main processing workflow including corrections
+        timeseries          Timeseries computation
+        stack               Stacking computation
         merge               Reassemble computed tiles and save as geotiffs.
         workflow            Run all the PyRate processes
 
@@ -273,19 +277,19 @@ and stacking analysis.
 
 ::
 
-    >> pyrate process --help
-    usage: pyrate process [-h] -f CONFIG_FILE
+    >> pyrate correct --help
+    usage: pyrate correct [-h] -f CONFIG_FILE
 
     optional arguments:
       -h, --help            show this help message and exit
       -f CONFIG_FILE, --config_file CONFIG_FILE
                             Pass configuration file
 
-The ``process`` step is used as follows:
+The ``correct`` step is used as follows:
 
 ::
 
-    >> pyrate process -f path/to/config_file
+    >> pyrate correct -f path/to/config_file
 
 
 Optionally, an orbital error correction and a spatio-temporal filter
@@ -304,8 +308,7 @@ Non-optional pre-processing steps include:
 - Assembly of the variance-covariance matrix.
 
 Following the above processing steps the time series and stacking
-calculations are run. Time series is optional, controlled by the 
-``tscal`` parameter. Stacking is not optional.
+calculations are run. Both time series and stacking steps are optional. 
 
 
 ``merge``: Reassemble the tiles
@@ -428,7 +431,9 @@ by using ``mpirun``:
     # Modify '-n' based on the number of processors available.
     mpirun -n 4 pyrate conv2tif -f path/to/config_file
     mpirun -n 4 pyrate prepifg -f path/to/config_file
-    mpirun -n 4 pyrate process -f path/to/config_file
+    mpirun -n 4 pyrate correct -f path/to/config_file
+    mpirun -n 4 pyrate timeseries -f input_parameters.conf
+    mpirun -n 4 pyrate stack -f input_parameters.conf
     mpirun -n 4 pyrate merge -f path/to/config_file
 
 .. note::

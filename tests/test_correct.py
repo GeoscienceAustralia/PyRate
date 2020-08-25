@@ -1,23 +1,41 @@
+#   This Python module is part of the PyRate software package.
+#
+#   Copyright 2020 Geoscience Australia
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+"""
+This Python module contains tests for the correct.py PyRate module.
+"""
 from pathlib import Path
 import pytest
 
 import pyrate.configuration
-from pyrate import process, prepifg, conv2tif
+from pyrate import correct, prepifg, conv2tif
 import pyrate.core.config as cf
 from pyrate.core.config import ConfigException
 from tests import common
 
 
 def test_unsupported_process_steps_raises(gamma_params):
-    gamma_params['process'] = ['orbfit2', 'something_other_step']
+    gamma_params['correct'] = ['orbfit2', 'something_other_step']
     with pytest.raises(ConfigException):
-        process.process_ifgs(gamma_params)
+        correct.correct_ifgs(gamma_params)
 
 
 def test_supported_process_steps_dont_raise(gamma_params):
-    supported_stpes = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack']
-    assert all([s in gamma_params['process'] for s in supported_stpes])
-    process.__validate_process_steps(params=gamma_params)
+    supported_stpes = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar']
+    assert all([s in gamma_params['correct'] for s in supported_stpes])
+    correct.__validate_correct_steps(params=gamma_params)
 
 
 def test_process_treats_prepif_outputs_readonly(gamma_conf, tempdir, coh_mask):
@@ -37,7 +55,7 @@ def test_process_treats_prepif_outputs_readonly(gamma_conf, tempdir, coh_mask):
     prepifg.main(params)
     cropped = list(Path(params[cf.OUT_DIR]).glob('*cr.tif'))
 
-    if coh_mask:  # 17 + 1 dem + 17 coh files
+    if params[cf.COH_FILE_LIST] is not None:  # 17 + 1 dem + 17 coh files
         assert len(cropped) == 35
     else:  # 17 + 1 dem
         assert len(cropped) == 18
@@ -50,8 +68,8 @@ def test_process_treats_prepif_outputs_readonly(gamma_conf, tempdir, coh_mask):
         assert c.stat().st_mode == 33060
 
     params = Configuration(output_conf).__dict__
-    process.main(params)
+    correct.main(params)
 
-    # check all after process steps multilooked files are still readonly
+    # check all after correct steps multilooked files are still readonly
     for c in cropped:
         assert c.stat().st_mode == 33060

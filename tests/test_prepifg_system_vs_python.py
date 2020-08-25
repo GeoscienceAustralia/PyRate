@@ -1,3 +1,21 @@
+#   This Python module is part of the PyRate software package.
+#
+#   Copyright 2020 Geoscience Australia
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+"""
+This Python module contains tests that compare system vs python prepifg methods.
+"""
 import shutil
 import pytest
 from pathlib import Path
@@ -130,7 +148,7 @@ def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, crea
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw_ifg.tif", 17)
 
     # if coherence masking, compare coh files were converted
-    if params[cf.COH_MASK]:
+    if params[cf.COH_FILE_LIST] is not None:
         assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_coh.tif", 17)
         print("coherence files compared")
         # 17 ifgs + 1 dem + 17 mlooked file

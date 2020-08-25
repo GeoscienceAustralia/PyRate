@@ -1,3 +1,21 @@
+#   This Python module is part of the PyRate software package.
+#
+#   Copyright 2020 Geoscience Australia
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+"""
+This Python module contains tests for the PyRate conv2tif script.
+"""
 import os
 import shutil
 import pytest
@@ -64,13 +82,13 @@ def test_tifs_placed_in_out_dir(gamma_params):
     # Test tifs in obs dir
     conv2tif.main(gamma_params)
     tifs = glob.glob(os.path.join(gamma_params[cf.OUT_DIR], '*.tif'))
-    assert len(tifs) == 18
+    assert len(tifs) == 35
 
 
 def test_num_gamma_tifs_equals_num_unws(gamma_params):
     gtifs = conv2tif.main(gamma_params)
-    # 17 unws + dem
-    assert len(gtifs) == 18
+    # 17 unws + dem + 17 cohfiles
+    assert len(gtifs) == 35
 
     for g, _ in gtifs:   # assert all output from conv2tfi are readonly
         assert Path(g).stat().st_mode == 33060
