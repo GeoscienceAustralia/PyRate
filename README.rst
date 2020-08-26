@@ -32,7 +32,6 @@ The versions of each package stated above have been tested to work.
 Python dependencies for PyRate are::
 
     Cython==0.29.16
-    glob2==0.7
     joblib==0.14.1
     mpi4py==3.0.3
     networkx==2.4
