@@ -151,7 +151,7 @@ def main():
         params = mpiops.run_once(_params_from_conf, args.config_file)
         merge.main(params)
 
-    log.debug("--- %s seconds ---" % (time.time() - start_time))
+    log.info("--- Runtime = %s seconds ---" % (time.time() - start_time))
 
 
 def timeseries(params: dict) -> None:
