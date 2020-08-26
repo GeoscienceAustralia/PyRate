@@ -2,3 +2,16 @@
 date: 2007 04 30 5 32 13.1244
 radar_frequency: 5.334694994e+09 Hz
 incidence_angle: 22.9671 degrees
+heading:                 193.1522256   degrees
+range_samples:                  8630
+azimuth_lines:                  8571
+range_looks:                       8
+azimuth_looks:                     2
+range_pixel_spacing:       18.635856   m
+azimuth_pixel_spacing:     28.136512   m
+near_range_slc:           802867.7247  m
+prf:                      486.4863103  Hz
+sar_to_earth_center:             7080600.3965   m
+earth_radius_below_sensor:       6371577.2590   m
+earth_semi_major_axis:           6378137.0000   m
+earth_semi_minor_axis:           6356752.3141   m

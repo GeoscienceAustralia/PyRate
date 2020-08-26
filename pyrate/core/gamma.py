@@ -267,7 +267,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
         raise GammaException(msg % args)
 
     range_pix = hdr0[ifc.PYRATE_RANGE_PIX_METRES]
-    if np.isclose(range_pix, hdr1[ifc.PYRATE_RANGE_PIX_METRES], atol=1e-3):
+    if np.isclose(range_pix, hdr1[ifc.PYRATE_RANGE_PIX_METRES], atol=1e-1):
         chdr[ifc.PYRATE_RANGE_PIX_METRES] = range_pix
     else:
         args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
@@ -283,7 +283,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
         raise GammaException(msg % args)
 
     azimuth_pix = hdr0[ifc.PYRATE_AZIMUTH_PIX_METRES]
-    if np.isclose(azimuth_pix, hdr1[ifc.PYRATE_AZIMUTH_PIX_METRES], atol=1e-3):
+    if np.isclose(azimuth_pix, hdr1[ifc.PYRATE_AZIMUTH_PIX_METRES], atol=1e-1):
         chdr[ifc.PYRATE_AZIMUTH_PIX_METRES] = azimuth_pix
     else:
         args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
