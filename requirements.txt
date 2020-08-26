@@ -1,4 +1,3 @@
-Cython==0.29.16
 GDAL
 joblib==0.14.1
 mpi4py==3.0.3
