@@ -21,7 +21,7 @@ The full PyRate documentation is available at http://geoscienceaustralia.github.
 Dependencies
 ------------
 
-The following dependencies need to be on your system prior to PyRate installation:
+The following system dependencies are required by PyRate:
 
 - `Python <https://www.python.org/downloads/>`_, versions 3.6, 3.7 or 3.8.
 - `GDAL <https://gdal.org/download.html>`_, versions 3.0.2 or 3.0.4
@@ -29,7 +29,7 @@ The following dependencies need to be on your system prior to PyRate installatio
 
 The versions of each package stated above have been tested to work.
 
-Python dependencies are::
+Python dependencies for PyRate are::
 
     Cython==0.29.16
     Pillow==7.1.1
@@ -47,7 +47,7 @@ Install
 
 Details of all install options are given in the `PyRate documentation <http://geoscienceaustralia.github.io/PyRate>`_.
 
-`PyRate` and its Python dependencies can be installed directly from the `Python Package Index (PyPI) <https://pypi.org/project/Py-Rate/>`_::
+PyRate and its Python dependencies can be installed directly from the `Python Package Index (PyPI) <https://pypi.org/project/Py-Rate/>`_::
 
     pip install Py-Rate
 
@@ -65,7 +65,7 @@ To learn more about using PyRate, type ``pyrate`` command in the terminal::
 
     >> pyrate --help
     usage: pyrate [-h] [-v {DEBUG,INFO,WARNING,ERROR}]
-                  {conv2tif,prepifg,correct,timeseires,stack,merge,workflow} ...
+              {conv2tif,prepifg,correct,timeseries,stack,merge,workflow} ...
 
     PyRate workflow:
 
@@ -80,14 +80,14 @@ To learn more about using PyRate, type ``pyrate`` command in the terminal::
     more details.
 
     positional arguments:
-      {conv2tif,prepifg,correct,merge,workflow}
+      {conv2tif,prepifg,correct,timeseries,stack,merge,workflow}
         conv2tif            Convert interferograms to geotiff.
-        prepifg             Perform multilooking and cropping on geotiffs.
-        correct             Main processing workflow including corrections
-        timeseries          Timeseries computation
-        stack               Stacking computation
+        prepifg             Perform multilooking, cropping and coherence masking to interferogram geotiffs.
+        correct             Calculate and apply corrections to interferogram phase data.
+        timeseries          Timeseries inversion of interferogram phase data.
+        stack               Stacking of interferogram phase data.
         merge               Reassemble computed tiles and save as geotiffs.
-        workflow            Run all the PyRate processes
+        workflow            Sequentially run all the PyRate processing steps.
 
     optional arguments:
       -h, --help            show this help message and exit
