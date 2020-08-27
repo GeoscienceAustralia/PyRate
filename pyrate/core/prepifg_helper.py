@@ -201,7 +201,7 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, header, wri
 
 # TODO: deprecate the following wrapper function
 def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, thresh=0.5, user_exts=None, write_to_disc=True,
-                 out_path=None):
+                 out_paths=None):
     """
     Wrapper function to prepare a sequence of interferogram files for
     PyRate analysis. See prepifg.prepare_ifg() for full description of
@@ -229,8 +229,9 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, thresh=0.
     # use metadata check to check whether it's a dem or ifg
     rasters = [dem_or_ifg(r) for r in raster_data_paths]
     exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)
-    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, h, write_to_disc, out_path) for d, h
-            in zip(raster_data_paths, headers)]
+    out_paths = [ if write_to_disc else None for r in raster_data_paths]
+    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, h, write_to_disc, p) for d, h, p
+            in zip(raster_data_paths, headers, out_paths)]
 
 
 # TODO: Not being used. Remove in future?

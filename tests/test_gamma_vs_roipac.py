@@ -43,14 +43,12 @@ def test_files_are_same(tempdir, get_config):
     gamma_params = __workflow(gamma_params, gamma_tdir)
 
     # conv2tif output equal
-    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR], "*_unw_ifg.tif", 17)
+    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR], "*_unw.tif", 17)
 
     # prepifg output equal
-    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR],
-                                 f"*_ifg_*{roipac_params[cf.IFG_CROP_OPT]}cr.tif", 17)
+    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR], f"*_ifg.tif", 17)
 
-    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR],
-                                 f"*_dem_*{roipac_params[cf.IFG_CROP_OPT]}cr.tif", 1)
+    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR], "dem.tif", 1)
 
     # clean up
     shutil.rmtree(roipac_params[cf.OBS_DIR])
@@ -108,7 +106,7 @@ def __assert_same_files_produced(dir1, dir2, ext, num_files):
             else:
                 assert mdj[k] == mdi[k]
 
-        if i.data_path.__contains__("_{looks}lksy_{crop}cr".format(looks=1, crop=1)):
+        if i.data_path.__contains__("_ifg.tif"):
             # these are multilooked tifs
             # test that DATA_STEP is MULTILOOKED
             assert mdi[ifc.DATA_TYPE] == ifc.MULTILOOKED

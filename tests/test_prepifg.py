@@ -16,12 +16,13 @@
 """
 This Python module contains tests for the prepifg.py PyRate module.
 """
-import os
 import shutil
+import os
+from os.path import exists, join
 import sys
 import tempfile
 from math import floor
-from os.path import exists, join
+from itertools import product
 from pathlib import Path
 
 import numpy as np
@@ -32,14 +33,15 @@ from osgeo import gdal
 
 import pyrate.configuration
 from pyrate.core import config as cf
-from pyrate.core.config import mlooked_path
 from pyrate.core.shared import Ifg, DEM
+from pyrate.core.shared import InputTypes
 from pyrate.core.prepifg_helper import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
     ALREADY_SAME_SIZE
 from pyrate.core import roipac
-from pyrate.core.prepifg_helper import prepare_ifgs, _resample, PreprocessError, CustomExts
+from pyrate.core.prepifg_helper import prepare_ifg, _resample, PreprocessError, CustomExts
+from pyrate.core.prepifg_helper import get_analysis_extent
 from pyrate.core import ifgconstants as ifc
-from pyrate.configuration import Configuration
+from pyrate.configuration import Configuration, MultiplePaths
 from pyrate import conv2tif, prepifg
 
 from tests import common
@@ -64,23 +66,25 @@ def test_prepifg_treats_inputs_and_outputs_read_only(gamma_conf, tempdir, coh_ma
     params = Configuration(output_conf.as_posix()).__dict__
     conv2tif.main(params)
 
-    tifs = list(Path(params[cf.OUT_DIR]).glob('*_unw_ifg.tif'))
+    tifs = list(Path(params[cf.OUT_DIR]).glob('*_unw.tif'))
     assert len(tifs) == 17
 
     params = Configuration(output_conf.as_posix()).__dict__
     prepifg.main(params)
-    cropped = list(Path(params[cf.OUT_DIR]).glob('*cr.tif'))
+    cropped_ifgs = list(Path(params[cf.OUT_DIR]).glob('*_ifg.tif'))
+    cropped_cohs = list(Path(params[cf.OUT_DIR]).glob('*_coh.tif'))
+    cropped_dem = list(Path(params[cf.OUT_DIR]).glob('*_dem.tif'))
 
     if params[cf.COH_FILE_LIST] is not None:  # 17 + 1 dem + 17 coh files
-        assert len(cropped) == 35
+        assert len(cropped_ifgs) + len(cropped_cohs) + len(cropped_dem) == 35
     else:  # 17 + 1 dem
-        assert len(cropped) == 18
+        assert len(cropped_ifgs) + len(cropped_cohs) + len(cropped_dem) == 18
     # check all tifs from conv2tif are still readonly
     for t in tifs:
         assert t.stat().st_mode == 33060
 
     # check all prepifg outputs are readonly
-    for c in cropped:
+    for c in cropped_cohs + cropped_ifgs + cropped_dem:
         assert c.stat().st_mode == 33060
 
 
@@ -97,17 +101,17 @@ def test_prepifg_file_types(tempdir, gamma_conf, coh_mask):
     # reread params from config
     params_s = Configuration(output_conf).__dict__
     prepifg.main(params_s)
-    ifg_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_ifg.tif'))
+    ifg_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_unw.tif'))
     assert len(ifg_files) == 17
-    mlooked_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_ifg_1lksx_1lksy_1cr.tif'))
+    mlooked_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_ifg.tif'))
     assert len(mlooked_files) == 17
-    coh_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_cc_coh.tif'))
-    mlooked_coh_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_cc_coh_1lksx_1lksy_1cr.tif'))
+    coh_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_cc.tif'))
+    mlooked_coh_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_coh.tif'))
     if coh_mask:
         assert len(coh_files) == 17
         assert len(mlooked_coh_files) == 17
     dem_file = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_dem.tif'))[0]
-    mlooked_dem_file = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_dem_1lksx_1lksy_1cr.tif'))[0]
+    mlooked_dem_file = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('dem.tif'))[0]
     import itertools
 
     # assert coherence and ifgs have correct metadata
@@ -115,25 +119,25 @@ def test_prepifg_file_types(tempdir, gamma_conf, coh_mask):
         ifg = Ifg(i)
         ifg.open()
         md = ifg.meta_data
-        if i.name.endswith('_ifg.tif'):
+        if i.name.endswith('_unw.tif'):
             assert md[ifc.DATA_TYPE] == ifc.ORIG
             assert ifc.IFG_LKSX not in md
             assert ifc.IFG_LKSY not in md
             assert ifc.IFG_CROP not in md
             continue
-        if i.name.endswith('_coh.tif'):
+        if i.name.endswith('_cc.tif'):
             assert md[ifc.DATA_TYPE] == ifc.COH
             assert ifc.IFG_LKSX not in md
             assert ifc.IFG_LKSY not in md
             assert ifc.IFG_CROP not in md
             continue
-        if i.name.endswith('_cc_coh_1lksx_1lksy_1cr.tif'):
+        if i.name.endswith('_coh.tif'):
             assert md[ifc.DATA_TYPE] == ifc.MULTILOOKED_COH
             assert md[ifc.IFG_LKSX] == '1'
             assert md[ifc.IFG_LKSY] == '1'
             assert md[ifc.IFG_CROP] == '1'
             continue
-        if i.name.endswith('_ifg_1lksx_1lksy_1cr.tif'):
+        if i.name.endswith('_ifg.tif'):
             if coh_mask:
                 assert md[ifc.DATA_TYPE] == ifc.MLOOKED_COH_MASKED_IFG
                 assert md[ifc.IFG_LKSX] == '1'
@@ -247,14 +251,14 @@ class TestPrepifgOutput(UnitTestAdaptation):
     def test_extents_from_params():
         test_extents_from_params()
 
-    @classmethod
-    def teardown_class(cls):
-        for exp_file in cls.exp_files:
-            if exists(exp_file):
-                os.remove(exp_file)
-        for ifg in cls.ifgs:
-            ifg.close()
-        shutil.rmtree(cls.random_dir)
+    # @classmethod
+    # def teardown_class(cls):
+    #     for exp_file in cls.exp_files:
+    #         if exists(exp_file):
+    #             os.remove(exp_file)
+    #     for ifg in cls.ifgs:
+    #         ifg.close()
+    #     shutil.rmtree(cls.random_dir)
 
     def _custom_ext_latlons(self):
         return [150.91 + (7 * self.xs),  # xfirst
@@ -284,9 +288,13 @@ class TestPrepifgOutput(UnitTestAdaptation):
 
     def test_multilooked_projection_same_as_geotiff(self):
         xlooks = ylooks = 1
-        prepare_ifgs(self.ifg_paths, MAXIMUM_CROP, xlooks, ylooks, headers=self.headers)
-        mlooked_paths = [mlooked_path(f, crop_opt=MAXIMUM_CROP, xlooks=xlooks, ylooks=ylooks)
+        exts = get_analysis_extent(crop_opt=MAXIMUM_CROP, rasters=self.ifgs, xlooks=xlooks, ylooks=ylooks,
+                                   user_exts=None)
+        mlooked_paths = [mlooked_path(f, crop_opt=MAXIMUM_CROP, xlooks=xlooks, ylooks=ylooks, input_type=InputTypes.IFG)
                          for f in self.ifg_paths]
+        for i, h, m in zip(self.ifg_paths, self.headers, mlooked_paths):
+            prepare_ifg(i, xlooks, ylooks, exts, thresh=0.5, crop_opt=MAXIMUM_CROP, header=h, write_to_disk=True,
+                        out_path=m)
         self.assert_projection_equal(self.ifg_paths + mlooked_paths)
 
     def test_default_max_extents(self):
@@ -603,18 +611,22 @@ class TestSameSizeTests(UnitTestAdaptation):
             os.remove(ifg.data_path)
 
 
+def mlooked_path(path, xlooks, ylooks, crop_opt, input_type):
+    out_dir = tempfile.mkdtemp()
+    params = common.min_params(out_dir)
+    params[cf.IFG_LKSX] = xlooks
+    params[cf.IFG_LKSY] = ylooks
+    params[cf.IFG_CROP_OPT] = crop_opt
+    m = MultiplePaths(path, params=params, input_type=input_type)
+
+    return m.sampled_path
+
+
 def test_mlooked_path():
     path = 'geo_060619-061002_unw.tif'
-    assert mlooked_path(path, xlooks=2, ylooks=2, crop_opt=4) == \
-        'geo_060619-061002_unw_2lksx_2lksy_4cr.tif'
-
-    path = 'some/dir/geo_060619-061002_unw.tif'
-    assert mlooked_path(path, xlooks=4, ylooks=2, crop_opt=2) == \
-        'some/dir/geo_060619-061002_unw_4lksx_2lksy_2cr.tif'
-
-    path = 'some/dir/geo_060619-061002_4lksx.tif'
-    assert mlooked_path(path, xlooks=4, ylooks=2, crop_opt=8) == \
-        'some/dir/geo_060619-061002_4lksx_4lksx_2lksy_8cr.tif'
+    for xlks, ylks, cr, input_type in product([2, 4, 8], [4, 2, 5], [1, 2, 3, 4], [InputTypes.IFG, InputTypes.COH]):
+        m = mlooked_path(path, xlooks=xlks, ylooks=ylks, crop_opt=cr, input_type=input_type)
+        assert Path(m).name == f'060619-061002_{input_type.value}.tif'
 
 
 # class LineOfSightTests(unittest.TestCase):
