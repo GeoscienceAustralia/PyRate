@@ -139,8 +139,8 @@ def __orb_params_check(params):
     orbfitlksx = params[cf.ORBITAL_FIT_LOOKS_X]
     orbfitlksy = params[cf.ORBITAL_FIT_LOOKS_Y]
 
-    if orbfitlksx != orbfitlksy:
-        msg = f"Invalid looks of {orbfitlksx} and {orbfitlksy} for orbital correction"
+    if type(orbfitlksx) != int or type(orbfitlksy) != int:
+        msg = f"Multi-look factors for orbital correction should be of type: int"
         raise OrbitalError(msg)
     if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
         msg = "Invalid degree of %s for orbital correction" % cf.ORB_DEGREE_NAMES.get(degree)
