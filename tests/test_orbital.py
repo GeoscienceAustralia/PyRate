@@ -291,8 +291,21 @@ class TestError:
                 remove_orbital_error(self.ifgs, self.params)
 
     def test_different_looks_raise(self):
+        # different x/y looks factors should be accepted
         self.params[cf.ORBITAL_FIT_LOOKS_X] = 1
         self.params[cf.ORBITAL_FIT_LOOKS_Y] = 5
+        try:
+            remove_orbital_error(self.ifgs, self.params)
+        except:
+            pytest.fail
+
+    def test_looks_as_int(self):
+        self.params[cf.ORBITAL_FIT_LOOKS_X] = 1.1
+        self.params[cf.ORBITAL_FIT_LOOKS_Y] = 5
+        with pytest.raises(OrbitalError):
+            remove_orbital_error(self.ifgs, self.params)
+        self.params[cf.ORBITAL_FIT_LOOKS_X] = 1
+        self.params[cf.ORBITAL_FIT_LOOKS_Y] = '5'
         with pytest.raises(OrbitalError):
             remove_orbital_error(self.ifgs, self.params)
 
