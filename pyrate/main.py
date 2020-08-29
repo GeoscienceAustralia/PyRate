@@ -53,7 +53,7 @@ def main():
     subparsers = parser.add_subparsers(dest='command')
     subparsers.required = True
 
-    parser_conv2tif = subparsers.add_parser('conv2tif', help='Convert interferograms to geotiff.',
+    parser_conv2tif = subparsers.add_parser('conv2tif', help='<Optional> Convert interferograms to geotiff.',
         add_help=True)
     parser_conv2tif.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                  help="Pass configuration file", required=True)
@@ -71,13 +71,13 @@ def main():
                                 help="Pass configuration file", required=True)
 
     parser_correct = subparsers.add_parser(
-        'timeseries', help='Timeseries inversion of interferogram phase data.',
+        'timeseries', help='<Optional> Timeseries inversion of interferogram phase data.',
         add_help=True)
     parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                 help="Pass configuration file", required=True)
 
     parser_correct = subparsers.add_parser(
-        'stack', help='Stacking of interferogram phase data.',
+        'stack', help='<Optional> Stacking of interferogram phase data.',
         add_help=True)
     parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                 help="Pass configuration file", required=True)
@@ -89,7 +89,7 @@ def main():
                               help="Pass configuration file", required=False)
 
     parser_workflow = subparsers.add_parser(
-        'workflow', help="Sequentially run all the PyRate processing steps.",
+        'workflow', help="<Optional> Sequentially run all the PyRate processing steps.",
         add_help=True)
     parser_workflow.add_argument('-f', '--config_file', action="store", type=str, default=None,
                                  help="Pass configuration file", required=False)
