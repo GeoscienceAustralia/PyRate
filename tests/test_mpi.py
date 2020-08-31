@@ -54,6 +54,7 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, roipac_or_gamma_conf):
     params = configuration.Configuration(output_conf).__dict__
     prepifg.main(params)
     params = configuration.Configuration(output_conf).__dict__
+    params[cf.ORBFIT_OFFSET] = True
     correct._copy_mlooked(params=params)
     correct._update_params_with_tiles(params)
     correct._create_ifg_dict(params=params)
