@@ -52,6 +52,8 @@ GAMMA_NEAR_RANGE = 'near_range_slc'
 GAMMA_SAR_EARTH = 'sar_to_earth_center'
 GAMMA_SEMI_MAJOR_AXIS = 'earth_semi_major_axis'
 GAMMA_SEMI_MINOR_AXIS = 'earth_semi_minor_axis'
+GAMMA_PRECISION_BASELINE = 'precision_baseline(TCN)'
+GAMMA_PRECISION_BASELINE_RATE = 'precision_baseline_rate'
 # RADIANS = 'RADIANS'
 # GAMMA = 'GAMMA'
 # value assigned to no-data-value

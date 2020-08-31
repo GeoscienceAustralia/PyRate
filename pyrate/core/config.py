@@ -61,6 +61,7 @@ HDR_FILE_LIST = 'hdrfilelist'
 INTERFEROGRAM_FILES = 'interferogram_files'
 HEADER_FILE_PATHS = 'header_file_paths'
 COHERENCE_FILE_PATHS = 'coherence_file_paths'
+BASELINE_FILE_PATHS = 'baseline_file_paths'
 DEM_FILE_PATH = 'dem_file'
 
 # STR; The projection of the input interferograms.
@@ -124,6 +125,12 @@ COH_THRESH = 'cohthresh'
 COH_FILE_DIR = 'cohfiledir'
 #: STR; Name of the file list containing the pool of available coherence files
 COH_FILE_LIST = 'cohfilelist'
+
+# baseline parameters
+#: STR; Directory containing baseline files; defaults to OBS_DIR if not provided
+BAS_FILE_DIR = 'basfiledir'
+#: STR; Name of the file list containing the pool of available baseline files
+BAS_FILE_LIST = 'basfilelist'
 
 #atmospheric error correction parameters NOT CURRENTLY USED
 APS_CORRECTION = 'apscorrect'
@@ -290,11 +297,13 @@ PATHS = [
     HDR_FILE_LIST,
     COH_FILE_DIR,
     COH_FILE_LIST,
+    BAS_FILE_DIR,
+    BAS_FILE_LIST,
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP,
 ]
 
-DEFAULT_TO_OBS_DIR = [SLC_DIR, COH_FILE_DIR]
+DEFAULT_TO_OBS_DIR = [SLC_DIR, COH_FILE_DIR, BAS_FILE_DIR]
 
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
@@ -502,6 +511,34 @@ def coherence_paths_for(path: str, params: dict, tif=False) -> str:
     return coh_file_paths[0]
 
 
+def baseline_paths_for(path: str, params: dict) -> str:
+    """
+    Returns path to baseline file for given interferogram. Pattern matches
+    based on epoch in filename.
+
+    Example:
+        '20151025-20160501_base.par'
+        Date pair is the epoch.
+
+    Args:
+        path: Path to intergerogram to find baseline file for.
+        params: Parameter dictionary.
+        tif: Find converted tif if True (_cc.tif), else find .cc file.
+
+    Returns:
+        Path to coherence file.
+    """
+    _, filename = split(path)
+    epoch = re.match(sixteen_digits_pattern, filename).group(0)
+    bas_file_paths = [f.unwrapped_path for f in params[BASELINE_FILE_PATHS] if epoch in f.unwrapped_path]
+
+    if len(bas_file_paths) > 2:
+        raise ConfigException(f"'{BAS_FILE_DIR}': found more than one baseline "
+                      f"file for '{path}'. There must be only one "
+                      f"baseline file per interferogram. Found {bas_file_paths}.")
+    return bas_file_paths[0]
+
+
 def mlooked_path(path, xlooks, ylooks, crop_opt):
     """
     Adds suffix to ifg path, for creating a new path for multilooked files.
@@ -679,6 +716,14 @@ _COHERENCE_VALIDATION = {
     ),
 }
 """dict: basic validation functions for coherence parameters."""
+
+_BASELINE_VALIDATION = {
+    BAS_FILE_LIST: (
+        lambda a: a is not None and not os.path.exists(a),
+        f"'{BAS_FILE_LIST}': if file is provided it must exist."
+    ),
+}
+"""dict: basic validation functions for baseline parameters."""
 
 _ORBITAL_FIT_VALIDATION = {
     ORBITAL_FIT_METHOD: (

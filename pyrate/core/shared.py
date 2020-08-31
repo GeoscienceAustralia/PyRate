@@ -67,6 +67,7 @@ GDAL_Y_FIRST = 3
 class InputTypes(Enum):
     IFG = '_ifg'
     COH = '_coh'
+    BAS = '_bas'
     DEM = '_dem'
     HEADER = '_header'
 
@@ -716,6 +717,14 @@ def _is_coherence(hdr):
            (hdr[ifc.INPUT_TYPE] == InputTypes.COH if ifc.INPUT_TYPE in hdr else False)
 
 
+def _is_baseline(hdr):
+    """
+    Convenience function to determine if file is interferogram
+    """
+    return (ifc.PYRATE_WAVELENGTH_METRES in hdr) and \
+           (hdr[ifc.INPUT_TYPE] == InputTypes.BAS if ifc.INPUT_TYPE in hdr else False)
+
+
 def _is_incidence(hdr):
     """
     Convenience function to determine if incidence file
@@ -759,7 +768,7 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
         raise GeotiffException(msg)
 
     wkt = srs.ExportToWkt()
-    dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header) or _is_coherence(header)) else 'int16'
+    dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header) or _is_coherence(header) or _is_baseline(header)) else 'int16'
 
     # get subset of metadata relevant to PyRate
     md = collate_metadata(header)
@@ -842,12 +851,17 @@ def collate_metadata(header):
                       ifc.PYRATE_AZIMUTH_PIX_METRES, ifc.PYRATE_AZIMUTH_N,
                       ifc.PYRATE_AZIMUTH_LOOKS, ifc.PYRATE_PRF_HERTZ,
                       ifc.PYRATE_NEAR_RANGE_METRES, ifc.PYRATE_SAR_EARTH_METRES,
-                      ifc.PYRATE_SEMI_MAJOR_AXIS_METRES, ifc.PYRATE_SEMI_MINOR_AXIS_METRES]:
+                      ifc.PYRATE_SEMI_MAJOR_AXIS_METRES, ifc.PYRATE_SEMI_MINOR_AXIS_METRES,
+                      ifc.PYRATE_BASELINE_T, ifc.PYRATE_BASELINE_C, ifc.PYRATE_BASELINE_N,
+                      ifc.PYRATE_BASELINE_RATE_T, ifc.PYRATE_BASELINE_RATE_C, ifc.PYRATE_BASELINE_RATE_N]:
                 md.update({k: str(header[k])})
 
     if _is_coherence(header):
         __common_ifg_coh_update(header, md)
         md.update({ifc.DATA_TYPE: ifc.COH})
+    elif _is_baseline(header):
+        __common_ifg_coh_update(header, md)
+        md.update({ifc.DATA_TYPE: ifc.BAS})
     elif _is_interferogram(header):
         __common_ifg_coh_update(header, md)
         md.update({ifc.DATA_TYPE: ifc.ORIG})

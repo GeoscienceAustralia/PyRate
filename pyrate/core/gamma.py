@@ -49,6 +49,9 @@ GAMMA_NEAR_RANGE = 'near_range_slc'
 GAMMA_SAR_EARTH = 'sar_to_earth_center'
 GAMMA_SEMI_MAJOR_AXIS = 'earth_semi_major_axis'
 GAMMA_SEMI_MINOR_AXIS = 'earth_semi_minor_axis'
+# to do add option to use initial baseline if precision baseline was not calculated in GAMMA
+GAMMA_PRECISION_BASELINE = 'precision_baseline(TCN)'
+GAMMA_PRECISION_BASELINE_RATE = 'precision_baseline_rate'
 RADIANS = 'RADIANS'
 GAMMA = 'GAMMA'
 
@@ -204,6 +207,31 @@ def parse_dem_header(path):
     return subset
 
 
+def parse_baseline_header(path):
+    """
+    Returns dictionary of DEM metadata required for PyRate
+
+    :param str path: `Full path to Gamma *dem.par file`
+
+    :return: subset: subset of full metadata
+    :rtype: dict
+    """
+    lookup = _parse_header(path)
+
+    subset = {}
+    # baseline vector (along Track, aCross track, Normal to the track)
+    baseline_tcn = lookup[GAMMA_PRECISION_BASELINE]
+    subset[ifc.PYRATE_BASELINE_T] = float(baseline_tcn[0])
+    subset[ifc.PYRATE_BASELINE_C] = float(baseline_tcn[1])
+    subset[ifc.PYRATE_BASELINE_N] = float(baseline_tcn[2])
+    baseline_rate_tcn = lookup[GAMMA_PRECISION_BASELINE_RATE]
+    subset[ifc.PYRATE_BASELINE_RATE_T] = float(baseline_rate_tcn[0])
+    subset[ifc.PYRATE_BASELINE_RATE_C] = float(baseline_rate_tcn[1])
+    subset[ifc.PYRATE_BASELINE_RATE_N] = float(baseline_rate_tcn[2])
+
+    return subset
+
+
 def _frequency_to_wavelength(freq):
     """
     Convert radar frequency to wavelength
@@ -211,7 +239,7 @@ def _frequency_to_wavelength(freq):
     return ifc.SPEED_OF_LIGHT_METRES_PER_SECOND / freq
 
 
-def combine_headers(hdr0, hdr1, dem_hdr):
+def combine_headers(hdr0, hdr1, dem_hdr, bas_hdr):
     """
     Combines metadata for first and second image epochs and DEM into a
     single dictionary for an interferogram.
@@ -223,7 +251,7 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     :return: chdr: combined metadata
     :rtype: dict
     """
-    if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr]]):
+    if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr, bas_hdr]]):
         raise GammaException('Header args need to be dicts')
 
     date0, date1 = hdr0[ifc.FIRST_DATE], hdr1[ifc.FIRST_DATE]
@@ -350,10 +378,13 @@ def combine_headers(hdr0, hdr1, dem_hdr):
     chdr[ifc.DATA_TYPE] = ifc.ORIG
 
     chdr.update(dem_hdr)  # add geographic data
+
+    chdr.update(bas_hdr)  # add baseline information
+
     return chdr
 
 
-def manage_headers(dem_header_file, header_paths):
+def manage_headers(dem_header_file, header_paths, baseline_paths):
     """
     Manage and combine  header files for GAMMA interferograms, DEM and
     incidence files
@@ -368,7 +399,8 @@ def manage_headers(dem_header_file, header_paths):
     # find param files containing filename dates
     if len(header_paths) == 2:
         headers = [parse_epoch_header(hp) for hp in header_paths]
-        combined_header = combine_headers(headers[0], headers[1], dem_header)
+        baseline_header = parse_baseline_header(baseline_paths)
+        combined_header = combine_headers(headers[0], headers[1], dem_header, baseline_header)
     else:
         # probably have DEM or incidence file
         combined_header = dem_header
@@ -407,7 +439,12 @@ def gamma_header(ifg_file_path, params):
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     header_paths = get_header_paths(ifg_file_path, params[cf.HDR_FILE_LIST])
-    combined_headers = manage_headers(dem_hdr_path, header_paths)
+    print(ifg_file_path)
+    if len(header_paths) == 2:
+        baseline_path = cf.baseline_paths_for(ifg_file_path, params)
+    else:
+        baseline_path = ''
+    combined_headers = manage_headers(dem_hdr_path, header_paths, baseline_path)
     if os.path.basename(ifg_file_path).split('.')[1] == \
             (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
         # TODO: implement incidence class here
