@@ -219,6 +219,8 @@ class Configuration:
                 else: # i.e. serial
                     self.rows, self.cols = 1, 1
 
+        self.orbfitoffset = 0 if self.orbfitmethod == 1 else 1
+
         # create a temporary directory if not supplied
         if not hasattr(self, 'tmpdir'):
             self.tmpdir = Path(self.outdir).joinpath("tmpdir")
