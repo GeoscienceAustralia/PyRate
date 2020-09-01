@@ -450,3 +450,22 @@ by using ``mpirun``:
   the ``-n`` option. The number of tiles in x and y dimension are automatically calculated by
   `PyRate`, ensuring a roughly equivalent number in both dimensions. One of the functions of the 
   ``merge`` step is to reassemble these tiles in to the full image for each output product.
+
+
+Results Visualisation
+---------------------
+
+A plotting script is included in the `utils/` directory that can be used to inspect the
+cumulative time series (`tscuml*tif`) and linear rate (`linear_rate.tif`) geotiff files
+produced in the `merge` step. Example usage for the included test data as follows::
+
+    cd PyRate
+    source ~/PyRateVenv/bin/activate
+    pyrate workflow -f input_parameters.conf
+    pip install -r requirements-plot.txt
+    python3 utils/plot_time_series.py out/
+
+.. image:: PyRate_plot_screenshot.png 
+   :alt: Screenshot of PyRate plotting tool
+   :scale: 50 %
+
