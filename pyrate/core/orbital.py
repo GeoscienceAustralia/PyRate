@@ -489,7 +489,7 @@ def orb_fit_calc_wrapper(params: dict) -> None:
         return
 
     if params[cf.ORBITAL_FIT_METHOD] == 2:
-        log.warn("Network orbital correction is currently unsupported. Using independent orbital correction method "
+        log.warning("Network orbital correction is currently unsupported. Using independent orbital correction method "
                  "instead!")
         params[cf.ORBITAL_FIT_METHOD] = 1
 

@@ -144,6 +144,7 @@ ORBITAL_FIT_DEGREE = 'orbfitdegrees'
 ORBITAL_FIT_LOOKS_X = 'orbfitlksx'
 #: INT; Multi look factor for orbital error calculation in y dimension
 ORBITAL_FIT_LOOKS_Y = 'orbfitlksy'
+#: BOOL (1/0); Add column of offset params to orbit correction design matrix (1: yes, 0: no)
 ORBFIT_OFFSET = 'orbfitoffset'
 
 # Stacking parameters
