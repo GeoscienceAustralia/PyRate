@@ -1,4 +1,5 @@
 .. image:: docs/PyRate_logo_50.png
+   :alt: PyRate logo
 
 Python tool for InSAR Rate and Time-series Estimation
 =====================================================
