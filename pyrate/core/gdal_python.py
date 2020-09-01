@@ -251,6 +251,8 @@ def crop_resample_average(
     if out_driver_type != 'MEM':
         shared.write_geotiff(resampled_average, out_ds, np.nan)
         log.info(f"Writing geotiff: {output_file}")
+    else:
+        out_ds.GetRasterBand(1).WriteArray(resampled_average)
     return resampled_average, out_ds
 
 
