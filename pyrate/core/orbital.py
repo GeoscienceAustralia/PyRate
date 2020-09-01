@@ -488,6 +488,11 @@ def orb_fit_calc_wrapper(params: dict) -> None:
         log.info('Orbital correction not required!')
         return
 
+    if params[cf.ORBITAL_FIT_METHOD] == 2:
+        log.warning("Network orbital correction is currently unsupported. Using independent orbital correction method "
+                 "instead!")
+        params[cf.ORBITAL_FIT_METHOD] = 1
+
     ifg_paths = [p.tmp_sampled_path for p in multi_paths]
 
     remove_orbital_error(ifg_paths, params)
