@@ -315,11 +315,10 @@ def _merge_setup(params):
     #xlks, ylks, crop = cf.transform_params(params)
     base_unw_paths = []
 
-    for p in Path(params[cf.OUT_DIR]).rglob("*lksx_*lksy_*cr.tif"):
+    for p in Path(params[cf.OUT_DIR]).rglob("*_ifg.tif"):
         if "dem" not in str(p):
             base_unw_paths.append(str(p))
-
-    if "tif" in base_unw_paths[0].split(".")[1]:
+    if base_unw_paths[0].endswith('.tif'):
         dest_tifs = base_unw_paths
         for i, dest_tif in enumerate(dest_tifs):
             dest_tifs[i] = dest_tif.replace("_tif", "")
