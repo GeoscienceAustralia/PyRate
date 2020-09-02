@@ -30,8 +30,9 @@ from osgeo import gdal
 
 from pyrate.core.gdal_python import crop_resample_average
 from pyrate.core import config as cf
-from pyrate.core.shared import dem_or_ifg, Ifg, DEM
+from pyrate.core.shared import dem_or_ifg, Ifg, DEM, InputTypes
 from pyrate.core.logger import pyratelogger as log
+from pyrate.configuration import MultiplePaths
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
@@ -200,8 +201,8 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, header, wri
 
 
 # TODO: deprecate the following wrapper function
-def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, thresh=0.5, user_exts=None, write_to_disc=True,
-                 out_paths=None):
+def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, params, thresh=0.5, user_exts=None,
+                 write_to_disc=True):
     """
     Wrapper function to prepare a sequence of interferogram files for
     PyRate analysis. See prepifg.prepare_ifg() for full description of
@@ -216,7 +217,7 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, thresh=0.
     :param float thresh: see thresh in prepare_ifgs()
     :param tuple user_exts: Tuple of user defined georeferenced extents for
         new file: (xfirst, yfirst, xlast, ylast)cropping coordinates
-    :param bool write_to_disk: Write new data to disk
+    :param bool write_to_disc: Write new data to disk
 
     :return: resampled_data: output cropped and resampled image
     :rtype: ndarray
@@ -229,7 +230,15 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, thresh=0.
     # use metadata check to check whether it's a dem or ifg
     rasters = [dem_or_ifg(r) for r in raster_data_paths]
     exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)
-    out_paths = [ if write_to_disc else None for r in raster_data_paths]
+    out_paths = []
+    for r, t in zip(raster_data_paths, rasters):
+        if isinstance(r, DEM):
+            input_type = InputTypes.DEM
+        else:
+            input_type = InputTypes.IFG
+        out_path = MultiplePaths(r, params, input_type).sampled_path if write_to_disc else None
+        out_paths.append(out_path)
+
     return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, h, write_to_disc, p) for d, h, p
             in zip(raster_data_paths, headers, out_paths)]
 

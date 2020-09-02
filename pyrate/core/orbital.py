@@ -119,7 +119,8 @@ def __create_multilooked_dataset_for_network_correction(params):
         ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
         thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
         write_to_disc=False,
-        headers=headers
+        headers=headers,
+        params=params
     )
     mlooked = [Ifg(m[1]) for m in mlooked_dataset]
     for m in mlooked:
