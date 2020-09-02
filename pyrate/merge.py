@@ -311,25 +311,10 @@ def _merge_setup(params):
     """
     Convenience function for Merge set up steps
     """
-    # setup paths
-    #xlks, ylks, crop = cf.transform_params(params)
-    base_unw_paths = []
-
-    for p in Path(params[cf.OUT_DIR]).rglob("*_ifg.tif"):
-        if "dem" not in str(p):
-            base_unw_paths.append(str(p))
-    if base_unw_paths[0].endswith('.tif'):
-        dest_tifs = base_unw_paths
-        for i, dest_tif in enumerate(dest_tifs):
-            dest_tifs[i] = dest_tif.replace("_tif", "")
-    else:
-        dest_tifs = base_unw_paths
-
     # load previously saved preread_ifgs dict
     preread_ifgs_file = Configuration.preread_ifgs(params)
     ifgs_dict = pickle.load(open(preread_ifgs_file, 'rb'))
     ifgs = [v for v in ifgs_dict.values() if isinstance(v, shared.PrereadIfg)]
     shape = ifgs[0].shape
-    rows, cols = params["rows"], params["cols"]
-    tiles = shared.get_tiles(dest_tifs[0], rows, cols)
+    tiles = Configuration.get_tiles(params)
     return shape, tiles, ifgs_dict
