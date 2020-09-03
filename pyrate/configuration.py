@@ -88,7 +88,6 @@ class MultiplePaths:
         if isinstance(tempdir, str):
             tempdir = Path(tempdir)
         b = Path(file_name)
-
         if input_type in [InputTypes.IFG, InputTypes.COH]:
             d = re.search(sixteen_digits_pattern, b.stem)
             if d is None:  # could be 6 digit epoch dates

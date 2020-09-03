@@ -232,13 +232,12 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, params, t
     exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)
     out_paths = []
     for r, t in zip(raster_data_paths, rasters):
-        if isinstance(r, DEM):
+        if isinstance(t, DEM):
             input_type = InputTypes.DEM
         else:
             input_type = InputTypes.IFG
-        out_path = MultiplePaths(r, params, input_type).sampled_path if write_to_disc else None
+        out_path = MultiplePaths(r, params, input_type).sampled_path
         out_paths.append(out_path)
-
     return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, h, write_to_disc, p) for d, h, p
             in zip(raster_data_paths, headers, out_paths)]
 
