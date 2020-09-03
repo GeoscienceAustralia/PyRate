@@ -342,6 +342,8 @@ class TestWriteUnw:
     @pytest.fixture(autouse=True)
     def setup_class(cls, gamma_params):
         # change the required params
+        shutil.rmtree(gamma_params[cf.OUT_DIR])  # start with a clean directory
+        shared.mkdir_p(gamma_params[cf.OUT_DIR])
         cls.params = gamma_params
         cls.params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         cls.params[cf.PROCESSOR] = 1  # gamma
@@ -434,6 +436,8 @@ class TestWriteUnw:
 
         # Ensure original multilooked geotiffs and 
         #  unw back to geotiff are the same
+        geotiffs.sort()
+        new_geotiffs.sort()
         for g, u in zip(geotiffs, new_geotiffs):
             g_ds = gdal.Open(g)
             u_gs = gdal.Open(u)
