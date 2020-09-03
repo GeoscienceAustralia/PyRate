@@ -498,7 +498,7 @@ def coherence_paths_for(path: str, params: dict, tif=False) -> str:
         Path to coherence file.
     """
     _, filename = split(path)
-    epoch = re.match(sixteen_digits_pattern, filename).group(0)
+    epoch = re.search(sixteen_digits_pattern, filename).group(0)
     if tif:
         coh_file_paths = [f.converted_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.converted_path]
     else:
@@ -528,8 +528,9 @@ def baseline_paths_for(path: str, params: dict) -> str:
     Returns:
         Path to coherence file.
     """
+
     _, filename = split(path)
-    epoch = re.match(sixteen_digits_pattern, filename).group(0)
+    epoch = re.search(sixteen_digits_pattern, filename).group(0)
     bas_file_paths = [f.unwrapped_path for f in params[BASELINE_FILE_PATHS] if epoch in f.unwrapped_path]
 
     if len(bas_file_paths) > 2:

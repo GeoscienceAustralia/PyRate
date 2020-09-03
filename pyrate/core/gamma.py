@@ -379,7 +379,8 @@ def combine_headers(hdr0, hdr1, dem_hdr, bas_hdr):
 
     chdr.update(dem_hdr)  # add geographic data
 
-    chdr.update(bas_hdr)  # add baseline information
+    if bas_hdr:
+        chdr.update(bas_hdr)  # add baseline information
 
     return chdr
 
@@ -399,7 +400,10 @@ def manage_headers(dem_header_file, header_paths, baseline_paths):
     # find param files containing filename dates
     if len(header_paths) == 2:
         headers = [parse_epoch_header(hp) for hp in header_paths]
-        baseline_header = parse_baseline_header(baseline_paths)
+        if baseline_paths is not None:
+            baseline_header = parse_baseline_header(baseline_paths)
+        else:
+            baseline_header = {}
         combined_header = combine_headers(headers[0], headers[1], dem_header, baseline_header)
     else:
         # probably have DEM or incidence file
@@ -439,11 +443,10 @@ def gamma_header(ifg_file_path, params):
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     header_paths = get_header_paths(ifg_file_path, params[cf.HDR_FILE_LIST])
-    print(ifg_file_path)
     if len(header_paths) == 2:
         baseline_path = cf.baseline_paths_for(ifg_file_path, params)
     else:
-        baseline_path = ''
+        baseline_path = None  # don't read baseline files for DEM
     combined_headers = manage_headers(dem_hdr_path, header_paths, baseline_path)
     if os.path.basename(ifg_file_path).split('.')[1] == \
             (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):

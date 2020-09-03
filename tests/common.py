@@ -77,6 +77,8 @@ SML_TEST_DEM_TIF = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed.tif')
 SML_TEST_COH_DIR = join(SML_TEST_DIR, 'coherence')
 SML_TEST_COH_LIST = join(SML_TEST_COH_DIR, 'coherence_17')
 
+SML_TEST_BAS_LIST = join(SML_TEST_GAMMA, 'baseline_17')
+
 TEST_CONF_ROIPAC = join(SML_TEST_CONF, 'pyrate_roipac_test.conf')
 TEST_CONF_GAMMA = join(SML_TEST_CONF, 'pyrate_gamma_test.conf')
 

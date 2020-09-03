@@ -833,6 +833,8 @@ def collate_metadata(header):
     Grab metadata relevant to PyRate from input metadata
 
     :param dict header: Input file metadata dictionary
+    :flag to distinguish whether conv2tif or prepifg has called the function
+        -> 0: conv2tif, 1: prepifg
 
     :return: dict of relevant metadata for PyRate
     """

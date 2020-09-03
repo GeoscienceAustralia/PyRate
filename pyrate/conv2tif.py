@@ -63,9 +63,6 @@ def main(params):
     if params[cf.DEM_FILE] is not None:  # optional DEM conversion
         base_ifg_paths.append(params[cf.DEM_FILE_PATH])
 
-    if params[cf.BAS_FILE_LIST] is not None:  # list with baseline files is provided
-        base_ifg_paths.extend(params[cf.BASELINE_FILE_PATHS])
-
     process_base_ifgs_paths = np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
     gtiff_paths = do_geotiff(process_base_ifgs_paths, params)
     mpiops.comm.barrier()
