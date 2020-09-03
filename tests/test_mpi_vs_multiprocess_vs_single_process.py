@@ -122,11 +122,11 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
     check_call(f"pyrate workflow -f {sr_conf}", shell=True)
 
     # convert2tif tests, 17 interferograms
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw_ifg.tif", 17)
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw.tif", 17)
 
     # if coherence masking, comprare coh files were converted
-    if params[cf.COH_MASK]:
-        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_coh.tif", 17)
+    if params[cf.COH_FILE_LIST] is not None:
+        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_cc.tif", 17)
         print("coherence files compared")
         # 17 ifgs + 1 dem + 17 mlooked coh files
         no_of_files = 35
@@ -134,11 +134,11 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
         # 17 ifgs + 1 dem
         no_of_files = 18
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
-                               f"*{params[cf.IFG_CROP_OPT]}cr.tif", no_of_files)
+                               ["*_ifg.tif", "*_cc.tif", "dem.tif"], no_of_files)
 
     # cf.TEMP_MLOOKED_DIR will contain the temp files that can be potentially deleted later
     assert_same_files_produced(params[cf.TEMP_MLOOKED_DIR], params_m[cf.TEMP_MLOOKED_DIR],
-                               params_s[cf.TEMP_MLOOKED_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 17)
+                               params_s[cf.TEMP_MLOOKED_DIR], "*_ifg.tif", 17)
 
     # prepifg + correct steps that overwrite tifs test
     # ifg phase checking in the previous step checks the correct pipeline upto APS correction
@@ -281,22 +281,21 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     check_call(f"pyrate workflow -f {sr_conf}", shell=True)
 
     # convert2tif tests, 17 interferograms
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw_ifg.tif", 17)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw.tif", 17)
 
     # if coherence masking, compare coh files were converted
-    if params[cf.COH_FILE_LIST]:
-        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_coh.tif", 17)
+    if params[cf.COH_FILE_LIST] is not None:
+        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_cc.tif", 17)
         print("coherence files compared")
 
     # prepifg + correct steps that overwrite tifs test
     # 17 mlooked ifgs + 1 dem + 17 mlooked coherence files
-    if params[cf.COH_FILE_LIST]:
-        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 35)
+    if params[cf.COH_FILE_LIST] is not None:
+        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], ["*_ifg.tif", "*_coh.tif", 'dem.tif'], 35)
     else:
-        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
+        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], ["*_ifg.tif", 'dem.tif'], 18)
 
-    assert_two_dirs_equal(params[cf.TEMP_MLOOKED_DIR], params_p[cf.TEMP_MLOOKED_DIR],
-                          f"*{params[cf.IFG_CROP_OPT]}cr.tif", 17)
+    assert_two_dirs_equal(params[cf.TEMP_MLOOKED_DIR], params_p[cf.TEMP_MLOOKED_DIR], "*_ifg.tif", 17)
 
     # ifg phase checking in the previous step checks the correct pipeline upto APS correction
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tsincr_*.npy", params['notiles'] * 2)

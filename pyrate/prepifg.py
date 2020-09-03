@@ -25,7 +25,7 @@ from pathlib import Path
 from joblib import Parallel, delayed
 import numpy as np
 from osgeo import gdal
-from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac, ifgconstants as ifc
+from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac, ifgconstants as ifc, gdal_python
 from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import MultiplePaths
@@ -125,7 +125,7 @@ def __prepifg_system(exts, gtiff, params, res):
     if isinstance(prepifg_helper.dem_or_ifg(p), shared.DEM):
         check_call('gdalwarp {co} -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}\n'.format(
             co=COMMON_OPTIONS, extents=extents, res=res, p=p, l=l), shell=True)
-        __update_meta_data(p, c, l)
+        __update_meta_data(p, c, l, params)
         return
 
     p_unset = Path(params[cf.OUT_DIR]).joinpath(Path(p).name).with_suffix('.unset.tif')
@@ -176,7 +176,7 @@ def __prepifg_system(exts, gtiff, params, res):
                f'--outfile={l}\t'
                f'--NoDataValue=nan', shell=True)
 
-    __update_meta_data(p_unset.as_posix(), c, l)
+    __update_meta_data(p_unset.as_posix(), c, l, params)
 
     # clean up
     nan_frac_avg.unlink()
@@ -185,12 +185,15 @@ def __prepifg_system(exts, gtiff, params, res):
     p_unset.unlink()
 
 
-def __update_meta_data(p_unset, c, l):
+def __update_meta_data(p_unset, c, l, params):
     # update metadata
     ds = gdal.Open(p_unset)
     md = ds.GetMetadata()
     # remove data type
     v = md.pop(ifc.DATA_TYPE)
+    md[ifc.IFG_LKSX] = str(params[cf.IFG_LKSX])
+    md[ifc.IFG_LKSY] = str(params[cf.IFG_LKSY])
+    md[ifc.IFG_CROP] = str(params[cf.IFG_CROP_OPT])
     # update data type
     if c is not None:  # it's a interferogram when COH_MASK=1
         md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MLOOKED_COH_MASKED_IFG)

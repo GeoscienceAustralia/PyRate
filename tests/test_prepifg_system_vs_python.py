@@ -145,18 +145,19 @@ def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, crea
     prepifg.main(params_p)
     params_p = Configuration(sr_conf).__dict__
     # convert2tif tests, 17 interferograms
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw_ifg.tif", 17)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw.tif", 17)
 
     # if coherence masking, compare coh files were converted
     if params[cf.COH_FILE_LIST] is not None:
-        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_coh.tif", 17)
-        print("coherence files compared")
+        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_cc.tif", 17)
         # 17 ifgs + 1 dem + 17 mlooked file
-        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 35)
-    else:
-        # prepifg
-        # 17 ifgs + 1 dem
-        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
+        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_coh.tif", 17)
+
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_dem.tif", 1)
+    # prepifg
+    # 17 ifgs + 1 dem
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_ifg.tif", 17)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "dem.tif", 1)
 
 
     print("==========================xxx===========================")
