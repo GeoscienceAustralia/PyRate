@@ -170,12 +170,15 @@ class TestIfgIOTests:
         """
         paths = [self.ifg.data_path]
         headers = [self.header]
+
+        params = common.min_params(tempfile.mkdtemp())
         mlooked_phase_data = prepifg_helper.prepare_ifgs(paths,
                                                          crop_opt=prepifg_helper.ALREADY_SAME_SIZE,
                                                          xlooks=2,
                                                          ylooks=2,
                                                          write_to_disc=False,
-                                                         headers=headers)
+                                                         headers=headers,
+                                                         params=params)
         mlooked = [Ifg(m[1]) for m in mlooked_phase_data]
         with pytest.raises(RasterException):
             mlooked[0].open()
@@ -410,16 +413,20 @@ class TestWriteUnw:
 
     def test_multilooked_tiffs_converted_to_unw_are_same(self):
         # Get multilooked geotiffs
-        geotiffs = self.dest_paths
+        geotiffs = list(set(self.dest_paths))
+        geotiffs = [g for g in geotiffs if 'dem' not in g]
 
         # Convert back to .unw
         dest_unws = []
-        for g in geotiffs:
+        for g in set(geotiffs):
             dest_unw = os.path.join(self.params[cf.OUT_DIR], Path(g).stem + '.unw')
-            shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw= dest_unw, ifg_proc=1)
+            shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw=dest_unw, ifg_proc=1)
             dest_unws.append(dest_unw)
 
-        dest_unws_ = [MultiplePaths(b, self.params) for b in dest_unws]
+        dest_unws_ = []
+
+        for d in dest_unws:
+            dest_unws_.append(MultiplePaths(d, self.params))
 
         # Convert back to tiff
         new_geotiffs_ = conv2tif.do_geotiff(dest_unws_, self.params)
@@ -430,8 +437,7 @@ class TestWriteUnw:
         for g, u in zip(geotiffs, new_geotiffs):
             g_ds = gdal.Open(g)
             u_gs = gdal.Open(u)
-            np.testing.assert_array_almost_equal(u_gs.ReadAsArray(),
-                                                 g_ds.ReadAsArray())
+            np.testing.assert_array_almost_equal(u_gs.ReadAsArray(), g_ds.ReadAsArray())
             u_gs = None
             g_ds = None
 
@@ -442,11 +448,9 @@ class TestWriteUnw:
             for b in self.base_unw_paths]
 
         for g in geotiffs[:1]:
-            dest_unw = os.path.join(self.params[cf.OUT_DIR],
-                                    os.path.splitext(g)[0] + '.unw')
+            dest_unw = os.path.join(self.params[cf.OUT_DIR], os.path.splitext(g)[0] + '.unw')
             with pytest.raises(NotImplementedError):
-                shared.write_unw_from_data_or_geotiff(
-                    geotif_or_data=g, dest_unw=dest_unw, ifg_proc=0)
+                shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw=dest_unw, ifg_proc=0)
 
 
 class TestGeodesy:

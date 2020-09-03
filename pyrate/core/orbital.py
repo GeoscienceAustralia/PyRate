@@ -17,6 +17,7 @@
 This Python module implements residual orbital corrections for interferograms.
 """
 # pylint: disable=invalid-name
+import tempfile
 from typing import Optional, List, Dict, Iterable
 from collections import OrderedDict
 from pathlib import Path
@@ -28,7 +29,7 @@ from scipy.linalg import lstsq
 
 from pyrate.core.algorithm import first_second_ids, get_all_epochs
 from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, mst, mpiops
-from pyrate.core.shared import nanmedian, Ifg
+from pyrate.core.shared import nanmedian, Ifg, InputTypes
 from pyrate.core.logger import pyratelogger as log
 from pyrate.prepifg import find_header
 from pyrate.configuration import MultiplePaths
@@ -112,16 +113,16 @@ def __create_multilooked_dataset_for_network_correction(params):
     multi_paths = params[cf.INTERFEROGRAM_FILES]
     ifg_paths = [p.tmp_sampled_path for p in multi_paths]
     headers = [find_header(p, params) for p in multi_paths]
-    mlooked_dataset = prepifg_helper.prepare_ifgs(
-        ifg_paths,
-        crop_opt=prepifg_helper.ALREADY_SAME_SIZE,
-        xlooks=params[cf.ORBITAL_FIT_LOOKS_X],
-        ylooks=params[cf.ORBITAL_FIT_LOOKS_Y],
-        thresh=params[cf.NO_DATA_AVERAGING_THRESHOLD],
-        write_to_disc=False,
-        headers=headers,
-        params=params
-    )
+    crop_opt = prepifg_helper.ALREADY_SAME_SIZE
+    xlooks = params[cf.ORBITAL_FIT_LOOKS_X]
+    ylooks = params[cf.ORBITAL_FIT_LOOKS_Y]
+    thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
+    rasters = [shared.dem_or_ifg(r) for r in ifg_paths]
+    exts = prepifg_helper.get_analysis_extent(crop_opt, rasters, xlooks, ylooks, None)
+
+    out_paths = [tempfile.mktemp() for _ in ifg_paths]
+    mlooked_dataset = [prepifg_helper.prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, h, False, p) for d, h, p
+                       in zip(ifg_paths, headers, out_paths)]
     mlooked = [Ifg(m[1]) for m in mlooked_dataset]
     for m in mlooked:
         m.initialize()
