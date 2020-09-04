@@ -124,9 +124,7 @@ def __create_multilooked_dataset_for_network_correction(params):
     mlooked = [Ifg(m[1]) for m in mlooked_dataset]
     for m in mlooked:
         m.initialize()
-        m.nodata_value = params[cf.NO_DATA_VALUE]
-        m.convert_to_nans()
-        m.convert_to_mm()
+        shared.nan_and_mm_convert(m, params)
     return mlooked
 
 
@@ -487,14 +485,7 @@ def orb_fit_calc_wrapper(params: dict) -> None:
     if not params[cf.ORBITAL_FIT]:
         log.info('Orbital correction not required!')
         return
-
-    if params[cf.ORBITAL_FIT_METHOD] == 2:
-        log.warning("Network orbital correction is currently unsupported. Using independent orbital correction method "
-                 "instead!")
-        params[cf.ORBITAL_FIT_METHOD] = 1
-
     ifg_paths = [p.tmp_sampled_path for p in multi_paths]
-
     remove_orbital_error(ifg_paths, params)
     mpiops.comm.barrier()
     shared.save_numpy_phase(ifg_paths, params)
