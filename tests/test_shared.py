@@ -155,7 +155,7 @@ class TestIfgIOTests:
         assert self.ifg.dataset is None
         assert self.ifg.is_open is False
         self.ifg.open(readonly=True)
-        assert  self.ifg.dataset is not None
+        assert self.ifg.dataset is not None
         assert self.ifg.is_open is True
         assert isinstance(self.ifg.dataset, Dataset)
 
@@ -168,20 +168,11 @@ class TestIfgIOTests:
         Test showing open() can not be used for Ifg created with
         gdal.Dataset object as Dataset has already been read in
         """
-        paths = [self.ifg.data_path]
-        headers = [self.header]
-
-        params = common.min_params(tempfile.mkdtemp())
-        mlooked_phase_data = prepifg_helper.prepare_ifgs(paths,
-                                                         crop_opt=prepifg_helper.ALREADY_SAME_SIZE,
-                                                         xlooks=2,
-                                                         ylooks=2,
-                                                         write_to_disc=False,
-                                                         headers=headers,
-                                                         params=params)
-        mlooked = [Ifg(m[1]) for m in mlooked_phase_data]
+        self.ifg.open()
+        dataset = self.ifg.dataset
+        new_ifg = Ifg(dataset)
         with pytest.raises(RasterException):
-            mlooked[0].open()
+            new_ifg.open()
 
     def test_write(self):
         base = TEMPDIR
