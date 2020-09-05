@@ -33,12 +33,12 @@ from osgeo import gdal
 
 import pyrate.configuration
 from pyrate.core import config as cf
-from pyrate.core.shared import Ifg, DEM
+from pyrate.core.logger import pyratelogger as log
+from pyrate.core.shared import Ifg, DEM, dem_or_ifg
 from pyrate.core.shared import InputTypes
-from pyrate.core.prepifg_helper import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, \
-    ALREADY_SAME_SIZE
+from pyrate.core.prepifg_helper import CUSTOM_CROP, MAXIMUM_CROP, MINIMUM_CROP, ALREADY_SAME_SIZE
 from pyrate.core import roipac
-from pyrate.core.prepifg_helper import prepare_ifg, _resample, PreprocessError, CustomExts, prepare_ifgs
+from pyrate.core.prepifg_helper import prepare_ifg, _resample, PreprocessError, CustomExts
 from pyrate.core.prepifg_helper import get_analysis_extent
 from pyrate.core import ifgconstants as ifc
 from pyrate.configuration import Configuration, MultiplePaths
@@ -46,7 +46,7 @@ from pyrate import conv2tif, prepifg
 
 from tests import common
 from tests.common import SML_TEST_LEGACY_PREPIFG_DIR
-from tests.common import PREP_TEST_TIF, SML_TEST_DEM_DIR, PREP_TEST_OBS
+from tests.common import PREP_TEST_TIF, PREP_TEST_OBS
 from tests.common import SML_TEST_DEM_TIF, SML_TEST_DEM_HDR, manipulate_test_conf, UnitTestAdaptation
 
 gdal.UseExceptions()
@@ -883,3 +883,44 @@ class TestOneIncidenceOrElevationMap(UnitTestAdaptation):
         self.assertEqual(18, len(mlooked_tifs))
         inc = glob.glob(os.path.join(self.base_dir, '*utm_{inc}.tif'.format(inc=inc)))
         self.assertEqual(0, len(inc))
+
+
+def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, params, thresh=0.5, user_exts=None,
+                 write_to_disc=True):
+    """
+    Wrapper function to prepare a sequence of interferogram files for
+    PyRate analysis. See prepifg.prepare_ifg() for full description of
+    inputs and returns.
+
+    Note: function need refining for crop options
+
+    :param list raster_data_paths: List of interferogram file paths
+    :param int crop_opt: Crop option
+    :param int xlooks: Number of multi-looks in x; 5 is 5 times smaller, 1 is no change
+    :param int ylooks: Number of multi-looks in y
+    :param float thresh: see thresh in prepare_ifgs()
+    :param tuple user_exts: Tuple of user defined georeferenced extents for
+        new file: (xfirst, yfirst, xlast, ylast)cropping coordinates
+    :param bool write_to_disc: Write new data to disk
+
+    :return: resampled_data: output cropped and resampled image
+    :rtype: ndarray
+    :return: out_ds: destination gdal dataset object
+    :rtype: List[gdal.Dataset]
+    """
+    if xlooks != ylooks:
+        log.warning('X and Y multi-look factors are not equal')
+
+    # use metadata check to check whether it's a dem or ifg
+    rasters = [dem_or_ifg(r) for r in raster_data_paths]
+    exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)
+    out_paths = []
+    for r, t in zip(raster_data_paths, rasters):
+        if isinstance(t, DEM):
+            input_type = InputTypes.DEM
+        else:
+            input_type = InputTypes.IFG
+        out_path = MultiplePaths(r, params, input_type).sampled_path
+        out_paths.append(out_path)
+    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, h, write_to_disc, p) for d, h, p
+            in zip(raster_data_paths, headers, out_paths)]
