@@ -26,13 +26,10 @@ from numbers import Number
 from decimal import Decimal
 from typing import List, Tuple, Union
 from numpy import array, nan, isnan, nanmean, float32, zeros, sum as nsum
-from osgeo import gdal
 
 from pyrate.core.gdal_python import crop_resample_average
-from pyrate.core import config as cf
-from pyrate.core.shared import dem_or_ifg, Ifg, DEM, InputTypes
+from pyrate.core.shared import dem_or_ifg, Ifg, DEM
 from pyrate.core.logger import pyratelogger as log
-from pyrate.configuration import MultiplePaths
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
@@ -162,7 +159,7 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, header, wri
     :param int ylooks: Number of multi-looks in y
     :param tuple exts: Tuple of user defined georeferenced extents for
         new file: (xfirst, yfirst, xlast, ylast)cropping coordinates
-    :param float thresh: see thresh in prepare_ifgs()
+    :param float thresh: NaN fraction threshold below which resampled_data is assigned NaNs
     :param int crop_opt: Crop option
     :param bool write_to_disk: Write new data to disk
     :param str out_path: Path for output file
@@ -198,48 +195,6 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, header, wri
     )
 
     return resampled_data, out_ds
-
-
-# TODO: deprecate the following wrapper function
-def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, params, thresh=0.5, user_exts=None,
-                 write_to_disc=True):
-    """
-    Wrapper function to prepare a sequence of interferogram files for
-    PyRate analysis. See prepifg.prepare_ifg() for full description of
-    inputs and returns.
-    
-    Note: function need refining for crop options
-
-    :param list raster_data_paths: List of interferogram file paths
-    :param int crop_opt: Crop option
-    :param int xlooks: Number of multi-looks in x; 5 is 5 times smaller, 1 is no change
-    :param int ylooks: Number of multi-looks in y
-    :param float thresh: see thresh in prepare_ifgs()
-    :param tuple user_exts: Tuple of user defined georeferenced extents for
-        new file: (xfirst, yfirst, xlast, ylast)cropping coordinates
-    :param bool write_to_disc: Write new data to disk
-
-    :return: resampled_data: output cropped and resampled image
-    :rtype: ndarray
-    :return: out_ds: destination gdal dataset object
-    :rtype: List[gdal.Dataset]
-    """
-    if xlooks != ylooks:
-        log.warning('X and Y multi-look factors are not equal')
-
-    # use metadata check to check whether it's a dem or ifg
-    rasters = [dem_or_ifg(r) for r in raster_data_paths]
-    exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)
-    out_paths = []
-    for r, t in zip(raster_data_paths, rasters):
-        if isinstance(t, DEM):
-            input_type = InputTypes.DEM
-        else:
-            input_type = InputTypes.IFG
-        out_path = MultiplePaths(r, params, input_type).sampled_path
-        out_paths.append(out_path)
-    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, h, write_to_disc, p) for d, h, p
-            in zip(raster_data_paths, headers, out_paths)]
 
 
 # TODO: Not being used. Remove in future?
