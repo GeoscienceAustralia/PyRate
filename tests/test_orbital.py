@@ -770,8 +770,10 @@ class TestLegacyComparisonTestsOrbfitMethod1:
             for k, j in enumerate([m.tmp_sampled_path for m in multi_paths]):
                 ifg = Ifg(j)
                 ifg.open()
-                if os.path.basename(j).split('_unw_1lksx_1lksy_1cr.')[0] == os.path.basename(f).split(
-                        '_orb_planar_1lks_method1_')[1].split('.')[0]:
+                print(f)
+                print(j)
+                if os.path.basename(j).split('_ifg.')[0] == os.path.basename(f).split(
+                        '_orb_planar_1lks_method1_geo_')[1].split('.')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data, ifg.phase_data, decimal=2)

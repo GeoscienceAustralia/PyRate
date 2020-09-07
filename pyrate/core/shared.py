@@ -66,10 +66,10 @@ GDAL_Y_FIRST = 3
 
 
 class InputTypes(Enum):
-    IFG = '_ifg'
-    COH = '_coh'
-    DEM = '_dem'
-    HEADER = '_header'
+    IFG = 'ifg'
+    COH = 'coh'
+    DEM = 'dem'
+    HEADER = 'header'
 
 
 def joblib_log_level(level: str) -> int:
@@ -1242,25 +1242,6 @@ def warp_required(xlooks, ylooks, crop):
     return True
 
 
-def output_tiff_filename(inpath, outpath):
-    """
-    Output geotiff filename for a given input filename.
-
-    :param str inpath: path of input file location
-    :param str outpath: path of output file location
-
-    :return: Geotiff filename for the given file.
-    :rtype: str
-    """
-    fname, ext = os.path.basename(inpath).split('.')
-    outpath = os.path.dirname(inpath) if outpath is None else outpath
-    if ext == 'tif':
-        name = os.path.join(outpath, fname + '.tif')
-    else:
-        name = os.path.join(outpath, fname + '_' + ext + '.tif')
-    return name
-
-
 def check_correction_status(ifgs, meta):  # pragma: no cover
     """
     Generic function for checking if a correction has already been performed
@@ -1365,3 +1346,22 @@ def tiles_split(func, params, *args, **kwargs):
         for t in process_tiles:
             func(t, params, *args, **kwargs)
     mpiops.comm.barrier()
+
+
+def output_tiff_filename(inpath, outpath):
+    """
+    Output geotiff filename for a given input filename.
+
+    :param str inpath: path of input file location
+    :param str outpath: path of output file location
+
+    :return: Geotiff filename for the given file.
+    :rtype: str
+    """
+    fname, ext = os.path.basename(inpath).split('.')
+    outpath = os.path.dirname(inpath) if outpath is None else outpath
+    if ext == 'tif':
+        name = os.path.join(outpath, fname + '.tif')
+    else:
+        name = os.path.join(outpath, fname + '_' + ext + '.tif')
+    return name

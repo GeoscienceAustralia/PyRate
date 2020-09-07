@@ -206,8 +206,7 @@ class TestRefPhsEstimationLegacyTestMethod1Serial:
             if not ifg.is_open:
                 ifg.open()
 
-        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                                     'ref_phase_est')
+        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR, 'ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
                 if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
@@ -215,11 +214,10 @@ class TestRefPhsEstimationLegacyTestMethod1Serial:
 
         count = 0
         for i, f in enumerate(onlyfiles):
-            ifg_data = np.genfromtxt(os.path.join(
-                LEGACY_REF_PHASE_DIR, f), delimiter=',')
+            ifg_data = np.genfromtxt(os.path.join(LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
-                if f.split('_corrected')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw_ifg_1lksx')[0]:
+                if f.split('_correctedgeo_')[-1].split('.')[0] == \
+                        os.path.split(j.data_path)[-1].split('_ifg.tif')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,
@@ -289,8 +287,7 @@ class TestRefPhsEstimationLegacyTestMethod1Parallel:
     def test_ifgs_after_ref_phs_est(self):
         for ifg in self.ifgs:
             ifg.open()
-        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR,
-                                                     'ref_phase_est')
+        LEGACY_REF_PHASE_DIR = os.path.join(common.SML_TEST_DIR, 'ref_phase_est')
 
         onlyfiles = [f for f in os.listdir(LEGACY_REF_PHASE_DIR)
                 if os.path.isfile(os.path.join(LEGACY_REF_PHASE_DIR, f))
@@ -301,8 +298,8 @@ class TestRefPhsEstimationLegacyTestMethod1Parallel:
             ifg_data = np.genfromtxt(os.path.join(
                 LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
-                if f.split('_corrected')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw_ifg_1lksx')[0]:
+                if f.split('_correctedgeo_')[-1].split('.')[0] == os.path.split(j.data_path)[-1].split(
+                        '_ifg.tif')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(
@@ -381,11 +378,10 @@ class TestRefPhsEstimationLegacyTestMethod2Serial:
 
         count = 0
         for i, f in enumerate(onlyfiles):
-            ifg_data = np.genfromtxt(os.path.join(
-                LEGACY_REF_PHASE_DIR, f), delimiter=',')
+            ifg_data = np.genfromtxt(os.path.join(LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
-                if f.split('_corrected_method2')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw_ifg_1lksx')[0]:
+                if f.split('_corrected_method2geo_')[-1].split('.')[0] == \
+                        os.path.split(j.data_path)[-1].split('_ifg.tif')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(ifg_data,
@@ -467,11 +463,10 @@ class TestRefPhsEstimationLegacyTestMethod2Parallel:
 
         count = 0
         for i, f in enumerate(onlyfiles):
-            ifg_data = np.genfromtxt(os.path.join(
-                LEGACY_REF_PHASE_DIR, f), delimiter=',')
+            ifg_data = np.genfromtxt(os.path.join(LEGACY_REF_PHASE_DIR, f), delimiter=',')
             for k, j in enumerate(self.ifgs):
-                if f.split('_corrected_method2')[-1].split('.')[0] == \
-                        os.path.split(j.data_path)[-1].split('_unw_ifg_1lksx')[0]:
+                if f.split('_corrected_method2geo_')[-1].split('.')[0] == \
+                        os.path.split(j.data_path)[-1].split('_ifg.tif')[0]:
                     count += 1
                     # all numbers equal
                     np.testing.assert_array_almost_equal(

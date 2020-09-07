@@ -29,6 +29,9 @@ from pyrate.core.logger import pyratelogger as log
 gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
+all_mlooked_types = [ifc.MLOOKED_COH_MASKED_IFG, ifc.MULTILOOKED, ifc.MULTILOOKED_COH, ifc.MLOOKED_DEM,
+                     ifc.MLOOKED_INC]
+
 
 
 def coherence_masking(input_gdal_dataset: Dataset,
@@ -223,7 +226,7 @@ def crop_resample_average(
         if k == ifc.DATA_TYPE:
             # update data type metadata
             if (v == ifc.ORIG) and (coherence_path is not None):
-                md.update({ifc.DATA_TYPE: ifc.COHERENCE})
+                md.update({ifc.DATA_TYPE: ifc.MLOOKED_COH_MASKED_IFG})
             elif (v == ifc.ORIG) and (coherence_path is None):
                 md.update({ifc.DATA_TYPE: ifc.MULTILOOKED})
             elif v == ifc.COH:
@@ -234,6 +237,8 @@ def crop_resample_average(
                 md.update({ifc.DATA_TYPE: ifc.MLOOKED_INC})
             else:
                 raise TypeError(f'Data Type metadata {v} not recognised')
+
+    add_looks_and_crop_from_header(hdr, md)
 
     # In-memory GDAL driver doesn't support compression so turn it off.
     creation_opts = ['compress=packbits'] if out_driver_type != 'MEM' else []
@@ -247,6 +252,17 @@ def crop_resample_average(
     else:
         out_ds.GetRasterBand(1).WriteArray(resampled_average)
     return resampled_average, out_ds
+
+
+def add_looks_and_crop_from_header(hdr, md):
+    # insert prepifg mlook and crop params as metadata
+    if any(m in md.values() for m in all_mlooked_types):
+        if ifc.IFG_LKSX in hdr:
+            md[ifc.IFG_LKSX] = hdr[ifc.IFG_LKSX]
+        if ifc.IFG_LKSY in hdr:
+            md[ifc.IFG_LKSY] = hdr[ifc.IFG_LKSY]
+        if ifc.IFG_CROP in hdr:
+            md[ifc.IFG_CROP] = hdr[ifc.IFG_CROP]
 
 
 def _alignment(input_tif, new_res, resampled_average, src_ds_mem,

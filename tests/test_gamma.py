@@ -303,7 +303,8 @@ class TestHeaderCombination:
             func(* args)
 
 
-glob_prefix = "*utm_unw_ifg_1lksx_1lksy_1cr.tif"
+ifg_glob_suffix = "*_ifg.tif"
+coh_glob_suffix = "*_coh.tif"
 
 
 @pytest.fixture(scope='module')
@@ -323,9 +324,10 @@ def parallel_ifgs(gamma_conf):
     conv2tif.main(params_p)
     prepifg.main(params_p)
 
-    parallel_df = list(Path(tdir).joinpath('out').glob(glob_prefix))
+    parallel_df = list(Path(tdir).joinpath('out').glob(ifg_glob_suffix))
+    parallel_coh_files = list(Path(tdir).joinpath('out').glob(coh_glob_suffix))
 
-    p_ifgs = small_data_setup(datafiles=parallel_df)
+    p_ifgs = small_data_setup(datafiles=parallel_df + parallel_coh_files)
     yield p_ifgs
 
     shutil.rmtree(params_p[cf.OBS_DIR], ignore_errors=True)
@@ -350,12 +352,11 @@ def series_ifgs(gamma_conf):
 
     prepifg.main(params_s)
 
-    parallel_df = list(Path(tdir).joinpath('out').glob(glob_prefix))
+    serial_ifgs = list(Path(tdir).joinpath('out').glob(ifg_glob_suffix))
+    coh_files = list(Path(tdir).joinpath('out').glob(coh_glob_suffix))
 
-    s_ifgs = small_data_setup(datafiles=parallel_df)
-
+    s_ifgs = small_data_setup(datafiles=serial_ifgs + coh_files)
     yield s_ifgs
-
     print('======================teardown series==========================')
 
     shutil.rmtree(params_s[cf.OBS_DIR], ignore_errors=True)
@@ -368,12 +369,11 @@ def test_equality(series_ifgs, parallel_ifgs):
 
 def test_meta_data_exists(series_ifgs, parallel_ifgs):
     for i, (s, p) in enumerate(zip(series_ifgs, parallel_ifgs)):
-        print(s, p)
         # all metadata equal
         assert s.meta_data == p.meta_data
         # test that DATA_TYPE exists in metadata
         assert ifc.DATA_TYPE in s.meta_data.keys()
         # test that DATA_TYPE is MULTILOOKED
-        assert s.meta_data[ifc.DATA_TYPE] == ifc.MULTILOOKED
-
-    assert i == 16
+        assert (s.meta_data[ifc.DATA_TYPE] == ifc.MULTILOOKED) or \
+               (s.meta_data[ifc.DATA_TYPE] == ifc.MULTILOOKED_COH)
+    assert i + 1 == 34

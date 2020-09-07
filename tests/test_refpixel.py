@@ -397,7 +397,7 @@ def test_error_msg_refpixel_out_of_bounds(tempdir, gamma_conf):
 def test_gamma_ref_pixel_search_vs_lat_lon(tempdir, gamma_conf):
     params_1, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=-1, refy=-1)
     params_2, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=150.941666654, refy=-34.218333314)
-    assert_two_dirs_equal(params_1[cf.OUT_DIR], params_2[cf.OUT_DIR], f"*{params_1[cf.IFG_CROP_OPT]}cr.tif", 35)
+    assert_two_dirs_equal(params_1[cf.OUT_DIR], params_2[cf.OUT_DIR], ["*_ifg.tif", '*_coh.tif', 'dem.tif'], 35)
 
 
 def _get_mlooked_files(gamma_conf, tdir, refx, refy):
@@ -480,7 +480,7 @@ def test_convert_pixel_value_to_geographic_coordinate(x_y_pixel):
                   text=True).stdout
         xs = (x, x+1, x-1)
         ys = (y, y+1, y-1)
-        assert any(f"({xx}P,{yy}L" in out for xx, yy in itertools.product(xs, ys))
+        assert any(f"({xx}P,{yy}L)" in out for xx, yy in itertools.product(xs, ys))
 
 
 def dem_transform():

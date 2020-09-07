@@ -502,43 +502,6 @@ def coherence_paths_for(path: str, params: dict, tif=False) -> str:
     return coh_file_paths[0]
 
 
-def mlooked_path(path, xlooks, ylooks, crop_opt):
-    """
-    Adds suffix to ifg path, for creating a new path for multilooked files.
-
-    :param str path: original interferogram path
-    :param int xlooks: number of X looks applied
-    :param int ylooks: number of Y looks applied
-    :param int crop_opt: crop option applied
-
-    :return: multilooked file name
-    :rtype: str
-    """
-    base, ext = splitext(path)
-    return "{base}_{xlooks}lksx_{ylooks}lksy_{crop_opt}cr{ext}".format(base=base, xlooks=xlooks, ylooks=ylooks, crop_opt=crop_opt, ext=ext)
-
-
-def get_dest_paths(base_paths, crop, params, looks):
-    """
-    Determines the full path names for the destination multilooked files
-
-    :param list base_paths: original interferogram paths
-    :param int crop: Crop option applied
-    :param dict params: Parameters dictionary
-    :param int looks: number of range looks applied
-
-    :return: full path names for destination files
-    :rtype: list
-    """
-
-    dest_mlooked_ifgs = [mlooked_path(os.path.basename(q).split('.')[0] + '_'
-                                      + os.path.basename(q).split('.')[1] +
-                                      '.tif', looks=looks, crop_opt=crop)
-                         for q in base_paths]
-
-    return [os.path.join(params[OUT_DIR], p) for p in dest_mlooked_ifgs]
-
-
 # ==== PARAMETER VALIDATION ==== #
 
 _PARAM_VALIDATION = {

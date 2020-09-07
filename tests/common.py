@@ -22,6 +22,7 @@ import glob
 import os
 import shutil
 import stat
+import itertools
 import tempfile
 from decimal import Decimal
 import pytest
@@ -525,9 +526,10 @@ def pre_prepare_ifgs(ifg_paths, params):
 
 
 def assert_two_dirs_equal(dir1, dir2, ext, num_files=None):
-
-    dir1_files = list(Path(dir1).glob(ext))
-    dir2_files = list(Path(dir2).glob(ext))  # MultiProcess files
+    if not isinstance(ext, list):
+        ext = [ext]
+    dir1_files = list(itertools.chain(* [list(Path(dir1).glob(ex)) for ex in ext]))
+    dir2_files = list(itertools.chain(* [list(Path(dir2).glob(ex)) for ex in ext]))
     dir1_files.sort()
     dir2_files.sort()
     # 17 unwrapped geotifs
