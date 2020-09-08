@@ -1,7 +1,7 @@
-PyRate Process Script
+PyRate Correct Script
 ========================
 
-.. automodule:: pyrate.process
+.. automodule:: pyrate.correct
     :members:
     :undoc-members:
     :show-inheritance:

@@ -59,7 +59,7 @@ def run_once(f: Callable, *args, **kwargs) -> Any:
     return result
 
 
-def array_split(arr: Iterable, process: int = None) -> np.ndarray:
+def array_split(arr: Iterable, process: int = None) -> Iterable:
     """
     Convenience function for splitting array elements across MPI processes
 

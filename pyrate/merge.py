@@ -17,16 +17,16 @@
 This Python module does post-processing steps to assemble the
 stack rate and time series outputs and save as geotiff files
 """
-from os.path import join, isfile
+from os.path import join, isfile, exists
 import pickle
 import numpy as np
 from osgeo import gdal
 import subprocess
 from pathlib import Path
-from math import floor
 
 from pyrate.core import shared, stack, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.logger import pyratelogger as log
+from pyrate.configuration import Configuration
 
 gdal.SetCacheMax(64)
 
@@ -36,14 +36,35 @@ def main(params: dict) -> None:
     PyRate merge main function. Assembles product tiles in to
     single geotiff files
     """
-    # setup paths
-    mpiops.run_once(_merge_stack, params)
-    mpiops.run_once(_create_png_from_tif, params[cf.OUT_DIR])
+    out_types = []
+    stfile = join(params[cf.TMPDIR], 'stack_rate_0.npy')
+    if exists(stfile):
+        # setup paths
+        mpiops.run_once(_merge_stack, params)
+        out_types += ['stack_rate', 'stack_error']
+    else:
+        log.warning('Not merging stack products; {} does not exist'.format(stfile))
 
-    if params[cf.TIME_SERIES_CAL]:
+    tsfile = join(params[cf.TMPDIR], 'tscuml_0.npy')
+    if exists(tsfile):
         _merge_timeseries(params, 'tscuml')
+        _merge_linrate(params)
+        out_types += ['linear_rate', 'linear_error', 'linear_rsquared']
+
         # optional save of merged tsincr products
-        if params["savetsincr"] == 1: _merge_timeseries(params, 'tsincr')
+        if params["savetsincr"] == 1:
+            _merge_timeseries(params, 'tsincr')
+    else:
+        log.warning('Not merging time series products; {} does not exist'.format(tsfile))
+
+
+    if len(out_types) > 0:
+        process_out_types = mpiops.array_split(out_types)
+        for out_type in process_out_types:
+            create_png_and_kml_from_tif(params[cf.OUT_DIR], output_type=out_type)
+    else:
+        log.warning('Exiting: no products to merge')
+
 
 
 def _merge_stack(params: dict) -> None:
@@ -68,6 +89,23 @@ def _merge_stack(params: dict) -> None:
     # save geotiff and numpy array files
     for out, ot in zip([rate, error, samples], ['stack_rate', 'stack_error', 'stack_samples']):
         _save_merged_files(ifgs_dict, params[cf.OUT_DIR], out, ot, savenpy=params["savenpy"])
+
+
+def _merge_linrate(params: dict) -> None:
+    """
+    Merge linear rate outputs
+    """
+    shape, tiles, ifgs_dict = mpiops.run_once(_merge_setup, params)
+
+    log.info('Merging and writing Linear Rate product geotiffs')
+
+    # read and assemble tile outputs
+    out_types = ['linear_' + x for x in ['rate', 'rsquared', 'error', 'intercept', 'samples']]
+    process_out_types = mpiops.array_split(out_types)
+    for p_out_type in process_out_types:
+        out = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type=p_out_type)
+        _save_merged_files(ifgs_dict, params[cf.OUT_DIR], out, p_out_type, savenpy=params["savenpy"])
+    mpiops.comm.barrier()
 
 
 def _merge_timeseries(params: dict, tstype: str) -> None:
@@ -99,23 +137,15 @@ def _merge_timeseries(params: dict, tstype: str) -> None:
              'total {}'.format(mpiops.rank, len(process_tifs), tstype, no_ts_tifs))
 
 
-def _create_png_from_tif(output_folder_path):
-    """
-    Wrapper for rate and error png/kml generation
-    """
-    create_png_and_kml_from_tif(output_folder_path, output_type='rate')
-    create_png_and_kml_from_tif(output_folder_path, output_type='error')
-
-
 def create_png_and_kml_from_tif(output_folder_path: str, output_type: str) -> None:
     """
     Function to create a preview PNG format image from a geotiff, and a KML file
     """
-    log.info(f'Creating quicklook image for stack_{output_type}')
+    log.info(f'Creating quicklook image for {output_type}')
     # open raster and choose band to find min, max
-    raster_path = join(output_folder_path, f"stack_{output_type}.tif")
+    raster_path = join(output_folder_path, f"{output_type}.tif")
     if not isfile(raster_path):
-        raise Exception(f"stack_{output_type}.tif file not found at: " + raster_path)
+        raise Exception(f"{output_type}.tif file not found at: " + raster_path)
     gtif = gdal.Open(raster_path)
     # find bounds of image
     west, north, east, south = "", "", "", ""
@@ -125,15 +155,15 @@ def create_png_and_kml_from_tif(output_folder_path: str, output_type: str) -> No
         if "Lower Right" in line:
             east, south = line.split(")")[0].split("(")[1].split(",")
     # write KML file
-    kml_file_path = join(output_folder_path, f"stack_{output_type}.kml")
+    kml_file_path = join(output_folder_path, f"{output_type}.kml")
     kml_file_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://earth.google.com/kml/2.1">
   <Document>
-    <name>stack_{output_type}.kml</name>
+    <name>{output_type}.kml</name>
     <GroundOverlay>
-      <name>stack_{output_type}.png</name>
+      <name>{output_type}.png</name>
       <Icon>
-        <href>stack_{output_type}.png</href>
+        <href>{output_type}.png</href>
       </Icon>
       <LatLonBox>
         <north> """ + north + """ </north>
@@ -154,7 +184,7 @@ def create_png_and_kml_from_tif(output_folder_path: str, output_type: str) -> No
     # steps used for the colourmap, must be even (currently hard-coded to 254 resulting in 255 values)
     no_of_steps = 254
     # slightly different code required for rate map and rate error map
-    if output_type == 'rate':
+    if output_type in ('stack_rate', 'linear_rate'):
         # minimum value might be negative
         maximum = max(abs(minimum), abs(maximum))
         minimum = -1 * maximum
@@ -172,7 +202,7 @@ def create_png_and_kml_from_tif(output_folder_path: str, output_type: str) -> No
         r = np.flipud(r) * 255
         g = np.flipud(g) * 255
         b = np.flipud(b) * 255
-    if output_type == 'error':
+    if output_type in ('stack_error', 'linear_error', 'linear_rsquared'):
         # colours: white -> red (minimum error -> maximum error  
         # allocate RGB values to three numpy arrays r, g, b
         r = np.ones(no_of_steps+1)*255
@@ -181,18 +211,21 @@ def create_png_and_kml_from_tif(output_folder_path: str, output_type: str) -> No
         b = g  
     # generate the colourmap file in the output folder   
     color_map_path = join(output_folder_path, f"colourmap_{output_type}.txt")
-    log.info(
-        'Saving colour map to file {}; min/max values: {:.2f}/{:.2f}'.format(color_map_path, minimum,
-                                                                                            maximum))
+    log.info('Saving colour map to file {}; min/max values: {:.2f}/{:.2f}'.format(
+             color_map_path, minimum, maximum))
+
+    # write colourmap as text file
     with open(color_map_path, "w") as f:
         f.write("nan 0 0 0 0\n")
         for i, value in enumerate(np.linspace(minimum, maximum, no_of_steps+1)):
             f.write("%f %f %f %f 255\n" % (value, r[i], g[i], b[i]))
-    input_tif_path = join(output_folder_path, f"stack_{output_type}.tif")
-    output_png_path = join(output_folder_path, f"stack_{output_type}.png")
+
+    # create PNG image file
+    input_tif_path = join(output_folder_path, f"{output_type}.tif")
+    output_png_path = join(output_folder_path, f"{output_type}.png")
     subprocess.check_call(["gdaldem", "color-relief", "-of", "PNG", input_tif_path, "-alpha",
                            color_map_path, output_png_path, "-nearest_color_entry"])
-    log.debug(f'Finished creating quicklook image for stack_{output_type}')
+    log.debug(f'Finished creating quicklook image for {output_type}')
 
 
 def assemble_tiles(s, dir, tiles, out_type, index=None):
@@ -215,9 +248,9 @@ def assemble_tiles(s, dir, tiles, out_type, index=None):
     for t in tiles:
         tile_file = Path(join(dir, out_type + '_'+str(t.index)+'.npy'))
         tile = np.load(file=tile_file)
-        if index is None: #2D array
+        if index is None:  #2D array
             merged_array[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = tile
-        else: #3D array
+        else:  #3D array
             merged_array[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = tile[:, :, index]
 
     log.debug('Finished assembling tiles for {}'.format(out_type))
@@ -242,7 +275,7 @@ def _save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=N
     else:
         dest = join(outdir, out_type + ".tif")
         npy_file = join(outdir, out_type + '.npy')
-        md[ifc.EPOCH_DATE] = epochlist.dates
+        md[ifc.EPOCH_DATE] = [d.strftime('%Y-%m-%d') for d in epochlist.dates]
 
     if out_type == 'stack_rate':
         md[ifc.DATA_TYPE] = ifc.STACKRATE
@@ -250,10 +283,22 @@ def _save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=N
         md[ifc.DATA_TYPE] = ifc.STACKERROR
     elif out_type == 'stack_samples':
         md[ifc.DATA_TYPE] = ifc.STACKSAMP
+    elif out_type == 'linear_rate':
+        md[ifc.DATA_TYPE] = ifc.LINRATE
+    elif out_type == 'linear_error':
+        md[ifc.DATA_TYPE] = ifc.LINERROR
+    elif out_type == 'linear_samples':
+        md[ifc.DATA_TYPE] = ifc.LINSAMP
+    elif out_type == 'linear_intercept':
+        md[ifc.DATA_TYPE] = ifc.LINICPT
+    elif out_type == 'linear_rsquared':
+        md[ifc.DATA_TYPE] = ifc.LINRSQ
     elif out_type == 'tsincr':
         md[ifc.DATA_TYPE] = ifc.INCR
-    else: #tscuml
+    elif out_type == 'tscuml':
         md[ifc.DATA_TYPE] = ifc.CUML
+    else:
+        log.warning('Output type "{}" not recognised'.format(out_type))
 
     shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
     if savenpy:
@@ -266,26 +311,10 @@ def _merge_setup(params):
     """
     Convenience function for Merge set up steps
     """
-    # setup paths
-    xlks, _, crop = cf.transform_params(params)
-    base_unw_paths = []
-
-    for p in Path(params[cf.OUT_DIR]).rglob("*rlks_*cr.tif"):
-        if "dem" not in str(p):
-            base_unw_paths.append(str(p))
-
-    if "tif" in base_unw_paths[0].split(".")[1]:
-        dest_tifs = base_unw_paths # cf.get_dest_paths(base_unw_paths, crop, params, xlks)
-        for i, dest_tif in enumerate(dest_tifs):
-            dest_tifs[i] = dest_tif.replace("_tif", "")
-    else:
-        dest_tifs = base_unw_paths # cf.get_dest_paths(base_unw_paths, crop, params, xlks)
-
     # load previously saved preread_ifgs dict
-    preread_ifgs_file = join(params[cf.TMPDIR], 'preread_ifgs.pk')
+    preread_ifgs_file = Configuration.preread_ifgs(params)
     ifgs_dict = pickle.load(open(preread_ifgs_file, 'rb'))
     ifgs = [v for v in ifgs_dict.values() if isinstance(v, shared.PrereadIfg)]
     shape = ifgs[0].shape
-    rows, cols = params["rows"], params["cols"]
-    tiles = shared.get_tiles(dest_tifs[0], rows, cols)
+    tiles = Configuration.get_tiles(params)
     return shape, tiles, ifgs_dict

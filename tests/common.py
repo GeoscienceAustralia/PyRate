@@ -22,6 +22,7 @@ import glob
 import os
 import shutil
 import stat
+import itertools
 import tempfile
 from decimal import Decimal
 import pytest
@@ -59,6 +60,7 @@ SML_TEST_TIF = join(SML_TEST_DIR, 'tif')
 SML_TEST_GAMMA = join(SML_TEST_DIR, 'gamma_obs')  # gamma processed unws
 SML_TEST_ROIPAC = join(SML_TEST_DIR, 'roipac_obs')  # gamma processed unws
 SML_TEST_CONF = join(SML_TEST_DIR, 'conf')
+SML_TEST_LINRATE = join(SML_TEST_DIR, 'linrate')
 SML_TEST_GAMMA_HEADER_LIST = join(SML_TEST_GAMMA, 'headers')
 SML_TEST_ROIPAC_HEADER_LIST = join(SML_TEST_ROIPAC, 'headers')
 
@@ -302,12 +304,12 @@ def reconstruct_stack_rate(shape, tiles, output_dir, out_type):
 
 
 def reconstruct_mst(shape, tiles, output_dir):
-    mst_file_0 = os.path.join(output_dir, 'mst_mat_{}.npy'.format(0))
+    mst_file_0 = os.path.join(output_dir, cf.MST_DIR, 'mst_mat_{}.npy'.format(0))
     shape0 = np.load(mst_file_0).shape[0]
 
     mst = np.empty(shape=((shape0,) + shape), dtype=np.float32)
     for i, t in enumerate(tiles):
-        mst_file_n = os.path.join(output_dir, 'mst_mat_{}.npy'.format(i))
+        mst_file_n = os.path.join(output_dir, cf.MST_DIR, 'mst_mat_{}.npy'.format(i))
         mst[:, t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x] = np.load(mst_file_n)
     return mst
@@ -500,7 +502,7 @@ def copytree(src, dst, symlinks=False, ignore=None):
             shutil.copy2(s, d)
 
 
-def repair_params_for_process_tests(out_dir, params):
+def repair_params_for_correct_tests(out_dir, params):
     base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
     headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
     params[cf.INTERFEROGRAM_FILES] = params[cf.INTERFEROGRAM_FILES][:-2]
@@ -524,9 +526,10 @@ def pre_prepare_ifgs(ifg_paths, params):
 
 
 def assert_two_dirs_equal(dir1, dir2, ext, num_files=None):
-
-    dir1_files = list(Path(dir1).glob(ext))
-    dir2_files = list(Path(dir2).glob(ext))  # MultiProcess files
+    if not isinstance(ext, list):
+        ext = [ext]
+    dir1_files = list(itertools.chain(* [list(Path(dir1).glob(ex)) for ex in ext]))
+    dir2_files = list(itertools.chain(* [list(Path(dir2).glob(ex)) for ex in ext]))
     dir1_files.sort()
     dir2_files.sort()
     # 17 unwrapped geotifs
@@ -614,3 +617,18 @@ class UnitTestAdaptation:
         places *= -1
         num = Decimal((0, (1, ), places))
         assert arg1 == pytest.approx(arg2, abs=num)
+
+
+def min_params(out_dir):
+    params = {}
+    params[cf.OUT_DIR] = out_dir
+    params[cf.IFG_LKSX] = 1
+    params[cf.IFG_LKSY] = 1
+    params[cf.IFG_CROP_OPT] = 4
+    params[cf.TEMP_MLOOKED_DIR] = Path(tempfile.mkdtemp())
+    params[cf.ORBFIT_OFFSET] = 1
+    params[cf.ORBITAL_FIT_METHOD] = 1
+    params[cf.ORBITAL_FIT_DEGREE] = 2
+    params[cf.ORBITAL_FIT_LOOKS_X] = 1
+    params[cf.ORBITAL_FIT_LOOKS_Y] = 1
+    return params

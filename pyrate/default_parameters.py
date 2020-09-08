@@ -365,14 +365,6 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
-    "tscal": {
-        "DataType": int,
-        "DefaultValue": 0,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": [0, 1],
-        "Required": False
-    },
     "tsmethod": {
         "DataType": int,
         "DefaultValue": 2,
@@ -445,7 +437,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": [1, 0],
         "Required": False
     },
-    "process": {
+    "correct": {
         "DataType": list,
         "DefaultValue": ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack'],
         "MinValue": None,

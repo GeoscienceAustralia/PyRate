@@ -19,11 +19,9 @@ This Python module contains tests for the timeseries.py PyRate module.
 """
 import os
 import shutil
-import sys
-import tempfile
 import pytest
 from datetime import date, timedelta
-from numpy import nan, asarray, where
+from numpy import nan, asarray, where, array
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
@@ -31,10 +29,10 @@ import pyrate.core.orbital
 import pyrate.core.ref_phs_est
 import pyrate.core.refpixel
 import tests.common as common
-from pyrate.core import config as cf, mst, covariance, roipac
-from pyrate import process, prepifg, conv2tif
+from pyrate.core import config as cf, mst, covariance
+from pyrate import correct, prepifg, conv2tif
 from pyrate.configuration import Configuration
-from pyrate.core.timeseries import time_series
+from pyrate.core.timeseries import time_series, linear_rate_pixel, linear_rate_array, TimeSeriesError
 
 
 def default_params():
@@ -112,9 +110,8 @@ class TestTimeSeries:
 class TestLegacyTimeSeriesEquality:
 
     @classmethod
-    @pytest.fixture(autouse=True)
-    def setup_class(cls, roipac_params):
-        params = roipac_params
+    def setup_class(cls):
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         params[cf.TEMP_MLOOKED_DIR] = os.path.join(params[cf.OUT_DIR], cf.TEMP_MLOOKED_DIR)
         conv2tif.main(params)
         prepifg.main(params)
@@ -123,8 +120,8 @@ class TestLegacyTimeSeriesEquality:
 
         xlks, _, crop = cf.transform_params(params)
 
-        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
-        process._copy_mlooked(params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[cf.OUT_DIR], params)
+        correct._copy_mlooked(params)
         copied_dest_paths = [os.path.join(params[cf.TEMP_MLOOKED_DIR], os.path.basename(d)) for d in dest_paths]
         del dest_paths
         # start run_pyrate copy
@@ -134,12 +131,13 @@ class TestLegacyTimeSeriesEquality:
 
         params[cf.REFX] = refx
         params[cf.REFY] = refy
+        params[cf.ORBFIT_OFFSET] = True
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = common.prepare_ifgs_without_phase(copied_dest_paths, params)
         for ifg in ifgs:
             ifg.close()
-        process._update_params_with_tiles(params)
+        correct._update_params_with_tiles(params)
         _, ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = covariance.RDist(ifgs[0])()
@@ -171,10 +169,11 @@ class TestLegacyTimeSeriesEquality:
         ts_cum = np.genfromtxt(tscum_path)
         cls.ts_incr = np.reshape(ts_incr, newshape=cls.tsincr_0.shape, order='F')
         cls.ts_cum = np.reshape(ts_cum, newshape=cls.tscum_0.shape, order='F')
+        cls.params = params
 
     @classmethod
     def teardown_class(cls):
-        "auto clean fixture used"
+        shutil.rmtree(cls.params[cf.OUT_DIR])
 
     def test_time_series_equality_parallel_by_rows(self):
         """
@@ -211,9 +210,8 @@ class TestLegacyTimeSeriesEquality:
 class TestLegacyTimeSeriesEqualityMethod2Interp0:
 
     @classmethod
-    @pytest.fixture(autouse=True)
-    def setup_class(cls, roipac_params):
-        params = roipac_params
+    def setup_class(cls):
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         params[cf.TEMP_MLOOKED_DIR] = os.path.join(params[cf.OUT_DIR], cf.TEMP_MLOOKED_DIR)
         conv2tif.main(params)
         prepifg.main(params)
@@ -222,8 +220,8 @@ class TestLegacyTimeSeriesEqualityMethod2Interp0:
 
         xlks, _, crop = cf.transform_params(params)
 
-        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
-        process._copy_mlooked(params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[cf.OUT_DIR], params)
+        correct._copy_mlooked(params)
         copied_dest_paths = [os.path.join(params[cf.TEMP_MLOOKED_DIR], os.path.basename(d)) for d in dest_paths]
         del dest_paths
         # start run_pyrate copy
@@ -233,14 +231,15 @@ class TestLegacyTimeSeriesEqualityMethod2Interp0:
 
         params[cf.REFX] = refx
         params[cf.REFY] = refy
+        params[cf.ORBFIT_OFFSET] = True
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = common.prepare_ifgs_without_phase(copied_dest_paths, params)
         for ifg in ifgs:
             ifg.close()
 
-        process._update_params_with_tiles(params)
+        correct._update_params_with_tiles(params)
         _, ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = covariance.RDist(ifgs[0])()
@@ -274,10 +273,11 @@ class TestLegacyTimeSeriesEqualityMethod2Interp0:
 
         cls.ts_incr = np.reshape(ts_incr, newshape=cls.tsincr_0.shape, order='F')
         cls.ts_cum = np.reshape(ts_cum, newshape=cls.tscum_0.shape, order='F')
+        cls.params = params
 
     @classmethod
     def teardown_class(cls):
-        "atuo clean fixture used"
+        shutil.rmtree(cls.params[cf.OUT_DIR])
 
     def test_time_series_equality_parallel_by_rows(self):
 
@@ -294,3 +294,110 @@ class TestLegacyTimeSeriesEqualityMethod2Interp0:
         np.testing.assert_array_almost_equal(self.ts_incr, self.tsincr_0, decimal=3)
 
         np.testing.assert_array_almost_equal(self.ts_cum, self.tscum_0, decimal=3)
+
+
+class TestLinearRatePixel:
+    """
+    Tests the linear regression algorithm for determining the best
+    fitting velocity from a cumulative time series
+    """
+
+    def test_linear_rate_pixel_clean(self):
+        y = array([0, 2, 4, 6, 8, 10])
+        t = array([0, 1, 2, 3, 4, 5])
+        exp = (2.0, 0.0, 1.0, 0.0, 6)
+        res = linear_rate_pixel(y, t)
+        assert res == exp
+
+    def test_linear_rate_pixel_neg_rate(self):
+        y = array([0, -2, -4, -6, -8, -10])
+        t = array([0, 1, 2, 3, 4, 5])
+        exp = (-2.0, 0.0, 1.0, 0.0, 6)
+        res = linear_rate_pixel(y, t)
+        assert res == exp
+
+    def test_linear_rate_pixel_outlier(self):
+        y = array([0, 2, 4, 6, 8, 20])
+        t = array([0, 1, 2, 3, 4, 5])
+        exp = (3.428571, -1.904761, 0.812030, 0.824786, 6)
+        res = linear_rate_pixel(y, t)
+        assert res == pytest.approx(exp, rel=1e-6)
+
+    def test_linear_rate_pixel_noise(self):
+        y = array([0, 2, 4, 6, 8, 10])
+        r = y + np.random.rand(6) # add different uniform noise each time
+        t = array([0, 1, 2, 3, 4, 5])
+        exprate = 2.0
+        explsqd = 1.0
+        experr = 0.0
+        rate, _, lsqd, err, _ = linear_rate_pixel(y, t)
+        assert exprate == pytest.approx(rate, rel=1e-1)
+        assert explsqd == pytest.approx(lsqd, rel=1e-1)
+        assert experr == pytest.approx(err, rel=1e-1)
+
+    def test_linear_rate_pixel_exception(self):
+        # input vectors should be equal length
+        y = array([2, 4, 6, 8, 10])
+        t = array([0, 1, 2, 3, 4, 5])
+        with pytest.raises(TimeSeriesError):
+            res = linear_rate_pixel(y, t)
+
+    def test_linear_rate_pixel_nans(self):
+        # at least two obs are required for line fitting
+        y = array([0, nan, nan, nan, nan, nan])
+        t = array([0, 1, 2, 3, 4, 5])
+        exp = (nan, nan, nan, nan, nan)
+        res = linear_rate_pixel(y, t)
+        assert res == exp
+
+
+class TestLinearRateArray:
+    """
+    Tests the array loop wrapper for the linear regression algorithm using real data
+    """
+
+    @classmethod
+    @pytest.fixture(autouse=True)
+    def setup_class(cls, roipac_params):
+        cls.params = roipac_params
+        cls.ifgs = common.small_data_setup()
+
+        # read in input (tscuml) and expected output arrays
+        tscuml_path = os.path.join(common.SML_TEST_LINRATE, "tscuml_0.npy")
+        cls.tscuml0 = np.load(tscuml_path)
+        # add zero epoch to tscuml 3D array
+        cls.tscuml = np.insert(cls.tscuml0, 0, 0, axis=2) 
+
+        linrate_path = os.path.join(common.SML_TEST_LINRATE, "linear_rate.npy")
+        cls.linrate = np.load(linrate_path)
+
+        error_path = os.path.join(common.SML_TEST_LINRATE, "linear_error.npy")
+        cls.error = np.load(error_path)
+
+        icpt_path = os.path.join(common.SML_TEST_LINRATE, "linear_intercept.npy")
+        cls.icpt = np.load(icpt_path)
+
+        samp_path = os.path.join(common.SML_TEST_LINRATE, "linear_samples.npy")
+        cls.samp = np.load(samp_path)
+
+        rsq_path = os.path.join(common.SML_TEST_LINRATE, "linear_rsquared.npy")
+        cls.rsq = np.load(rsq_path)
+
+    def test_linear_rate_array(self):
+        """
+        Input and expected output are on disk. This test only tests the linear_rate_array
+        and linear_rate_pixel functions using real data.
+        """
+        l, i, r, e, s = linear_rate_array(self.tscuml, self.ifgs, self.params)
+        # test to 20 decimal places
+        assert_array_almost_equal(self.linrate, l, 1e-20)
+        assert_array_almost_equal(self.icpt, i, 1e-20)
+        assert_array_almost_equal(self.rsq, r, 1e-20)
+        assert_array_almost_equal(self.error, e, 1e-20)
+        assert_array_almost_equal(self.samp, s, 1e-20)
+
+    def test_linear_rate_array_exception(self):
+        # depth of tscuml should equal nepochs
+        with pytest.raises(TimeSeriesError):
+            res = linear_rate_array(self.tscuml0, self.ifgs, self.params)
+

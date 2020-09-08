@@ -1,3 +1,21 @@
+#   This Python module is part of the PyRate software package.
+#
+#   Copyright 2020 Geoscience Australia
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+"""
+This Python module contains tests for the coherence.py PyRate module.
+"""
 import os
 import stat
 import tempfile
@@ -15,6 +33,8 @@ from pyrate.core import prepifg_helper
 from pyrate.core import ifgconstants as ifc
 from pyrate.configuration import MultiplePaths
 from pyrate import conv2tif
+
+from tests import common
 
 
 def test_small_data_coherence(gamma_params):
@@ -75,8 +95,9 @@ def test_coherence_files_not_converted():
 
     # create a coherence mask dataset
     tmpdir = tempfile.mkdtemp()
-    out_dir = Path(tmpdir) # we won't be creating any output coherence mask files as there are already GeoTIFFs
-    coherence_mask_filename = MultiplePaths(out_dir, Path("mask_dataset_01122000.tif").as_posix())
+    out_dir = Path(tmpdir)  # we won't be creating any output coherence mask files as there are already GeoTIFFs
+    params = common.min_params(out_dir)
+    coherence_mask_filename = MultiplePaths(Path("mask_dataset_01122000-02122000.tif").as_posix(), params)
     coherence_mask_dataset = driver.Create(coherence_mask_filename.converted_path, 5, 5, 1, gdal.GDT_Float32)
     srs = osr.SpatialReference()
     wkt_projection = srs.ExportToWkt()

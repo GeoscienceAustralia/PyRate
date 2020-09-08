@@ -22,6 +22,7 @@ import shutil
 import pytest
 from pathlib import Path
 
+import pyrate.configuration
 from pyrate.core.shared import DEM
 from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.prepifg_helper import _is_number
@@ -42,11 +43,12 @@ def test_files_are_same(tempdir, get_config):
     gamma_params = __workflow(gamma_params, gamma_tdir)
 
     # conv2tif output equal
-    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR], "*_unw_ifg.tif", 17)
+    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR], "*_unw.tif", 17)
 
     # prepifg output equal
-    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR],
-                                 f"*{roipac_params[cf.IFG_CROP_OPT]}cr.tif", 18)
+    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR], f"*_ifg.tif", 17)
+
+    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR], "dem.tif", 1)
 
     # clean up
     shutil.rmtree(roipac_params[cf.OBS_DIR])
@@ -70,7 +72,7 @@ def __workflow(params, tdir):
     params[cf.APS_INCIDENCE_MAP] = tdir.joinpath(Path(params[cf.APS_INCIDENCE_MAP]).name).as_posix()
     params[cf.TMPDIR] = tdir.joinpath(Path(params[cf.TMPDIR]).name).as_posix()
     output_conf = tdir.joinpath('roipac_temp.conf')
-    cf.write_config_file(params=params, output_conf_file=output_conf)
+    pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
     params = configuration.Configuration(output_conf).__dict__
     conv2tif.main(params)
     prepifg.main(params)
@@ -104,7 +106,7 @@ def __assert_same_files_produced(dir1, dir2, ext, num_files):
             else:
                 assert mdj[k] == mdi[k]
 
-        if i.data_path.__contains__("_{looks}rlks_{crop}cr".format(looks=1, crop=1)):
+        if i.data_path.__contains__("_ifg.tif"):
             # these are multilooked tifs
             # test that DATA_STEP is MULTILOOKED
             assert mdi[ifc.DATA_TYPE] == ifc.MULTILOOKED
@@ -112,5 +114,6 @@ def __assert_same_files_produced(dir1, dir2, ext, num_files):
         else:
             assert mdi[ifc.DATA_TYPE] == ifc.ORIG
             assert mdj[ifc.DATA_TYPE] == ifc.ORIG
-
+    if not all_gamma_ifgs:  # checking for dem
+        return
     assert c + 1 == len(all_gamma_ifgs)

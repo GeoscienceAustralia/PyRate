@@ -6,14 +6,16 @@ import numpy as np
 PYRATEPATH = Path(__file__).parent.parent
 
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 CLI_DESCRIPTION = """
 PyRate workflow: 
 
     Step 1: conv2tif
     Step 2: prepifg
-    Step 3: process
-    Step 4: merge 
+    Step 3: correct
+    Step 4: timeseries
+    Step 5: stack
+    Step 6: merge
 
 Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for 
 more details.
@@ -24,7 +26,9 @@ NO_OF_PARALLEL_PROCESSES = comm.Get_size()
 
 CONV2TIF = 'conv2tif'
 PREPIFG = 'prepifg'
-PROCESS = 'process'
+CORRECT = 'correct'
+TIMESERIES = 'timeseries'
+STACK = 'stack'
 MERGE = 'merge'
 
 # distance division factor of 1000 converts to km and is needed to match legacy output

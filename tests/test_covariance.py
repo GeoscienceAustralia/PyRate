@@ -17,6 +17,7 @@
 This Python module contains tests for the covariance.py PyRate module.
 """
 import os
+import shutil
 from pathlib import Path
 import pytest
 from numpy import array
@@ -26,7 +27,7 @@ from numpy.testing import assert_array_almost_equal
 import pyrate.core.ref_phs_est
 import pyrate.core.refpixel
 from pyrate.core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
-from pyrate import process, prepifg, conv2tif
+from pyrate import correct, prepifg, conv2tif
 from pyrate.core.covariance import cvd, get_vcmt, RDist
 from pyrate.configuration import Configuration, MultiplePaths
 import pyrate.core.orbital
@@ -185,31 +186,31 @@ legacy_maxvar = [15.4156637191772,
 
 class TestLegacyEquality:
     @classmethod
-    @pytest.fixture(autouse=True)
-    def setup_class(cls, roipac_params):
-
-        params = roipac_params
+    def setup_class(cls):
+        roipac_params = Configuration(TEST_CONF_ROIPAC).__dict__
+        from copy import deepcopy
+        params = deepcopy(roipac_params)
         shared.mkdir_p(params[cf.TMPDIR])
         params[cf.REF_EST_METHOD] = 2
         conv2tif.main(params)
+        params = deepcopy(roipac_params)
         prepifg.main(params)
-        params = params
+        params = deepcopy(roipac_params)
         base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
         dest_paths = [c.converted_path for c in params[cf.INTERFEROGRAM_FILES]]
-        dest_paths = dest_paths[:-2]
-        params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(params[cf.OUT_DIR], d) for d in dest_paths]
+        params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(d, params) for d in dest_paths]
         for p in params[cf.INTERFEROGRAM_FILES]:  # hack
             p.sampled_path = p.converted_path
 
         for i in dest_paths:
             Path(i).chmod(0o664)  # assign write permission as conv2tif output is readonly
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
-        process._copy_mlooked(params)
-        process._update_params_with_tiles(params)
-        process._create_ifg_dict(params)
+        correct._copy_mlooked(params)
+        correct._update_params_with_tiles(params)
+        correct._create_ifg_dict(params)
         pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
-        headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        params[cf.ORBFIT_OFFSET] = True
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
@@ -229,8 +230,7 @@ class TestLegacyEquality:
 
     @classmethod
     def teardown_class(cls):
-        # roipac_params tears down itself
-        pass
+        shutil.rmtree(cls.params[cf.OUT_DIR])
 
     def test_legacy_maxvar_equality_small_test_files(self):
         np.testing.assert_array_almost_equal(self.maxvar, legacy_maxvar, decimal=3)

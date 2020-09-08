@@ -32,25 +32,20 @@ in the configuration file.
       Multiple periods in a filename will raise an error during runtime.
 
 The ``ifgfilelist`` gives the list of interferograms to be processed.
-Example of an interferogram file list for `GAMMA` flat-binary files:
-
-::
+Example of an interferogram file list for `GAMMA` flat-binary files::
 
     /absolute/path/to/20150702-20150920.unw
     /absolute/path/to/20151219-20160109.unw
     /absolute/path/to/20160202-20160415.unw
 
-
 .. note::
 
     - Interferogram filenames must contain a pair of date epochs.
       Any naming convention is appropriate as long as an epoch pair of format
-      ``YYYYMMDD-YYYYMMDD`` exists in the filename.
+      ``YYYYMMDD-YYYYMMDD`` or ``YYMMDD-YYMMDD`` exists in the filename.
 
 The ``hdrfilelist`` gives the list of `GAMMA` SLC header text files.
-Example of a `GAMMA` SLC header file list:
-
-::
+Example of a `GAMMA` SLC header file list::
 
     /absolute/path/to/20150702_slc.par
     /absolute/path/to/20150920_slc.par
@@ -59,16 +54,14 @@ Example of a `GAMMA` SLC header file list:
     /absolute/path/to/20160202_slc.par
     /absolute/path/to/20160415_slc.par
 
-
 .. note::
 
-    - SLC header filenames must contain a single date epoch in the format ``YYYYMMDD``.
+    - SLC header filenames must contain a single date epoch in the format
+      ``YYYYMMDD`` or ``YYMMDD``.
 
 The ``cohfilelist`` is an optional list which contains the pool of all available
 coherence files to be used for optional coherence masking.
-Example of a coherence file list for `GAMMA` flat-binary files:
-
-::
+Example of a coherence file list for `GAMMA` flat-binary files::
 
     /absolute/path/to/20150702-20150920.coh
     /absolute/path/to/20151219-20160109.coh
@@ -77,8 +70,8 @@ Example of a coherence file list for `GAMMA` flat-binary files:
 .. note::
 
     - Like interferograms, coherence filenames must contain a pair of epochs.
-      The epoch pair must be in the format ``YYYYMMDD-YYYYMMDD``. Otherwise, any
-      naming convention is appropriate.
+      The epoch pair must be in the format ``YYYYMMDD-YYYYMMDD`` or
+      ``YYMMDD-YYMMDD``. Otherwise, any naming convention is appropriate.
 
 The date epochs in filenames are used to match the corresponding SLC header
 or coherence files to each interferogram. It is recommended to provide a complete
@@ -91,31 +84,33 @@ all three lists.
 ^^^^^^^^^^^^^^^^^
 
 After `Installation <installation.html>`__, an
-executable program ``pyrate`` is created in the system path:
-
-::
+executable program ``pyrate`` is created in the system path::
 
     >> pyrate --help
     usage: pyrate [-h] [-v {DEBUG,INFO,WARNING,ERROR}]
-                  {conv2tif,prepifg,process,merge,workflow} ...
+                  {conv2tif,prepifg,correct,timeseries,stack,merge,workflow} ...
 
     PyRate workflow:
 
         Step 1: conv2tif
         Step 2: prepifg
-        Step 3: process
-        Step 4: merge
+        Step 3: correct
+        Step 4: timeseries
+        Step 5: stack
+        Step 6: merge
 
     Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for
     more details.
 
     positional arguments:
-      {conv2tif,prepifg,process,merge,workflow}
-        conv2tif            Convert interferograms to geotiff.
-        prepifg             Perform multilooking and cropping on geotiffs.
-        process             Main processing workflow including corrections, time series and stacking computation.
+      {conv2tif,prepifg,correct,timeseries,stack,merge,workflow}
+        conv2tif            <Optional> Convert interferograms to geotiff.
+        prepifg             Perform multilooking, cropping and coherence masking to interferogram geotiffs.
+        correct             Calculate and apply corrections to interferogram phase data.
+        timeseries          <Optional> Timeseries inversion of interferogram phase data.
+        stack               <Optional> Stacking of interferogram phase data.
         merge               Reassemble computed tiles and save as geotiffs.
-        workflow            Run all the PyRate processes
+        workflow            <Optional> Sequentially run all the PyRate processing steps.
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -130,24 +125,17 @@ executable program ``pyrate`` is created in the system path:
 The ``pyrate`` program has four command line options corresponding to
 different steps in the `PyRate` workflow:
 
-1. ``conv2tif``
+1. ``conv2tif`` (optional)
 2. ``prepifg``
-3. ``process``
-4. ``merge``
+3. ``correct``
+4. ``timeseries`` (optional)
+5. ``stack`` (optional)
+6. ``merge``
 
-All four steps are required. 
-A fifth option, ``workflow``, is available that will run all four steps in order.
-In the following sub-sections we discuss each of the available steps.
+Not all steps are required as indicated above. A seventh option, ``workflow``, is
+available that will run all six of the above steps in the order shown.
 
-
-
-``conv2tif``: Converting flat-binary interferograms to Geotiff format
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Before `PyRate` can process interferograms in flat-binary file format, they need to be
-converted into geotiff format using the ``conv2tif`` step.
-
-::
+Command line arguments for each step can be found using (e.g. for ``conv2tif``)::
 
     >> pyrate conv2tif --help
     usage: pyrate conv2tif [-h] -f CONFIG_FILE
@@ -157,11 +145,20 @@ converted into geotiff format using the ``conv2tif`` step.
       -f CONFIG_FILE, --config_file CONFIG_FILE
                             Pass configuration file
 
-The ``conv2tif`` step is used as follows:
-
-::
+Each step can be run on the command line in one of the following two ways
+(e.g. for ``conv2tif``)::
 
     >> pyrate conv2tif -f /path/to/config_file
+    >> python3 pyrate/main.py conv2tif -f /path/to/config_file
+
+In the following sub-sections we discuss each of the available steps.
+
+
+``conv2tif``: Converting flat-binary files to Geotiff format
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Before `PyRate` can process interferograms that are in flat-binary file format, they
+need to be converted into geotiff format using the optional ``conv2tif`` step.
 
 .. note::
 
@@ -187,24 +184,9 @@ in the ``outdir`` directory defined in the configuration file.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``prepifg`` is the second step of `PyRate`, which applys multi-looking, cropping
-and coherence masking operations to the geotiff interferograms.
-
-::
-
-    >> pyrate prepifg --help
-    usage: pyrate prepifg [-h] -f CONFIG_FILE
-
-    optional arguments:
-      -h, --help            show this help message and exit
-      -f CONFIG_FILE, --config_file CONFIG_FILE
-                            Pass configuration file
-
-The ``prepifg`` step is used as follows:
-
-::
-
-    >> pyrate prepifg -f /path/to/config_file
-
+and coherence masking operations to the geotiff-format input interferograms.
+This is a required step, which formats the input data in a way expected by the
+rest of the `PyRate` workflow.
 
 **Coherence masking**
 
@@ -220,13 +202,18 @@ high-quality pixels for analysis. Pixels with coherence values below a certain t
     - The number of pixels with numeric phase values (i.e. pixels not equal to NaN)
       in each interferogram will be different after coherence masking.
 
-Coherence masking is enabled by setting the ``cohmask`` parameter to ``1`` in
+Coherence masking is enabled by setting ``cohmask: 1`` in
 the configuration file. A threshold, ``cohthresh`` needs to be provided. 
 For every pixel where the coherence is lower than ``cohthresh`` the phase will be
-changed to a NaN.
+changed to NaN.
 The available coherence files need to be specified in a list file as described above
 and defined in the ``cohfilelist`` parameter.
 
+.. note::
+
+    - Multi-looked and cropped versions of those coherence images found that match
+      the epochs of the input interferograms will be saved to disk in geotiff format,
+      even if coherence masking is not applied (i.e. ``cohmask: 0``).
 
 **Multi-looking**
 
@@ -234,13 +221,14 @@ The ``prepifg`` step will perform optional multi-looking (image sub-sampling)
 of the input interferograms in geotiff format. The purpose of multi-looking is twofold:
 
 - Reduce the spatial resolution of the interferograms in order to improve the
-computational efficiency of `PyRate` analysis.
-- Reduce the general phase noise in the interferograms.
+  computational efficiency of `PyRate` analysis.
+- Reduce the general phase noise in the interferograms in order to enhance the
+  signal-to-noise ratio in the output products.
 
-To multi-look, set ``ifglksx`` and ``ifglksy`` to the integer subsampling factor
-in the x (easting) and y (northing) dimensions respectively. Separate parameters for x
-and y gives flexibility for users in case they want to achieve different spatial
-resolution in in each dimension.
+To multi-look, set ``ifglksx`` and ``ifglksy`` to an integer subsampling factor greater
+than one in the x (easting) and y (northing) dimensions respectively. Separate parameters
+for x and y gives flexibility for users in case they want to achieve different spatial
+resolution in each dimension.
 
 .. note::
 
@@ -249,8 +237,7 @@ resolution in in each dimension.
       (i.e. no multi-looking).
     - It is recommended to try a large multi-look factor to start with (e.g. ``10``
       or greater), and subsequently reduce the multi-looking factor once the user
-      has experience with processing a certain dataset.
-
+      has experience with processing a particular dataset.
 
 **Cropping**
 
@@ -263,101 +250,80 @@ To crop, set ``ifgcropopt`` to ``3`` and provide the geographic latitude and lon
 bounds in the ``ifgxfirst`` (west), ``ifgxlast`` (east), ``ifgyfirst`` (north), and
 ``ifgylast`` (south) parameters.
 
-
-``process``: Main workflow, including stacking and time series analysis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-``process`` is the core of the `PyRate` processing workflow. This step will perform
-a series of corrections to the interferogram phase data before running the time series
-and stacking analysis.
-
-::
-
-    >> pyrate process --help
-    usage: pyrate process [-h] -f CONFIG_FILE
-
-    optional arguments:
-      -h, --help            show this help message and exit
-      -f CONFIG_FILE, --config_file CONFIG_FILE
-                            Pass configuration file
-
-The ``process`` step is used as follows:
-
-::
-
-    >> pyrate process -f path/to/config_file
+Upon completion, ``prepifg`` will save in the ``outdir`` a new set of interferogram files
+(``*_ifg.tif``) and if provided as input, coherence files (``*_coh.tif``) and a DEM
+(``dem.tif``).
 
 
-Optionally, an orbital error correction and a spatio-temporal filter
-operation to estimate and remove atmospheric phase screen (APS) signals is
-applied to the interferograms prior to time series and stacking
-analysis. The corrected interferograms are updated on disk and the
-corrections are not re-applied upon subsequent runs. This functionality
-is controlled by the ``orbfit`` and ``apsest`` options in the
-configuration file.
+``correct``: Compute and apply interferometric phase corrections
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Non-optional pre-processing steps include: 
+``correct`` is the third step in the `PyRate` processing workflow. This step will perform
+a series of corrections to the interferogram phase data.
+It is a required step in the processing workflow consisting of a series of optional
+and non-optional phase corrections.
+Orbital error and spatio-temporal filtering are the optional steps, controlled by the
+configuration parameters ``orbfit`` and ``apsest``, respectively.
+Non-optional phase corrections include:
+
 - Minimum Spanning Tree matrix calculation,
 - Identification of a suitable reference phase area,
-- Removal of reference phase from interferograms,
+- Correction of reference phase in interferograms,
 - Calculation of interferogram covariance,
 - Assembly of the variance-covariance matrix.
 
-Following the above processing steps the time series and stacking
-calculations are run. Time series is optional, controlled by the 
-``tscal`` parameter. Stacking is not optional.
+The corrected interferogram phase is saved to copies of the ``prepifg`` interferograms in
+the directory ``<outdir>/temp_mlooked_dir/`` (the output from ``prepifg`` is retained
+as a read-only dataset in the ``outdir``).
+Additionally, copies of the phase corrections are saved to disk as numpy array
+files (``*.npy``) for use in post-processing.
+
+
+``timeseries``: Compute the displacement time series
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``timeseries`` is the optional fourth step in the `PyRate` processing workflow.
+This step will perform a time series inversion to derive the cumulative displacement
+time series from the stack of corrected interferograms.
+The cumulative displacement time series (``tscuml*``) is saved by default.
+Users can optionally save the incremental displacement time series (``tsincr*``)
+by setting parameter ``savetsincr: 1``.
+
+A linear regression of the cumulative displacement time series is also computed
+as part of the ``timeseries`` step. The resulting linear rate (velocity),
+standard error, R-squared and y-intercept terms are all saved to disk.
+
+
+``stack``: Compute the average velocity via stacking
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``stack`` is the optional fifth step in the `PyRate` processing workflow.
+This step will perform an iterative stacking of the phase data to derive a
+robust velocity estimate for each pixel in the interferograms.
+The velocity from stacking (``stack_rate*``) is saved by default.
+
+.. note::
+
+    - Both ``timeseries`` and ``stack`` are optional and independent steps
+      that can be computed in either order.
 
 
 ``merge``: Reassemble the tiles
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``merge`` is the last step of the `PyRate` workflow, which produces geotiff
-files containing the final time series and stacking products.
-``merge`` will also re-assemble tiles that were generated during the ``process``
-step when run with MPI. Tiling is discussed in the :ref:`parallel_label` section
-below.
-
-::
-
-    >> pyrate merge --help
-    usage: pyrate merge [-h] [-f CONFIG_FILE]
-
-    optional arguments:
-      -h, --help            show this help message and exit
-      -f CONFIG_FILE, --config_file CONFIG_FILE
-                            Pass configuration file
-
-The ``merge`` step is used as follows:
-
-::
-
-    >> pyrate merge -f path/to/config_file
-
+``merge`` is the sixth and final step of the `PyRate` workflow, which produces
+geotiff files containing the final time series, linear rate and stacking products.
+``merge`` will also re-assemble tiles that were generated during the previous
+steps. Tiling is discussed in the :ref:`parallel_label` section below.
 After running the ``merge`` step, several geotiff products will appear in the
-directory defined by the ``outdir`` parameter.
+``outdir`` directory.
 
 
 ``workflow``: Run the full PyRate workflow
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``workflow`` is a fifth option that will run all four steps (``conv2tif``, ``prepifg``,
-``process``, and ``merge``) in order as a single job.
-
-::
-
-    >> pyrate workflow --help
-    usage: pyrate workflow [-h] [-f CONFIG_FILE]
-
-    optional arguments:
-      -h, --help            show this help message and exit
-      -f CONFIG_FILE, --config_file CONFIG_FILE
-                            Pass configuration file
-
-The ``workflow`` is used as follows:
-
-::
-
-    pyrate workflow -f path/to/config_file
+``workflow`` is an additional option that will run all the above six steps
+in order as a single job.
 
 .. note::
 
@@ -417,31 +383,49 @@ It therefore makes sense to parallelise processing operations wherever possible.
 .. _`Sentinel-1`: https://sentinel.esa.int/web/sentinel/user-guides/sentinel-1-sar
 
 `PyRate` can be run in parallel using standard multi-threading simply by turning
-``parallel:  1`` in the configuration file to take advantage of multiple cores
+``parallel: 1`` in the configuration file to take advantage of multiple cores
 on a single machine. The parameter ``processes`` sets the number of threads.
 
 Alternatively, `PyRate` can be parallelised on a system with an installed MPI library
-by using ``mpirun``:
-
-::
+by using ``mpirun``::
 
     # Modify '-n' based on the number of processors available.
     mpirun -n 4 pyrate conv2tif -f path/to/config_file
     mpirun -n 4 pyrate prepifg -f path/to/config_file
-    mpirun -n 4 pyrate process -f path/to/config_file
+    mpirun -n 4 pyrate correct -f path/to/config_file
+    mpirun -n 4 pyrate timeseries -f input_parameters.conf
+    mpirun -n 4 pyrate stack -f input_parameters.conf
     mpirun -n 4 pyrate merge -f path/to/config_file
 
 .. note::
 
-    - In the case that `PyRate` is run using ``mpirun``, standard multi-threading is automatically
-      disabled (i.e. equivalent to setting ``parallel:  0``).
+    - In the case that `PyRate` is run using ``mpirun``, standard multi-threading is
+      automatically disabled (i.e. equivalent to setting ``parallel: 0``).
 
-- During ``conv2tif`` and ``prepifg``, parallelism is achieved by sending sub-lists of input
-  files to each process.
-- In the multi-threading case, parallelism in the ``process`` step is achieved by splitting
-  individual pixels across the available processes in a pixel-by-pixel nature.
-- In the MPI case, parallelism in the ``process`` step is achieved by splitting the images
-  in to a grid of tiles, where the number of tiles equals the number of processes passed with
-  the ``-n`` option. The number of tiles in x and y dimension are automatically calculated by
-  `PyRate`, ensuring a roughly equivalent number in both dimensions. One of the functions of the 
-  ``merge`` step is to reassemble these tiles in to the full image for each output product.
+During ``conv2tif`` and ``prepifg``, parallelism is achieved by sending sub-lists of input
+files to each process.
+Parallelism in the ``correct``, ``timeseries`` and ``stack`` steps is achieved by splitting
+the images in to a grid of tiles, where the number of tiles equals the number of processes
+passed with the ``-n`` argument to ``mpirun``, or the ``processes`` parameter for multi-threading.
+The number of tiles in x and y dimension are automatically calculated by `PyRate`, ensuring
+a roughly equivalent number in both dimensions. One of the functions of the ``merge`` step
+is to reassemble these tiles in to the full image for each output product.
+
+
+Results Visualisation
+---------------------
+
+A plotting script is included in the ``utils/`` directory that can be used to inspect the
+cumulative time series (``tscuml*.tif``) and linear rate (``linear_rate.tif``) geotiff files
+produced in the ``merge`` step. Example usage for the included test data is as follows::
+
+    cd PyRate
+    source ~/PyRateVenv/bin/activate
+    pyrate workflow -f input_parameters.conf
+    pip install -r requirements-plot.txt
+    python3 utils/plot_time_series.py out/
+
+.. image:: PyRate_plot_screenshot.png 
+   :alt: Screenshot of PyRate plotting tool
+   :scale: 30 %
+

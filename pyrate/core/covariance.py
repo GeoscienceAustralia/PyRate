@@ -19,6 +19,7 @@ Variance/Covariance matrix functionality.
 """
 # coding: utf-8
 from os.path import basename, join
+from collections import OrderedDict
 from numpy import array, where, isnan, real, imag, sqrt, meshgrid
 from numpy import zeros, vstack, ceil, mean, exp, reshape
 from numpy.linalg import norm
@@ -30,14 +31,13 @@ from pyrate.core import shared, ifgconstants as ifc, config as cf, mpiops
 from pyrate.core.shared import PrereadIfg, Ifg
 from pyrate.core.algorithm import first_second_ids
 from pyrate.core.logger import pyratelogger as log
+from pyrate.configuration import Configuration
 
 # pylint: disable=too-many-arguments
 # distance division factor of 1000 converts to km and is needed to match legacy output
 
-first_PROCESS = 0
+MAIN_PROCESS = 0
 DISTFACT = 1000
-
-
 
 
 def _pendiffexp(alphamod, cvdav):
@@ -64,8 +64,7 @@ def _unique_points(points):  # pragma: no cover
     return vstack([array(u) for u in set(points)])
 
 
-def cvd(ifg_path, params, r_dist, calc_alpha=False,
-        write_vals=False, save_acg=False):
+def cvd(ifg_path, params, r_dist, calc_alpha=False, write_vals=False, save_acg=False):
     """
     Calculate the 1D covariance function of an entire interferogram as the
     radial average of its 2D autocorrelation.
@@ -101,8 +100,7 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False,
     else:
         phase = ifg.phase_data
 
-    maxvar, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha,
-                                   save_acg=save_acg, params=params)
+    maxvar, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=save_acg, params=params)
 
     if write_vals:
         _add_metadata(ifg, maxvar, alpha)
@@ -297,7 +295,6 @@ def get_vcmt(ifgs, maxvar):
     # of one matches second of another
 
     if isinstance(ifgs, dict):
-        from collections import OrderedDict
         ifgs = {k: v for k, v in ifgs.items() if isinstance(v, PrereadIfg)}
         ifgs = OrderedDict(sorted(ifgs.items()))
         # pylint: disable=redefined-variable-type
@@ -336,7 +333,6 @@ def maxvar_vcm_calc_wrapper(params):
     preread_ifgs = params[cf.PREREAD_IFGS]
     ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     log.info('Calculating the temporal variance-covariance matrix')
-    process_indices = mpiops.array_split(range(len(ifg_paths)))
 
     def _get_r_dist(ifg_path):
         """
@@ -349,26 +345,16 @@ def maxvar_vcm_calc_wrapper(params):
         return r_dist
 
     r_dist = mpiops.run_once(_get_r_dist, ifg_paths[0])
-    prcs_ifgs = mpiops.array_split(ifg_paths)
-    process_maxvar = []
-    for n, i in enumerate(prcs_ifgs):
-        log.debug('Calculating maxvar for {} of process ifgs {} of total {}'.format(n+1, len(prcs_ifgs), len(ifg_paths)))
-        process_maxvar.append(cvd(i, params, r_dist, calc_alpha=True, write_vals=True, save_acg=True)[0])
-    if mpiops.rank == first_PROCESS:
-        maxvar = np.empty(len(ifg_paths), dtype=np.float64)
-        maxvar[process_indices] = process_maxvar
-        for i in range(1, mpiops.size):  # pragma: no cover
-            rank_indices = mpiops.array_split(range(len(ifg_paths)), i)
-            this_process_ref_phs = np.empty(len(rank_indices), dtype=np.float64)
-            mpiops.comm.Recv(this_process_ref_phs, source=i, tag=i)
-            maxvar[rank_indices] = this_process_ref_phs
-    else:  # pragma: no cover
-        maxvar = np.empty(len(ifg_paths), dtype=np.float64)
-        mpiops.comm.Send(np.array(process_maxvar, dtype=np.float64), dest=first_PROCESS, tag=mpiops.rank)
+    prcs_ifgs = mpiops.array_split(list(enumerate(ifg_paths)))
+    process_maxvar = {}
+    for n, i in prcs_ifgs:
+        log.debug(f'Calculating maxvar for {n} of process ifgs {len(prcs_ifgs)} of total {len(ifg_paths)}')
+        process_maxvar[int(n)] = cvd(i, params, r_dist, calc_alpha=True, write_vals=True, save_acg=True)[0]
+    maxvar_d = shared.join_dicts(mpiops.comm.allgather(process_maxvar))
+    maxvar = [v[1] for v in sorted(maxvar_d.items(), key=lambda s: s[0])]
 
-    mpiops.comm.barrier()
-    maxvar = mpiops.comm.bcast(maxvar, root=0)
     vcmt = mpiops.run_once(get_vcmt, preread_ifgs, maxvar)
     log.debug("Finished maxvar and vcm calc!")
     params[cf.MAXVAR], params[cf.VCMT] = maxvar, vcmt
+    np.save(Configuration.vcmt_path(params), arr=vcmt)
     return maxvar, vcmt

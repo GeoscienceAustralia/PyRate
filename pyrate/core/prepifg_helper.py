@@ -26,11 +26,10 @@ from numbers import Number
 from decimal import Decimal
 from typing import List, Tuple, Union
 from numpy import array, nan, isnan, nanmean, float32, zeros, sum as nsum
-from osgeo import gdal
 
 from pyrate.core.gdal_python import crop_resample_average
-from pyrate.core import config as cf
-from pyrate.core.shared import output_tiff_filename, dem_or_ifg, Ifg, DEM
+from pyrate.core.shared import dem_or_ifg, Ifg, DEM
+from pyrate.core.logger import pyratelogger as log
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
 
@@ -110,6 +109,9 @@ def _check_looks(xlooks, ylooks):
               "Looks must be an integer greater than zero" % (xlooks, ylooks)
         raise PreprocessError(msg)
 
+    if xlooks != ylooks:
+        log.warning('X and Y multi-look factors are not equal')
+
 
 def _check_resolution(ifgs):
     """
@@ -157,7 +159,7 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, header, wri
     :param int ylooks: Number of multi-looks in y
     :param tuple exts: Tuple of user defined georeferenced extents for
         new file: (xfirst, yfirst, xlast, ylast)cropping coordinates
-    :param float thresh: see thresh in prepare_ifgs()
+    :param float thresh: NaN fraction threshold below which resampled_data is assigned NaNs
     :param int crop_opt: Crop option
     :param bool write_to_disk: Write new data to disk
     :param str out_path: Path for output file
@@ -177,13 +179,6 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, header, wri
     if do_multilook:
         resolution = [xlooks * raster.x_step, ylooks * raster.y_step]
 
-    # cut, average, resample the final output layers
-    op = output_tiff_filename(raster.data_path, out_path)
-    looks_path = cf.mlooked_path(op, ylooks, crop_opt)
-
-    if xlooks != ylooks:
-        raise ValueError('X and Y looks mismatch')
-
     #     # Add missing/updated metadata to resampled ifg/DEM
     #     new_lyr = type(ifg)(looks_path)
     #     new_lyr.open(readonly=True)
@@ -195,42 +190,11 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, header, wri
     #         #    reproject()
     driver_type = 'GTiff' if write_to_disk else 'MEM'
     resampled_data, out_ds = crop_resample_average(
-        input_tif=raster.data_path, extents=exts, new_res=resolution, output_file=looks_path, thresh=thresh,
+        input_tif=raster.data_path, extents=exts, new_res=resolution, output_file=out_path, thresh=thresh,
         out_driver_type=driver_type, hdr=header, coherence_path=coherence_path, coherence_thresh=coherence_thresh
     )
 
     return resampled_data, out_ds
-
-
-# TODO: crop options 0 = no cropping? get rid of same size
-def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, thresh=0.5, user_exts=None, write_to_disc=True,
-                 out_path=None):
-    """
-    Wrapper function to prepare a sequence of interferogram files for
-    PyRate analysis. See prepifg.prepare_ifg() for full description of
-    inputs and returns.
-    
-    Note: function need refining for crop options
-
-    :param list raster_data_paths: List of interferogram file paths
-    :param int crop_opt: Crop option
-    :param int xlooks: Number of multi-looks in x; 5 is 5 times smaller, 1 is no change
-    :param int ylooks: Number of multi-looks in y
-    :param float thresh: see thresh in prepare_ifgs()
-    :param tuple user_exts: Tuple of user defined georeferenced extents for
-        new file: (xfirst, yfirst, xlast, ylast)cropping coordinates
-    :param bool write_to_disk: Write new data to disk
-
-    :return: resampled_data: output cropped and resampled image
-    :rtype: ndarray
-    :return: out_ds: destination gdal dataset object
-    :rtype: List[gdal.Dataset]
-    """
-    # use metadata check to check whether it's a dem or ifg
-    rasters = [dem_or_ifg(r) for r in raster_data_paths]
-    exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)
-    return [prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, h, write_to_disc, out_path) for d, h
-            in zip(raster_data_paths, headers)]
 
 
 # TODO: Not being used. Remove in future?

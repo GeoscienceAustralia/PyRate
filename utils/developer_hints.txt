@@ -17,19 +17,29 @@ check out here also: https://packaging.python.org/tutorials/packaging-projects/
 # Clone Github repo
 cd ~
 git clone git@github.com:GeoscienceAustralia/PyRate.git
+or
+git clone https://github.com/GeoscienceAustralia/PyRate.git 
 
 # build PyRate package
 cd ~/PyRate
+pip install -r requirements.txt
 pip install -r requirements-dev.txt
 pip install -r requirements-test.txt
-pip install -r requirements-test.txt
-cd /PyRate && python3 setup.py install
+python3 setup.py install
 
-# Run workflow
-python pyrate/__main__.py  conv2tif -f  pyrate_gamma.conf
-pyrate prepifg -f pyrate_gamma.conf
-pyrate process -f pyrate_gamma.conf
-pyrate merge -f pyrate_gamma.conf
+# Run workflow, one step at a time
+pyrate conv2tif -f input_parameters.conf
+pyrate prepifg -f input_parameters.conf
+pyrate correct -f input_parameters.conf
+pyrate timeseries -f input_parameters.conf
+pyrate stack -f input_parameters.conf
+pyrate merge -f input_parameters.conf
+
+# or run all workflow steps in order
+pyrate workflow -f input_parameters.conf
+
+# alternatively run commands via python, e.g.
+python3 pyrate/main.py workflow -f input_parameters.conf
 
 ---------------------------------------
 # Build Sphinx docs
@@ -40,6 +50,7 @@ cd /PyRate/docs && make html
 # Run unit tests, avoiding those marked as "slow"
 pip install -r requirements-test.txt
 cd /PyRate
+# file permission change required for a test:
 chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif
 pytest tests/ -m "not slow"
 
@@ -48,12 +59,10 @@ NCI Gadi supercomputer
 
 ssh <username>@gadi.nci.org.au
 
-cd ~
+rm -rf ~/PyRate
+rm -rf ~/PyRateVenv
 
-rm -rf PyRate
-rm -rf PyRateVenv
-
-git clone https://github.com/GeoscienceAustralia/PyRate.git -b develop --single-branch
+git clone git@github.com:GeoscienceAustralia/PyRate.git
 source PyRate/scripts/nci_load_modules.sh
 python3 -m venv ~/PyRateVenv
 source ~/PyRateVenv/bin/activate
@@ -62,11 +71,10 @@ pip install -r requirements-dev.txt
 pip install -r requirements-test.txt
 pip install -r requirements.txt
 
-python setup.py install
+python3 setup.py install
 
-cd ~/PyRate/pyrate
-python main.py -v DEBUG conv2tif -f ~/PyRate/sample_data/input_parameters.conf
-python main.py -v DEBUG prepifg  -f ~/PyRate/sample_data/input_parameters.conf
-python main.py -v DEBUG process  -f ~/PyRate/sample_data/input_parameters.conf
-python main.py -v DEBUG merge    -f ~/PyRate/sample_data/input_parameters.conf
+# run with debug messages
+pyrate -v DEBUG workflow -f input_parameters.conf
 
+# run using MPI
+mpirun -n 6 pyrate workflow -f input_parameters.conf

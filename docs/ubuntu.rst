@@ -17,3 +17,5 @@ Clone the repository, install required packages and install `PyRate`:
     export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/usr/include/gdal
 
     python3 setup.py install
+
+These commands will compile the executable program ``pyrate``.

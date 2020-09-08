@@ -1,4 +1,5 @@
 .. image:: docs/PyRate_logo_50.png
+   :alt: PyRate logo
 
 Python tool for InSAR Rate and Time-series Estimation
 =====================================================
@@ -21,7 +22,7 @@ The full PyRate documentation is available at http://geoscienceaustralia.github.
 Dependencies
 ------------
 
-The following dependencies need to be on your system prior to PyRate installation:
+The following system dependencies are required by PyRate:
 
 - `Python <https://www.python.org/downloads/>`_, versions 3.6, 3.7 or 3.8.
 - `GDAL <https://gdal.org/download.html>`_, versions 3.0.2 or 3.0.4
@@ -29,13 +30,8 @@ The following dependencies need to be on your system prior to PyRate installatio
 
 The versions of each package stated above have been tested to work.
 
-Python dependencies are:
+Python dependencies for PyRate are::
 
-::
-
-    Cython==0.29.16
-    Pillow==7.1.1
-    glob2==0.7
     joblib==0.14.1
     mpi4py==3.0.3
     networkx==2.4
@@ -49,15 +45,11 @@ Install
 
 Details of all install options are given in the `PyRate documentation <http://geoscienceaustralia.github.io/PyRate>`_.
 
-`PyRate` and its Python dependencies can be installed directly from the `Python Package Index (PyPI) <https://pypi.org/project/Py-Rate/>`_:
-
-::
+PyRate and its Python dependencies can be installed directly from the `Python Package Index (PyPI) <https://pypi.org/project/Py-Rate/>`_::
 
     pip install Py-Rate
 
-To install from source in Linux, enter these commands in a terminal:
-
-::
+Alternatively, to install from source and create an executable program in Linux, enter these commands in a terminal::
 
     cd ~
     git clone https://github.com/GeoscienceAustralia/PyRate.git
@@ -66,34 +58,49 @@ To install from source in Linux, enter these commands in a terminal:
     cd ~/PyRate
     python3 setup.py install
 
-This will install the above-listed Python dependencies and compile the executable program ``pyrate``:
-
-::
+This will install the above-listed Python dependencies and compile the executable program ``pyrate``.
+To learn more about using PyRate, type ``pyrate`` command in the terminal::
 
     >> pyrate --help
     usage: pyrate [-h] [-v {DEBUG,INFO,WARNING,ERROR}]
-                  {conv2tif,prepifg,process,merge,workflow} ...
+              {conv2tif,prepifg,correct,timeseries,stack,merge,workflow} ...
 
     PyRate workflow:
 
         Step 1: conv2tif
         Step 2: prepifg
-        Step 3: process
-        Step 4: merge
+        Step 3: correct
+        Step 4: timeseries
+        Step 5: stack
+        Step 6: merge
 
     Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for
     more details.
 
     positional arguments:
-      {conv2tif,prepifg,process,merge,workflow}
+      {conv2tif,prepifg,correct,timeseries,stack,merge,workflow}
         conv2tif            Convert interferograms to geotiff.
-        prepifg             Perform multilooking and cropping on geotiffs.
-        process             Main processing workflow including corrections, time series and stacking computation.
+        prepifg             Perform multilooking, cropping and coherence masking to interferogram geotiffs.
+        correct             Calculate and apply corrections to interferogram phase data.
+        timeseries          Timeseries inversion of interferogram phase data.
+        stack               Stacking of interferogram phase data.
         merge               Reassemble computed tiles and save as geotiffs.
-        workflow            Run all the PyRate processes
+        workflow            Sequentially run all the PyRate processing steps.
 
     optional arguments:
       -h, --help            show this help message and exit
       -v {DEBUG,INFO,WARNING,ERROR}, --verbosity {DEBUG,INFO,WARNING,ERROR}
                             Increase output verbosity
+
+Test
+----
+
+To run the test suite, enter these commands in the terminal::
+
+   pip install -r requirements-test.txt
+   python3 -m pytest -m "not slow" tests/
+
+To run the tests for a single module (e.g. test_timeseries.py), use this command::
+
+   python3 -m pytest tests/test_timeseries.py
 

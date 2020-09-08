@@ -16,7 +16,6 @@
 """
 This Python module contains tests for the shared.py PyRate module.
 """
-
 import os
 import shutil
 import sys
@@ -156,7 +155,7 @@ class TestIfgIOTests:
         assert self.ifg.dataset is None
         assert self.ifg.is_open is False
         self.ifg.open(readonly=True)
-        assert  self.ifg.dataset is not None
+        assert self.ifg.dataset is not None
         assert self.ifg.is_open is True
         assert isinstance(self.ifg.dataset, Dataset)
 
@@ -169,17 +168,11 @@ class TestIfgIOTests:
         Test showing open() can not be used for Ifg created with
         gdal.Dataset object as Dataset has already been read in
         """
-        paths = [self.ifg.data_path]
-        headers = [self.header]
-        mlooked_phase_data = prepifg_helper.prepare_ifgs(paths,
-                                                         crop_opt=prepifg_helper.ALREADY_SAME_SIZE,
-                                                         xlooks=2,
-                                                         ylooks=2,
-                                                         write_to_disc=False,
-                                                         headers=headers)
-        mlooked = [Ifg(m[1]) for m in mlooked_phase_data]
+        self.ifg.open()
+        dataset = self.ifg.dataset
+        new_ifg = Ifg(dataset)
         with pytest.raises(RasterException):
-            mlooked[0].open()
+            new_ifg.open()
 
     def test_write(self):
         base = TEMPDIR
@@ -340,6 +333,8 @@ class TestWriteUnw:
     @pytest.fixture(autouse=True)
     def setup_class(cls, gamma_params):
         # change the required params
+        shutil.rmtree(gamma_params[cf.OUT_DIR])  # start with a clean directory
+        shared.mkdir_p(gamma_params[cf.OUT_DIR])
         cls.params = gamma_params
         cls.params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         cls.params[cf.PROCESSOR] = 1  # gamma
@@ -411,17 +406,20 @@ class TestWriteUnw:
 
     def test_multilooked_tiffs_converted_to_unw_are_same(self):
         # Get multilooked geotiffs
-        geotiffs = self.dest_paths
+        geotiffs = list(set(self.dest_paths))
+        geotiffs = [g for g in geotiffs if 'dem' not in g]
 
         # Convert back to .unw
         dest_unws = []
-        for g in geotiffs:
+        for g in set(geotiffs):
             dest_unw = os.path.join(self.params[cf.OUT_DIR], Path(g).stem + '.unw')
-            shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw= dest_unw, ifg_proc=1)
+            shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw=dest_unw, ifg_proc=1)
             dest_unws.append(dest_unw)
 
-        dest_unws_ = [MultiplePaths(self.params[cf.OUT_DIR], b, self.params[cf.IFG_LKSX], self.params[cf.IFG_CROP_OPT])
-                      for b in dest_unws]
+        dest_unws_ = []
+
+        for d in dest_unws:
+            dest_unws_.append(MultiplePaths(d, self.params))
 
         # Convert back to tiff
         new_geotiffs_ = conv2tif.do_geotiff(dest_unws_, self.params)
@@ -429,11 +427,12 @@ class TestWriteUnw:
 
         # Ensure original multilooked geotiffs and 
         #  unw back to geotiff are the same
+        geotiffs.sort()
+        new_geotiffs.sort()
         for g, u in zip(geotiffs, new_geotiffs):
             g_ds = gdal.Open(g)
             u_gs = gdal.Open(u)
-            np.testing.assert_array_almost_equal(u_gs.ReadAsArray(),
-                                                 g_ds.ReadAsArray())
+            np.testing.assert_array_almost_equal(u_gs.ReadAsArray(), g_ds.ReadAsArray())
             u_gs = None
             g_ds = None
 
@@ -444,11 +443,9 @@ class TestWriteUnw:
             for b in self.base_unw_paths]
 
         for g in geotiffs[:1]:
-            dest_unw = os.path.join(self.params[cf.OUT_DIR],
-                                    os.path.splitext(g)[0] + '.unw')
+            dest_unw = os.path.join(self.params[cf.OUT_DIR], os.path.splitext(g)[0] + '.unw')
             with pytest.raises(NotImplementedError):
-                shared.write_unw_from_data_or_geotiff(
-                    geotif_or_data=g, dest_unw=dest_unw, ifg_proc=0)
+                shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw=dest_unw, ifg_proc=0)
 
 
 class TestGeodesy:

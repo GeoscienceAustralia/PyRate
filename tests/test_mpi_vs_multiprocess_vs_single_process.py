@@ -1,9 +1,29 @@
-import os
+#   This Python module is part of the PyRate software package.
+#
+#   Copyright 2020 Geoscience Australia
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+"""
+This Python module contains regression tests for comparing output from serial,
+parallel and MPI PyRate runs.
+"""
 import shutil
 import pytest
 from pathlib import Path
-from subprocess import check_call, check_output, CalledProcessError
+from subprocess import check_call, CalledProcessError
 import numpy as np
+
+import pyrate.configuration
 from pyrate.core import config as cf
 from tests.common import (
     assert_same_files_produced,
@@ -60,7 +80,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
         print(params)
         # write new temp config
         output_conf = tdir.joinpath(output_conf_file)
-        cf.write_config_file(params=params, output_conf_file=output_conf)
+        pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
 
         return output_conf, params
     return modify_params
@@ -84,11 +104,13 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
     check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
 
     try:
-        check_call(f"mpirun -n 3 pyrate process -f {mpi_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate correct -f {mpi_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate timeseries -f {mpi_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate stack -f {mpi_conf}", shell=True)
     except CalledProcessError as c:
         print(c)
         if TRAVIS:
-            pytest.skip("Skipping as part of process error")
+            pytest.skip("Skipping as part of correction error")
     check_call(f"mpirun -n 3 pyrate merge -f {mpi_conf}", shell=True)
 
     mr_conf, params_m = modified_config(gamma_conf, 1, 'multiprocess_conf.conf')
@@ -100,11 +122,11 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
     check_call(f"pyrate workflow -f {sr_conf}", shell=True)
 
     # convert2tif tests, 17 interferograms
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw_ifg.tif", 17)
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw.tif", 17)
 
     # if coherence masking, comprare coh files were converted
-    if params[cf.COH_MASK]:
-        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_coh.tif", 17)
+    if params[cf.COH_FILE_LIST] is not None:
+        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_cc.tif", 17)
         print("coherence files compared")
         # 17 ifgs + 1 dem + 17 mlooked coh files
         no_of_files = 35
@@ -112,20 +134,31 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
         # 17 ifgs + 1 dem
         no_of_files = 18
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
-                               f"*{params[cf.IFG_CROP_OPT]}cr.tif", no_of_files)
+                               ["*_ifg.tif", "*_cc.tif", "dem.tif"], no_of_files)
 
     # cf.TEMP_MLOOKED_DIR will contain the temp files that can be potentially deleted later
     assert_same_files_produced(params[cf.TEMP_MLOOKED_DIR], params_m[cf.TEMP_MLOOKED_DIR],
-                               params_s[cf.TEMP_MLOOKED_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 17)
+                               params_s[cf.TEMP_MLOOKED_DIR], "*_ifg.tif", 17)
 
-    # prepifg + process steps that overwrite tifs test
-    # ifg phase checking in the previous step checks the process pipeline upto APS correction
+    # prepifg + correct steps that overwrite tifs test
+    # ifg phase checking in the previous step checks the correct pipeline upto APS correction
 
     # 2 x because of aps files
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "tsincr_*.npy",
                                params['notiles'] * 2)
 
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "tscuml_*.npy",
+                               params['notiles'])
+
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "linear_rate_*.npy",
+                               params['notiles'])
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "linear_error_*.npy",
+                               params['notiles'])
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "linear_intercept_*.npy",
+                               params['notiles'])
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "linear_rsquared_*.npy",
+                               params['notiles'])
+    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "linear_samples_*.npy",
                                params['notiles'])
 
     assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "stack_rate_*.npy",
@@ -140,6 +173,12 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_conf):
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.kml", 2)
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.png", 2)
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.npy", 3)
+    
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.tif", 5)
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.kml", 3)
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.png", 3)
+    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.npy", 5)
+    
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tscuml*.tif", 12)
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tsincr*.tif", 12)
 
@@ -187,7 +226,7 @@ def modified_config_short(tempdir, local_crop, get_lks, coh_mask, ref_pixel):
         print(params)
         # write new temp config
         output_conf = tdir.joinpath(output_conf_file)
-        cf.write_config_file(params=params, output_conf_file=output_conf)
+        pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
 
         return output_conf, params
 
@@ -205,7 +244,9 @@ def create_mpi_files():
         check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
 
         try:
-            check_call(f"mpirun -n 3 pyrate process -f {mpi_conf}", shell=True)
+            check_call(f"mpirun -n 3 pyrate correct -f {mpi_conf}", shell=True)
+            check_call(f"mpirun -n 3 pyrate timeseries -f {mpi_conf}", shell=True)
+            check_call(f"mpirun -n 3 pyrate stack -f {mpi_conf}", shell=True)
         except CalledProcessError as c:
             print(c)
             if TRAVIS:
@@ -240,26 +281,32 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     check_call(f"pyrate workflow -f {sr_conf}", shell=True)
 
     # convert2tif tests, 17 interferograms
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw_ifg.tif", 17)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw.tif", 17)
 
     # if coherence masking, compare coh files were converted
-    if params[cf.COH_MASK]:
-        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_coh.tif", 17)
+    if params[cf.COH_FILE_LIST] is not None:
+        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_cc.tif", 17)
         print("coherence files compared")
 
-    # prepifg + process steps that overwrite tifs test
+    # prepifg + correct steps that overwrite tifs test
     # 17 mlooked ifgs + 1 dem + 17 mlooked coherence files
-    if params[cf.COH_MASK]:
-        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 35)
+    if params[cf.COH_FILE_LIST] is not None:
+        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], ["*_ifg.tif", "*_coh.tif", 'dem.tif'], 35)
     else:
-        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], f"*{params[cf.IFG_CROP_OPT]}cr.tif", 18)
+        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], ["*_ifg.tif", 'dem.tif'], 18)
 
-    assert_two_dirs_equal(params[cf.TEMP_MLOOKED_DIR], params_p[cf.TEMP_MLOOKED_DIR],
-                          f"*{params[cf.IFG_CROP_OPT]}cr.tif", 17)
+    assert_two_dirs_equal(params[cf.TEMP_MLOOKED_DIR], params_p[cf.TEMP_MLOOKED_DIR], "*_ifg.tif", 17)
 
-    # ifg phase checking in the previous step checks the process pipeline upto APS correction
+    # ifg phase checking in the previous step checks the correct pipeline upto APS correction
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tsincr_*.npy", params['notiles'] * 2)
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tscuml_*.npy", params['notiles'])
+
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "linear_rate_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "linear_error_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "linear_samples_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "linear_intercept_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "linear_rsquared_*.npy", params['notiles'])
+
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_rate_*.npy", params['notiles'])
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_error_*.npy", params['notiles'])
     assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_samples_*.npy", params['notiles'])
@@ -269,6 +316,12 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.kml", 2)
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.png", 2)
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.npy", 3)
+
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "linear*.tif", 5)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "linear*.kml", 3)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "linear*.png", 3)
+    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "linear*.npy", 5)
+
     assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "tscuml*.tif")
 
     print("==========================xxx===========================")

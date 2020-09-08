@@ -50,14 +50,14 @@ def main(params):
     # pylint: disable=too-many-branches
 
     if params[cf.PROCESSOR] == 2:  # if geotif
-        log.warning("conv2tif not required for geotiff!")
+        log.warning("'conv2tif' step not required for geotiff!")
         return
 
     mpi_vs_multiprocess_logging("conv2tif", params)
 
     base_ifg_paths = params[cf.INTERFEROGRAM_FILES]
 
-    if params[cf.COH_MASK]:
+    if params[cf.COH_FILE_LIST] is not None:
         base_ifg_paths.extend(params[cf.COHERENCE_FILE_PATHS])
 
     if params[cf.DEM_FILE] is not None:  # optional DEM conversion
@@ -66,7 +66,7 @@ def main(params):
     process_base_ifgs_paths = np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
     gtiff_paths = do_geotiff(process_base_ifgs_paths, params)
     mpiops.comm.barrier()
-    log.info("Finished conv2tif")
+    log.info("Finished 'conv2tif' step")
     return gtiff_paths
 
 

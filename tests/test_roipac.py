@@ -16,7 +16,6 @@
 """
 This Python module contains tests for the roipac.py PyRate module.
 """
-
 import os
 import shutil
 import sys

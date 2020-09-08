@@ -19,6 +19,7 @@
 pyrate basic workflow for all supported input datasets
 
 """
+import shutil
 from subprocess import check_call
 from pathlib import Path
 import pytest
@@ -27,23 +28,26 @@ from pyrate.core import config as cf
 from pyrate.configuration import Configuration
 
 
-# @pytest.mark.slow
+@pytest.mark.slow
 def test_workflow(system_conf):
     """check the handlers are working as expected"""
     check_call(f"mpirun -n 3 pyrate conv2tif -f {system_conf}", shell=True)
     check_call(f"mpirun -n 3 pyrate prepifg -f {system_conf}", shell=True)
-    check_call(f"mpirun -n 3 pyrate process -f {system_conf}", shell=True)
+    check_call(f"mpirun -n 3 pyrate correct -f {system_conf}", shell=True)
+    check_call(f"mpirun -n 3 pyrate timeseries -f {system_conf}", shell=True)
+    check_call(f"mpirun -n 3 pyrate stack -f {system_conf}", shell=True)
     check_call(f"mpirun -n 3 pyrate merge -f {system_conf}", shell=True)
 
     # assert logs generated in the outdir
     params = Configuration(system_conf).__dict__
-    for stage in ['conv2tif', 'prepifg', 'process', 'merge']:
+    for stage in ['conv2tif', 'prepifg', 'correct', 'timeseries', 'stack', 'merge']:
         log_file_name = 'pyrate.log.' + stage
         files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
         assert len(files) == 1
+    shutil.rmtree(params[cf.OUT_DIR])
 
 
-# @pytest.mark.slow
+@pytest.mark.slow
 def test_single_workflow(gamma_conf):
 
     check_call(f"mpirun -n 4 pyrate workflow -f {gamma_conf}", shell=True)
@@ -55,8 +59,8 @@ def test_single_workflow(gamma_conf):
     assert len(files) == 1
 
     # ref pixel file generated
-    ref_pixel_file = Path(params[cf.OUT_DIR]).joinpath(cf.REF_PIXEL_FILE)
-    assert ref_pixel_file.exists()
+    ref_pixel_file = params[cf.REF_PIXEL_FILE]
+    assert Path(ref_pixel_file).exists()
     ref_pixel = np.load(ref_pixel_file)
     np.testing.assert_array_equal(ref_pixel, [38, 58])
 
@@ -68,3 +72,4 @@ def test_single_workflow(gamma_conf):
                           Path(ifg.data_path).stem + '_orbfit.npy')
                        for ifg in ifgs]
     assert all(orbfits_on_disc)
+    shutil.rmtree(params[cf.OUT_DIR])

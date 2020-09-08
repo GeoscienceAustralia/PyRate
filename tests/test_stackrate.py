@@ -18,6 +18,7 @@
 This Python module contains tests for the stack.py PyRate module.
 """
 import os
+import shutil
 import pytest
 
 from numpy import eye, array, ones, nan
@@ -30,7 +31,8 @@ import pyrate.core.refpixel
 import tests.common
 from pyrate.core import shared, config as cf, covariance as vcm_module
 from pyrate.core.stack import stack_rate_pixel, mask_rate
-from pyrate import process, prepifg, conv2tif
+from pyrate import correct, prepifg, conv2tif
+from pyrate.configuration import Configuration
 from tests import common
 from tests.common import SML_TEST_DIR, prepare_ifgs_without_phase, pre_prepare_ifgs
 
@@ -106,9 +108,8 @@ class TestLegacyEquality:
     """
 
     @classmethod
-    @pytest.fixture(autouse=True)
-    def setup_class(cls, roipac_params):
-        params = roipac_params
+    def setup_class(cls):
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         params[cf.TEMP_MLOOKED_DIR] = os.path.join(params[cf.OUT_DIR], cf.TEMP_MLOOKED_DIR)
         conv2tif.main(params)
         prepifg.main(params)
@@ -117,8 +118,8 @@ class TestLegacyEquality:
 
         xlks, _, crop = cf.transform_params(params)
 
-        dest_paths, headers = common.repair_params_for_process_tests(params[cf.OUT_DIR], params)
-        process._copy_mlooked(params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[cf.OUT_DIR], params)
+        correct._copy_mlooked(params)
         copied_dest_paths = [os.path.join(params[cf.TEMP_MLOOKED_DIR], os.path.basename(d)) for d in dest_paths]
         del dest_paths
         # start run_pyrate copy
@@ -129,13 +130,14 @@ class TestLegacyEquality:
 
         params[cf.REFX] = refx
         params[cf.REFY] = refy
+        params[cf.ORBFIT_OFFSET] = True
 
         # Estimate and remove orbit errors
-        pyrate.core.orbital.remove_orbital_error(ifgs, params, headers)
+        pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(copied_dest_paths, params)
         for ifg in ifgs:
             ifg.close()
-        process._update_params_with_tiles(params)
+        correct._update_params_with_tiles(params)
         _, ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
         ifgs[0].open()
         r_dist = vcm_module.RDist(ifgs[0])()
@@ -165,9 +167,11 @@ class TestLegacyEquality:
         for ifg in ifgs:
             ifg.close()
 
+        cls.params = params
+
     @classmethod
     def teardown_class(cls):
-        "auto clean by fixture"
+        shutil.rmtree(cls.params[cf.OUT_DIR])
 
     def test_stack_rate_full_parallel(self):
         """

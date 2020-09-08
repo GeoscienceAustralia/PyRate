@@ -25,10 +25,9 @@ from pathlib import Path
 from joblib import Parallel, delayed
 import numpy as np
 from osgeo import gdal
-from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac, ifgconstants as ifc
+from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac, ifgconstants as ifc, gdal_python
 from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core.logger import pyratelogger as log
-from pyrate.core.shared import output_tiff_filename
 from pyrate.configuration import MultiplePaths
 
 GAMMA = 1
@@ -54,8 +53,12 @@ def main(params):
     if params[cf.DEM_FILE] is not None:  # optional DEM conversion
         ifg_paths.append(params[cf.DEM_FILE_PATH])
 
-    if params[cf.COH_MASK]:
+    if params[cf.COH_FILE_LIST] is not None:
         ifg_paths.extend(params[cf.COHERENCE_FILE_PATHS])
+
+    if params[cf.COH_FILE_LIST] is None and params[cf.COH_MASK]:
+        raise FileNotFoundError("Cannot apply coherence masking: no coherence file list "
+                                "supplied (parameter 'cohfilelist')")
 
     shared.mkdir_p(params[cf.OUT_DIR])  # create output dir
 
@@ -67,7 +70,7 @@ def main(params):
     process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     do_prepifg(process_ifgs_paths, exts, params)
     mpiops.comm.barrier()
-    log.info("Finished prepifg")
+    log.info("Finished 'prepifg' step")
 
 
 def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float, float], params: dict) -> None:
@@ -86,7 +89,7 @@ def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float
                                     "interferograms to geotiffs.")
 
     if params[cf.LARGE_TIFS]:
-        log.info("Using gdal system calls to process prepifg")
+        log.info("Using gdal system calls to execute 'prepifg' step")
         ifg = prepifg_helper.dem_or_ifg(multi_paths[0].converted_path)
         ifg.open()
         xlooks, ylooks = params[cf.IFG_LKSX], params[cf.IFG_LKSY]
@@ -122,7 +125,7 @@ def __prepifg_system(exts, gtiff, params, res):
     if isinstance(prepifg_helper.dem_or_ifg(p), shared.DEM):
         check_call('gdalwarp {co} -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}\n'.format(
             co=COMMON_OPTIONS, extents=extents, res=res, p=p, l=l), shell=True)
-        __update_meta_data(p, c, l)
+        __update_meta_data(p, c, l, params)
         return
 
     p_unset = Path(params[cf.OUT_DIR]).joinpath(Path(p).name).with_suffix('.unset.tif')
@@ -173,7 +176,7 @@ def __prepifg_system(exts, gtiff, params, res):
                f'--outfile={l}\t'
                f'--NoDataValue=nan', shell=True)
 
-    __update_meta_data(p_unset.as_posix(), c, l)
+    __update_meta_data(p_unset.as_posix(), c, l, params)
 
     # clean up
     nan_frac_avg.unlink()
@@ -182,15 +185,18 @@ def __prepifg_system(exts, gtiff, params, res):
     p_unset.unlink()
 
 
-def __update_meta_data(p_unset, c, l):
+def __update_meta_data(p_unset, c, l, params):
     # update metadata
     ds = gdal.Open(p_unset)
     md = ds.GetMetadata()
     # remove data type
     v = md.pop(ifc.DATA_TYPE)
+    md[ifc.IFG_LKSX] = str(params[cf.IFG_LKSX])
+    md[ifc.IFG_LKSY] = str(params[cf.IFG_LKSY])
+    md[ifc.IFG_CROP] = str(params[cf.IFG_CROP_OPT])
     # update data type
     if c is not None:  # it's a interferogram when COH_MASK=1
-        md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.COHERENCE)
+        md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MLOOKED_COH_MASKED_IFG)
     else:
         if v == ifc.DEM:  # it's a dem
             md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MLOOKED_DEM)
@@ -211,13 +217,16 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, fl
     """
     Multiprocessing wrapper for prepifg
     """
-    xlooks, ylooks, crop = cf.transform_params(params)
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
-    header = find_header(m_path, params)
-    header[ifc.INPUT_TYPE] = m_path.input_type
+    hdr = find_header(m_path, params)
+    hdr[ifc.INPUT_TYPE] = m_path.input_type
+    xlooks, ylooks, crop = cf.transform_params(params)
+    hdr[ifc.IFG_LKSX] = xlooks
+    hdr[ifc.IFG_LKSY] = ylooks
+    hdr[ifc.IFG_CROP] = crop
 
     # If we're performing coherence masking, find the coherence file for this IFG.
-    if params[cf.COH_MASK] and shared._is_interferogram(header):
+    if params[cf.COH_MASK] and shared._is_interferogram(hdr):
         coherence_path = cf.coherence_paths_for(m_path.converted_path, params, tif=True)
         coherence_thresh = params[cf.COH_THRESH]
     else:
@@ -228,7 +237,7 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, fl
         return m_path.converted_path, coherence_path, m_path.sampled_path
     else:
         prepifg_helper.prepare_ifg(m_path.converted_path, xlooks, ylooks, exts, thresh, crop,
-                                   out_path=params[cf.OUT_DIR], header=header, coherence_path=coherence_path,
+                                   out_path=m_path.sampled_path, header=hdr, coherence_path=coherence_path,
                                    coherence_thresh=coherence_thresh)
         Path(m_path.sampled_path).chmod(0o444)  # readonly output
 
@@ -239,7 +248,9 @@ def find_header(path: MultiplePaths, params: dict):
     if (processor == GAMMA) or (processor == GEOTIF):
         header = gamma.gamma_header(tif_path, params)
     elif processor == ROIPAC:
-        log.info("Warning: ROI_PAC support will be deprecated in a future PyRate release")
+        import warnings
+        warnings.warn("Warning: ROI_PAC support will be deprecated in a future PyRate release",
+                      category=DeprecationWarning)
         header = roipac.roipac_header(tif_path, params)
     else:
         raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
