@@ -17,11 +17,11 @@
 This Python module contains bindings for the GDAL library
 """
 # pylint: disable=too-many-arguments,R0914
-from osgeo import gdal, gdalconst, gdalnumeric
+from typing import Union, List, Tuple
+from osgeo import gdal, gdalconst
+from osgeo.gdal import Dataset
 import numpy as np
 import numexpr as ne
-from typing import Union, List, Tuple
-from osgeo.gdal import Dataset
 from pyrate.core import shared, ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
 
@@ -29,22 +29,20 @@ from pyrate.core.logger import pyratelogger as log
 gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
-all_mlooked_types = [ifc.MLOOKED_COH_MASKED_IFG, ifc.MULTILOOKED, ifc.MULTILOOKED_COH, ifc.MLOOKED_DEM,
-                     ifc.MLOOKED_INC]
+all_mlooked_types = [ifc.MLOOKED_COH_MASKED_IFG, ifc.MULTILOOKED, ifc.MULTILOOKED_COH,
+                     ifc.MLOOKED_DEM, ifc.MLOOKED_INC]
 
 
-
-def coherence_masking(input_gdal_dataset: Dataset,
-                      coherence_file_path: str,
+def coherence_masking(input_gdal_dataset: Dataset, coherence_file_path: str,
                       coherence_thresh: float) -> None:
-    """Perform coherence masking on raster in-place.
+    """
+    Perform coherence masking on raster in-place.
 
     Based on gdal_calc formula provided by Nahidul:
     gdal_calc.py -A 20151127-20151209_VV_8rlks_flat_eqa.cc.tif
-     -B 20151127-20151209_VV_8rlks_eqa.unw.tif
-     --outfile=test_v1.tif --calc="B*(A>=0.8)-999*(A<0.8)"
-     --NoDataValue=-999
-
+    -B 20151127-20151209_VV_8rlks_eqa.unw.tif
+    --outfile=test_v1.tif --calc="B*(A>=0.8)-999*(A<0.8)"
+    --NoDataValue=-999
     """
 
     coherence_ds = gdal.Open(coherence_file_path, gdalconst.GA_ReadOnly)
@@ -166,9 +164,9 @@ def _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, geo_trans):
 
 
 def crop_resample_average(
-        input_tif, extents: Union[List, Tuple], new_res, output_file, thresh, hdr, out_driver_type='GTiff',
-        match_pyrate=False, coherence_path=None, coherence_thresh=None
-        ):
+        input_tif, extents: Union[List, Tuple], new_res, output_file, thresh, hdr,
+        out_driver_type='GTiff', match_pyrate=False, coherence_path=None,
+        coherence_thresh=None):
     """
     Crop, resample, and average a geotiff image.
 
@@ -190,7 +188,10 @@ def crop_resample_average(
                                            out_bands=2, dst_driver_type='MEM')
 
     # make a temporary copy of the dst_ds for PyRate style prepifg
-    tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds) if (match_pyrate and new_res[0]) else None
+    if (match_pyrate and new_res[0]):
+        tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', dst_ds)
+    else:
+        tmp_ds = None
 
     src_ds, src_ds_mem = _setup_source(input_tif)
 
@@ -198,9 +199,9 @@ def crop_resample_average(
         coherence_masking(src_ds_mem, coherence_path, coherence_thresh)
 
     elif coherence_path and not coherence_thresh:
-        raise ValueError(f"Coherence file provided without a coherence "
-                         f"threshold. Please ensure you provide 'cohthresh' "
-                         f"in your config if coherence masking is enabled.")
+        raise ValueError("Coherence file provided without a coherence "
+                         "threshold. Please ensure you provide 'cohthresh' "
+                         "in your config if coherence masking is enabled.")
 
     resampled_average, src_ds_mem = gdal_average(dst_ds, src_ds, src_ds_mem, thresh)
     src_ds = None
@@ -243,8 +244,8 @@ def crop_resample_average(
     # In-memory GDAL driver doesn't support compression so turn it off.
     creation_opts = ['compress=packbits'] if out_driver_type != 'MEM' else []
     out_ds = shared.gdal_dataset(output_file, dst_ds.RasterXSize, dst_ds.RasterYSize,
-                                 driver=out_driver_type, bands=1, dtype=src_dtype, metadata=md, crs=wkt,
-                                 geotransform=gt, creation_opts=creation_opts)
+                                 driver=out_driver_type, bands=1, dtype=src_dtype, metadata=md,
+                                 crs=wkt, geotransform=gt, creation_opts=creation_opts)
 
     if out_driver_type != 'MEM':
         shared.write_geotiff(resampled_average, out_ds, np.nan)
@@ -255,6 +256,9 @@ def crop_resample_average(
 
 
 def add_looks_and_crop_from_header(hdr, md):
+    """
+    function to add prepfig options to geotiff metadata
+    """
     # insert prepifg mlook and crop params as metadata
     if any(m in md.values() for m in all_mlooked_types):
         if ifc.IFG_LKSX in hdr:
