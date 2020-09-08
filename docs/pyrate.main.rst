@@ -1,12 +1,14 @@
 PyRate Main Script
 ==================
 
-.. automodule:: pyrate.__main__
+.. automodule:: pyrate.main
 
    .. rubric:: Functions
    .. autosummary::
 
       conv2tif
       prepifg
-      process
+      correct
+      timeseries
+      stack
       merge

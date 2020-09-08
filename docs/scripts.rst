@@ -6,6 +6,6 @@ PyRate Scripts
 
    pyrate.conv2tif
    pyrate.prepifg
-   pyrate.process
+   pyrate.correct
    pyrate.merge
-   pyrate.__main__
+   pyrate.main

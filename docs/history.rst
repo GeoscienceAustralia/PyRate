@@ -3,7 +3,7 @@
 Release History
 ===============
 
-0.5.0 (2020-08-31)
+0.5.0 (2020-09-08)
 ------------------
 Added
 +++++
@@ -34,11 +34,16 @@ Changed
   files are saved to disk, regardless of whether ``cohmask`` is 0 or 1.
 - Parallelisation capability is refactored - MPI and multiprocessing both now use a common
   tiling framework for ``stack``, ``timeseries`` and ``mst`` algorithms.
+- Introduced a simplified and standardised file naming format for files produced by the
+  ``prepifg`` step. Information previously saved in the filename (e.g. ``ifglksx``, ``ifglksy``,
+  and ``ifgcropopt`` values) is now saved to the geotiff header instead.
 
 Removed
 +++++++
 - Redundant ``tscal`` config parameter was deprecated - not needed now there is a ``timeseries``
   step invokable on the command line.
+- Unused ``Pillow``, ``cython`` and ``glob2`` dependencies.
+- Deprecated function ``pyrate.prepifg_helper.prepare_ifgs``, which is no longer needed.
 
 0.4.3 (2020-08-04)
 ------------------

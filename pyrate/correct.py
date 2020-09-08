@@ -113,6 +113,8 @@ def main(params):
     """
     Top level function to perform PyRate workflow on given interferograms
 
+    :param dict params: Dictionary of configuration parameters
+
     :return: refpt: tuple of reference pixel x and y position
     :rtype: tuple
     :return: maxvar: array of maximum variance values of interferograms
@@ -148,7 +150,9 @@ correct_steps = {
 def correct_ifgs(params: dict) -> None:
     """
     Top level function to perform PyRate workflow on given interferograms
+
     :param dict params: Dictionary of configuration parameters
+
     :return: refpt: tuple of reference pixel x and y position
     :rtype: tuple
     :return: maxvar: array of maximum variance values of interferograms

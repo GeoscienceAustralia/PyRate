@@ -7,41 +7,6 @@ If your issue is not covered below, please contact the `Geoscience Australia InS
 
 .. _`Geoscience Australia InSAR Team`: mailto:insar@ga.gov.au
 
-Corrections being skipped
--------------------------
-**Problem**: When running the ``process`` step, many corrections are reported as ``Skipped: interferograms already corrected``, but I want to try different processing parameters!
-
-::
-
-    >> pyrate correct -f input_parameters.conf
-    16:43:16 main 97 24732 INFO 0/0 Verbosity set to INFO.
-    16:43:16 shared 1294 24732 INFO 0/0 Running process serially
-    16:43:17 process 86 24732 INFO 0/0 Found 13 unique epochs in the 17 interferogram network
-    16:43:17 process 134 24732 INFO 0/0 Searching for best reference pixel location
-    16:43:18 process 155 24732 INFO 0/0 Selected reference pixel coordinate: (38, 58)
-    16:43:18 process 170 24732 INFO 0/0 Calculating orbital correction
-    16:43:18 shared 1255 24732 INFO 0/0 Skipped: interferograms already corrected
-    16:43:18 process 198 24732 INFO 0/0 Calculating reference phase
-    16:43:19 shared 1255 24732 INFO 0/0 Skipped: interferograms already corrected
-    16:43:19 process 105 24732 INFO 0/0 Calculating minimum spanning tree matrix
-    16:43:19 process 342 24732 INFO 0/0 Calculating the temporal variance-covariance matrix
-    16:43:20 process 391 24732 INFO 0/0 Calculating time series using SVD method
-    16:43:20 timeseries 152 24732 INFO 0/0 Calculating timeseries in serial
-    16:43:21 process 323 24732 INFO 0/0 Calculating rate map from stacking
-    16:43:21 process 326 24732 INFO 0/0 Stacking of tile 0
-    16:43:21 stack 64 24732 INFO 0/0 Calculating stack rate in serial
-    16:43:21 process 314 24732 INFO 0/0 PyRate workflow completed
-
-**Reason**: `PyRate` updates the phase values in the input interferogram geotiff files as corrections are applied during the ``process`` step. Metadata is then added to the geotiff header to indicate the correction has been applied. This metadata is then checked upon subsequent runs to see if the correction should be applied.
-
-**Solution**: Start again from ``prepifg`` step, creating new cropped/multi-looked interferograms that have not been corrected.
-
-.. note::
-
-    We plan to change this workflow behaviour in a future `PyRate` release, recognising that
-    it would be convenient to be able to quickly test the impact of parameter changes.
-
-
 ValueError: too many values to unpack (expected 2)
 --------------------------------------------------
 **Problem**: During ``prepifg`` step, the following error is encountered:
@@ -104,12 +69,12 @@ Stack Rate map appears to be blank/empty
 
 **Reason**: The ``maxsig`` parameter is too low, resulting in stack rate values being replaced by NaNs. ``maxsig`` is a threshold for masking stack rate pixels according to the corresponding stack error estimate saved in ``out/tmpdir/stack_error_*.npy``.
 
-**Solution**: Increase ``maxsig``, then re-run ``process`` and ``merge`` steps. Maximum permittable value for ``maxsig`` is 1000 mm.
+**Solution**: Increase ``maxsig``, then re-run the ``merge`` step. Maximum permittable value for ``maxsig`` is 1000 mm.
 
 
 Failure of APS spatial low pass filter
 ---------------------------------------
-**Problem**: Atmospheric corrections during “process“ fails due to the interpolated grid used for correction being empty:
+**Problem**: Atmospheric corrections during ``correct`` step fails due to the interpolated grid used for correction being empty:
 
 ::
 
@@ -155,8 +120,8 @@ Failure of APS spatial low pass filter
 In general, users are advised to input a network of small-baseline interferograms
 that has at least 2 interferometric connections per SAR image epoch. Furthermore,
 make sure that ``ts_pthr``, ``pthr`` and ``tlpfpthr`` are smaller than the number
-of image epochs. To check that ``process`` worked correctly, users can check that
-the ``tsincr_*.npy`` and ``tscuml*.npy`` arrays in the ``/<outdir>/tmpdir`` contain numeric values and not NaNs.
+of image epochs. To check that the spatio-temporal filters worked correctly, users can check that
+the numpy arrays saved at ``/<outdir>/aps_error/*aps_error.npy`` contain numeric values and not NaNs.
 
 
 Out of memory errors
@@ -167,11 +132,11 @@ Out of memory errors
 
     joblib.externals.loky.process_executor.TerminatedWorkerError: A worker process managed by the executor was unexpectedly terminated. This could be caused by a segmentation fault while calling the function or by an excessive memory usage causing the Operating System to kill the worker. The exit codes of the workers are {EXIT(1), EXIT(1), EXIT(1)}
 
-**Solution**: Increase the amount of memory available. On HPC systems this can be done by increasing the value provided to the ``mem`` argument when submitting a PBS job, e.g.:
-
-::
+**Solution**: Increase the amount of memory available. On HPC systems this can be done by increasing the value provided to the ``mem`` argument when submitting a PBS job, e.g.::
 
     mem=32Gb
+
+If no more memory can be called upon, users can try running the job in serial, or reducing the size of the interferograms by increasing the multi-looking factors applied during ``prepifg`` (parameters ``ifglksx`` and ``ifglksy``).
 
 Incorrect modules loaded on Gadi
 ----------------------------------
