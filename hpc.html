@@ -93,14 +93,15 @@
 <li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#input-files">Input Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#results-visualisation">Results Visualisation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.correct.html">PyRate Correct Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.__main__.html">PyRate Main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">PyRate Modules</a><ul>
@@ -125,7 +126,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
@@ -145,13 +145,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id16">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id17">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id26">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id27">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -228,14 +229,14 @@ HPC platforms may differ.</p>
 <span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">GeoscienceAustralia</span><span class="o">/</span><span class="n">PyRate</span><span class="o">.</span><span class="n">git</span>
 </pre></div>
 </div>
-<p>Load the required Gadi modules (this will also remove the default NCI GDAL
-Python bindings so we can build and use our own):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">~/</span><span class="n">PyRate</span><span class="o">/</span><span class="n">scripts</span><span class="o">/</span><span class="n">nci_load_modules</span><span class="o">.</span><span class="n">sh</span>
-</pre></div>
-</div>
 <p>Create a Python virtual environment:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">venv</span> <span class="o">~/</span><span class="n">PyRateVenv</span>
 <span class="n">source</span> <span class="o">~/</span><span class="n">PyRateVenv</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
+</pre></div>
+</div>
+<p>Load the required Gadi modules (this will also remove the default NCI GDAL
+Python bindings so we can build and use our own):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">~/</span><span class="n">PyRate</span><span class="o">/</span><span class="n">scripts</span><span class="o">/</span><span class="n">nci_load_modules</span><span class="o">.</span><span class="n">sh</span>
 </pre></div>
 </div>
 <p>Install <cite>PyRate</cite>:</p>

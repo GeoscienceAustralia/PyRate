@@ -95,14 +95,15 @@
 <li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#input-files">Input Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#results-visualisation">Results Visualisation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.correct.html">PyRate Correct Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.__main__.html">PyRate Main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">PyRate Modules</a><ul class="current">
@@ -127,7 +128,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
@@ -147,13 +147,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id16">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id17">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id26">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id27">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -401,6 +402,20 @@ in configuration files.</p>
 </dd></dl>
 
 <dl class="py data">
+<dt id="pyrate.core.config.ORBFIT_OFFSET">
+<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">ORBFIT_OFFSET</code><em class="property"> = 'orbfitoffset'</em><a class="headerlink" href="#pyrate.core.config.ORBFIT_OFFSET" title="Permalink to this definition">¶</a></dt>
+<dd><p>no)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>BOOL (1/0); Add column of offset params to orbit correction design matrix (1</p>
+</dd>
+<dt class="field-even">Type</dt>
+<dd class="field-even"><p>yes, 0</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
 <dt id="pyrate.core.config.ORBITAL_FIT">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">ORBITAL_FIT</code><em class="property"> = 'orbfit'</em><a class="headerlink" href="#pyrate.core.config.ORBITAL_FIT" title="Permalink to this definition">¶</a></dt>
 <dd><p>no)</p>
@@ -594,20 +609,6 @@ in configuration files.</p>
 </dd></dl>
 
 <dl class="py data">
-<dt id="pyrate.core.config.TIME_SERIES_CAL">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">TIME_SERIES_CAL</code><em class="property"> = 'tscal'</em><a class="headerlink" href="#pyrate.core.config.TIME_SERIES_CAL" title="Permalink to this definition">¶</a></dt>
-<dd><p>no)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>BOOL (1/0); Perform time series calculation (1</p>
-</dd>
-<dt class="field-even">Type</dt>
-<dd class="field-even"><p>yes, 0</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py data">
 <dt id="pyrate.core.config.TIME_SERIES_METHOD">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">TIME_SERIES_METHOD</code><em class="property"> = 'tsmethod'</em><a class="headerlink" href="#pyrate.core.config.TIME_SERIES_METHOD" title="Permalink to this definition">¶</a></dt>
 <dd><p>SVD)</p>
@@ -707,49 +708,6 @@ a dictionary.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="pyrate.core.config.get_dest_paths">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">get_dest_paths</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_paths</span></em>, <em class="sig-param"><span class="n">crop</span></em>, <em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">looks</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#get_dest_paths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.get_dest_paths" title="Permalink to this definition">¶</a></dt>
-<dd><p>Determines the full path names for the destination multilooked files</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_paths</strong> (<em>list</em>) – original interferogram paths</p></li>
-<li><p><strong>crop</strong> (<em>int</em>) – Crop option applied</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Parameters dictionary</p></li>
-<li><p><strong>looks</strong> (<em>int</em>) – number of range looks applied</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>full path names for destination files</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="pyrate.core.config.mlooked_path">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">mlooked_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span></em>, <em class="sig-param"><span class="n">looks</span></em>, <em class="sig-param"><span class="n">crop_out</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#mlooked_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.mlooked_path" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds suffix to ifg path, for creating a new path for multilooked files.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>path</strong> (<em>str</em>) – original interferogram path</p></li>
-<li><p><strong>looks</strong> (<em>int</em>) – number of range looks applied</p></li>
-<li><p><strong>crop_out</strong> (<em>int</em>) – crop option applied</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>multilooked file name</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt id="pyrate.core.config.original_ifg_paths">
 <code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">original_ifg_paths</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifglist_path</span></em>, <em class="sig-param"><span class="n">obs_dir</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#original_ifg_paths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.original_ifg_paths" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns sequence of paths to files in given ifglist file.</p>
@@ -799,26 +757,6 @@ a dictionary.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="pyrate.core.config.write_config_file">
-<code class="sig-prename descclassname">pyrate.core.config.</code><code class="sig-name descname">write_config_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">output_conf_file</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/config.html#write_config_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.config.write_config_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Takes a param object and writes the config file. Reverse of get_conf_params.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>params</strong> (<em>dict</em>) – parameter dictionary</p></li>
-<li><p><strong>output_conf_file</strong> (<em>str</em>) – output file name</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>config file</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list</p>
 </dd>
 </dl>
 </dd></dl>

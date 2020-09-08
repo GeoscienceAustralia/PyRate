@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pyrate.process &mdash; PyRate 0.4.0 documentation</title>
+  <title>pyrate.correct &mdash; PyRate 0.4.0 documentation</title>
   
 
   
@@ -93,14 +93,15 @@
 <li class="toctree-l2"><a class="reference internal" href="../../usage.html#workflow">Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage.html#input-files">Input Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#results-visualisation">Results Visualisation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.prepifg.html">PyRate Prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.correct.html">PyRate Correct Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.merge.html">PyRate Merge Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../pyrate.__main__.html">PyRate Main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../modules.html">PyRate Modules</a><ul>
@@ -125,7 +126,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
@@ -145,13 +145,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id7">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id12">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id16">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id21">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id22">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id7">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id12">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id17">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id21">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id26">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id27">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -202,7 +203,7 @@
         
           <li><a href="../index.html">Module code</a> &raquo;</li>
         
-      <li>pyrate.process</li>
+      <li>pyrate.correct</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -217,7 +218,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for pyrate.process</h1><div class="highlight"><pre>
+  <h1>Source code for pyrate.correct</h1><div class="highlight"><pre>
 <span></span><span class="c1">#   This Python module is part of the PyRate software package.</span>
 <span class="c1">#</span>
 <span class="c1">#   Copyright 2020 Geoscience Australia</span>
@@ -235,11 +236,10 @@
 <span class="c1">#   limitations under the License.</span>
 <span class="c1"># coding: utf-8</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">This Python module runs the main PyRate processing workflow</span>
+<span class="sd">This Python module runs the main PyRate correction workflow</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
-<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span>
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span> <span class="nn">pickle</span> <span class="k">as</span> <span class="nn">cp</span>
 <span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="p">(</span><span class="n">shared</span><span class="p">,</span> <span class="n">algorithm</span><span class="p">,</span> <span class="n">mpiops</span><span class="p">,</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span><span class="p">)</span>
@@ -250,20 +250,11 @@
 <span class="kn">from</span> <span class="nn">pyrate.core.orbital</span> <span class="kn">import</span> <span class="n">orb_fit_calc_wrapper</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.ref_phs_est</span> <span class="kn">import</span> <span class="n">ref_phase_est_wrapper</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.refpixel</span> <span class="kn">import</span> <span class="n">ref_pixel_calc_wrapper</span>
-<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">PrereadIfg</span><span class="p">,</span> <span class="n">get_tiles</span><span class="p">,</span> <span class="n">mpi_vs_multiprocess_logging</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">PrereadIfg</span><span class="p">,</span> <span class="n">get_tiles</span><span class="p">,</span> <span class="n">mpi_vs_multiprocess_logging</span><span class="p">,</span> <span class="n">join_dicts</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.logger</span> <span class="kn">import</span> <span class="n">pyratelogger</span> <span class="k">as</span> <span class="n">log</span>
-<span class="kn">from</span> <span class="nn">pyrate.core.stack</span> <span class="kn">import</span> <span class="n">stack_calc_wrapper</span>
-<span class="kn">from</span> <span class="nn">pyrate.core.timeseries</span> <span class="kn">import</span> <span class="n">timeseries_calc_wrapper</span>
+<span class="kn">from</span> <span class="nn">pyrate.configuration</span> <span class="kn">import</span> <span class="n">Configuration</span>
 
-
-<span class="k">def</span> <span class="nf">_join_dicts</span><span class="p">(</span><span class="n">dicts</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Function to concatenate dictionaries</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">dicts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-        <span class="k">return</span>
-    <span class="n">assembled_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">D</span> <span class="ow">in</span> <span class="n">dicts</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">D</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-    <span class="k">return</span> <span class="n">assembled_dict</span>
+<span class="n">MAIN_PROCESS</span> <span class="o">=</span> <span class="mi">0</span>
 
 
 <span class="k">def</span> <span class="nf">_create_ifg_dict</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
@@ -297,7 +288,7 @@
             <span class="n">metadata</span><span class="o">=</span><span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span>
         <span class="p">)</span>
         <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="n">ifgs_dict</span> <span class="o">=</span> <span class="n">_join_dicts</span><span class="p">(</span><span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">allgather</span><span class="p">(</span><span class="n">ifgs_dict</span><span class="p">))</span>
+    <span class="n">ifgs_dict</span> <span class="o">=</span> <span class="n">join_dicts</span><span class="p">(</span><span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">allgather</span><span class="p">(</span><span class="n">ifgs_dict</span><span class="p">))</span>
 
     <span class="n">ifgs_dict</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">__save_ifgs_dict_with_headers_and_epochs</span><span class="p">,</span> <span class="n">dest_tifs</span><span class="p">,</span> <span class="n">ifgs_dict</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">process_tifs</span><span class="p">)</span>
 
@@ -311,7 +302,7 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">):</span>
         <span class="n">shared</span><span class="o">.</span><span class="n">mkdir_p</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span>
 
-    <span class="n">preread_ifgs_file</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="s1">&#39;preread_ifgs.pk&#39;</span><span class="p">)</span>
+    <span class="n">preread_ifgs_file</span> <span class="o">=</span> <span class="n">Configuration</span><span class="o">.</span><span class="n">preread_ifgs</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
     <span class="n">nifgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dest_tifs</span><span class="p">)</span>
     <span class="c1"># add some extra information that&#39;s also useful later</span>
     <span class="n">gt</span><span class="p">,</span> <span class="n">md</span><span class="p">,</span> <span class="n">wkt</span> <span class="o">=</span> <span class="n">shared</span><span class="o">.</span><span class="n">get_geotiff_header_info</span><span class="p">(</span><span class="n">process_tifs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tmp_sampled_path</span><span class="p">)</span>
@@ -331,7 +322,7 @@
 
 
 <span class="k">def</span> <span class="nf">_copy_mlooked</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Copying input files into tempdir for manipulation during process steps&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Copying input files into tempdir for manipulation during &#39;correct&#39; steps&quot;</span><span class="p">)</span>
     <span class="n">mpaths</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">INTERFEROGRAM_FILES</span><span class="p">]</span>
     <span class="n">process_mpaths</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">mpaths</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">process_mpaths</span><span class="p">:</span>
@@ -339,9 +330,11 @@
         <span class="n">Path</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">tmp_sampled_path</span><span class="p">)</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="mo">0o664</span><span class="p">)</span>  <span class="c1"># assign write permission as prepifg output is readonly</span>
 
 
-<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../pyrate.process.html#pyrate.process.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../pyrate.correct.html#pyrate.correct.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Top level function to perform PyRate workflow on given interferograms</span>
+
+<span class="sd">    :param dict params: Dictionary of configuration parameters</span>
 
 <span class="sd">    :return: refpt: tuple of reference pixel x and y position</span>
 <span class="sd">    :rtype: tuple</span>
@@ -350,15 +343,12 @@
 <span class="sd">    :return: vcmt: Variance-covariance matrix array</span>
 <span class="sd">    :rtype: ndarray</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">mpi_vs_multiprocess_logging</span><span class="p">(</span><span class="s2">&quot;process&quot;</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="n">mpi_vs_multiprocess_logging</span><span class="p">(</span><span class="s2">&quot;correct&quot;</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># turn of multiprocessing during mpi jobs</span>
-        <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PARALLEL</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
-
-    <span class="c1"># Make a copy of the multi-looked files for manipulation during process steps</span>
+    <span class="c1"># Make a copy of the multi-looked files for manipulation during correct steps</span>
     <span class="n">_copy_mlooked</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">process_ifgs</span><span class="p">(</span><span class="n">params</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">correct_ifgs</span><span class="p">(</span><span class="n">params</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">_update_params_with_tiles</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -369,21 +359,21 @@
     <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TILES</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiles</span>
 
 
-<span class="n">process_steps</span> <span class="o">=</span> <span class="p">{</span>
+<span class="n">correct_steps</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;orbfit&#39;</span><span class="p">:</span> <span class="n">orb_fit_calc_wrapper</span><span class="p">,</span>
     <span class="s1">&#39;refphase&#39;</span><span class="p">:</span> <span class="n">ref_phase_est_wrapper</span><span class="p">,</span>
     <span class="s1">&#39;mst&#39;</span><span class="p">:</span> <span class="n">mst_calc_wrapper</span><span class="p">,</span>
     <span class="s1">&#39;apscorrect&#39;</span><span class="p">:</span> <span class="n">wrap_spatio_temporal_filter</span><span class="p">,</span>
     <span class="s1">&#39;maxvar&#39;</span><span class="p">:</span> <span class="n">maxvar_vcm_calc_wrapper</span><span class="p">,</span>
-    <span class="s1">&#39;timeseries&#39;</span><span class="p">:</span> <span class="n">timeseries_calc_wrapper</span><span class="p">,</span>
-    <span class="s1">&#39;stack&#39;</span><span class="p">:</span> <span class="n">stack_calc_wrapper</span>
 <span class="p">}</span>
 
 
-<div class="viewcode-block" id="process_ifgs"><a class="viewcode-back" href="../../pyrate.process.html#pyrate.process.process_ifgs">[docs]</a><span class="k">def</span> <span class="nf">process_ifgs</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="correct_ifgs"><a class="viewcode-back" href="../../pyrate.correct.html#pyrate.correct.correct_ifgs">[docs]</a><span class="k">def</span> <span class="nf">correct_ifgs</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Top level function to perform PyRate workflow on given interferograms</span>
+
 <span class="sd">    :param dict params: Dictionary of configuration parameters</span>
+
 <span class="sd">    :return: refpt: tuple of reference pixel x and y position</span>
 <span class="sd">    :rtype: tuple</span>
 <span class="sd">    :return: maxvar: array of maximum variance values of interferograms</span>
@@ -392,25 +382,24 @@
 <span class="sd">    :rtype: ndarray</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">__validate_process_steps</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">__validate_correct_steps</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
 
     <span class="c1"># house keeping</span>
     <span class="n">_update_params_with_tiles</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
     <span class="n">_create_ifg_dict</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
-    <span class="n">ref_pixel_calc_wrapper</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFX_FOUND</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFY_FOUND</span><span class="p">]</span> <span class="o">=</span> <span class="n">ref_pixel_calc_wrapper</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
 
-    <span class="c1"># run through the process steps in user specified sequence</span>
-    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;process&#39;</span><span class="p">]:</span>
-        <span class="n">process_steps</span><span class="p">[</span><span class="n">step</span><span class="p">](</span><span class="n">params</span><span class="p">)</span>
+    <span class="c1"># run through the correct steps in user specified sequence</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;correct&#39;</span><span class="p">]:</span>
+        <span class="n">correct_steps</span><span class="p">[</span><span class="n">step</span><span class="p">](</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Finished &#39;correct&#39; step&quot;</span><span class="p">)</span></div>
 
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Finished process workflow steps&#39;</span><span class="p">)</span></div>
 
-
-<span class="k">def</span> <span class="nf">__validate_process_steps</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;process&#39;</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="n">step</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">process_steps</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="n">ConfigException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2"> is not a supported process step. </span><span class="se">\n</span><span class="s2">&quot;</span>
-                                  <span class="sa">f</span><span class="s2">&quot;Supported steps are </span><span class="si">{</span><span class="n">process_steps</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">__validate_correct_steps</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;correct&#39;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">correct_steps</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">ConfigException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2"> is not a supported &#39;correct&#39; step. </span><span class="se">\n</span><span class="s2">&quot;</span>
+                                  <span class="sa">f</span><span class="s2">&quot;Supported steps are </span><span class="si">{</span><span class="n">correct_steps</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 
            </div>

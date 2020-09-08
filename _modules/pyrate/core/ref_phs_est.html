@@ -93,14 +93,15 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#workflow">Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#input-files">Input Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#results-visualisation">Results Visualisation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.prepifg.html">PyRate Prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.correct.html">PyRate Correct Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.merge.html">PyRate Merge Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.__main__.html">PyRate Main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules.html">PyRate Modules</a><ul>
@@ -125,7 +126,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
@@ -145,13 +145,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id16">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id17">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id26">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id27">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -237,16 +238,18 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">This Python module implements a reference phase estimation algorithm.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span><span class="p">,</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span><span class="p">,</span> <span class="n">mpiops</span><span class="p">,</span> <span class="n">shared</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">joblib_log_level</span><span class="p">,</span> <span class="n">nanmedian</span><span class="p">,</span> <span class="n">Ifg</span>
 <span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">mpiops</span>
+<span class="kn">from</span> <span class="nn">pyrate.configuration</span> <span class="kn">import</span> <span class="n">Configuration</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.logger</span> <span class="kn">import</span> <span class="n">pyratelogger</span> <span class="k">as</span> <span class="n">log</span>
 
-<span class="n">first_PROCESS</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">MAIN_PROCESS</span> <span class="o">=</span> <span class="mi">0</span>
 
 
 <div class="viewcode-block" id="est_ref_phase_patch_median"><a class="viewcode-back" href="../../../ref_phs_est.html#pyrate.core.ref_phs_est.est_ref_phase_patch_median">[docs]</a><span class="k">def</span> <span class="nf">est_ref_phase_patch_median</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">refpx</span><span class="p">,</span> <span class="n">refpy</span><span class="p">):</span>
@@ -290,11 +293,6 @@
             <span class="n">ref_phs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ifgs</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
                 <span class="n">ref_phs</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">_est_ref_phs_patch_median</span><span class="p">(</span><span class="n">phase_data</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">half_chip_size</span><span class="p">,</span> <span class="n">refpx</span><span class="p">,</span> <span class="n">refpy</span><span class="p">,</span> <span class="n">thresh</span><span class="p">)</span>
-                <span class="n">ifg</span><span class="o">.</span><span class="n">phase_data</span> <span class="o">-=</span> <span class="n">ref_phs</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-
-        <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">:</span>
-            <span class="n">_update_phase_metadata</span><span class="p">(</span><span class="n">ifg</span><span class="p">)</span>
-            <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">ref_phs</span>
     
@@ -374,11 +372,6 @@
             <span class="n">ref_phs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">proc_ifgs</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">proc_ifgs</span><span class="p">):</span>
                 <span class="n">ref_phs</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">_est_ref_phs_ifg_median</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">phase_data</span><span class="p">,</span> <span class="n">comp</span><span class="p">)</span>
-                <span class="n">ifg</span><span class="o">.</span><span class="n">phase_data</span> <span class="o">-=</span> <span class="n">ref_phs</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
-
-        <span class="k">for</span> <span class="n">ifg</span> <span class="ow">in</span> <span class="n">proc_ifgs</span><span class="p">:</span>
-            <span class="n">_update_phase_metadata</span><span class="p">(</span><span class="n">ifg</span><span class="p">)</span>
-            <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">ref_phs</span>
 
@@ -387,6 +380,12 @@
     <span class="n">ref_phs</span> <span class="o">=</span> <span class="n">_inner</span><span class="p">(</span><span class="n">process_ifg_paths</span><span class="p">,</span> <span class="n">ifg_phase_data_sum</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">ref_phs</span></div>
+
+
+<span class="k">def</span> <span class="nf">_update_phase_metadata</span><span class="p">(</span><span class="n">ifg</span><span class="p">):</span>
+    <span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_REF_PHASE</span><span class="p">]</span> <span class="o">=</span> <span class="n">ifc</span><span class="o">.</span><span class="n">REF_PHASE_REMOVED</span>
+    <span class="n">ifg</span><span class="o">.</span><span class="n">write_modified_phase</span><span class="p">()</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reference phase corrected for </span><span class="si">{</span><span class="n">ifg</span><span class="o">.</span><span class="n">data_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_est_ref_phs_ifg_median</span><span class="p">(</span><span class="n">phase_data</span><span class="p">,</span> <span class="n">comp</span><span class="p">):</span>
@@ -398,10 +397,17 @@
     <span class="k">return</span> <span class="n">nanmedian</span><span class="p">(</span><span class="n">ifgv</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_update_phase_metadata</span><span class="p">(</span><span class="n">ifg</span><span class="p">):</span>
-    <span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_REF_PHASE</span><span class="p">]</span> <span class="o">=</span> <span class="n">ifc</span><span class="o">.</span><span class="n">REF_PHASE_REMOVED</span>
-    <span class="n">ifg</span><span class="o">.</span><span class="n">write_modified_phase</span><span class="p">()</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reference phase corrected for </span><span class="si">{</span><span class="n">ifg</span><span class="o">.</span><span class="n">data_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_update_phase_and_metadata</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">ref_phs</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__inner</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">ref_ph</span><span class="p">):</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">phase_data</span> <span class="o">-=</span> <span class="n">ref_ph</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_REF_PHASE</span><span class="p">]</span> <span class="o">=</span> <span class="n">ifc</span><span class="o">.</span><span class="n">REF_PHASE_REMOVED</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">write_modified_phase</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reference phase corrected for </span><span class="si">{</span><span class="n">ifg</span><span class="o">.</span><span class="n">data_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">rp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">ifgs</span><span class="p">),</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">ref_phs</span><span class="p">)):</span>
+        <span class="n">__inner</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">rp</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="ReferencePhaseError"><a class="viewcode-back" href="../../../ref_phs_est.html#pyrate.core.ref_phs_est.ReferencePhaseError">[docs]</a><span class="k">class</span> <span class="nc">ReferencePhaseError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
@@ -416,16 +422,27 @@
 <span class="sd">    Wrapper for reference phase estimation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ifg_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg_path</span><span class="o">.</span><span class="n">tmp_sampled_path</span> <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">INTERFEROGRAM_FILES</span><span class="p">]]</span>
-    <span class="n">refpx</span><span class="p">,</span> <span class="n">refpy</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFX</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFY</span><span class="p">]</span>
+    <span class="n">refpx</span><span class="p">,</span> <span class="n">refpy</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFX_FOUND</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFY_FOUND</span><span class="p">]</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">ReferencePhaseError</span><span class="p">(</span>
             <span class="s2">&quot;At least two interferograms required for reference phase correction (</span><span class="si">{len_ifg_paths}</span><span class="s2"> &quot;</span>
             <span class="s2">&quot;provided).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">len_ifg_paths</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">))</span>
         <span class="p">)</span>
 
+    <span class="c1"># this is not going to be true as we now start with fresh multilooked ifg copies - remove?</span>
     <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">shared</span><span class="o">.</span><span class="n">check_correction_status</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_REF_PHASE</span><span class="p">):</span>
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished reference phase correction&#39;</span><span class="p">)</span>
         <span class="k">return</span>
+
+    <span class="n">ifgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Ifg</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">)</span> <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">ifg_paths</span><span class="p">]</span>
+    <span class="c1"># Save reference phase numpy arrays to disk.</span>
+    <span class="n">ref_phs_file</span> <span class="o">=</span> <span class="n">Configuration</span><span class="o">.</span><span class="n">ref_phs_file</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">ref_phs_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">ref_phs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ref_phs_file</span><span class="p">)</span>
+        <span class="n">_update_phase_and_metadata</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">ref_phs</span><span class="p">)</span>
+        <span class="n">shared</span><span class="o">.</span><span class="n">save_numpy_phase</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ref_phs</span><span class="p">,</span> <span class="n">ifgs</span>
 
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REF_EST_METHOD</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calculating reference phase as median of interferogram&quot;</span><span class="p">)</span>
@@ -436,9 +453,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">ReferencePhaseError</span><span class="p">(</span><span class="s2">&quot;No such option, set parameter &#39;refest&#39; to &#39;1&#39; or &#39;2&#39;.&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Save reference phase numpy arrays to disk.</span>
-    <span class="n">ref_phs_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="s1">&#39;ref_phs.npy&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="n">first_PROCESS</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="n">MAIN_PROCESS</span><span class="p">:</span>
         <span class="n">collected_ref_phs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
         <span class="n">process_indices</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)))</span>
         <span class="n">collected_ref_phs</span><span class="p">[</span><span class="n">process_indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">ref_phs</span>
@@ -450,18 +465,21 @@
             <span class="n">collected_ref_phs</span><span class="p">[</span><span class="n">process_indices</span><span class="p">]</span> <span class="o">=</span> <span class="n">this_process_ref_phs</span>
         <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">ref_phs_file</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="n">collected_ref_phs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">Send</span><span class="p">(</span><span class="n">ref_phs</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="n">first_PROCESS</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+        <span class="n">collected_ref_phs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">Send</span><span class="p">(</span><span class="n">ref_phs</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="n">MAIN_PROCESS</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+
+    <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">Bcast</span><span class="p">(</span><span class="n">collected_ref_phs</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">_update_phase_and_metadata</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">collected_ref_phs</span><span class="p">)</span>
+
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished reference phase correction&#39;</span><span class="p">)</span>
 
-    <span class="c1"># Preserve old return value so tests don&#39;t break.</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Ifg</span><span class="p">):</span>
-        <span class="n">ifgs</span> <span class="o">=</span> <span class="n">ifg_paths</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">ifgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Ifg</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">)</span> <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">ifg_paths</span><span class="p">]</span>
     <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
     <span class="n">shared</span><span class="o">.</span><span class="n">save_numpy_phase</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
 
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Reference phase computed!&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Preserve old return value so tests don&#39;t break.</span>
     <span class="k">return</span> <span class="n">ref_phs</span><span class="p">,</span> <span class="n">ifgs</span></div>
 </pre></div>
 

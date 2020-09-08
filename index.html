@@ -94,14 +94,15 @@
 <li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#input-files">Input Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#results-visualisation">Results Visualisation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.correct.html">PyRate Correct Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.__main__.html">PyRate Main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">PyRate Modules</a><ul>
@@ -126,7 +127,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
@@ -146,13 +146,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id16">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id17">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id26">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id27">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -269,9 +270,11 @@ University of Technology.</p>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="usage.html#file-discovery">File Discovery</a></li>
 <li class="toctree-l3"><a class="reference internal" href="usage.html#pyrate-workflow"><cite>PyRate</cite> Workflow</a></li>
-<li class="toctree-l3"><a class="reference internal" href="usage.html#conv2tif-converting-flat-binary-interferograms-to-geotiff-format"><code class="docutils literal notranslate"><span class="pre">conv2tif</span></code>: Converting flat-binary interferograms to Geotiff format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#conv2tif-converting-flat-binary-files-to-geotiff-format"><code class="docutils literal notranslate"><span class="pre">conv2tif</span></code>: Converting flat-binary files to Geotiff format</a></li>
 <li class="toctree-l3"><a class="reference internal" href="usage.html#prepifg-preparing-input-interferograms"><code class="docutils literal notranslate"><span class="pre">prepifg</span></code>: Preparing input interferograms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="usage.html#process-main-workflow-including-stacking-and-time-series-analysis"><code class="docutils literal notranslate"><span class="pre">process</span></code>: Main workflow, including stacking and time series analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#correct-compute-and-apply-interferometric-phase-corrections"><code class="docutils literal notranslate"><span class="pre">correct</span></code>: Compute and apply interferometric phase corrections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#timeseries-compute-the-displacement-time-series"><code class="docutils literal notranslate"><span class="pre">timeseries</span></code>: Compute the displacement time series</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#stack-compute-the-average-velocity-via-stacking"><code class="docutils literal notranslate"><span class="pre">stack</span></code>: Compute the average velocity via stacking</a></li>
 <li class="toctree-l3"><a class="reference internal" href="usage.html#merge-reassemble-the-tiles"><code class="docutils literal notranslate"><span class="pre">merge</span></code>: Reassemble the tiles</a></li>
 <li class="toctree-l3"><a class="reference internal" href="usage.html#workflow-run-the-full-pyrate-workflow"><code class="docutils literal notranslate"><span class="pre">workflow</span></code>: Run the full PyRate workflow</a></li>
 </ul>
@@ -282,14 +285,15 @@ University of Technology.</p>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#results-visualisation">Results Visualisation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.correct.html">PyRate Correct Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.__main__.html">PyRate Main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">PyRate Modules</a><ul>
@@ -314,7 +318,6 @@ University of Technology.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
@@ -341,42 +344,49 @@ University of Technology.</p>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.3 (2020-08-04)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.5.0 (2020-09-08)</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="history.html#added">Added</a></li>
 <li class="toctree-l3"><a class="reference internal" href="history.html#fixed">Fixed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="history.html#changed">Changed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="history.html#removed">Removed</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.2 (2020-06-26)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.3 (2020-08-04)</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="history.html#id3">Added</a></li>
 <li class="toctree-l3"><a class="reference internal" href="history.html#id4">Fixed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="history.html#id5">Changed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="history.html#id6">Removed</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.1 (2020-05-19)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.2 (2020-06-26)</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="history.html#id8">Added</a></li>
 <li class="toctree-l3"><a class="reference internal" href="history.html#id9">Fixed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="history.html#id10">Changed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="history.html#id11">Removed</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.0 (2019-10-31)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.1 (2020-05-19)</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="history.html#id13">Added</a></li>
-<li class="toctree-l3"><a class="reference internal" href="history.html#id14">Changed</a></li>
-<li class="toctree-l3"><a class="reference internal" href="history.html#id15">Removed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="history.html#id14">Fixed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="history.html#id15">Changed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="history.html#id16">Removed</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id16">0.3.0 (2019-07-26)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="history.html#id17">Added</a></li>
-<li class="toctree-l3"><a class="reference internal" href="history.html#id18">Fixed</a></li>
-<li class="toctree-l3"><a class="reference internal" href="history.html#id19">Removed</a></li>
-<li class="toctree-l3"><a class="reference internal" href="history.html#id20">Changed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id17">0.4.0 (2019-10-31)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="history.html#id18">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="history.html#id19">Changed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="history.html#id20">Removed</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.3.0 (2019-07-26)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="history.html#id22">Added</a></li>
+<li class="toctree-l3"><a class="reference internal" href="history.html#id23">Fixed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="history.html#id24">Removed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="history.html#id25">Changed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id26">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id27">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>

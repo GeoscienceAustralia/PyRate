@@ -93,14 +93,15 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#workflow">Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#input-files">Input Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#results-visualisation">Results Visualisation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.prepifg.html">PyRate Prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.correct.html">PyRate Correct Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.merge.html">PyRate Merge Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.__main__.html">PyRate Main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules.html">PyRate Modules</a><ul>
@@ -125,7 +126,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
@@ -145,13 +145,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id16">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id17">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id26">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id27">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -246,11 +247,10 @@
 <span class="kn">from</span> <span class="nn">decimal</span> <span class="kn">import</span> <span class="n">Decimal</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">array</span><span class="p">,</span> <span class="n">nan</span><span class="p">,</span> <span class="n">isnan</span><span class="p">,</span> <span class="n">nanmean</span><span class="p">,</span> <span class="n">float32</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="nb">sum</span> <span class="k">as</span> <span class="n">nsum</span>
-<span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span>
 
 <span class="kn">from</span> <span class="nn">pyrate.core.gdal_python</span> <span class="kn">import</span> <span class="n">crop_resample_average</span>
-<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span>
-<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">output_tiff_filename</span><span class="p">,</span> <span class="n">dem_or_ifg</span><span class="p">,</span> <span class="n">Ifg</span><span class="p">,</span> <span class="n">DEM</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">dem_or_ifg</span><span class="p">,</span> <span class="n">Ifg</span><span class="p">,</span> <span class="n">DEM</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.logger</span> <span class="kn">import</span> <span class="n">pyratelogger</span> <span class="k">as</span> <span class="n">log</span>
 
 <span class="n">CustomExts</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;CustExtents&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;xfirst&#39;</span><span class="p">,</span> <span class="s1">&#39;yfirst&#39;</span><span class="p">,</span> <span class="s1">&#39;xlast&#39;</span><span class="p">,</span> <span class="s1">&#39;ylast&#39;</span><span class="p">])</span>
 
@@ -330,6 +330,9 @@
               <span class="s2">&quot;Looks must be an integer greater than zero&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">xlooks</span> <span class="o">!=</span> <span class="n">ylooks</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;X and Y multi-look factors are not equal&#39;</span><span class="p">)</span>
+
 
 <span class="k">def</span> <span class="nf">_check_resolution</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -377,7 +380,7 @@
 <span class="sd">    :param int ylooks: Number of multi-looks in y</span>
 <span class="sd">    :param tuple exts: Tuple of user defined georeferenced extents for</span>
 <span class="sd">        new file: (xfirst, yfirst, xlast, ylast)cropping coordinates</span>
-<span class="sd">    :param float thresh: see thresh in prepare_ifgs()</span>
+<span class="sd">    :param float thresh: NaN fraction threshold below which resampled_data is assigned NaNs</span>
 <span class="sd">    :param int crop_opt: Crop option</span>
 <span class="sd">    :param bool write_to_disk: Write new data to disk</span>
 <span class="sd">    :param str out_path: Path for output file</span>
@@ -397,13 +400,6 @@
     <span class="k">if</span> <span class="n">do_multilook</span><span class="p">:</span>
         <span class="n">resolution</span> <span class="o">=</span> <span class="p">[</span><span class="n">xlooks</span> <span class="o">*</span> <span class="n">raster</span><span class="o">.</span><span class="n">x_step</span><span class="p">,</span> <span class="n">ylooks</span> <span class="o">*</span> <span class="n">raster</span><span class="o">.</span><span class="n">y_step</span><span class="p">]</span>
 
-    <span class="c1"># cut, average, resample the final output layers</span>
-    <span class="n">op</span> <span class="o">=</span> <span class="n">output_tiff_filename</span><span class="p">(</span><span class="n">raster</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">out_path</span><span class="p">)</span>
-    <span class="n">looks_path</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">mlooked_path</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">crop_opt</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">xlooks</span> <span class="o">!=</span> <span class="n">ylooks</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;X and Y looks mismatch&#39;</span><span class="p">)</span>
-
     <span class="c1">#     # Add missing/updated metadata to resampled ifg/DEM</span>
     <span class="c1">#     new_lyr = type(ifg)(looks_path)</span>
     <span class="c1">#     new_lyr.open(readonly=True)</span>
@@ -415,42 +411,11 @@
     <span class="c1">#         #    reproject()</span>
     <span class="n">driver_type</span> <span class="o">=</span> <span class="s1">&#39;GTiff&#39;</span> <span class="k">if</span> <span class="n">write_to_disk</span> <span class="k">else</span> <span class="s1">&#39;MEM&#39;</span>
     <span class="n">resampled_data</span><span class="p">,</span> <span class="n">out_ds</span> <span class="o">=</span> <span class="n">crop_resample_average</span><span class="p">(</span>
-        <span class="n">input_tif</span><span class="o">=</span><span class="n">raster</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">extents</span><span class="o">=</span><span class="n">exts</span><span class="p">,</span> <span class="n">new_res</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="n">looks_path</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="n">thresh</span><span class="p">,</span>
+        <span class="n">input_tif</span><span class="o">=</span><span class="n">raster</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">extents</span><span class="o">=</span><span class="n">exts</span><span class="p">,</span> <span class="n">new_res</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span> <span class="n">output_file</span><span class="o">=</span><span class="n">out_path</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="n">thresh</span><span class="p">,</span>
         <span class="n">out_driver_type</span><span class="o">=</span><span class="n">driver_type</span><span class="p">,</span> <span class="n">hdr</span><span class="o">=</span><span class="n">header</span><span class="p">,</span> <span class="n">coherence_path</span><span class="o">=</span><span class="n">coherence_path</span><span class="p">,</span> <span class="n">coherence_thresh</span><span class="o">=</span><span class="n">coherence_thresh</span>
     <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">resampled_data</span><span class="p">,</span> <span class="n">out_ds</span></div>
-
-
-<span class="c1"># TODO: crop options 0 = no cropping? get rid of same size</span>
-<div class="viewcode-block" id="prepare_ifgs"><a class="viewcode-back" href="../../../prepifg_helper.html#pyrate.core.prepifg_helper.prepare_ifgs">[docs]</a><span class="k">def</span> <span class="nf">prepare_ifgs</span><span class="p">(</span><span class="n">raster_data_paths</span><span class="p">,</span> <span class="n">crop_opt</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">headers</span><span class="p">,</span> <span class="n">thresh</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">user_exts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">write_to_disc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                 <span class="n">out_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Wrapper function to prepare a sequence of interferogram files for</span>
-<span class="sd">    PyRate analysis. See prepifg.prepare_ifg() for full description of</span>
-<span class="sd">    inputs and returns.</span>
-<span class="sd">    </span>
-<span class="sd">    Note: function need refining for crop options</span>
-
-<span class="sd">    :param list raster_data_paths: List of interferogram file paths</span>
-<span class="sd">    :param int crop_opt: Crop option</span>
-<span class="sd">    :param int xlooks: Number of multi-looks in x; 5 is 5 times smaller, 1 is no change</span>
-<span class="sd">    :param int ylooks: Number of multi-looks in y</span>
-<span class="sd">    :param float thresh: see thresh in prepare_ifgs()</span>
-<span class="sd">    :param tuple user_exts: Tuple of user defined georeferenced extents for</span>
-<span class="sd">        new file: (xfirst, yfirst, xlast, ylast)cropping coordinates</span>
-<span class="sd">    :param bool write_to_disk: Write new data to disk</span>
-
-<span class="sd">    :return: resampled_data: output cropped and resampled image</span>
-<span class="sd">    :rtype: ndarray</span>
-<span class="sd">    :return: out_ds: destination gdal dataset object</span>
-<span class="sd">    :rtype: List[gdal.Dataset]</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># use metadata check to check whether it&#39;s a dem or ifg</span>
-    <span class="n">rasters</span> <span class="o">=</span> <span class="p">[</span><span class="n">dem_or_ifg</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">raster_data_paths</span><span class="p">]</span>
-    <span class="n">exts</span> <span class="o">=</span> <span class="n">get_analysis_extent</span><span class="p">(</span><span class="n">crop_opt</span><span class="p">,</span> <span class="n">rasters</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">user_exts</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">prepare_ifg</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">exts</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">crop_opt</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">write_to_disc</span><span class="p">,</span> <span class="n">out_path</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">h</span>
-            <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">raster_data_paths</span><span class="p">,</span> <span class="n">headers</span><span class="p">)]</span></div>
 
 
 <span class="c1"># TODO: Not being used. Remove in future?</span>

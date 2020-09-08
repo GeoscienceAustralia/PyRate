@@ -95,14 +95,15 @@
 <li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#input-files">Input Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#results-visualisation">Results Visualisation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.correct.html">PyRate Correct Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.__main__.html">PyRate Main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">PyRate Modules</a><ul class="current">
@@ -127,7 +128,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
@@ -147,13 +147,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id16">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id17">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id26">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id27">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -234,55 +235,20 @@
 <span id="gdal-python-bindings-module"></span><h1>GDAL-Python Bindings Module<a class="headerlink" href="#module-pyrate.core.gdal_python" title="Permalink to this headline">¶</a></h1>
 <p>This Python module contains bindings for the GDAL library</p>
 <dl class="py function">
+<dt id="pyrate.core.gdal_python.add_looks_and_crop_from_header">
+<code class="sig-prename descclassname">pyrate.core.gdal_python.</code><code class="sig-name descname">add_looks_and_crop_from_header</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hdr</span></em>, <em class="sig-param"><span class="n">md</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#add_looks_and_crop_from_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.gdal_python.add_looks_and_crop_from_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>function to add prepfig options to geotiff metadata</p>
+</dd></dl>
+
+<dl class="py function">
 <dt id="pyrate.core.gdal_python.coherence_masking">
 <code class="sig-prename descclassname">pyrate.core.gdal_python.</code><code class="sig-name descname">coherence_masking</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_gdal_dataset</span><span class="p">:</span> <span class="n">osgeo.gdal.Dataset</span></em>, <em class="sig-param"><span class="n">coherence_file_path</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">coherence_thresh</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/pyrate/core/gdal_python.html#coherence_masking"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.gdal_python.coherence_masking" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform coherence masking on raster in-place.</p>
 <p>Based on gdal_calc formula provided by Nahidul:
-gdal_calc.py -A 20151127-20151209_VV_8rlks_flat_eqa.cc.tif</p>
-<blockquote>
-<div><p>-B 20151127-20151209_VV_8rlks_eqa.unw.tif
+gdal_calc.py -A 20151127-20151209_VV_8rlks_flat_eqa.cc.tif
+-B 20151127-20151209_VV_8rlks_eqa.unw.tif
 –outfile=test_v1.tif –calc=”B*(A&gt;=0.8)-999*(A&lt;0.8)”
 –NoDataValue=-999</p>
-</div></blockquote>
-</dd></dl>
-
-<dl class="py function">
-<dt id="pyrate.core.gdal_python.crop">
-<code class="sig-prename descclassname">pyrate.core.gdal_python.</code><code class="sig-name descname">crop</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_file</span></em>, <em class="sig-param"><span class="n">extents</span></em>, <em class="sig-param"><span class="n">geo_trans</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nodata</span><span class="o">=</span><span class="default_value">nan</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#crop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.gdal_python.crop" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adapted from <a class="reference external" href="http://karthur.org/2015/clipping-rasters-in-python.html">http://karthur.org/2015/clipping-rasters-in-python.html</a></p>
-<p>Clips a raster (given as either a gdal.Dataset or as a numpy.array
-instance) to a polygon layer provided by a Shapefile (or other vector
-layer). If a numpy.array is given, a “GeoTransform” must be provided
-(via dataset.GetGeoTransform() in GDAL). Returns an array. Clip features
-must be a dissolved, single-part geometry (not multi-part). Modified from:</p>
-<p><a class="reference external" href="http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html">http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html</a>
-#clip-a-geotiff-with-shapefile</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>A gdal.Dataset</strong><strong> or </strong><strong>a NumPy array</strong> (<em>rast</em>) – </p></li>
-<li><p><strong>The path to the clipping features</strong> (<em>features_path</em>) – </p></li>
-<li><p><strong>An optional GDAL GeoTransform to use instead</strong> (<em>geo_trans</em>) – </p></li>
-<li><p><strong>The NoData value; defaults to -9999.</strong> (<em>nodata</em>) – </p></li>
-<li><p><strong>input_file</strong> (<em>str</em>) – input image file path</p></li>
-<li><p><strong>extents</strong> (<em>list</em>) – extents for the cropped area</p></li>
-<li><p><strong>geo_trans</strong> (<em>list</em>) – An optional GDAL GeoTransform to use instead</p></li>
-<li><p><strong>nodata</strong> (<em>int</em>) – The NoData value; defaults to -9999</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>clip: cropped part of the image</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>gt2: geotransform parameters for the cropped image</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py function">

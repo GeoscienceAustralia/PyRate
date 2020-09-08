@@ -93,14 +93,15 @@
 <li class="toctree-l2"><a class="reference internal" href="../../usage.html#workflow">Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage.html#input-files">Input Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#results-visualisation">Results Visualisation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.prepifg.html">PyRate Prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.correct.html">PyRate Correct Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../pyrate.merge.html">PyRate Merge Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../pyrate.__main__.html">PyRate Main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../modules.html">PyRate Modules</a><ul>
@@ -125,7 +126,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
@@ -145,13 +145,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id7">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id12">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id16">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id21">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../history.html#id22">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id7">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id12">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id17">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id21">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id26">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id27">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -245,10 +246,9 @@
 <span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span>
-<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">shared</span><span class="p">,</span> <span class="n">mpiops</span><span class="p">,</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span><span class="p">,</span> <span class="n">prepifg_helper</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">roipac</span><span class="p">,</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span>
+<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">shared</span><span class="p">,</span> <span class="n">mpiops</span><span class="p">,</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span><span class="p">,</span> <span class="n">prepifg_helper</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">roipac</span><span class="p">,</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span><span class="p">,</span> <span class="n">gdal_python</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.prepifg_helper</span> <span class="kn">import</span> <span class="n">PreprocessError</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.logger</span> <span class="kn">import</span> <span class="n">pyratelogger</span> <span class="k">as</span> <span class="n">log</span>
-<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">output_tiff_filename</span>
 <span class="kn">from</span> <span class="nn">pyrate.configuration</span> <span class="kn">import</span> <span class="n">MultiplePaths</span>
 
 <span class="n">GAMMA</span> <span class="o">=</span> <span class="mi">1</span>
@@ -274,8 +274,12 @@
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">DEM_FILE</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># optional DEM conversion</span>
         <span class="n">ifg_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">DEM_FILE_PATH</span><span class="p">])</span>
 
-    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">COH_MASK</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">COH_FILE_LIST</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">ifg_paths</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">COHERENCE_FILE_PATHS</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">COH_FILE_LIST</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">COH_MASK</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Cannot apply coherence masking: no coherence file list &quot;</span>
+                                <span class="s2">&quot;supplied (parameter &#39;cohfilelist&#39;)&quot;</span><span class="p">)</span>
 
     <span class="n">shared</span><span class="o">.</span><span class="n">mkdir_p</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">])</span>  <span class="c1"># create output dir</span>
 
@@ -287,7 +291,7 @@
     <span class="n">process_ifgs_paths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">size</span><span class="p">)[</span><span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span><span class="p">]</span>
     <span class="n">do_prepifg</span><span class="p">(</span><span class="n">process_ifgs_paths</span><span class="p">,</span> <span class="n">exts</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
     <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Finished prepifg&quot;</span><span class="p">)</span></div>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Finished &#39;prepifg&#39; step&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="do_prepifg"><a class="viewcode-back" href="../../pyrate.prepifg.html#pyrate.prepifg.do_prepifg">[docs]</a><span class="k">def</span> <span class="nf">do_prepifg</span><span class="p">(</span><span class="n">multi_paths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">MultiplePaths</span><span class="p">],</span> <span class="n">exts</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -306,7 +310,7 @@
                                     <span class="s2">&quot;interferograms to geotiffs.&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">LARGE_TIFS</span><span class="p">]:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Using gdal system calls to process prepifg&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Using gdal system calls to execute &#39;prepifg&#39; step&quot;</span><span class="p">)</span>
         <span class="n">ifg</span> <span class="o">=</span> <span class="n">prepifg_helper</span><span class="o">.</span><span class="n">dem_or_ifg</span><span class="p">(</span><span class="n">multi_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">converted_path</span><span class="p">)</span>
         <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
         <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_LKSX</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_LKSY</span><span class="p">]</span>
@@ -342,7 +346,7 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prepifg_helper</span><span class="o">.</span><span class="n">dem_or_ifg</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">shared</span><span class="o">.</span><span class="n">DEM</span><span class="p">):</span>
         <span class="n">check_call</span><span class="p">(</span><span class="s1">&#39;gdalwarp </span><span class="si">{co}</span><span class="s1"> -te</span><span class="se">\t</span><span class="si">{extents}</span><span class="se">\t</span><span class="s1">-tr</span><span class="se">\t</span><span class="si">{res}</span><span class="se">\t</span><span class="s1">-r</span><span class="se">\t</span><span class="s1">average </span><span class="se">\t</span><span class="si">{p}</span><span class="se">\t</span><span class="si">{l}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="n">co</span><span class="o">=</span><span class="n">COMMON_OPTIONS</span><span class="p">,</span> <span class="n">extents</span><span class="o">=</span><span class="n">extents</span><span class="p">,</span> <span class="n">res</span><span class="o">=</span><span class="n">res</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">l</span><span class="o">=</span><span class="n">l</span><span class="p">),</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">__update_meta_data</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
+        <span class="n">__update_meta_data</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
         <span class="k">return</span>
 
     <span class="n">p_unset</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">])</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">&#39;.unset.tif&#39;</span><span class="p">)</span>
@@ -393,7 +397,7 @@
                <span class="sa">f</span><span class="s1">&#39;--outfile=</span><span class="si">{</span><span class="n">l</span><span class="si">}</span><span class="se">\t</span><span class="s1">&#39;</span>
                <span class="sa">f</span><span class="s1">&#39;--NoDataValue=nan&#39;</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">__update_meta_data</span><span class="p">(</span><span class="n">p_unset</span><span class="o">.</span><span class="n">as_posix</span><span class="p">(),</span> <span class="n">c</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
+    <span class="n">__update_meta_data</span><span class="p">(</span><span class="n">p_unset</span><span class="o">.</span><span class="n">as_posix</span><span class="p">(),</span> <span class="n">c</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
 
     <span class="c1"># clean up</span>
     <span class="n">nan_frac_avg</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
@@ -402,15 +406,18 @@
     <span class="n">p_unset</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
 
 
-<span class="k">def</span> <span class="nf">__update_meta_data</span><span class="p">(</span><span class="n">p_unset</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">l</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">__update_meta_data</span><span class="p">(</span><span class="n">p_unset</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
     <span class="c1"># update metadata</span>
     <span class="n">ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">p_unset</span><span class="p">)</span>
     <span class="n">md</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">GetMetadata</span><span class="p">()</span>
     <span class="c1"># remove data type</span>
     <span class="n">v</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">)</span>
+    <span class="n">md</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">IFG_LKSX</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_LKSX</span><span class="p">])</span>
+    <span class="n">md</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">IFG_LKSY</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_LKSY</span><span class="p">])</span>
+    <span class="n">md</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">IFG_CROP</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">IFG_CROP_OPT</span><span class="p">])</span>
     <span class="c1"># update data type</span>
     <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># it&#39;s a interferogram when COH_MASK=1</span>
-        <span class="n">md_str</span> <span class="o">=</span> <span class="s1">&#39;-mo </span><span class="si">{k}</span><span class="s1">=</span><span class="si">{v}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">ifc</span><span class="o">.</span><span class="n">COHERENCE</span><span class="p">)</span>
+        <span class="n">md_str</span> <span class="o">=</span> <span class="s1">&#39;-mo </span><span class="si">{k}</span><span class="s1">=</span><span class="si">{v}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">ifc</span><span class="o">.</span><span class="n">MLOOKED_COH_MASKED_IFG</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DEM</span><span class="p">:</span>  <span class="c1"># it&#39;s a dem</span>
             <span class="n">md_str</span> <span class="o">=</span> <span class="s1">&#39;-mo </span><span class="si">{k}</span><span class="s1">=</span><span class="si">{v}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="n">ifc</span><span class="o">.</span><span class="n">MLOOKED_DEM</span><span class="p">)</span>
@@ -431,13 +438,16 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Multiprocessing wrapper for prepifg</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">crop</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">transform_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
     <span class="n">thresh</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">NO_DATA_AVERAGING_THRESHOLD</span><span class="p">]</span>
-    <span class="n">header</span> <span class="o">=</span> <span class="n">find_header</span><span class="p">(</span><span class="n">m_path</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
-    <span class="n">header</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">INPUT_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">m_path</span><span class="o">.</span><span class="n">input_type</span>
+    <span class="n">hdr</span> <span class="o">=</span> <span class="n">find_header</span><span class="p">(</span><span class="n">m_path</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="n">hdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">INPUT_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">m_path</span><span class="o">.</span><span class="n">input_type</span>
+    <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">crop</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">transform_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">hdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">IFG_LKSX</span><span class="p">]</span> <span class="o">=</span> <span class="n">xlooks</span>
+    <span class="n">hdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">IFG_LKSY</span><span class="p">]</span> <span class="o">=</span> <span class="n">ylooks</span>
+    <span class="n">hdr</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">IFG_CROP</span><span class="p">]</span> <span class="o">=</span> <span class="n">crop</span>
 
     <span class="c1"># If we&#39;re performing coherence masking, find the coherence file for this IFG.</span>
-    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">COH_MASK</span><span class="p">]</span> <span class="ow">and</span> <span class="n">shared</span><span class="o">.</span><span class="n">_is_interferogram</span><span class="p">(</span><span class="n">header</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">COH_MASK</span><span class="p">]</span> <span class="ow">and</span> <span class="n">shared</span><span class="o">.</span><span class="n">_is_interferogram</span><span class="p">(</span><span class="n">hdr</span><span class="p">):</span>
         <span class="n">coherence_path</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">coherence_paths_for</span><span class="p">(</span><span class="n">m_path</span><span class="o">.</span><span class="n">converted_path</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">tif</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">coherence_thresh</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">COH_THRESH</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
@@ -448,7 +458,7 @@
         <span class="k">return</span> <span class="n">m_path</span><span class="o">.</span><span class="n">converted_path</span><span class="p">,</span> <span class="n">coherence_path</span><span class="p">,</span> <span class="n">m_path</span><span class="o">.</span><span class="n">sampled_path</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">prepifg_helper</span><span class="o">.</span><span class="n">prepare_ifg</span><span class="p">(</span><span class="n">m_path</span><span class="o">.</span><span class="n">converted_path</span><span class="p">,</span> <span class="n">xlooks</span><span class="p">,</span> <span class="n">ylooks</span><span class="p">,</span> <span class="n">exts</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span>
-                                   <span class="n">out_path</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">,</span> <span class="n">coherence_path</span><span class="o">=</span><span class="n">coherence_path</span><span class="p">,</span>
+                                   <span class="n">out_path</span><span class="o">=</span><span class="n">m_path</span><span class="o">.</span><span class="n">sampled_path</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">hdr</span><span class="p">,</span> <span class="n">coherence_path</span><span class="o">=</span><span class="n">coherence_path</span><span class="p">,</span>
                                    <span class="n">coherence_thresh</span><span class="o">=</span><span class="n">coherence_thresh</span><span class="p">)</span>
         <span class="n">Path</span><span class="p">(</span><span class="n">m_path</span><span class="o">.</span><span class="n">sampled_path</span><span class="p">)</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="mo">0o444</span><span class="p">)</span>  <span class="c1"># readonly output</span>
 
@@ -459,7 +469,9 @@
     <span class="k">if</span> <span class="p">(</span><span class="n">processor</span> <span class="o">==</span> <span class="n">GAMMA</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">processor</span> <span class="o">==</span> <span class="n">GEOTIF</span><span class="p">):</span>
         <span class="n">header</span> <span class="o">=</span> <span class="n">gamma</span><span class="o">.</span><span class="n">gamma_header</span><span class="p">(</span><span class="n">tif_path</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">processor</span> <span class="o">==</span> <span class="n">ROIPAC</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Warning: ROI_PAC support will be deprecated in a future PyRate release&quot;</span><span class="p">)</span>
+        <span class="kn">import</span> <span class="nn">warnings</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Warning: ROI_PAC support will be deprecated in a future PyRate release&quot;</span><span class="p">,</span>
+                      <span class="n">category</span><span class="o">=</span><span class="ne">DeprecationWarning</span><span class="p">)</span>
         <span class="n">header</span> <span class="o">=</span> <span class="n">roipac</span><span class="o">.</span><span class="n">roipac_header</span><span class="p">(</span><span class="n">tif_path</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">PreprocessError</span><span class="p">(</span><span class="s1">&#39;Processor must be ROI_PAC (0) or GAMMA (1)&#39;</span><span class="p">)</span>

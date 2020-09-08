@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PyRate Process Script &mdash; PyRate 0.4.0 documentation</title>
+  <title>PyRate Correct Script &mdash; PyRate 0.4.0 documentation</title>
   
 
   
@@ -95,14 +95,15 @@
 <li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#input-files">Input Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#results-visualisation">Results Visualisation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">PyRate Process Script</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">PyRate Correct Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.__main__.html">PyRate Main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">PyRate Modules</a><ul>
@@ -127,7 +128,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
@@ -147,13 +147,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id16">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id17">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id26">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id27">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -204,7 +205,7 @@
         
           <li><a href="scripts.html">PyRate Scripts</a> &raquo;</li>
         
-      <li>PyRate Process Script</li>
+      <li>PyRate Correct Script</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -230,46 +231,65 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pyrate.process">
-<span id="pyrate-process-script"></span><h1>PyRate Process Script<a class="headerlink" href="#module-pyrate.process" title="Permalink to this headline">¶</a></h1>
-<p>This Python module runs the main PyRate processing workflow</p>
+  <div class="section" id="module-pyrate.correct">
+<span id="pyrate-correct-script"></span><h1>PyRate Correct Script<a class="headerlink" href="#module-pyrate.correct" title="Permalink to this headline">¶</a></h1>
+<p>This Python module runs the main PyRate correction workflow</p>
 <dl class="py function">
-<dt id="pyrate.process.main">
-<code class="sig-prename descclassname">pyrate.process.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/process.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.process.main" title="Permalink to this definition">¶</a></dt>
+<dt id="pyrate.correct.correct_ifgs">
+<code class="sig-prename descclassname">pyrate.correct.</code><code class="sig-name descname">correct_ifgs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/pyrate/correct.html#correct_ifgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.correct.correct_ifgs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Top level function to perform PyRate workflow on given interferograms</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>refpt: tuple of reference pixel x and y position</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>tuple</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>refpt: tuple of reference pixel x and y position</p>
 </dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>maxvar: array of maximum variance values of interferograms</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>ndarray</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>maxvar: array of maximum variance values of interferograms</p>
 </dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>vcmt: Variance-covariance matrix array</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>ndarray</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>vcmt: Variance-covariance matrix array</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
-<dt id="pyrate.process.process_ifgs">
-<code class="sig-prename descclassname">pyrate.process.</code><code class="sig-name descname">process_ifgs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="p">:</span> <span class="n">dict</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/pyrate/process.html#process_ifgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.process.process_ifgs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Top level function to perform PyRate workflow on given interferograms
-:param dict params: Dictionary of configuration parameters
-:return: refpt: tuple of reference pixel x and y position
-:rtype: tuple
-:return: maxvar: array of maximum variance values of interferograms
-:rtype: ndarray
-:return: vcmt: Variance-covariance matrix array
-:rtype: ndarray</p>
+<dt id="pyrate.correct.main">
+<code class="sig-prename descclassname">pyrate.correct.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/correct.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.correct.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Top level function to perform PyRate workflow on given interferograms</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>refpt: tuple of reference pixel x and y position</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>maxvar: array of maximum variance values of interferograms</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>vcmt: Variance-covariance matrix array</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>

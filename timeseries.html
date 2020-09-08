@@ -95,14 +95,15 @@
 <li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#input-files">Input Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#results-visualisation">Results Visualisation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.correct.html">PyRate Correct Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.__main__.html">PyRate Main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">PyRate Modules</a><ul class="current">
@@ -127,7 +128,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
@@ -147,13 +147,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id16">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id17">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id26">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id27">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -241,6 +242,98 @@ inversion in PyRate.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt id="pyrate.core.timeseries.linear_rate_array">
+<code class="sig-prename descclassname">pyrate.core.timeseries.</code><code class="sig-name descname">linear_rate_array</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tscuml</span></em>, <em class="sig-param"><span class="n">ifgs</span></em>, <em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/timeseries.html#linear_rate_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.timeseries.linear_rate_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function loops over all pixels in a 3-dimensional cumulative
+time series array and calculates the linear rate (line of best fit)
+for each pixel using linear regression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tscuml</strong> (<em>ndarray</em>) – 3-dimensional cumulative time series array</p></li>
+<li><p><strong>ifgs</strong> (<em>list</em>) – list of interferogram class objects.</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – Configuration parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>linrate: Linear rate map from linear regression</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>intercept: Array of Y-axis intercepts from linear regression</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>rsquared: Array of R-squared value of the linear regression</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>error: Array of standard errors of the linear regression</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>samples: Number of observations used in linear regression for each pixel</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="pyrate.core.timeseries.linear_rate_pixel">
+<code class="sig-prename descclassname">pyrate.core.timeseries.</code><code class="sig-name descname">linear_rate_pixel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">t</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/timeseries.html#linear_rate_pixel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.timeseries.linear_rate_pixel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate best fitting linear rate to cumulative displacement
+time series for one pixel using linear regression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y</strong> (<em>ndarray</em>) – 1-dimensional vector of cumulative displacement time series</p></li>
+<li><p><strong>t</strong> (<em>ndarray</em>) – 1-dimensional vector of cumulative time at each epoch</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>linrate: Linear rate; gradient of fitted line.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Return intercept</dt>
+<dd class="field-even"><p>Y-axis intercept of fitted line at t = 0</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>rsquared: R-squared value of the linear regression</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>error: Standard error of the linear regression</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>samples: Number of observations used in linear regression</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt id="pyrate.core.timeseries.time_series">
 <code class="sig-prename descclassname">pyrate.core.timeseries.</code><code class="sig-name descname">time_series</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifgs</span></em>, <em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">vcmt</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mst</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/timeseries.html#time_series"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.timeseries.time_series" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the displacement time series from the given interferogram
@@ -290,7 +383,7 @@ size(nrows, ncols, nepochs-1), where:</p>
 <dl class="py function">
 <dt id="pyrate.core.timeseries.timeseries_calc_wrapper">
 <code class="sig-prename descclassname">pyrate.core.timeseries.</code><code class="sig-name descname">timeseries_calc_wrapper</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/timeseries.html#timeseries_calc_wrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.timeseries.timeseries_calc_wrapper" title="Permalink to this definition">¶</a></dt>
-<dd><p>MPI wrapper for time series calculation.</p>
+<dd><p>Wrapper for time series calculation on a set of tiles.</p>
 </dd></dl>
 
 </div>

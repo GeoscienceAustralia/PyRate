@@ -95,14 +95,15 @@
 <li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#input-files">Input Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#results-visualisation">Results Visualisation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.correct.html">PyRate Correct Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pyrate.__main__.html">PyRate Main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">PyRate Modules</a><ul>
@@ -127,7 +128,6 @@
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#corrections-being-skipped">Corrections being skipped</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
@@ -147,13 +147,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id16">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id17">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id26">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id27">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -232,37 +233,6 @@
 <h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h1>
 <p>Some common/known issues with <cite>PyRate</cite> that users may encounter are described below.</p>
 <p>If your issue is not covered below, please contact the <a class="reference external" href="mailto:insar&#37;&#52;&#48;ga&#46;gov&#46;au">Geoscience Australia InSAR Team</a> for help.</p>
-<div class="section" id="corrections-being-skipped">
-<h2>Corrections being skipped<a class="headerlink" href="#corrections-being-skipped" title="Permalink to this headline">¶</a></h2>
-<p><strong>Problem</strong>: When running the <code class="docutils literal notranslate"><span class="pre">process</span></code> step, many corrections are reported as <code class="docutils literal notranslate"><span class="pre">Skipped:</span> <span class="pre">interferograms</span> <span class="pre">already</span> <span class="pre">corrected</span></code>, but I want to try different processing parameters!</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">pyrate</span> <span class="n">process</span> <span class="o">-</span><span class="n">f</span> <span class="n">input_parameters</span><span class="o">.</span><span class="n">conf</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">16</span> <span class="n">main</span> <span class="mi">97</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">Verbosity</span> <span class="nb">set</span> <span class="n">to</span> <span class="n">INFO</span><span class="o">.</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">16</span> <span class="n">shared</span> <span class="mi">1294</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">Running</span> <span class="n">process</span> <span class="n">serially</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">17</span> <span class="n">process</span> <span class="mi">86</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">Found</span> <span class="mi">13</span> <span class="n">unique</span> <span class="n">epochs</span> <span class="ow">in</span> <span class="n">the</span> <span class="mi">17</span> <span class="n">interferogram</span> <span class="n">network</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">17</span> <span class="n">process</span> <span class="mi">134</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">Searching</span> <span class="k">for</span> <span class="n">best</span> <span class="n">reference</span> <span class="n">pixel</span> <span class="n">location</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">18</span> <span class="n">process</span> <span class="mi">155</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">Selected</span> <span class="n">reference</span> <span class="n">pixel</span> <span class="n">coordinate</span><span class="p">:</span> <span class="p">(</span><span class="mi">38</span><span class="p">,</span> <span class="mi">58</span><span class="p">)</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">18</span> <span class="n">process</span> <span class="mi">170</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">Calculating</span> <span class="n">orbital</span> <span class="n">correction</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">18</span> <span class="n">shared</span> <span class="mi">1255</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">Skipped</span><span class="p">:</span> <span class="n">interferograms</span> <span class="n">already</span> <span class="n">corrected</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">18</span> <span class="n">process</span> <span class="mi">198</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">Calculating</span> <span class="n">reference</span> <span class="n">phase</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">19</span> <span class="n">shared</span> <span class="mi">1255</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">Skipped</span><span class="p">:</span> <span class="n">interferograms</span> <span class="n">already</span> <span class="n">corrected</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">19</span> <span class="n">process</span> <span class="mi">105</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">Calculating</span> <span class="n">minimum</span> <span class="n">spanning</span> <span class="n">tree</span> <span class="n">matrix</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">19</span> <span class="n">process</span> <span class="mi">342</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">Calculating</span> <span class="n">the</span> <span class="n">temporal</span> <span class="n">variance</span><span class="o">-</span><span class="n">covariance</span> <span class="n">matrix</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">20</span> <span class="n">process</span> <span class="mi">391</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">Calculating</span> <span class="n">time</span> <span class="n">series</span> <span class="n">using</span> <span class="n">SVD</span> <span class="n">method</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">20</span> <span class="n">timeseries</span> <span class="mi">152</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">Calculating</span> <span class="n">timeseries</span> <span class="ow">in</span> <span class="n">serial</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">21</span> <span class="n">process</span> <span class="mi">323</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">Calculating</span> <span class="n">rate</span> <span class="nb">map</span> <span class="kn">from</span> <span class="nn">stacking</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">21</span> <span class="n">process</span> <span class="mi">326</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">Stacking</span> <span class="n">of</span> <span class="n">tile</span> <span class="mi">0</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">21</span> <span class="n">stack</span> <span class="mi">64</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">Calculating</span> <span class="n">stack</span> <span class="n">rate</span> <span class="ow">in</span> <span class="n">serial</span>
-<span class="mi">16</span><span class="p">:</span><span class="mi">43</span><span class="p">:</span><span class="mi">21</span> <span class="n">process</span> <span class="mi">314</span> <span class="mi">24732</span> <span class="n">INFO</span> <span class="mi">0</span><span class="o">/</span><span class="mi">0</span> <span class="n">PyRate</span> <span class="n">workflow</span> <span class="n">completed</span>
-</pre></div>
-</div>
-<p><strong>Reason</strong>: <cite>PyRate</cite> updates the phase values in the input interferogram geotiff files as corrections are applied during the <code class="docutils literal notranslate"><span class="pre">process</span></code> step. Metadata is then added to the geotiff header to indicate the correction has been applied. This metadata is then checked upon subsequent runs to see if the correction should be applied.</p>
-<p><strong>Solution</strong>: Start again from <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> step, creating new cropped/multi-looked interferograms that have not been corrected.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>We plan to change this workflow behaviour in a future <cite>PyRate</cite> release, recognising that
-it would be convenient to be able to quickly test the impact of parameter changes.</p>
-</div>
-</div>
 <div class="section" id="valueerror-too-many-values-to-unpack-expected-2">
 <h2>ValueError: too many values to unpack (expected 2)<a class="headerlink" href="#valueerror-too-many-values-to-unpack-expected-2" title="Permalink to this headline">¶</a></h2>
 <p><strong>Problem</strong>: During <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> step, the following error is encountered:</p>
@@ -318,11 +288,11 @@ For example, rename <code class="docutils literal notranslate"><span class="pre"
 </pre></div>
 </div>
 <p><strong>Reason</strong>: The <code class="docutils literal notranslate"><span class="pre">maxsig</span></code> parameter is too low, resulting in stack rate values being replaced by NaNs. <code class="docutils literal notranslate"><span class="pre">maxsig</span></code> is a threshold for masking stack rate pixels according to the corresponding stack error estimate saved in <code class="docutils literal notranslate"><span class="pre">out/tmpdir/stack_error_*.npy</span></code>.</p>
-<p><strong>Solution</strong>: Increase <code class="docutils literal notranslate"><span class="pre">maxsig</span></code>, then re-run <code class="docutils literal notranslate"><span class="pre">process</span></code> and <code class="docutils literal notranslate"><span class="pre">merge</span></code> steps. Maximum permittable value for <code class="docutils literal notranslate"><span class="pre">maxsig</span></code> is 1000 mm.</p>
+<p><strong>Solution</strong>: Increase <code class="docutils literal notranslate"><span class="pre">maxsig</span></code>, then re-run the <code class="docutils literal notranslate"><span class="pre">merge</span></code> step. Maximum permittable value for <code class="docutils literal notranslate"><span class="pre">maxsig</span></code> is 1000 mm.</p>
 </div>
 <div class="section" id="failure-of-aps-spatial-low-pass-filter">
 <h2>Failure of APS spatial low pass filter<a class="headerlink" href="#failure-of-aps-spatial-low-pass-filter" title="Permalink to this headline">¶</a></h2>
-<p><strong>Problem</strong>: Atmospheric corrections during “process“ fails due to the interpolated grid used for correction being empty:</p>
+<p><strong>Problem</strong>: Atmospheric corrections during <code class="docutils literal notranslate"><span class="pre">correct</span></code> step fails due to the interpolated grid used for correction being empty:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">+</span><span class="mi">8</span><span class="n">s</span> <span class="n">pyrate</span><span class="o">.</span><span class="n">aps</span><span class="p">:</span><span class="n">INFO</span> <span class="n">Applying</span> <span class="n">spatial</span> <span class="n">low</span> <span class="k">pass</span> <span class="nb">filter</span>
 <span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
 <span class="n">File</span> <span class="s2">&quot;~/PyRateVenv/bin/pyrate&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">11</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
@@ -365,8 +335,8 @@ For example, rename <code class="docutils literal notranslate"><span class="pre"
 <p>In general, users are advised to input a network of small-baseline interferograms
 that has at least 2 interferometric connections per SAR image epoch. Furthermore,
 make sure that <code class="docutils literal notranslate"><span class="pre">ts_pthr</span></code>, <code class="docutils literal notranslate"><span class="pre">pthr</span></code> and <code class="docutils literal notranslate"><span class="pre">tlpfpthr</span></code> are smaller than the number
-of image epochs. To check that <code class="docutils literal notranslate"><span class="pre">process</span></code> worked correctly, users can check that
-the <code class="docutils literal notranslate"><span class="pre">tsincr_*.npy</span></code> and <code class="docutils literal notranslate"><span class="pre">tscuml*.npy</span></code> arrays in the <code class="docutils literal notranslate"><span class="pre">/&lt;outdir&gt;/tmpdir</span></code> contain numeric values and not NaNs.</p>
+of image epochs. To check that the spatio-temporal filters worked correctly, users can check that
+the numpy arrays saved at <code class="docutils literal notranslate"><span class="pre">/&lt;outdir&gt;/aps_error/*aps_error.npy</span></code> contain numeric values and not NaNs.</p>
 </div>
 <div class="section" id="out-of-memory-errors">
 <h2>Out of memory errors<a class="headerlink" href="#out-of-memory-errors" title="Permalink to this headline">¶</a></h2>
@@ -378,6 +348,7 @@ the <code class="docutils literal notranslate"><span class="pre">tsincr_*.npy</s
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mem</span><span class="o">=</span><span class="mi">32</span><span class="n">Gb</span>
 </pre></div>
 </div>
+<p>If no more memory can be called upon, users can try running the job in serial, or reducing the size of the interferograms by increasing the multi-looking factors applied during <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> (parameters <code class="docutils literal notranslate"><span class="pre">ifglksx</span></code> and <code class="docutils literal notranslate"><span class="pre">ifglksy</span></code>).</p>
 </div>
 <div class="section" id="incorrect-modules-loaded-on-gadi">
 <h2>Incorrect modules loaded on Gadi<a class="headerlink" href="#incorrect-modules-loaded-on-gadi" title="Permalink to this headline">¶</a></h2>

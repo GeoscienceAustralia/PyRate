@@ -93,14 +93,15 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#workflow">Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#input-files">Input Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#results-visualisation">Results Visualisation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.prepifg.html">PyRate Prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.correct.html">PyRate Correct Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.merge.html">PyRate Merge Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.__main__.html">PyRate Main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules.html">PyRate Modules</a><ul>
@@ -125,7 +126,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
@@ -145,13 +145,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id16">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id17">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id26">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id27">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -314,8 +315,10 @@
 <span class="c1"># reference pixel parameters</span>
 <span class="c1">#: INT; Longitude (decimal degrees) of reference pixel, or if left blank a search will be performed</span>
 <span class="n">REFX</span> <span class="o">=</span> <span class="s1">&#39;refx&#39;</span>
+<span class="n">REFX_FOUND</span> <span class="o">=</span> <span class="s1">&#39;refxfound&#39;</span>
 <span class="c1">#: INT; Latitude (decimal degrees) of reference pixel, or if left blank a search will be performed</span>
 <span class="n">REFY</span> <span class="o">=</span> <span class="s1">&#39;refy&#39;</span>
+<span class="n">REFY_FOUND</span> <span class="o">=</span> <span class="s1">&#39;refyfound&#39;</span>
 <span class="c1">#: INT; Number of reference pixel grid search nodes in x dimension</span>
 <span class="n">REFNX</span> <span class="o">=</span> <span class="s2">&quot;refnx&quot;</span>
 <span class="c1">#: INT; Number of reference pixel grid search nodes in y dimension</span>
@@ -362,6 +365,8 @@
 <span class="n">ORBITAL_FIT_LOOKS_X</span> <span class="o">=</span> <span class="s1">&#39;orbfitlksx&#39;</span>
 <span class="c1">#: INT; Multi look factor for orbital error calculation in y dimension</span>
 <span class="n">ORBITAL_FIT_LOOKS_Y</span> <span class="o">=</span> <span class="s1">&#39;orbfitlksy&#39;</span>
+<span class="c1">#: BOOL (1/0); Add column of offset params to orbit correction design matrix (1: yes, 0: no)</span>
+<span class="n">ORBFIT_OFFSET</span> <span class="o">=</span> <span class="s1">&#39;orbfitoffset&#39;</span>
 
 <span class="c1"># Stacking parameters</span>
 <span class="c1">#: FLOAT; Threshold ratio between &#39;model minus observation&#39; residuals and a-priori observation standard deviations for stacking estimate acceptance (otherwise remove furthest outlier and re-iterate)</span>
@@ -399,8 +404,6 @@
 <span class="n">SLPF_NANFILL_METHOD</span> <span class="o">=</span> <span class="s1">&#39;slpnanfill_method&#39;</span>
 
 <span class="c1"># Time series parameters</span>
-<span class="c1">#: BOOL (1/0); Perform time series calculation (1: yes, 0: no)</span>
-<span class="n">TIME_SERIES_CAL</span> <span class="o">=</span> <span class="s1">&#39;tscal&#39;</span>
 <span class="c1">#: INT (1/2); Method for time series inversion (1: Laplacian Smoothing; 2: SVD)</span>
 <span class="n">TIME_SERIES_METHOD</span> <span class="o">=</span> <span class="s1">&#39;tsmethod&#39;</span>
 <span class="c1">#: INT; Number of required input observations per pixel for time series inversion</span>
@@ -483,7 +486,6 @@
     <span class="n">SLPF_ORDER</span><span class="p">:</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
     <span class="n">SLPF_NANFILL</span><span class="p">:</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
 
-    <span class="n">TIME_SERIES_CAL</span><span class="p">:</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
     <span class="c1"># pixel thresh based on nepochs? not every project may have 20 epochs</span>
     <span class="n">TIME_SERIES_PTHRESH</span><span class="p">:</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
     <span class="n">TIME_SERIES_SM_FACTOR</span><span class="p">:</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">),</span>
@@ -516,8 +518,10 @@
 <span class="n">INT_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="n">APS_CORRECTION</span><span class="p">,</span> <span class="n">APS_METHOD</span><span class="p">]</span>
 
 <span class="c1"># filenames reused in  many parts of the program</span>
-<span class="n">REF_PIXEL_FILE</span> <span class="o">=</span> <span class="s1">&#39;ref_pixel.npy&#39;</span>
+<span class="n">REF_PIXEL_FILE</span> <span class="o">=</span> <span class="s1">&#39;ref_pixel_file&#39;</span>
 <span class="n">ORB_ERROR_DIR</span> <span class="o">=</span> <span class="s1">&#39;orb_error&#39;</span>
+<span class="n">APS_ERROR_DIR</span> <span class="o">=</span> <span class="s1">&#39;aps_error&#39;</span>
+<span class="n">MST_DIR</span> <span class="o">=</span> <span class="s1">&#39;mst_dir&#39;</span>
 <span class="n">TEMP_MLOOKED_DIR</span> <span class="o">=</span> <span class="s1">&#39;temp_mlooked_dir&#39;</span>
 
 
@@ -658,32 +662,6 @@
     <span class="k">return</span> <span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">lines</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="write_config_file"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.write_config_file">[docs]</a><span class="k">def</span> <span class="nf">write_config_file</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">output_conf_file</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Takes a param object and writes the config file. Reverse of get_conf_params.</span>
-
-<span class="sd">    :param dict params: parameter dictionary</span>
-<span class="sd">    :param str output_conf_file: output file name</span>
-
-<span class="sd">    :return: config file</span>
-<span class="sd">    :rtype: list</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_conf_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s1">&#39;process&#39;</span><span class="p">:</span>
-                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="s1">&#39;:</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span>
-                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;steps = &#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span>
-                    <span class="k">for</span> <span class="n">vv</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
-                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">vv</span><span class="p">),</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span>
-                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                    <span class="k">continue</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="s1">&#39;:</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">),</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="s1">&#39;:</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span></div>
-
-
 <div class="viewcode-block" id="transform_params"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.transform_params">[docs]</a><span class="k">def</span> <span class="nf">transform_params</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns subset of all parameters for cropping and multilooking.</span>
@@ -732,7 +710,7 @@
 <span class="sd">        Path to coherence file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_</span><span class="p">,</span> <span class="n">filename</span> <span class="o">=</span> <span class="n">split</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-    <span class="n">epoch</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">sixteen_digits_pattern</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">epoch</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">sixteen_digits_pattern</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">tif</span><span class="p">:</span>
         <span class="n">coh_file_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">converted_path</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="n">COHERENCE_FILE_PATHS</span><span class="p">]</span> <span class="k">if</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">converted_path</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
@@ -743,42 +721,6 @@
                       <span class="sa">f</span><span class="s2">&quot;file for &#39;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&#39;. There must be only one &quot;</span>
                       <span class="sa">f</span><span class="s2">&quot;coherence file per interferogram. Found </span><span class="si">{</span><span class="n">coh_file_paths</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">coh_file_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
-
-
-<div class="viewcode-block" id="mlooked_path"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.mlooked_path">[docs]</a><span class="k">def</span> <span class="nf">mlooked_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">looks</span><span class="p">,</span> <span class="n">crop_out</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Adds suffix to ifg path, for creating a new path for multilooked files.</span>
-
-<span class="sd">    :param str path: original interferogram path</span>
-<span class="sd">    :param int looks: number of range looks applied</span>
-<span class="sd">    :param int crop_out: crop option applied</span>
-
-<span class="sd">    :return: multilooked file name</span>
-<span class="sd">    :rtype: str</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">base</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-    <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{base}</span><span class="s2">_</span><span class="si">{looks}</span><span class="s2">rlks_</span><span class="si">{crop_out}</span><span class="s2">cr</span><span class="si">{ext}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="n">base</span><span class="p">,</span> <span class="n">looks</span><span class="o">=</span><span class="n">looks</span><span class="p">,</span> <span class="n">crop_out</span><span class="o">=</span><span class="n">crop_out</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="n">ext</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="get_dest_paths"><a class="viewcode-back" href="../../../config.html#pyrate.core.config.get_dest_paths">[docs]</a><span class="k">def</span> <span class="nf">get_dest_paths</span><span class="p">(</span><span class="n">base_paths</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">looks</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Determines the full path names for the destination multilooked files</span>
-
-<span class="sd">    :param list base_paths: original interferogram paths</span>
-<span class="sd">    :param int crop: Crop option applied</span>
-<span class="sd">    :param dict params: Parameters dictionary</span>
-<span class="sd">    :param int looks: number of range looks applied</span>
-
-<span class="sd">    :return: full path names for destination files</span>
-<span class="sd">    :rtype: list</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">dest_mlooked_ifgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">mlooked_path</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span>
-                                      <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span>
-                                      <span class="s1">&#39;.tif&#39;</span><span class="p">,</span> <span class="n">looks</span><span class="o">=</span><span class="n">looks</span><span class="p">,</span> <span class="n">crop_out</span><span class="o">=</span><span class="n">crop</span><span class="p">)</span>
-                         <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">base_paths</span><span class="p">]</span>
-
-    <span class="k">return</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">dest_mlooked_ifgs</span><span class="p">]</span></div>
 
 
 <span class="c1"># ==== PARAMETER VALIDATION ==== #</span>
@@ -855,10 +797,6 @@
     <span class="n">APSEST</span><span class="p">:</span> <span class="p">(</span>
         <span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
         <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">APSEST</span><span class="si">}</span><span class="s2">&#39;: must select option 0 or 1.&quot;</span>
-    <span class="p">),</span>
-    <span class="n">TIME_SERIES_CAL</span><span class="p">:</span> <span class="p">(</span>
-        <span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-        <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">TIME_SERIES_CAL</span><span class="si">}</span><span class="s2">&#39;: must select option 0 or 1.&quot;</span>
     <span class="p">),</span>
     <span class="n">PARALLEL</span><span class="p">:</span> <span class="p">(</span>
         <span class="k">lambda</span> <span class="n">a</span><span class="p">:</span> <span class="n">a</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>

@@ -93,14 +93,15 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#workflow">Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#input-files">Input Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#results-visualisation">Results Visualisation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.prepifg.html">PyRate Prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.correct.html">PyRate Correct Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.merge.html">PyRate Merge Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.__main__.html">PyRate Main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules.html">PyRate Modules</a><ul>
@@ -125,7 +126,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
@@ -145,13 +145,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id16">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id17">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id26">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id27">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -239,7 +240,6 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span>
 
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
@@ -254,17 +254,17 @@
 <span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">joblib_log_level</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.logger</span> <span class="kn">import</span> <span class="n">pyratelogger</span> <span class="k">as</span> <span class="n">log</span>
 <span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">prepifg_helper</span>
+<span class="kn">from</span> <span class="nn">pyrate.configuration</span> <span class="kn">import</span> <span class="n">Configuration</span>
 
-<span class="n">first_PROCESS</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">MAIN_PROCESS</span> <span class="o">=</span> <span class="mi">0</span>
 
 
 <div class="viewcode-block" id="update_refpix_metadata"><a class="viewcode-back" href="../../../refpixel.html#pyrate.core.refpixel.update_refpix_metadata">[docs]</a><span class="k">def</span> <span class="nf">update_refpix_metadata</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function that adds metadata about the chosen reference pixel to each interferogram.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pyrate_refpix_lon</span><span class="p">,</span> <span class="n">pyrate_refpix_lat</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">convert_pixel_value_to_geographic_coordinate</span><span class="p">,</span> <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
 
-    <span class="n">pyrate_refpix_lon</span><span class="p">,</span> <span class="n">pyrate_refpix_lat</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">convert_pixel_value_to_geographic_coordinate</span><span class="p">,</span>
-                                                           <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
 
     <span class="n">process_ifgs_paths</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)</span>
 
@@ -343,7 +343,7 @@
     <span class="n">refx</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">lon</span> <span class="o">-</span> <span class="n">xOrigin</span><span class="p">)</span> <span class="o">/</span> <span class="n">pixelWidth</span><span class="p">)</span>
     <span class="n">refy</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">yOrigin</span> <span class="o">-</span> <span class="n">lat</span><span class="p">)</span> <span class="o">/</span> <span class="n">pixelHeight</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span></div>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">)</span></div>
 
 
 <span class="c1"># TODO: move error checking to config step (for fail fast)</span>
@@ -601,7 +601,7 @@
         <span class="k">raise</span> <span class="n">RefPixelError</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="n">max_rows</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="validate_supplied_lat_lon"><a class="viewcode-back" href="../../../refpixel.html#pyrate.core.refpixel.validate_supplied_lat_lon">[docs]</a><span class="k">def</span> <span class="nf">validate_supplied_lat_lon</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">__validate_supplied_lat_lon</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Function to validate that the user supplied lat/lon values sit within image bounds</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -621,7 +621,7 @@
     <span class="k">if</span> <span class="p">(</span><span class="n">lat</span> <span class="o">&lt;</span> <span class="n">ymin</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">lat</span> <span class="o">&gt;</span> <span class="n">ymax</span><span class="p">):</span>
         <span class="n">lat_lon_txt</span> <span class="o">+=</span> <span class="s1">&#39; and latitude&#39;</span> <span class="k">if</span> <span class="n">lat_lon_txt</span> <span class="k">else</span> <span class="s1">&#39;latitude&#39;</span>
     <span class="k">if</span> <span class="n">lat_lon_txt</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">RefPixelError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lat_lon_txt</span><span class="p">))</span></div>
+        <span class="k">raise</span> <span class="n">RefPixelError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lat_lon_txt</span><span class="p">))</span>
 
 
 <div class="viewcode-block" id="RefPixelError"><a class="viewcode-back" href="../../../refpixel.html#pyrate.core.refpixel.RefPixelError">[docs]</a><span class="k">class</span> <span class="nc">RefPixelError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
@@ -634,6 +634,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Wrapper for reference pixel calculation</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__validate_supplied_lat_lon</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
     <span class="n">ifg_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg_path</span><span class="o">.</span><span class="n">tmp_sampled_path</span> <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">INTERFEROGRAM_FILES</span><span class="p">]]</span>
     <span class="n">lon</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFX</span><span class="p">]</span>
     <span class="n">lat</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFY</span><span class="p">]</span>
@@ -643,19 +644,26 @@
     <span class="c1"># assume all interferograms have same projection and will share the same transform</span>
     <span class="n">transform</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">GetGeoTransform</span><span class="p">()</span>
 
-    <span class="n">ref_pixel_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">])</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">REF_PIXEL_FILE</span><span class="p">)</span>
+    <span class="n">ref_pixel_file</span> <span class="o">=</span> <span class="n">Configuration</span><span class="o">.</span><span class="n">ref_pixel_path</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">lon</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">lat</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-
+    <span class="k">def</span> <span class="nf">__reuse_ref_pixel_file_if_exists</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">ref_pixel_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="c1"># read and return</span>
             <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ref_pixel_file</span><span class="p">)</span>
             <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Reusing pre-calculated ref-pixel values: (</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">) from file </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">,</span> <span class="n">ref_pixel_file</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()))</span>
             <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Reusing ref-pixel values from previous run!!!&quot;</span><span class="p">)</span>
-            <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFX</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFY</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">)</span>
+            <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFX_FOUND</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFY_FOUND</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">)</span>
             <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
+    <span class="c1"># read and return</span>
+    <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">__reuse_ref_pixel_file_if_exists</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">refx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">refy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">update_refpix_metadata</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">),</span> <span class="n">transform</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span>
+
+    <span class="k">if</span> <span class="n">lon</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">lat</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Searching for best reference pixel location&#39;</span><span class="p">)</span>
 
         <span class="n">half_patch_size</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">grid</span> <span class="o">=</span> <span class="n">ref_pixel_setup</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
@@ -663,7 +671,7 @@
         <span class="n">save_ref_pixel_blocks</span><span class="p">(</span><span class="n">process_grid</span><span class="p">,</span> <span class="n">half_patch_size</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
         <span class="n">mean_sds</span> <span class="o">=</span> <span class="n">_ref_pixel_mpi</span><span class="p">(</span><span class="n">process_grid</span><span class="p">,</span> <span class="n">half_patch_size</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">,</span> <span class="n">thresh</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
         <span class="n">mean_sds</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">mean_sds</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="n">first_PROCESS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="n">MAIN_PROCESS</span><span class="p">:</span>
             <span class="n">mean_sds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">mean_sds</span><span class="p">)</span>
 
         <span class="n">refpixel_returned</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">find_min_mean</span><span class="p">,</span> <span class="n">mean_sds</span><span class="p">,</span> <span class="n">grid</span><span class="p">)</span>
@@ -677,20 +685,18 @@
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Selected reference pixel coordinate (x, y): (</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">))</span>
         <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">convert_pixel_value_to_geographic_coordinate</span><span class="p">(</span><span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Selected reference pixel coordinate (lon, lat): (</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">))</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">ref_pixel_file</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">)])</span>
-
     <span class="k">else</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Using reference pixel from config file (lon, lat): (</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">))</span>
         <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Ensure user supplied reference pixel values are in lon/lat&quot;</span><span class="p">)</span>
         <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span> <span class="o">=</span> <span class="n">convert_geographic_coordinate_to_pixel_value</span><span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">ref_pixel_file</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">)])</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Converted reference pixel coordinate (x, y): (</span><span class="si">{}</span><span class="s1">, </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">))</span>
 
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">ref_pixel_file</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">)])</span>
     <span class="n">update_refpix_metadata</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">refx</span><span class="p">,</span> <span class="n">refy</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
 
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;refpx, refpy: &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">refx</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">refy</span><span class="p">))</span>
     <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFX</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFY</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">)</span>
+    <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFX_FOUND</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">REFY_FOUND</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">refx</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">refy</span><span class="p">)</span></div>
 </pre></div>
 

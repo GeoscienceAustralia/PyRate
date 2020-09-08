@@ -93,14 +93,15 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#workflow">Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#input-files">Input Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#results-visualisation">Results Visualisation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.prepifg.html">PyRate Prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.correct.html">PyRate Correct Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.merge.html">PyRate Merge Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.__main__.html">PyRate Main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules.html">PyRate Modules</a><ul>
@@ -125,7 +126,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
@@ -145,13 +145,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id16">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id17">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id26">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id27">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -244,6 +245,7 @@
 
 <span class="kn">import</span> <span class="nn">errno</span>
 <span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
 <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">floor</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">basename</span><span class="p">,</span> <span class="n">join</span>
@@ -285,10 +287,10 @@
 
 
 <div class="viewcode-block" id="InputTypes"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.InputTypes">[docs]</a><span class="k">class</span> <span class="nc">InputTypes</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
-    <span class="n">IFG</span> <span class="o">=</span> <span class="s1">&#39;_ifg&#39;</span>
-    <span class="n">COH</span> <span class="o">=</span> <span class="s1">&#39;_coh&#39;</span>
-    <span class="n">DEM</span> <span class="o">=</span> <span class="s1">&#39;_dem&#39;</span>
-    <span class="n">HEADER</span> <span class="o">=</span> <span class="s1">&#39;_header&#39;</span></div>
+    <span class="n">IFG</span> <span class="o">=</span> <span class="s1">&#39;ifg&#39;</span>
+    <span class="n">COH</span> <span class="o">=</span> <span class="s1">&#39;coh&#39;</span>
+    <span class="n">DEM</span> <span class="o">=</span> <span class="s1">&#39;dem&#39;</span>
+    <span class="n">HEADER</span> <span class="o">=</span> <span class="s1">&#39;header&#39;</span></div>
 
 
 <div class="viewcode-block" id="joblib_log_level"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.joblib_log_level">[docs]</a><span class="k">def</span> <span class="nf">joblib_log_level</span><span class="p">(</span><span class="n">level</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -577,6 +579,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">NAN_STATUS</span><span class="p">]</span> <span class="o">=</span> <span class="n">ifc</span><span class="o">.</span><span class="n">NAN_CONVERTED</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">nan_converted</span> <span class="o">=</span> <span class="kc">True</span></div>
 
+        <span class="c1"># self.write_modified_phase(self.phase_data)</span>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">phase_band</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -633,6 +637,8 @@
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Phase units are not millimetres or radians&#39;</span>
             <span class="k">raise</span> <span class="n">IfgException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+        <span class="c1"># self.write_modified_phase(self.phase_data)</span>
 
     <span class="nd">@phase_data</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">phase_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
@@ -1400,11 +1406,10 @@
 <span class="sd">    :return: None, file saved to disk</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">tiles</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;tiles&#39;</span><span class="p">]</span>
-    <span class="n">process_ifgs</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)</span>
     <span class="n">outdir</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outdir</span><span class="p">):</span>
         <span class="n">mkdir_p</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">process_ifgs</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">):</span>
         <span class="n">ifg</span> <span class="o">=</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">)</span>
         <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
         <span class="n">phase_data</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">phase_data</span>
@@ -1456,25 +1461,6 @@
     <span class="k">if</span> <span class="n">crop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">return</span> <span class="kc">True</span></div>
-
-
-<div class="viewcode-block" id="output_tiff_filename"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.output_tiff_filename">[docs]</a><span class="k">def</span> <span class="nf">output_tiff_filename</span><span class="p">(</span><span class="n">inpath</span><span class="p">,</span> <span class="n">outpath</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Output geotiff filename for a given input filename.</span>
-
-<span class="sd">    :param str inpath: path of input file location</span>
-<span class="sd">    :param str outpath: path of output file location</span>
-
-<span class="sd">    :return: Geotiff filename for the given file.</span>
-<span class="sd">    :rtype: str</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">fname</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">inpath</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
-    <span class="n">outpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">inpath</span><span class="p">)</span> <span class="k">if</span> <span class="n">outpath</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">outpath</span>
-    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;tif&#39;</span><span class="p">:</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outpath</span><span class="p">,</span> <span class="n">fname</span> <span class="o">+</span> <span class="s1">&#39;.tif&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outpath</span><span class="p">,</span> <span class="n">fname</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">ext</span> <span class="o">+</span> <span class="s1">&#39;.tif&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">name</span></div>
 
 
 <div class="viewcode-block" id="check_correction_status"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.check_correction_status">[docs]</a><span class="k">def</span> <span class="nf">check_correction_status</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">meta</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
@@ -1534,13 +1520,14 @@
 
 <span class="k">def</span> <span class="nf">mpi_vs_multiprocess_logging</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Over-ride input options if this is an MPI job</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2"> step using MPI processing. Disabling parallel processing.&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running &#39;</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">&#39; step with MPI using </span><span class="si">{</span><span class="n">mpiops</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2"> processes&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Disabling joblib parallel processing (setting parallel = 0)&quot;</span><span class="p">)</span>
         <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PARALLEL</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PARALLEL</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2"> step in parallel using </span><span class="si">{</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PROCESSES</span><span class="p">]</span><span class="si">}</span><span class="s2"> processes&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running &#39;</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">&#39; step in parallel using </span><span class="si">{</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PROCESSES</span><span class="p">]</span><span class="si">}</span><span class="s2"> processes&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2"> step in serial&quot;</span><span class="p">)</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running &#39;</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">&#39; step in serial&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="dem_or_ifg"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.dem_or_ifg">[docs]</a><span class="k">def</span> <span class="nf">dem_or_ifg</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>
@@ -1558,6 +1545,47 @@
         <span class="k">return</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">DEM</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="join_dicts"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.join_dicts">[docs]</a><span class="k">def</span> <span class="nf">join_dicts</span><span class="p">(</span><span class="n">dicts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to concatenate dictionaries</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dicts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">return</span> <span class="p">{}</span>
+    <span class="n">assembled_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">D</span> <span class="ow">in</span> <span class="n">dicts</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">D</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">return</span> <span class="n">assembled_dict</span></div>
+
+
+<span class="k">def</span> <span class="nf">tiles_split</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">tiles</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TILES</span><span class="p">]</span>
+    <span class="n">process_tiles</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">tiles</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PARALLEL</span><span class="p">]:</span>
+        <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PROCESSES</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="n">joblib_log_level</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">LOG_LEVEL</span><span class="p">))(</span>
+            <span class="n">delayed</span><span class="p">(</span><span class="n">func</span><span class="p">)(</span><span class="n">t</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">process_tiles</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">process_tiles</span><span class="p">:</span>
+            <span class="n">func</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="output_tiff_filename"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.output_tiff_filename">[docs]</a><span class="k">def</span> <span class="nf">output_tiff_filename</span><span class="p">(</span><span class="n">inpath</span><span class="p">,</span> <span class="n">outpath</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Output geotiff filename for a given input filename.</span>
+
+<span class="sd">    :param str inpath: path of input file location</span>
+<span class="sd">    :param str outpath: path of output file location</span>
+
+<span class="sd">    :return: Geotiff filename for the given file.</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fname</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">inpath</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+    <span class="n">outpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">inpath</span><span class="p">)</span> <span class="k">if</span> <span class="n">outpath</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">outpath</span>
+    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s1">&#39;tif&#39;</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outpath</span><span class="p">,</span> <span class="n">fname</span> <span class="o">+</span> <span class="s1">&#39;.tif&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outpath</span><span class="p">,</span> <span class="n">fname</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">ext</span> <span class="o">+</span> <span class="s1">&#39;.tif&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">name</span></div>
 </pre></div>
 
            </div>

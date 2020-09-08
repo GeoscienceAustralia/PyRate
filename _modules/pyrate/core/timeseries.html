@@ -93,14 +93,15 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#workflow">Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#input-files">Input Files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#results-visualisation">Results Visualisation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../scripts.html">PyRate Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.prepifg.html">PyRate Prepifg Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.process.html">PyRate Process Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.correct.html">PyRate Correct Script</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../pyrate.merge.html">PyRate Merge Script</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.__main__.html">PyRate Main Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../modules.html">PyRate Modules</a><ul>
@@ -125,7 +126,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../troubleshooting.html">Troubleshooting</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#corrections-being-skipped">Corrections being skipped</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
@@ -145,13 +145,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id16">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id17">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id21">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id26">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id27">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
@@ -241,22 +242,22 @@
 <span class="c1"># pylint: disable=too-many-arguments</span>
 <span class="kn">import</span> <span class="nn">os</span>
 
-<span class="kn">import</span> <span class="nn">itertools</span>
-
+<span class="kn">import</span> <span class="nn">pickle</span> <span class="k">as</span> <span class="nn">cp</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">isnan</span><span class="p">,</span> <span class="n">nan</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span>
                    <span class="n">float32</span><span class="p">,</span> <span class="n">cumsum</span><span class="p">,</span> <span class="n">dot</span><span class="p">,</span> <span class="n">delete</span><span class="p">,</span> <span class="n">asarray</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">matrix_rank</span><span class="p">,</span> <span class="n">pinv</span><span class="p">,</span> <span class="n">cholesky</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="kn">import</span> <span class="n">qr</span>
-<span class="kn">from</span> <span class="nn">joblib</span> <span class="kn">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
-<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">joblib_log_level</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">linregress</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="kn">import</span> <span class="n">tiles_split</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.algorithm</span> <span class="kn">import</span> <span class="n">first_second_ids</span><span class="p">,</span> <span class="n">get_epochs</span>
-<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span><span class="p">,</span> <span class="n">mst</span> <span class="k">as</span> <span class="n">mst_module</span><span class="p">,</span> <span class="n">mpiops</span><span class="p">,</span> <span class="n">shared</span>
+<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="kn">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">cf</span><span class="p">,</span> <span class="n">mst</span> <span class="k">as</span> <span class="n">mst_module</span><span class="p">,</span> <span class="n">shared</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.config</span> <span class="kn">import</span> <span class="n">ConfigException</span>
 <span class="kn">from</span> <span class="nn">pyrate.core.logger</span> <span class="kn">import</span> <span class="n">pyratelogger</span> <span class="k">as</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">pyrate.configuration</span> <span class="kn">import</span> <span class="n">Configuration</span>
 
 
-<span class="k">def</span> <span class="nf">_time_series_setup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_time_series_setup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">mst</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convenience function for setting up time series computation parameters</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -267,8 +268,6 @@
     <span class="c1"># if mst is not a single tree then do interpolation</span>
     <span class="n">interp</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">mst_module</span><span class="o">.</span><span class="n">mst_from_ifgs</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">else</span> <span class="mi">1</span>
 
-    <span class="c1"># Parallel Processing parameters</span>
-    <span class="n">parallel</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PARALLEL</span><span class="p">]</span>
     <span class="c1"># Time Series parameters</span>
     <span class="n">tsmethod</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_METHOD</span><span class="p">]</span>
 
@@ -302,7 +301,7 @@
     <span class="k">if</span> <span class="n">mst</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">mst</span> <span class="o">=</span> <span class="o">~</span><span class="n">isnan</span><span class="p">(</span><span class="n">ifg_data</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">b0_mat</span><span class="p">,</span> <span class="n">interp</span><span class="p">,</span> <span class="n">pthresh</span><span class="p">,</span> <span class="n">smfactor</span><span class="p">,</span> <span class="n">smorder</span><span class="p">,</span> <span class="n">tsmethod</span><span class="p">,</span> <span class="n">ifg_data</span><span class="p">,</span> \
-        <span class="n">mst</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">nrows</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">,</span> <span class="n">parallel</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">tsvel_matrix</span>
+        <span class="n">mst</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">nrows</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">tsvel_matrix</span>
 
 
 <span class="k">def</span> <span class="nf">_validate_params</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">tsmethod</span><span class="p">):</span>
@@ -323,7 +322,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">pthresh</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_PTHRESH</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">pthresh</span> <span class="o">&lt;</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">pthresh</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">TimeSeriesError</span><span class="p">(</span>
                 <span class="s2">&quot;minimum number of coherent observations for a pixel&quot;</span>
                 <span class="s2">&quot; TIME_SERIES_PTHRESH setting must be &gt;= 0.0 and &lt;= 1000&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">pthresh</span><span class="p">,</span> <span class="n">smfactor</span><span class="p">,</span> <span class="n">smorder</span>
@@ -355,27 +354,17 @@
 <span class="sd">    :return: tsvel_matrix: velocity for each epoch interval.</span>
 <span class="sd">    :rtype: ndarray</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">b0_mat</span><span class="p">,</span> <span class="n">interp</span><span class="p">,</span> <span class="n">p_thresh</span><span class="p">,</span> <span class="n">sm_factor</span><span class="p">,</span> <span class="n">sm_order</span><span class="p">,</span> <span class="n">ts_method</span><span class="p">,</span> <span class="n">ifg_data</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> \
-        <span class="n">ncols</span><span class="p">,</span> <span class="n">nrows</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">,</span> <span class="n">parallel</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">tsvel_matrix</span> <span class="o">=</span> \
-        <span class="n">_time_series_setup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="n">ncols</span><span class="p">,</span> <span class="n">nrows</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">tsvel_matrix</span> <span class="o">=</span> \
+        <span class="n">_time_series_setup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">mst</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">parallel</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating timeseries in parallel&#39;</span><span class="p">)</span>
-        <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PROCESSES</span><span class="p">],</span> 
-                                <span class="n">verbose</span><span class="o">=</span><span class="n">joblib_log_level</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">LOG_LEVEL</span><span class="p">))(</span>
-            <span class="n">delayed</span><span class="p">(</span><span class="n">_time_series_by_pixel</span><span class="p">)(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">b0_mat</span><span class="p">,</span> <span class="n">sm_factor</span><span class="p">,</span> <span class="n">sm_order</span><span class="p">,</span>
-                                           <span class="n">ifg_data</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">,</span> <span class="n">p_thresh</span><span class="p">,</span>
-                                           <span class="n">interp</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">ts_method</span><span class="p">)</span>
-            <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">ncols</span><span class="p">))))</span>
-        <span class="n">tsvel_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating timeseries in serial&#39;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ncols</span><span class="p">):</span>
-                <span class="n">tsvel_matrix</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">_time_series_by_pixel</span><span class="p">(</span>
-                    <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">b0_mat</span><span class="p">,</span> <span class="n">sm_factor</span><span class="p">,</span> <span class="n">sm_order</span><span class="p">,</span> <span class="n">ifg_data</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span>
-                    <span class="n">nvelpar</span><span class="p">,</span> <span class="n">p_thresh</span><span class="p">,</span> <span class="n">interp</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">ts_method</span><span class="p">)</span>
+    <span class="c1"># pixel-by-pixel calculation.</span>
+    <span class="c1"># nested loops to loop over the 2 image dimensions</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ncols</span><span class="p">):</span>
+            <span class="n">tsvel_matrix</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">_time_series_pixel</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">b0_mat</span><span class="p">,</span> <span class="n">sm_factor</span><span class="p">,</span> <span class="n">sm_order</span><span class="p">,</span> <span class="n">ifg_data</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span>
+                <span class="n">nvelpar</span><span class="p">,</span> <span class="n">p_thresh</span><span class="p">,</span> <span class="n">interp</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">ts_method</span><span class="p">)</span>
 
     <span class="n">tsvel_matrix</span> <span class="o">=</span> <span class="n">where</span><span class="p">(</span><span class="n">tsvel_matrix</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">nan</span><span class="p">,</span> <span class="n">tsvel_matrix</span><span class="p">)</span>
     <span class="c1"># SB: do the span multiplication as a numpy linalg operation, MUCH faster</span>
@@ -401,10 +390,10 @@
     <span class="k">return</span> <span class="n">b_mat</span><span class="p">,</span> <span class="n">ifgv</span><span class="p">,</span> <span class="n">sel</span><span class="p">,</span> <span class="n">rmrow</span>
 
 
-<span class="k">def</span> <span class="nf">_time_series_by_pixel</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">b0_mat</span><span class="p">,</span> <span class="n">sm_factor</span><span class="p">,</span> <span class="n">sm_order</span><span class="p">,</span> <span class="n">ifg_data</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span>
+<span class="k">def</span> <span class="nf">_time_series_pixel</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">b0_mat</span><span class="p">,</span> <span class="n">sm_factor</span><span class="p">,</span> <span class="n">sm_order</span><span class="p">,</span> <span class="n">ifg_data</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span>
                           <span class="n">nvelpar</span><span class="p">,</span> <span class="n">p_thresh</span><span class="p">,</span> <span class="n">interp</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Wrapper function for splitting time series computation by pixels.</span>
+<span class="sd">    Wrapper function to compute time series for single pixel.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># check pixel for non-redundant ifgs</span>
     <span class="n">sel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">mst</span><span class="p">[:,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># trues in mst are chosen</span>
@@ -430,15 +419,13 @@
             <span class="n">b_mat</span> <span class="o">=</span> <span class="n">b_mat</span><span class="p">[:,</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">velflag</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">velflag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nvelpar</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="c1"># Use Laplacian smoothing method</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="c1"># Use Laplacian smoothing method</span>
             <span class="n">tsvel</span> <span class="o">=</span> <span class="n">_solve_ts_lap</span><span class="p">(</span><span class="n">nvelpar</span><span class="p">,</span> <span class="n">velflag</span><span class="p">,</span> <span class="n">ifgv</span><span class="p">,</span> <span class="n">b_mat</span><span class="p">,</span>
                                   <span class="n">sm_order</span><span class="p">,</span> <span class="n">sm_factor</span><span class="p">,</span> <span class="n">sel</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="c1"># Use SVD method</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span> <span class="c1"># Use SVD method</span>
             <span class="n">tsvel</span> <span class="o">=</span> <span class="n">_solve_ts_svd</span><span class="p">(</span><span class="n">nvelpar</span><span class="p">,</span> <span class="n">velflag</span><span class="p">,</span> <span class="n">ifgv</span><span class="p">,</span> <span class="n">b_mat</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognised time series method&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">TimeSeriesError</span><span class="p">(</span><span class="s2">&quot;Unrecognised time series method&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">tsvel</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">nvelpar</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
@@ -522,6 +509,96 @@
     <span class="k">return</span> <span class="n">tsvel</span>
 
 
+<div class="viewcode-block" id="linear_rate_pixel"><a class="viewcode-back" href="../../../timeseries.html#pyrate.core.timeseries.linear_rate_pixel">[docs]</a><span class="k">def</span> <span class="nf">linear_rate_pixel</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate best fitting linear rate to cumulative displacement</span>
+<span class="sd">    time series for one pixel using linear regression.</span>
+
+<span class="sd">    :param ndarray y: 1-dimensional vector of cumulative displacement time series</span>
+<span class="sd">    :param ndarray t: 1-dimensional vector of cumulative time at each epoch</span>
+
+<span class="sd">    :return: linrate: Linear rate; gradient of fitted line.</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    :return intercept: Y-axis intercept of fitted line at t = 0</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    :return: rsquared: R-squared value of the linear regression</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    :return: error: Standard error of the linear regression</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    :return: samples: Number of observations used in linear regression</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Mask to exclude nan elements</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">isnan</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="c1"># remove nan elements from both arrays</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">TimeSeriesError</span><span class="p">(</span><span class="s2">&quot;linear_rate_pixel: y and t are not equal length&quot;</span><span class="p">)</span>
+
+    <span class="c1"># break out of func if not enough time series obs for line fitting</span>
+    <span class="n">nsamp</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nsamp</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">nan</span><span class="p">,</span> <span class="n">nan</span><span class="p">,</span> <span class="n">nan</span><span class="p">,</span> <span class="n">nan</span><span class="p">,</span> <span class="n">nan</span>
+
+    <span class="c1"># compute linear regression of tscuml </span>
+    <span class="n">linrate</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">r_value</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">std_err</span> <span class="o">=</span> <span class="n">linregress</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">linrate</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">r_value</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">std_err</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">nsamp</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="linear_rate_array"><a class="viewcode-back" href="../../../timeseries.html#pyrate.core.timeseries.linear_rate_array">[docs]</a><span class="k">def</span> <span class="nf">linear_rate_array</span><span class="p">(</span><span class="n">tscuml</span><span class="p">,</span> <span class="n">ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function loops over all pixels in a 3-dimensional cumulative</span>
+<span class="sd">    time series array and calculates the linear rate (line of best fit)</span>
+<span class="sd">    for each pixel using linear regression.</span>
+
+<span class="sd">    :param ndarray tscuml: 3-dimensional cumulative time series array</span>
+<span class="sd">    :param list ifgs: list of interferogram class objects.</span>
+<span class="sd">    :param dict params: Configuration parameters</span>
+
+<span class="sd">    :return: linrate: Linear rate map from linear regression</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    :return: intercept: Array of Y-axis intercepts from linear regression</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    :return: rsquared: Array of R-squared value of the linear regression</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    :return: error: Array of standard errors of the linear regression</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    :return: samples: Number of observations used in linear regression for each pixel</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">b0_mat</span><span class="p">,</span> <span class="n">interp</span><span class="p">,</span> <span class="n">p_thresh</span><span class="p">,</span> <span class="n">sm_factor</span><span class="p">,</span> <span class="n">sm_order</span><span class="p">,</span> <span class="n">ts_method</span><span class="p">,</span> <span class="n">ifg_data</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> \
+        <span class="n">ncols</span><span class="p">,</span> <span class="n">nrows</span><span class="p">,</span> <span class="n">nvelpar</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">tsvel_matrix</span> <span class="o">=</span> \
+        <span class="n">_time_series_setup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+    <span class="n">epochlist</span> <span class="o">=</span> <span class="n">get_epochs</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># get cumulative time per epoch</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">asarray</span><span class="p">(</span><span class="n">epochlist</span><span class="o">.</span><span class="n">spans</span><span class="p">)</span>
+
+    <span class="c1"># test for equal length of input vectors</span>
+    <span class="k">if</span> <span class="n">tscuml</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">TimeSeriesError</span><span class="p">(</span><span class="s2">&quot;linear_rate_array: tscuml and nepochs are not equal length&quot;</span><span class="p">)</span>
+
+    <span class="c1"># preallocate empty arrays for results</span>
+    <span class="n">linrate</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">rsquared</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">intercept</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c1"># pixel-by-pixel calculation.</span>
+    <span class="c1"># nested loops to loop over the 2 image dimensions</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ncols</span><span class="p">):</span>
+            <span class="n">linrate</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">intercept</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">rsquared</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">error</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">samples</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="n">linear_rate_pixel</span><span class="p">(</span><span class="n">tscuml</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="p">:],</span> <span class="n">t</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">linrate</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">rsquared</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">samples</span></div>
+
+
 <span class="k">def</span> <span class="nf">_missing_option_error</span><span class="p">(</span><span class="n">option</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convenience function for raising similar missing option errors.</span>
@@ -538,35 +615,46 @@
 
 <div class="viewcode-block" id="timeseries_calc_wrapper"><a class="viewcode-back" href="../../../timeseries.html#pyrate.core.timeseries.timeseries_calc_wrapper">[docs]</a><span class="k">def</span> <span class="nf">timeseries_calc_wrapper</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    MPI wrapper for time series calculation.</span>
+<span class="sd">    Wrapper for time series calculation on a set of tiles.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">tiles</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TILES</span><span class="p">]</span>
-    <span class="n">preread_ifgs</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PREREAD_IFGS</span><span class="p">]</span>
-    <span class="n">vcmt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">VCMT</span><span class="p">]</span>
-    <span class="n">ifg_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg_path</span><span class="o">.</span><span class="n">tmp_sampled_path</span> <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">INTERFEROGRAM_FILES</span><span class="p">]]</span>
-    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_CAL</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Time Series Calculation not required&#39;</span><span class="p">)</span>
-        <span class="k">return</span>
-
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_METHOD</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating time series using Laplacian Smoothing method&#39;</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TIME_SERIES_METHOD</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating time series using SVD method&#39;</span><span class="p">)</span>
-
-    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">]</span>
-    <span class="n">total_tiles</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tiles</span><span class="p">)</span>
-    <span class="n">process_tiles</span> <span class="o">=</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">tiles</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">process_tiles</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating time series for tile &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot; out of &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">total_tiles</span><span class="p">))</span>
-        <span class="n">ifg_parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">shared</span><span class="o">.</span><span class="n">IfgPart</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ifg_paths</span><span class="p">]</span>
-        <span class="n">mst_tile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;mst_mat_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)))</span>
-        <span class="n">tsincr</span><span class="p">,</span> <span class="n">tscuml</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">time_series</span><span class="p">(</span><span class="n">ifg_parts</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">mst_tile</span><span class="p">)</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;tscuml_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">tscuml</span><span class="p">)</span>
-        <span class="c1"># optional save of tsincr npy tiles</span>
-        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;savetsincr&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;tsincr_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">tsincr</span><span class="p">)</span>
-    <span class="n">mpiops</span><span class="o">.</span><span class="n">comm</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">Configuration</span><span class="o">.</span><span class="n">vcmt_path</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;VCMT is not found on disc. Have you run the &#39;correct&#39; step?&quot;</span><span class="p">)</span>
+    <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PREREAD_IFGS</span><span class="p">]</span> <span class="o">=</span> <span class="n">cp</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">Configuration</span><span class="o">.</span><span class="n">preread_ifgs</span><span class="p">(</span><span class="n">params</span><span class="p">),</span> <span class="s1">&#39;rb&#39;</span><span class="p">))</span>
+    <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">VCMT</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">Configuration</span><span class="o">.</span><span class="n">vcmt_path</span><span class="p">(</span><span class="n">params</span><span class="p">))</span>
+    <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TILES</span><span class="p">]</span> <span class="o">=</span> <span class="n">Configuration</span><span class="o">.</span><span class="n">get_tiles</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">tiles_split</span><span class="p">(</span><span class="n">__calc_time_series_for_tile</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Finished timeseries calc!&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">__calc_time_series_for_tile</span><span class="p">(</span><span class="n">tile</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper for time series calculation on a single tile</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">preread_ifgs</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">PREREAD_IFGS</span><span class="p">]</span>
+    <span class="n">vcmt</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">VCMT</span><span class="p">]</span>
+    <span class="n">ifg_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg_path</span><span class="o">.</span><span class="n">tmp_sampled_path</span> <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">INTERFEROGRAM_FILES</span><span class="p">]]</span>
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">cf</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">]</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Calculating time series for tile </span><span class="si">{</span><span class="n">tile</span><span class="o">.</span><span class="n">index</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">ifg_parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">shared</span><span class="o">.</span><span class="n">IfgPart</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">tile</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ifg_paths</span><span class="p">]</span>
+    <span class="n">mst_tile</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">Configuration</span><span class="o">.</span><span class="n">mst_path</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
+    <span class="n">tsincr</span><span class="p">,</span> <span class="n">tscuml</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">time_series</span><span class="p">(</span><span class="n">ifg_parts</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">vcmt</span><span class="p">,</span> <span class="n">mst_tile</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;tscuml_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">tscuml</span><span class="p">)</span>
+    <span class="c1"># optional save of tsincr npy tiles</span>
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;savetsincr&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;tsincr_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">tsincr</span><span class="p">)</span>
+    <span class="n">tscuml</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">tscuml</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># add zero epoch to tscuml 3D array</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating linear regression of cumulative time series&#39;</span><span class="p">)</span>
+    <span class="n">linrate</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">r_squared</span><span class="p">,</span> <span class="n">std_err</span><span class="p">,</span> <span class="n">samples</span> <span class="o">=</span> <span class="n">linear_rate_array</span><span class="p">(</span><span class="n">tscuml</span><span class="p">,</span> <span class="n">ifg_parts</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;linear_rate_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">linrate</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;linear_intercept_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">intercept</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;linear_rsquared_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">r_squared</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;linear_error_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">std_err</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;linear_samples_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">samples</span><span class="p">)</span>
+
 </pre></div>
 
            </div>
