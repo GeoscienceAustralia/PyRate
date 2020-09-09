@@ -132,6 +132,9 @@ BAS_FILE_DIR = 'basfiledir'
 #: STR; Name of the file list containing the pool of available baseline files
 BAS_FILE_LIST = 'basfilelist'
 
+#: STR; Name of the file containing the GAMMA lookup table between lat/lon and radar coordinates (row/col)
+LT_FILE = 'ltfile'
+
 #atmospheric error correction parameters NOT CURRENTLY USED
 APS_CORRECTION = 'apscorrect'
 APS_METHOD = 'apsmethod'
@@ -299,6 +302,7 @@ PATHS = [
     COH_FILE_LIST,
     BAS_FILE_DIR,
     BAS_FILE_LIST,
+    LT_FILE,
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP,
 ]
@@ -722,6 +726,14 @@ _BASELINE_VALIDATION = {
     BAS_FILE_LIST: (
         lambda a: a is not None and not os.path.exists(a),
         f"'{BAS_FILE_LIST}': if file is provided it must exist."
+    ),
+}
+"""dict: basic validation functions for baseline parameters."""
+
+_LOOKUPTABLE_VALIDATION = {
+    LT_FILE: (
+        lambda a: a is not None and not os.path.exists(a),
+        f"'{LT_FILE}': if file is provided it must exist."
     ),
 }
 """dict: basic validation functions for baseline parameters."""

@@ -68,6 +68,14 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
+    "ltfile": {
+        "DataType": "path",
+        "DefaultValue": None,
+        "MinValue": None,
+        "MaxValue": None,
+        "PossibleValues": None,
+        "Required": False
+    },
     "outdir": {
         "DataType": "path",
         "DefaultValue": None,
