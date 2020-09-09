@@ -141,7 +141,7 @@ class TestGammaToGeoTiff:
         self.compare_rasters(ds, exp_ds)
 
         md = ds.GetMetadata()
-        assert len(md) == 28 # 28 metadata items
+        assert len(md) == 30 # 30 metadata items
         assert md[ifc.FIRST_DATE] == str(date(2009, 7, 13))
         assert md[ifc.SECOND_DATE] == str(date(2009, 8, 17))
         assert md[ifc.PYRATE_TIME_SPAN] == str(35 / ifc.DAYS_PER_YEAR)
