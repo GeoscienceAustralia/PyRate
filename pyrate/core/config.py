@@ -61,6 +61,7 @@ HDR_FILE_LIST = 'hdrfilelist'
 INTERFEROGRAM_FILES = 'interferogram_files'
 HEADER_FILE_PATHS = 'header_file_paths'
 COHERENCE_FILE_PATHS = 'coherence_file_paths'
+BASELINE_FILE_PATHS = 'baseline_file_paths'
 DEM_FILE_PATH = 'dem_file'
 
 # STR; The projection of the input interferograms.
@@ -124,6 +125,15 @@ COH_THRESH = 'cohthresh'
 COH_FILE_DIR = 'cohfiledir'
 #: STR; Name of the file list containing the pool of available coherence files
 COH_FILE_LIST = 'cohfilelist'
+
+# baseline parameters
+#: STR; Directory containing baseline files; defaults to OBS_DIR if not provided
+BAS_FILE_DIR = 'basfiledir'
+#: STR; Name of the file list containing the pool of available baseline files
+BAS_FILE_LIST = 'basfilelist'
+
+#: STR; Name of the file containing the GAMMA lookup table between lat/lon and radar coordinates (row/col)
+LT_FILE = 'ltfile'
 
 #atmospheric error correction parameters NOT CURRENTLY USED
 APS_CORRECTION = 'apscorrect'
@@ -288,11 +298,14 @@ PATHS = [
     HDR_FILE_LIST,
     COH_FILE_DIR,
     COH_FILE_LIST,
+    BAS_FILE_DIR,
+    BAS_FILE_LIST,
+    LT_FILE,
     APS_INCIDENCE_MAP,
     APS_ELEVATION_MAP,
 ]
 
-DEFAULT_TO_OBS_DIR = [SLC_DIR, COH_FILE_DIR]
+DEFAULT_TO_OBS_DIR = [SLC_DIR, COH_FILE_DIR, BAS_FILE_DIR]
 
 INT_KEYS = [APS_CORRECTION, APS_METHOD]
 
@@ -502,6 +515,72 @@ def coherence_paths_for(path: str, params: dict, tif=False) -> str:
     return coh_file_paths[0]
 
 
+def baseline_paths_for(path: str, params: dict) -> str:
+    """
+    Returns path to baseline file for given interferogram. Pattern matches
+    based on epoch in filename.
+
+    Example:
+        '20151025-20160501_base.par'
+        Date pair is the epoch.
+
+    Args:
+        path: Path to intergerogram to find baseline file for.
+        params: Parameter dictionary.
+        tif: Find converted tif if True (_cc.tif), else find .cc file.
+
+    Returns:
+        Path to coherence file.
+    """
+
+    _, filename = split(path)
+    epoch = re.search(sixteen_digits_pattern, filename).group(0)
+    bas_file_paths = [f.unwrapped_path for f in params[BASELINE_FILE_PATHS] if epoch in f.unwrapped_path]
+
+    if len(bas_file_paths) > 2:
+        raise ConfigException(f"'{BAS_FILE_DIR}': found more than one baseline "
+                      f"file for '{path}'. There must be only one "
+                      f"baseline file per interferogram. Found {bas_file_paths}.")
+    return bas_file_paths[0]
+
+
+def mlooked_path(path, xlooks, ylooks, crop_opt):
+    """
+    Adds suffix to ifg path, for creating a new path for multilooked files.
+
+    :param str path: original interferogram path
+    :param int xlooks: number of X looks applied
+    :param int ylooks: number of Y looks applied
+    :param int crop_opt: crop option applied
+
+    :return: multilooked file name
+    :rtype: str
+    """
+    base, ext = splitext(path)
+    return "{base}_{xlooks}lksx_{ylooks}lksy_{crop_opt}cr{ext}".format(base=base, xlooks=xlooks, ylooks=ylooks, crop_opt=crop_opt, ext=ext)
+
+
+def get_dest_paths(base_paths, crop, params, looks):
+    """
+    Determines the full path names for the destination multilooked files
+
+    :param list base_paths: original interferogram paths
+    :param int crop: Crop option applied
+    :param dict params: Parameters dictionary
+    :param int looks: number of range looks applied
+
+    :return: full path names for destination files
+    :rtype: list
+    """
+
+    dest_mlooked_ifgs = [mlooked_path(os.path.basename(q).split('.')[0] + '_'
+                                      + os.path.basename(q).split('.')[1] +
+                                      '.tif', looks=looks, crop_opt=crop)
+                         for q in base_paths]
+
+    return [os.path.join(params[OUT_DIR], p) for p in dest_mlooked_ifgs]
+
+
 # ==== PARAMETER VALIDATION ==== #
 
 _PARAM_VALIDATION = {
@@ -638,6 +717,22 @@ _COHERENCE_VALIDATION = {
     ),
 }
 """dict: basic validation functions for coherence parameters."""
+
+_BASELINE_VALIDATION = {
+    BAS_FILE_LIST: (
+        lambda a: a is not None and not os.path.exists(a),
+        f"'{BAS_FILE_LIST}': if file is provided it must exist."
+    ),
+}
+"""dict: basic validation functions for baseline parameters."""
+
+_LOOKUPTABLE_VALIDATION = {
+    LT_FILE: (
+        lambda a: a is not None and not os.path.exists(a),
+        f"'{LT_FILE}': if file is provided it must exist."
+    ),
+}
+"""dict: basic validation functions for baseline parameters."""
 
 _ORBITAL_FIT_VALIDATION = {
     ORBITAL_FIT_METHOD: (

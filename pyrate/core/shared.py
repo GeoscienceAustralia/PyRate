@@ -68,6 +68,7 @@ GDAL_Y_FIRST = 3
 class InputTypes(Enum):
     IFG = 'ifg'
     COH = 'coh'
+    BAS = 'bas'
     DEM = 'dem'
     HEADER = 'header'
 
@@ -717,6 +718,14 @@ def _is_coherence(hdr):
            (hdr[ifc.INPUT_TYPE] == InputTypes.COH if ifc.INPUT_TYPE in hdr else False)
 
 
+def _is_baseline(hdr):
+    """
+    Convenience function to determine if file is interferogram
+    """
+    return (ifc.PYRATE_WAVELENGTH_METRES in hdr) and \
+           (hdr[ifc.INPUT_TYPE] == InputTypes.BAS if ifc.INPUT_TYPE in hdr else False)
+
+
 def _is_incidence(hdr):
     """
     Convenience function to determine if incidence file
@@ -760,7 +769,7 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
         raise GeotiffException(msg)
 
     wkt = srs.ExportToWkt()
-    dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header) or _is_coherence(header)) else 'int16'
+    dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header) or _is_coherence(header) or _is_baseline(header)) else 'int16'
 
     # get subset of metadata relevant to PyRate
     md = collate_metadata(header)
@@ -788,6 +797,54 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
 
     ds = None  # manual close
     del ds
+
+
+def read_lookup_table(head, data_path, xlooks, ylooks):
+    # pylint: disable = too - many - statements
+    """
+    Creates a copy of input lookup table file in a numpy array and applies the ifg ML factors
+
+    :param IFG object head: first IFG in the list to read metadata
+    :param str data_path: Input file
+    :param int xlooks: multi-looking factor in x
+    :param int ylooks: multi-looking factor in y
+
+    :return: np-array lt_data_az: azimuth (i.e. row) of radar-coded MLI
+    :return: np-array lt_data_rg: range (i.e. column) of radar-coded MLI
+    """
+    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-locals
+
+    # read relevant metadata parameters
+    nrows = head.nrows # number of rows in multi-looked data sets
+    ncols = head.ncols # number of columns in multi-looked data sets
+    nrows_lt = int(head.meta_data[ifc.PYRATE_NROWS]) # number of rows of original geotiff files
+    ncols_lt = int(head.meta_data[ifc.PYRATE_NCOLS]) # number of columns of original geotiff files
+    ifg_proc = head.meta_data[ifc.PYRATE_INSAR_PROCESSOR]
+
+    # get dimensions of lookup table file
+    bytes_per_col, fmtstr = _data_format(ifg_proc, True, ncols_lt*2) # float complex data set containing value tupels
+    row_bytes = ncols_lt*2 * bytes_per_col
+    lt_data_az = np.empty((0, ncols)) # empty array with correct number of columns
+    lt_data_rg = np.empty((0, ncols)) # empty array with correct number of column
+
+    # for indexing: lookup table file contains value pairs (i.e. range/azimuth)
+    idx1 = np.arange(int(xlooks/2)-1, ncols_lt, xlooks) # first value
+    idx2 = np.arange(int(xlooks/2), ncols_lt, xlooks) # second value
+
+    # read the binary lookup table file and save the range/azimuth value pair for each position in ML data
+    print("reading lookup table file %s ..." % data_path)
+    with open(data_path, 'rb') as f:
+        for y in range(int(ylooks/2), nrows_lt, ylooks):
+            print("reading row %i of lookup table file" % y)
+            data = struct.unpack(fmtstr, f.read(row_bytes))
+            row_data = np.array(data)
+            row_data_ml_az = row_data[idx1] # azimuth for PyRate
+            row_data_ml_rg = row_data[idx2]
+            lt_data_az = np.append(lt_data_az, [row_data_ml_az], axis=0)
+            lt_data_rg = np.append(lt_data_rg, [row_data_ml_rg], axis=0)
+
+    return lt_data_az, lt_data_rg
 
 
 def gdal_dataset(out_fname, columns, rows, driver="GTiff", bands=1,
@@ -825,6 +882,8 @@ def collate_metadata(header):
     Grab metadata relevant to PyRate from input metadata
 
     :param dict header: Input file metadata dictionary
+    :flag to distinguish whether conv2tif or prepifg has called the function
+        -> 0: conv2tif, 1: prepifg
 
     :return: dict of relevant metadata for PyRate
     """
@@ -837,12 +896,24 @@ def collate_metadata(header):
                   ifc.DATA_UNITS]:
             md.update({k: str(header[k])})
         if header[ifc.PYRATE_INSAR_PROCESSOR] == GAMMA:
-            for k in [ifc.FIRST_TIME, ifc.SECOND_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
+            for k in [ifc.FIRST_TIME, ifc.SECOND_TIME,
+                      ifc.PYRATE_NROWS, ifc.PYRATE_NCOLS,
+                      ifc.PYRATE_INCIDENCE_DEGREES, ifc.PYRATE_HEADING_DEGREES,
+                      ifc.PYRATE_RANGE_PIX_METRES, ifc.PYRATE_RANGE_N,
+                      ifc.PYRATE_AZIMUTH_PIX_METRES, ifc.PYRATE_AZIMUTH_N,
+                      ifc.PYRATE_AZIMUTH_LOOKS, ifc.PYRATE_PRF_HERTZ,
+                      ifc.PYRATE_NEAR_RANGE_METRES, ifc.PYRATE_SAR_EARTH_METRES,
+                      ifc.PYRATE_SEMI_MAJOR_AXIS_METRES, ifc.PYRATE_SEMI_MINOR_AXIS_METRES,
+                      ifc.PYRATE_BASELINE_T, ifc.PYRATE_BASELINE_C, ifc.PYRATE_BASELINE_N,
+                      ifc.PYRATE_BASELINE_RATE_T, ifc.PYRATE_BASELINE_RATE_C, ifc.PYRATE_BASELINE_RATE_N]:
                 md.update({k: str(header[k])})
 
     if _is_coherence(header):
         __common_ifg_coh_update(header, md)
         md.update({ifc.DATA_TYPE: ifc.COH})
+    elif _is_baseline(header):
+        __common_ifg_coh_update(header, md)
+        md.update({ifc.DATA_TYPE: ifc.BAS})
     elif _is_interferogram(header):
         __common_ifg_coh_update(header, md)
         md.update({ifc.DATA_TYPE: ifc.ORIG})

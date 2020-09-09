@@ -270,6 +270,11 @@ class Configuration:
             validate_file_list_values(self.cohfilelist, 1)
             self.coherence_file_paths = self.__get_files_from_attr('cohfilelist', input_type=InputTypes.COH)
 
+        if self.basfilelist is not None:
+            # if self.processor != 0:  # not roipac
+            validate_file_list_values(self.basfilelist, 1)
+            self.baseline_file_paths = self.__get_files_from_attr('basfilelist', input_type=InputTypes.BAS)
+
         self.header_file_paths = self.__get_files_from_attr('hdrfilelist', input_type=InputTypes.HEADER)
 
         self.interferogram_files = self.__get_files_from_attr('ifgfilelist')

@@ -29,6 +29,11 @@ from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roi
 from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import MultiplePaths
+# TF testing
+from pyrate.core.refpixel import convert_pixel_value_to_geographic_coordinate
+from pyrate.core.shared import Ifg
+from pyrate.core.shared import read_lookup_table
+#
 
 GAMMA = 1
 ROIPAC = 0
@@ -70,6 +75,7 @@ def main(params):
     process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     do_prepifg(process_ifgs_paths, exts, params)
     mpiops.comm.barrier()
+
     log.info("Finished 'prepifg' step")
 
 

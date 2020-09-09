@@ -812,6 +812,7 @@ class TestOneIncidenceOrElevationMap(UnitTestAdaptation):
         cls.base_dir = tempfile.mkdtemp()
         cls.conf_file = tempfile.mktemp(suffix='.conf', dir=cls.base_dir)
         cls.ifgListFile = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
+        cls.basListFile = os.path.join(common.SML_TEST_GAMMA, 'baseline_17')
 
     @classmethod
     def teardown_class(cls):
@@ -825,6 +826,7 @@ class TestOneIncidenceOrElevationMap(UnitTestAdaptation):
             conf.write('{}: {}\n'.format(cf.OBS_DIR, common.SML_TEST_GAMMA))
             conf.write('{}: {}\n'.format(cf.OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(cf.IFG_FILE_LIST, self.ifgListFile))
+            conf.write('{}: {}\n'.format(cf.BAS_FILE_LIST, self.basListFile))
             conf.write('{}: {}\n'.format(cf.PROCESSOR, '1'))
             conf.write('{}: {}\n'.format(
                 cf.DEM_HEADER_FILE, os.path.join(

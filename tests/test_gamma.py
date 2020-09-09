@@ -35,6 +35,7 @@ from pyrate.core.config import (
     NO_DATA_VALUE,
     OBS_DIR,
     IFG_FILE_LIST,
+    BAS_FILE_LIST,
     PROCESSOR,
     OUT_DIR,
     SLC_DIR)
@@ -61,6 +62,7 @@ class TestGammaCommandLineTests:
         temp_text = tempfile.mktemp()
         self.confFile = os.path.join(TEMPDIR,'{}/gamma_test.cfg'.format(temp_text))
         self.ifgListFile = os.path.join(TEMPDIR, '{}/gamma_ifg.list'.format(temp_text))
+        self.basListFile = os.path.join(TEMPDIR, '{}/gamma_bas.list'.format(temp_text))
         self.base_dir = os.path.dirname(self.confFile)
         shared.mkdir_p(self.base_dir)
 
@@ -77,6 +79,7 @@ class TestGammaCommandLineTests:
             conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
             conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
+            conf.write('{}: {}\n'.format(BAS_FILE_LIST, self.basListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '1'))
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(SLC_DIR, ''))
@@ -95,9 +98,10 @@ class TestGammaToGeoTiff:
         hdr_paths = [join(GAMMA_TEST_DIR, f) for f in filenames]
         hdrs = [gamma.parse_epoch_header(p) for p in hdr_paths]
         dem_hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
-
+        bas_hdr_path = join(GAMMA_TEST_DIR, '20090713-20090817_base.par')
         cls.DEM_HDR = gamma.parse_dem_header(dem_hdr_path)
-        cls.COMBINED = gamma.combine_headers(*hdrs, dem_hdr=cls.DEM_HDR)
+        cls.BAS_HDR = gamma.parse_baseline_header(bas_hdr_path)
+        cls.COMBINED = gamma.combine_headers(*hdrs, dem_hdr=cls.DEM_HDR, bas_hdr=cls.BAS_HDR)
 
     def teardown_method(self):
         if os.path.exists(self.dest):
@@ -137,7 +141,7 @@ class TestGammaToGeoTiff:
         self.compare_rasters(ds, exp_ds)
 
         md = ds.GetMetadata()
-        assert len(md) == 11 # 11 metadata items
+        assert len(md) == 30 # 30 metadata items
         assert md[ifc.FIRST_DATE] == str(date(2009, 7, 13))
         assert md[ifc.SECOND_DATE] == str(date(2009, 8, 17))
         assert md[ifc.PYRATE_TIME_SPAN] == str(35 / ifc.DAYS_PER_YEAR)
@@ -256,6 +260,8 @@ class TestHeaderCombination:
         self.err = gamma.GammaException
         dem_hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
         self.dh = gamma.parse_dem_header(dem_hdr_path)
+        bas_hdr_path = join(GAMMA_TEST_DIR, '20090713-20090817_base.par')
+        self.bh = gamma.parse_baseline_header(bas_hdr_path)
 
     @staticmethod
     def assert_equal(arg1, arg2):
@@ -266,7 +272,7 @@ class TestHeaderCombination:
         paths = [join(GAMMA_TEST_DIR, p) for p in filenames]
         hdr0, hdr1 = [gamma.parse_epoch_header(p) for p in paths]
 
-        chdr = gamma.combine_headers(hdr0, hdr1, self.dh)
+        chdr = gamma.combine_headers(hdr0, hdr1, self.dh, self.bh)
 
         exp_timespan = (18 + 17) / ifc.DAYS_PER_YEAR
         self.assert_equal(chdr[ifc.PYRATE_TIME_SPAN], exp_timespan)
@@ -280,23 +286,23 @@ class TestHeaderCombination:
         self.assert_equal(chdr[ifc.PYRATE_WAVELENGTH_METRES], exp_wavelen)
 
     def test_fail_non_dict_header(self):
-        self.assertRaises(gamma.combine_headers, H0, '', self.dh)
-        self.assertRaises(gamma.combine_headers, '', H0, self.dh)
-        self.assertRaises(gamma.combine_headers, H0, H1, None)
-        self.assertRaises(gamma.combine_headers, H0, H1, '')
+        self.assertRaises(gamma.combine_headers, H0, '', self.dh, self.bh)
+        self.assertRaises(gamma.combine_headers, '', H0, self.dh, self.bh)
+        self.assertRaises(gamma.combine_headers, H0, H1, None, self.bh)
+        self.assertRaises(gamma.combine_headers, H0, H1, '', self.bh)
 
     def test_fail_mismatching_wavelength(self):
-        self.assertRaises(gamma.combine_headers, H0, H1_ERR1, self.dh)
+        self.assertRaises(gamma.combine_headers, H0, H1_ERR1, self.dh, self.bh)
         
     def test_fail_mismatching_incidence(self):
-        self.assertRaises(gamma.combine_headers, H0, H1_ERR2, self.dh)
+        self.assertRaises(gamma.combine_headers, H0, H1_ERR2, self.dh, self.bh)
 
     def test_fail_same_date(self):
-        self.assertRaises(gamma.combine_headers, H0, H0, self.dh)
+        self.assertRaises(gamma.combine_headers, H0, H0, self.dh, self.bh)
 
     def test_fail_bad_date_order(self):
         with pytest.raises(self.err):
-            gamma.combine_headers(H1, H0, self.dh)
+            gamma.combine_headers(H1, H0, self.dh, self.bh)
 
     def assertRaises(self, func, * args):
         with pytest.raises(self.err):
