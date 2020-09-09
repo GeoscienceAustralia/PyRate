@@ -72,27 +72,7 @@ def main(params):
     process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     do_prepifg(process_ifgs_paths, exts, params)
     mpiops.comm.barrier()
-    # TF: for testing only, to be moved to "correct" later
-    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
-    ifg = Ifg(ifg_paths[0])
-    ifg.open(readonly=True)
-    # assume all interferograms have same projection and will share the same transform
-    transform = ifg.dataset.GetGeoTransform()
-    # lookup table file:
-    lookup_table = params[cf.LT_FILE]
-    ifglksx = params[cf.IFG_LKSX]
-    ifglksy = params[cf.IFG_LKSY]
-    print(lookup_table)
-    # transform float lookup table file to np array
-    lt_az, lt_rg = read_lookup_table(ifg, lookup_table, ifglksx, ifglksy)
-    # number of rows and columns in dataset
-    m, n = ifg.shape
-    print(m, n)
-    #for i in range(0, m):
-    #    for j in range(0, n):
-    #        lon, lat = convert_pixel_value_to_geographic_coordinate(i, j, transform)
-    #        #print(lon, lat)
-    # TF
+
     log.info("Finished prepifg")
 
 
