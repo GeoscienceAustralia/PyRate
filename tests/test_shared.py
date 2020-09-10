@@ -341,7 +341,7 @@ class TestWriteUnw:
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.REF_EST_METHOD] = 1
         cls.params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
-        cls.params[cf.BAS_FILE_LIST] = common.SML_TEST_GAMMA
+        cls.params[cf.BASE_FILE_LIST] = common.SML_TEST_GAMMA
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         cls.base_unw_paths = cf.original_ifg_paths(cls.params[cf.IFG_FILE_LIST], cls.params[cf.OBS_DIR])
         cls.base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
@@ -374,9 +374,9 @@ class TestWriteUnw:
             os.path.join(common.SML_TEST_GAMMA, '20060828_slc.par'))
         header.update(dem_header)
              
-        bas_header = gamma.parse_baseline_header(
+        base_header = gamma.parse_baseline_header(
             os.path.join(common.SML_TEST_GAMMA, '20060828-20061211_base.par'))
-        header.update(bas_header)
+        header.update(base_header)
                 
         # insert some dummy data so we are the dem in write_fullres_geotiff is not
         # not activated and ifg write_fullres_geotiff operation works

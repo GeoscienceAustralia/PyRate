@@ -41,6 +41,7 @@ GAMMA_INCIDENCE = 'incidence_angle'
 GAMMA_HEADING = 'heading'
 GAMMA_RANGE_PIX = 'range_pixel_spacing'
 GAMMA_RANGE_N = 'range_samples'
+GAMMA_RANGE_LOOKS = 'range_looks'
 GAMMA_AZIMUTH_PIX = 'azimuth_pixel_spacing'
 GAMMA_AZIMUTH_N = 'azimuth_lines'
 GAMMA_AZIMUTH_LOOKS = 'azimuth_looks'
@@ -49,7 +50,7 @@ GAMMA_NEAR_RANGE = 'near_range_slc'
 GAMMA_SAR_EARTH = 'sar_to_earth_center'
 GAMMA_SEMI_MAJOR_AXIS = 'earth_semi_major_axis'
 GAMMA_SEMI_MINOR_AXIS = 'earth_semi_minor_axis'
-# to do add option to use initial baseline if precision baseline was not calculated in GAMMA
+# TODO add option to use initial baseline if precision baseline was not calculated in GAMMA
 GAMMA_PRECISION_BASELINE = 'precision_baseline(TCN)'
 GAMMA_PRECISION_BASELINE_RATE = 'precision_baseline_rate'
 RADIANS = 'RADIANS'
@@ -105,6 +106,9 @@ def parse_epoch_header(path):
 
     range_n = lookup[GAMMA_RANGE_N] # number without a unit in .par file
     subset[ifc.PYRATE_RANGE_N] = int(range_n[0])
+
+    range_looks = lookup[GAMMA_RANGE_LOOKS]  # number without a unit in .par file
+    subset[ifc.PYRATE_RANGE_LOOKS] = int(range_looks[0])
 
     azimuth_pix, unit = lookup[GAMMA_AZIMUTH_PIX]
     if unit != "m":  # pragma: no cover
@@ -209,9 +213,9 @@ def parse_dem_header(path):
 
 def parse_baseline_header(path):
     """
-    Returns dictionary of DEM metadata required for PyRate
+    Returns dictionary of Baseline metadata required for PyRate
 
-    :param str path: `Full path to Gamma *dem.par file`
+    :param str path: `Full path to Gamma *base.par file`
 
     :return: subset: subset of full metadata
     :rtype: dict
@@ -239,7 +243,7 @@ def _frequency_to_wavelength(freq):
     return ifc.SPEED_OF_LIGHT_METRES_PER_SECOND / freq
 
 
-def combine_headers(hdr0, hdr1, dem_hdr, bas_hdr):
+def combine_headers(hdr0, hdr1, dem_hdr, base_hdr):
     """
     Combines metadata for first and second image epochs and DEM into a
     single dictionary for an interferogram.
@@ -251,7 +255,7 @@ def combine_headers(hdr0, hdr1, dem_hdr, bas_hdr):
     :return: chdr: combined metadata
     :rtype: dict
     """
-    if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr, bas_hdr]]):
+    if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr, base_hdr]]):
         raise GammaException('Header args need to be dicts')
 
     date0, date1 = hdr0[ifc.FIRST_DATE], hdr1[ifc.FIRST_DATE]
@@ -274,7 +278,7 @@ def combine_headers(hdr0, hdr1, dem_hdr, bas_hdr):
         chdr[ifc.PYRATE_INCIDENCE_DEGREES] = (hdr0[ifc.PYRATE_INCIDENCE_DEGREES] + hdr1[
             ifc.PYRATE_INCIDENCE_DEGREES]) / 2
     else:
-        msg = "Incidence angles differ by more than 1e-1"
+        msg = "Incidence angles differ by more than 0.1 degrees"
         raise GammaException(msg)
 
     wavelen = hdr0[ifc.PYRATE_WAVELENGTH_METRES]
@@ -291,7 +295,7 @@ def combine_headers(hdr0, hdr1, dem_hdr, bas_hdr):
         chdr[ifc.PYRATE_HEADING_DEGREES] = heading_ang
     else:
         args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
-        msg = "Satellite heading angles differ by more than 1e-1"
+        msg = "Satellite heading angles differ by more than 0.1 degrees"
         raise GammaException(msg % args)
 
     range_pix = hdr0[ifc.PYRATE_RANGE_PIX_METRES]
@@ -299,7 +303,7 @@ def combine_headers(hdr0, hdr1, dem_hdr, bas_hdr):
         chdr[ifc.PYRATE_RANGE_PIX_METRES] = range_pix
     else:
         args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
-        msg = "Range pixel spacing differs by more than 1e-3"
+        msg = "Range pixel spacing differs by more than 0.001 metres"
         raise GammaException(msg % args)
 
     range_n = hdr0[ifc.PYRATE_RANGE_N]
@@ -310,12 +314,20 @@ def combine_headers(hdr0, hdr1, dem_hdr, bas_hdr):
         msg = "Number of range pixels mismatch, check both header files for %s & %s"
         raise GammaException(msg % args)
 
+    range_looks = hdr0[ifc.PYRATE_RANGE_LOOKS]
+    if range_looks == hdr1[ifc.PYRATE_RANGE_LOOKS]:
+        chdr[ifc.PYRATE_RANGE_LOOKS] = range_looks
+    else:
+        args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
+        msg = "Number of range looks mismatch, check both header files for %s & %s"
+        raise GammaException(msg % args)
+
     azimuth_pix = hdr0[ifc.PYRATE_AZIMUTH_PIX_METRES]
     if np.isclose(azimuth_pix, hdr1[ifc.PYRATE_AZIMUTH_PIX_METRES], atol=1e-1):
         chdr[ifc.PYRATE_AZIMUTH_PIX_METRES] = azimuth_pix
     else:
         args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
-        msg = "Azimuth pixel spacing differs by more than 1e-3"
+        msg = "Azimuth pixel spacing differs by more than 0.001 metres"
         raise GammaException(msg % args)
 
     azimuth_n = hdr0[ifc.PYRATE_AZIMUTH_N]
@@ -347,7 +359,7 @@ def combine_headers(hdr0, hdr1, dem_hdr, bas_hdr):
         chdr[ifc.PYRATE_NEAR_RANGE_METRES] = near_range
     else:
         args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
-        msg = "Near range differs by more than 1e3"
+        msg = "Near range differs by more than 1000 metres"
         raise GammaException(msg % args)
 
     sar_earth = hdr0[ifc.PYRATE_SAR_EARTH_METRES]
@@ -355,7 +367,7 @@ def combine_headers(hdr0, hdr1, dem_hdr, bas_hdr):
         chdr[ifc.PYRATE_SAR_EARTH_METRES] = sar_earth
     else:
         args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
-        msg = "SAR to Earth Center differs by more than 1e3"
+        msg = "SAR to Earth Center differs by more than 1000 metres"
         raise GammaException(msg % args)
 
     semi_major_axis = hdr0[ifc.PYRATE_SEMI_MAJOR_AXIS_METRES]
@@ -363,7 +375,7 @@ def combine_headers(hdr0, hdr1, dem_hdr, bas_hdr):
         chdr[ifc.PYRATE_SEMI_MAJOR_AXIS_METRES] = semi_major_axis
     else:
         args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
-        msg = "Earth semi major axis differs by more than 1e-4"
+        msg = "Earth semi major axis differs by more than 0.0001 metres"
         raise GammaException(msg % args)
 
     semi_minor_axis = hdr0[ifc.PYRATE_SEMI_MINOR_AXIS_METRES]
@@ -371,7 +383,7 @@ def combine_headers(hdr0, hdr1, dem_hdr, bas_hdr):
         chdr[ifc.PYRATE_SEMI_MINOR_AXIS_METRES] = semi_minor_axis
     else:
         args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
-        msg = "Earth semi minor axis differs by more than 1e-4"
+        msg = "Earth semi minor axis differs by more than 0.0001 metres"
         raise GammaException(msg % args)
 
     # non-cropped, non-multilooked geotif process step information added
@@ -379,8 +391,8 @@ def combine_headers(hdr0, hdr1, dem_hdr, bas_hdr):
 
     chdr.update(dem_hdr)  # add geographic data
 
-    if bas_hdr:
-        chdr.update(bas_hdr)  # add baseline information
+    if base_hdr:
+        chdr.update(base_hdr)  # add baseline information
 
     return chdr
 

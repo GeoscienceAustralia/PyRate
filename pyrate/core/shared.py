@@ -68,7 +68,7 @@ GDAL_Y_FIRST = 3
 class InputTypes(Enum):
     IFG = 'ifg'
     COH = 'coh'
-    BAS = 'bas'
+    BASE = 'base'
     DEM = 'dem'
     HEADER = 'header'
 
@@ -720,10 +720,10 @@ def _is_coherence(hdr):
 
 def _is_baseline(hdr):
     """
-    Convenience function to determine if file is interferogram
+    Convenience function to determine if file is baseline file
     """
     return (ifc.PYRATE_WAVELENGTH_METRES in hdr) and \
-           (hdr[ifc.INPUT_TYPE] == InputTypes.BAS if ifc.INPUT_TYPE in hdr else False)
+           (hdr[ifc.INPUT_TYPE] == InputTypes.BASE if ifc.INPUT_TYPE in hdr else False)
 
 
 def _is_incidence(hdr):
@@ -899,7 +899,7 @@ def collate_metadata(header):
             for k in [ifc.FIRST_TIME, ifc.SECOND_TIME,
                       ifc.PYRATE_NROWS, ifc.PYRATE_NCOLS,
                       ifc.PYRATE_INCIDENCE_DEGREES, ifc.PYRATE_HEADING_DEGREES,
-                      ifc.PYRATE_RANGE_PIX_METRES, ifc.PYRATE_RANGE_N,
+                      ifc.PYRATE_RANGE_PIX_METRES, ifc.PYRATE_RANGE_N, ifc.PYRATE_RANGE_LOOKS,
                       ifc.PYRATE_AZIMUTH_PIX_METRES, ifc.PYRATE_AZIMUTH_N,
                       ifc.PYRATE_AZIMUTH_LOOKS, ifc.PYRATE_PRF_HERTZ,
                       ifc.PYRATE_NEAR_RANGE_METRES, ifc.PYRATE_SAR_EARTH_METRES,
@@ -913,7 +913,7 @@ def collate_metadata(header):
         md.update({ifc.DATA_TYPE: ifc.COH})
     elif _is_baseline(header):
         __common_ifg_coh_update(header, md)
-        md.update({ifc.DATA_TYPE: ifc.BAS})
+        md.update({ifc.DATA_TYPE: ifc.BASE})
     elif _is_interferogram(header):
         __common_ifg_coh_update(header, md)
         md.update({ifc.DATA_TYPE: ifc.ORIG})

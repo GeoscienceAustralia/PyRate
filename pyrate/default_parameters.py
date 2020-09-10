@@ -60,7 +60,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
-    "basfilelist": {
+    "basefilelist": {
         "DataType": "path",
         "DefaultValue": None,
         "MinValue": None,
