@@ -833,10 +833,10 @@ def read_lookup_table(head, data_path, xlooks, ylooks):
     idx2 = np.arange(int(xlooks/2), ncols_lt, xlooks) # second value
 
     # read the binary lookup table file and save the range/azimuth value pair for each position in ML data
-    print("reading lookup table file %s ..." % data_path)
+    log.info(f"reading lookup table file {data_path}")
     with open(data_path, 'rb') as f:
         for y in range(int(ylooks/2), nrows_lt, ylooks):
-            print("reading row %i of lookup table file" % y)
+            log.info(f"reading row {y} of lookup table file")
             data = struct.unpack(fmtstr, f.read(row_bytes))
             row_data = np.array(data)
             row_data_ml_az = row_data[idx1] # azimuth for PyRate
