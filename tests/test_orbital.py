@@ -713,10 +713,10 @@ class TestLegacyComparisonTestsOrbfitMethod1:
     This is the legacy comparison test of orbital correction functionality.
     Tests use the following config
     orbfit:        1
-    orbfitmethod:  2
+    orbfitmethod:  1
     orbfitdegrees: 1
-    orbfitlksx:    2
-    orbfitlksy:    2
+    orbfitlksx:    1
+    orbfitlksy:    1
 
     """
 
@@ -727,8 +727,8 @@ class TestLegacyComparisonTestsOrbfitMethod1:
         cls.BASE_DIR = cls.params[cf.OUT_DIR]
         # change to orbital error correction method 1
         cls.params[cf.ORBITAL_FIT_METHOD] = INDEPENDENT_METHOD
-        cls.params[cf.ORBITAL_FIT_LOOKS_X] = 2
-        cls.params[cf.ORBITAL_FIT_LOOKS_Y] = 2
+        cls.params[cf.ORBITAL_FIT_LOOKS_X] = 1
+        cls.params[cf.ORBITAL_FIT_LOOKS_Y] = 1
         cls.params[cf.PARALLEL] = False
         cls.params[cf.ORBFIT_OFFSET] = True
 
