@@ -315,46 +315,42 @@ def temporal_high_pass_filter(tsincr, epochlist, params):
 
     # convert cutoff in days to years
     cutoff_yr = cutoff_day / ifc.DAYS_PER_YEAR
-    log.info(f'Gaussian temporal filter cutoff is {cutoff_day} days ({cutoff_yr} years)')
+    log.info(f'Gaussian temporal filter cutoff is {cutoff_day} days ({cutoff_yr:.4f} years)')
 
-    nanmat = ~isnan(tsincr)
-    intv = np.diff(epochlist.spans)  # time interval for the neighboring epoch
+    intv = np.diff(epochlist.spans)  # time interval for the neighboring epochs
     span = epochlist.spans[: tsincr.shape[2]] + intv/2  # accumulated time
     rows, cols = tsincr.shape[:2]
 
-    # Result of gaussian filter is low frequency time series
-    ts_lp = _tlpfilter(nanmat, rows, cols, cutoff_yr, span, threshold, tsincr)
-    log.debug("Finished applying temporal high-pass filter")
-    # Return the high frequency time series
-    return tsincr - ts_lp
-
-
-def _gauss(m, yr, cutoff):
-    """
-    Define Gaussian filter weights with cutoff in years
-    """
-    return np.exp(-0.5 * (yr / cutoff) ** 2)
-
-
-def _tlpfilter(nanmat, rows, cols, cutoff, span, threshold, tsincr):
-    """
-    Wrapper function to apply temporal low pass filter
-    """
     tsfilt_incr_each_row = {}
     process_rows = mpiops.array_split(list(range(rows)))
 
     for r in process_rows:
         tsfilt_incr_each_row[r] = np.empty(tsincr.shape[1:], dtype=np.float32) * np.nan
         for j in range(cols):
-            sel = np.nonzero(nanmat[r, j, :])[0]  # don't select if nan
-            m = len(sel)
-            if m >= threshold:
-                for k in range(m):
-                    yr = span[sel] - span[sel[k]]
-                    wgt = _gauss(m, yr, cutoff)
-                    wgt /= np.sum(wgt)
-                    tsfilt_incr_each_row[r][j, sel[k]] = np.sum(tsincr[r, j, sel] * wgt)
+            # Result of gaussian filter is low frequency time series
+            tsfilt_incr_each_row[r][j, :] = _tlpfilter(tsincr[r, j, :], cutoff_yr, span, threshold)
 
     tsfilt_incr_combined = shared.join_dicts(mpiops.comm.allgather(tsfilt_incr_each_row))
     tsfilt_incr = np.array([v[1] for v in tsfilt_incr_combined.items()])
-    return tsfilt_incr
+    log.debug("Finished applying temporal high-pass filter")
+    return tsincr - tsfilt_incr # Return the high frequency time series
+
+
+def _tlpfilter(tsincr, cutoff, span, threshold):
+    """
+    Apply Gaussian temporal low pass filter to one pixel
+    """
+    nanmat = ~isnan(tsincr)
+    sel = np.nonzero(nanmat)[0]  # don't select if nan
+    ts_lp = np.empty(tsincr.shape, dtype=np.float32) * np.nan
+    m = len(sel)
+    if m >= threshold:
+        for k in range(m):
+            yr = span[sel] - span[sel[k]]
+            # define Gaussian filter weights with cutoff in years
+            wgt = np.exp(-0.5 * (yr / cutoff) ** 2)
+            wgt /= np.sum(wgt)
+            ts_lp[sel[k]] = np.sum(tsincr[sel] * wgt)
+
+    return ts_lp
+
