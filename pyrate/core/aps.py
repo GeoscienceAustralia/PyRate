@@ -312,34 +312,20 @@ def temporal_low_pass_filter(tsincr, epochlist, params):
     span = epochlist.spans[: tsincr.shape[2]] + intv/2  # accumulated time
     rows, cols = tsincr.shape[:2]
     cutoff = params[cf.TLPF_CUTOFF]
-    method = params[cf.TLPF_METHOD]
     threshold = params[cf.TLPF_PTHR]
-    tsfilt_incr = _tlpfilter(nanmat, rows, cols, cutoff, span, threshold, tsincr, tlpf_methods[method])
+    tsfilt_incr = _tlpfilter(nanmat, rows, cols, cutoff, span, threshold, tsincr)
     log.debug("Finished applying temporal low-pass filter")
     return tsfilt_incr
 
 
-def gauss(m, yr, cutoff):
+def _gauss(m, yr, cutoff):
     """
     Define Gaussian filter weights
     """
     return np.exp(-0.5 * (yr / cutoff) ** 2)
 
-def _triangle(m, yr, cutoff):
-    """
-    Define triangular filter weights
-    """
-    wgt = cutoff - abs(yr)
-    wgt[wgt < 0] = 0
-    return wgt
 
-
-mean_filter = lambda m, yr, cutoff: np.ones(m)
-
-tlpf_methods = {1: gauss, 2: _triangle, 3: mean_filter}
-
-
-def _tlpfilter(nanmat, rows, cols, cutoff_day, span, threshold, tsincr, func):
+def _tlpfilter(nanmat, rows, cols, cutoff_day, span, threshold, tsincr):
     """
     Wrapper function for temporal low pass filter
     """
@@ -349,7 +335,7 @@ def _tlpfilter(nanmat, rows, cols, cutoff_day, span, threshold, tsincr, func):
 
     # convert cutoff in days to years
     cutoff_yr = cutoff_day / ifc.DAYS_PER_YEAR
-    log.info(f'Temporal filter cutoff is {cutoff_day} days ({cutoff_yr} years)')
+    log.info(f'Gaussian temporal filter cutoff is {cutoff_day} days ({cutoff_yr} years)')
 
     tsfilt_incr_each_row = {}
     process_rows = mpiops.array_split(list(range(rows)))
@@ -362,9 +348,8 @@ def _tlpfilter(nanmat, rows, cols, cutoff_day, span, threshold, tsincr, func):
             if m >= threshold:
                 for k in range(m):
                     yr = span[sel] - span[sel[k]]
-                    wgt = func(m, yr, cutoff_yr)
+                    wgt = _gauss(m, yr, cutoff_yr)
                     wgt /= np.sum(wgt)
-                    print(wgt)
                     tsfilt_incr_each_row[r][j, sel[k]] = np.sum(tsincr[r, j, sel] * wgt)
 
     tsfilt_incr_combined = shared.join_dicts(mpiops.comm.allgather(tsfilt_incr_each_row))

@@ -172,8 +172,6 @@ LR_MAXSIG = 'maxsig'
 #: BOOL (0/1) Perform APS correction (1: yes, 0: no)
 APSEST = 'apsest'
 # temporal low-pass filter parameters
-#: INT (1/2/3); Method for temporal filtering (1: Gaussian, 2: Triangular, 3: Mean filter)
-TLPF_METHOD = 'tlpfmethod'
 #: FLOAT; Cutoff time for gaussian filter in years;
 TLPF_CUTOFF = 'tlpfcutoff'
 #: INT; Number of required input observations per pixel for temporal filtering
@@ -270,7 +268,6 @@ PARAM_CONVERSION = {
     # ATM_FIT_METHOD: (int, 2),
 
     APSEST: (int, 0),
-    TLPF_METHOD: (int, 1),
     TLPF_CUTOFF: (float, 1.0),
     TLPF_PTHR: (int, 1),
 
@@ -736,10 +733,6 @@ _ORBITAL_FIT_VALIDATION = {
 """dict: basic validation fucntions for orbital error correction parameters."""
 
 _APSEST_VALIDATION = {
-    TLPF_METHOD: (
-        lambda a: a in (1, 2, 3),
-        f"'{TLPF_METHOD}': must select option 1, 2 or 3."
-    ),
     TLPF_CUTOFF: (
         lambda a: a >= YEARS_PER_DAY,  # 1 day in years
         f"'{TLPF_CUTOFF}': must be >= {YEARS_PER_DAY}."

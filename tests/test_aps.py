@@ -70,7 +70,6 @@ def test_tlpfilter():
 # slpnanfill: 1 for interpolation, 0 for zero fill
 # slpnanfill_method: linear, nearest, cubic; only used when slpnanfill=1
 # Temporal low-pass filter parameters
-# tlpfmethod: 1 = Gaussian, 2 = Triangular, 3 = Mean filter
 # tlpfcutoff: cutoff t0 for gaussian filter in year;
 # tlpfpthr: valid pixel threshold;
 # slpfmethod:     2
@@ -78,7 +77,6 @@ def test_tlpfilter():
 # slpforder:      1
 # slpnanfill:     1
 # slpnanfill_method:  cubic
-# tlpfmethod:   3
 # tlpfcutoff:   0.25
 # tlpfpthr:     1
 

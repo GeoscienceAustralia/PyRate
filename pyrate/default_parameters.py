@@ -356,14 +356,6 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": ["linear", "nearest", "cubic"],
         "Required": False
     },
-    "tlpfmethod": {
-        "DataType": int,
-        "DefaultValue": 1,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": [1, 2, 3],
-        "Required": False
-    },
     "tlpfcutoff": {
         "DataType": int,
         "DefaultValue": 12,
