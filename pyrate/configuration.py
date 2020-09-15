@@ -141,7 +141,6 @@ class MultiplePaths:
                         params[cf.SLPF_ORDER],
                         params[cf.SLPF_NANFILL],
                         params[cf.SLPF_NANFILL_METHOD],
-                        params[cf.TLPF_METHOD],
                         params[cf.TLPF_CUTOFF],
                         params[cf.TLPF_PTHR]
                         ]

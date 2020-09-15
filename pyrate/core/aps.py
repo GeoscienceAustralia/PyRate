@@ -92,8 +92,7 @@ def spatio_temporal_filter(tsincr, ifg_paths, params, preread_ifgs):
     ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
     ifg.open()
     epochlist = mpiops.run_once(get_epochs, preread_ifgs)[0]
-    ts_lp = temporal_low_pass_filter(tsincr, epochlist, params)
-    ts_hp = tsincr - ts_lp
+    ts_hp = temporal_high_pass_filter(tsincr, epochlist, params)
     ts_aps = spatial_low_pass_filter(ts_hp, ifg, params)
     tsincr -= ts_aps
 
@@ -293,42 +292,23 @@ def _slp_filter(phase, cutoff, rows, cols, x_size, y_size, params):
 
 
 # TODO: use tiles here and distribute amongst processes
-def temporal_low_pass_filter(tsincr, epochlist, params):
+def temporal_high_pass_filter(tsincr, epochlist, params):
     """
-    Filter time series data temporally using either a Gaussian, triangular
-    or mean low pass filter defined by a cut-off time period (in years).
+    Isolate high-frequency components of time series data by subtracting
+    low-pass components obtained using a Gaussian filter defined by a
+    cut-off time period (in days).
 
     :param ndarray tsincr: Array of incremental time series data of shape
                 (ifg.shape, n_epochs)
     :param list epochlist: List of shared.EpochList class instances
     :param dict params: Dictionary of configuration parameters
 
-    :return: tsfilt_incr: filtered time series data, shape (ifg.shape, nepochs)
+    :return: ts_hp: filtered high frequency time series data, shape (ifg.shape, nepochs)
     :rtype: ndarray
     """
-    log.info('Applying temporal low-pass filter')
-    nanmat = ~isnan(tsincr)
-    intv = np.diff(epochlist.spans)  # time interval for the neighboring epoch
-    span = epochlist.spans[: tsincr.shape[2]] + intv/2  # accumulated time
-    rows, cols = tsincr.shape[:2]
-    cutoff = params[cf.TLPF_CUTOFF]
+    log.info('Applying temporal high-pass filter')
     threshold = params[cf.TLPF_PTHR]
-    tsfilt_incr = _tlpfilter(nanmat, rows, cols, cutoff, span, threshold, tsincr)
-    log.debug("Finished applying temporal low-pass filter")
-    return tsfilt_incr
-
-
-def _gauss(m, yr, cutoff):
-    """
-    Define Gaussian filter weights
-    """
-    return np.exp(-0.5 * (yr / cutoff) ** 2)
-
-
-def _tlpfilter(nanmat, rows, cols, cutoff_day, span, threshold, tsincr):
-    """
-    Wrapper function for temporal low pass filter
-    """
+    cutoff_day = params[cf.TLPF_CUTOFF]
     if cutoff_day < 1 or type(cutoff_day) != int:
         raise ValueError(f'tlpf_cutoff must be an integer greater than or '
                          f'equal to 1 day. Value provided = {cutoff_day}')
@@ -337,6 +317,29 @@ def _tlpfilter(nanmat, rows, cols, cutoff_day, span, threshold, tsincr):
     cutoff_yr = cutoff_day / ifc.DAYS_PER_YEAR
     log.info(f'Gaussian temporal filter cutoff is {cutoff_day} days ({cutoff_yr} years)')
 
+    nanmat = ~isnan(tsincr)
+    intv = np.diff(epochlist.spans)  # time interval for the neighboring epoch
+    span = epochlist.spans[: tsincr.shape[2]] + intv/2  # accumulated time
+    rows, cols = tsincr.shape[:2]
+
+    # Result of gaussian filter is low frequency time series
+    ts_lp = _tlpfilter(nanmat, rows, cols, cutoff_yr, span, threshold, tsincr)
+    log.debug("Finished applying temporal high-pass filter")
+    # Return the high frequency time series
+    return tsincr - ts_lp
+
+
+def _gauss(m, yr, cutoff):
+    """
+    Define Gaussian filter weights with cutoff in years
+    """
+    return np.exp(-0.5 * (yr / cutoff) ** 2)
+
+
+def _tlpfilter(nanmat, rows, cols, cutoff, span, threshold, tsincr):
+    """
+    Wrapper function to apply temporal low pass filter
+    """
     tsfilt_incr_each_row = {}
     process_rows = mpiops.array_split(list(range(rows)))
 
@@ -348,7 +351,7 @@ def _tlpfilter(nanmat, rows, cols, cutoff_day, span, threshold, tsincr):
             if m >= threshold:
                 for k in range(m):
                     yr = span[sel] - span[sel[k]]
-                    wgt = _gauss(m, yr, cutoff_yr)
+                    wgt = _gauss(m, yr, cutoff)
                     wgt /= np.sum(wgt)
                     tsfilt_incr_each_row[r][j, sel[k]] = np.sum(tsincr[r, j, sel] * wgt)
 
