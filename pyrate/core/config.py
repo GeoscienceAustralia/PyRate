@@ -28,7 +28,6 @@ import os
 from os.path import splitext, split
 import re
 
-from pyrate.core.ifgconstants import YEARS_PER_DAY
 from pyrate.constants import sixteen_digits_pattern
 from pyrate.core.logger import pyratelogger as _logger
 
@@ -172,7 +171,7 @@ LR_MAXSIG = 'maxsig'
 #: BOOL (0/1) Perform APS correction (1: yes, 0: no)
 APSEST = 'apsest'
 # temporal low-pass filter parameters
-#: FLOAT; Cutoff time for gaussian filter in years;
+#: FLOAT; Cutoff time for gaussian filter in days;
 TLPF_CUTOFF = 'tlpfcutoff'
 #: INT; Number of required input observations per pixel for temporal filtering
 TLPF_PTHR = 'tlpfpthr'
@@ -268,7 +267,7 @@ PARAM_CONVERSION = {
     # ATM_FIT_METHOD: (int, 2),
 
     APSEST: (int, 0),
-    TLPF_CUTOFF: (float, 1.0),
+    TLPF_CUTOFF: (int, 12),
     TLPF_PTHR: (int, 1),
 
     SLPF_METHOD: (int, 1),
@@ -734,8 +733,8 @@ _ORBITAL_FIT_VALIDATION = {
 
 _APSEST_VALIDATION = {
     TLPF_CUTOFF: (
-        lambda a: a >= YEARS_PER_DAY,  # 1 day in years
-        f"'{TLPF_CUTOFF}': must be >= {YEARS_PER_DAY}."
+        lambda a: a >= 1,
+        f"'{TLPF_CUTOFF}': must be >= 1."
     ),
     TLPF_PTHR: (
         lambda a: a >= 1,
