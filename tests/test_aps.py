@@ -23,8 +23,9 @@ import numpy as np
 from pyrate import conv2tif, prepifg, correct
 from pyrate.configuration import Configuration, MultiplePaths
 import pyrate.core.config as cf
-from pyrate.core.aps import wrap_spatio_temporal_filter, _interpolate_nans
+from pyrate.core.aps import wrap_spatio_temporal_filter, _interpolate_nans, _tlpfilter
 from pyrate.core import shared
+from pyrate.core.ifgconstants import DAYS_PER_YEAR
 from tests import common
 
 
@@ -51,14 +52,35 @@ def test_slp_filter():
     pass
 
 
-def test_temporal_low_pass_filter():
+def test_temporal_high_pass_filter():
     # TODO
     pass
 
 
 def test_tlpfilter():
-    # TODO
-    pass
+    '''
+    Test the temporal filter for a single pixel with synthetic data
+    '''
+    cutoff = 12 / DAYS_PER_YEAR # 0.03285 years
+    threshold = 1 # no nans in this test case
+    # normally distributed noise
+    n = np.array([-0.36427456,  0.69539061,  0.42181139, -2.56306134,
+                  0.55844095, -0.65562626,  0.65607911,  1.19431637,
+                  -1.43837395, -0.91656358])
+    # synthetic incremental displacement
+    d = np.array([1. , 1. , 0.7, 0.3, 0. , 0.1, 0.2, 0.6, 1. , 1. ])
+    # incremental displacement + noise
+    tsincr = d*2 + n
+    # regular time series, every 12 days
+    intv = np.ones(tsincr.shape, dtype=np.float32) * cutoff
+    span = np.cumsum(intv)
+
+    ts_lp = _tlpfilter(tsincr, cutoff, span, threshold)
+    exp = np.array([1.9936507, 1.9208364, 1.0252733, -0.07402889,
+                    -0.1842336, 0.24325351, 0.94737214, 1.3890865,
+                    1.1903466 ,  1.0036403])
+
+    np.testing.assert_array_almost_equal(ts_lp, exp, decimal=6)
 
 
 # APS correction using spatio-temporal filter
@@ -77,7 +99,7 @@ def test_tlpfilter():
 # slpforder:      1
 # slpnanfill:     1
 # slpnanfill_method:  cubic
-# tlpfcutoff:   0.25
+# tlpfcutoff:   12
 # tlpfpthr:     1
 
 
