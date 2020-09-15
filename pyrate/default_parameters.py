@@ -17,7 +17,6 @@
 #   either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-YEARS_PER_DAY = 1 / 365.25
 
 PYRATE_DEFAULT_CONFIGURATION = {
     "ifgfilelist": {
@@ -366,9 +365,9 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "Required": False
     },
     "tlpfcutoff": {
-        "DataType": float,
-        "DefaultValue": 1.0,
-        "MinValue": YEARS_PER_DAY,
+        "DataType": int,
+        "DefaultValue": 12,
+        "MinValue": 1,
         "MaxValue": None,
         "PossibleValues": None,
         "Required": False

@@ -319,8 +319,11 @@ def temporal_low_pass_filter(tsincr, epochlist, params):
     return tsfilt_incr
 
 
-gauss = lambda m, yr, cutoff: np.exp(-(yr / cutoff) ** 2 / 2)
-
+def gauss(m, yr, cutoff):
+    """
+    Define Gaussian filter weights
+    """
+    return np.exp(-0.5 * (yr / cutoff) ** 2)
 
 def _triangle(m, yr, cutoff):
     """
@@ -336,10 +339,18 @@ mean_filter = lambda m, yr, cutoff: np.ones(m)
 tlpf_methods = {1: gauss, 2: _triangle, 3: mean_filter}
 
 
-def _tlpfilter(nanmat, rows, cols, cutoff, span, threshold, tsincr, func):
+def _tlpfilter(nanmat, rows, cols, cutoff_day, span, threshold, tsincr, func):
     """
     Wrapper function for temporal low pass filter
     """
+    if cutoff_day < 1 or type(cutoff_day) != int:
+        raise ValueError(f'tlpf_cutoff must be an integer greater than or '
+                         f'equal to 1 day. Value provided = {cutoff_day}')
+
+    # convert cutoff in days to years
+    cutoff_yr = cutoff_day / ifc.DAYS_PER_YEAR
+    log.info(f'Temporal filter cutoff is {cutoff_day} days ({cutoff_yr} years)')
+
     tsfilt_incr_each_row = {}
     process_rows = mpiops.array_split(list(range(rows)))
 
@@ -351,8 +362,9 @@ def _tlpfilter(nanmat, rows, cols, cutoff, span, threshold, tsincr, func):
             if m >= threshold:
                 for k in range(m):
                     yr = span[sel] - span[sel[k]]
-                    wgt = func(m, yr, cutoff)
+                    wgt = func(m, yr, cutoff_yr)
                     wgt /= np.sum(wgt)
+                    print(wgt)
                     tsfilt_incr_each_row[r][j, sel[k]] = np.sum(tsincr[r, j, sel] * wgt)
 
     tsfilt_incr_combined = shared.join_dicts(mpiops.comm.allgather(tsfilt_incr_each_row))
