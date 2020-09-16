@@ -29,11 +29,7 @@ from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roi
 from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import MultiplePaths
-# TF testing
-from pyrate.core.refpixel import convert_pixel_value_to_geographic_coordinate
-from pyrate.core.shared import Ifg
-from pyrate.core.shared import read_lookup_table
-#
+
 
 GAMMA = 1
 ROIPAC = 0

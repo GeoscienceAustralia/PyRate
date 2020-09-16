@@ -828,21 +828,32 @@ def read_lookup_table(head, data_path, xlooks, ylooks):
     lt_data_az = np.empty((0, ncols)) # empty array with correct number of columns
     lt_data_rg = np.empty((0, ncols)) # empty array with correct number of column
 
-    # for indexing: lookup table file contains value pairs (i.e. range/azimuth)
-    idx1 = np.arange(int(xlooks/2)-1, ncols_lt, xlooks) # first value
-    idx2 = np.arange(int(xlooks/2), ncols_lt, xlooks) # second value
+    # for indexing: lookup table file contains value pairs (i.e. range, azimuth)
+    # value pair 0 would be index 0 and 1, value pair 1 would be index 2 and 3, and so on
+    # example: for a multi-looking factor of 10 we want value pair 4, 14, 24, ...
+    # this would be index 8 and 9, index 28 and 29, 48 and 49, ...
+    if xlooks == 1:
+        idx_start = 0
+    else:
+        idx_start = (int(xlooks/2)-1)*2
+    idx_rg = np.arange(idx_start, ncols_lt*2, 2*xlooks) # first value
+    idx_az = np.arange(idx_start+1, ncols_lt*2, 2*xlooks) # second value
+    # row index used (e.g. for multi-looking factor 10: 4, 14, 24, ...)
+    row_idx = np.arange(int(ylooks/2)-1, nrows_lt, ylooks)
 
     # read the binary lookup table file and save the range/azimuth value pair for each position in ML data
     print("reading lookup table file %s ..." % data_path)
     with open(data_path, 'rb') as f:
-        for y in range(int(ylooks/2), nrows_lt, ylooks):
-            print("reading row %i of lookup table file" % y)
+        for y in range(nrows_lt): # loop through all lines in file
+            # this could potentially be made quicker by skipping unwanted bytes in the f.read command?
             data = struct.unpack(fmtstr, f.read(row_bytes))
-            row_data = np.array(data)
-            row_data_ml_az = row_data[idx1] # azimuth for PyRate
-            row_data_ml_rg = row_data[idx2]
-            lt_data_az = np.append(lt_data_az, [row_data_ml_az], axis=0)
-            lt_data_rg = np.append(lt_data_rg, [row_data_ml_rg], axis=0)
+            # but only read data from lines in row index:
+            if y in row_idx:
+                row_data = np.array(data)
+                row_data_ml_az = row_data[idx_az] # azimuth for PyRate
+                row_data_ml_rg = row_data[idx_rg] # range for PyRate
+                lt_data_az = np.append(lt_data_az, [row_data_ml_az], axis=0)
+                lt_data_rg = np.append(lt_data_rg, [row_data_ml_rg], axis=0)
 
     return lt_data_az, lt_data_rg
 
