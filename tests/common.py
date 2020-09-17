@@ -80,6 +80,8 @@ SML_TEST_COH_LIST = join(SML_TEST_COH_DIR, 'coherence_17')
 
 SML_TEST_BASE_LIST = join(SML_TEST_GAMMA, 'baseline_17')
 
+SML_TEST_LT_FILE = join(SML_TEST_GAMMA, 'cropped_lookup_table.lt')
+
 TEST_CONF_ROIPAC = join(SML_TEST_CONF, 'pyrate_roipac_test.conf')
 TEST_CONF_GAMMA = join(SML_TEST_CONF, 'pyrate_gamma_test.conf')
 

@@ -69,6 +69,7 @@ class InputTypes(Enum):
     IFG = 'ifg'
     COH = 'coh'
     BASE = 'base'
+    LT = 'lt'
     DEM = 'dem'
     HEADER = 'header'
 
@@ -725,6 +726,12 @@ def _is_baseline(hdr):
     return (ifc.PYRATE_WAVELENGTH_METRES in hdr) and \
            (hdr[ifc.INPUT_TYPE] == InputTypes.BASE if ifc.INPUT_TYPE in hdr else False)
 
+def _is_lookuptable(hdr):
+    """
+    Convenience function to determine if file is lookup table file
+    """
+    return (ifc.PYRATE_WAVELENGTH_METRES in hdr) and \
+           (hdr[ifc.INPUT_TYPE] == InputTypes.LT if ifc.INPUT_TYPE in hdr else False)
 
 def _is_incidence(hdr):
     """
@@ -769,7 +776,8 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
         raise GeotiffException(msg)
 
     wkt = srs.ExportToWkt()
-    dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header) or _is_coherence(header) or _is_baseline(header)) else 'int16'
+    dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header) or _is_coherence(header) or \
+                          _is_baseline(header) or _is_lookuptable(header)) else 'int16'
 
     # get subset of metadata relevant to PyRate
     md = collate_metadata(header)
@@ -928,6 +936,8 @@ def collate_metadata(header):
     elif _is_interferogram(header):
         __common_ifg_coh_update(header, md)
         md.update({ifc.DATA_TYPE: ifc.ORIG})
+    elif _is_lookuptable(header):
+        md.update({ifc.DATA_TYPE: ifc.LT})
     elif _is_incidence(header):
         md.update({ifc.DATA_TYPE: ifc.INCIDENCE})
     else:  # must be dem

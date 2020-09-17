@@ -300,6 +300,8 @@ class Configuration:
 
         self.dem_file = MultiplePaths(self.demfile, self.__dict__, input_type=InputTypes.DEM)
 
+        self.lt_file = MultiplePaths(self.ltfile, self.__dict__, input_type=InputTypes.LT)
+
         # backward compatibility for string paths
         for key in self.__dict__:
             if isinstance(self.__dict__[key], PurePath):

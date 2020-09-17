@@ -15,7 +15,7 @@
 #   limitations under the License.
 """
 This Python module implements the calculation of per-pixel baseline values used
-for correcting interferograms for residual topographic effects (aka as DEM errors).
+for correcting interferograms for residual topographic effects (a.k.a. as DEM errors).
 The module also outputs the per-pixel vector of the radar viewing geometry
 (i.e. local incidence and azimuth angles).
 """
@@ -43,18 +43,22 @@ def remove_dem_error(ifgs: List, params: dict) -> None:
     ifg0 = Ifg(ifg0_path)
     ifg0.open(readonly=True)
 
-    # calculate per-pixel lon/lat
-    lon, lat = get_lonlat_coords(ifg0)
-    # calculate per-pixel radar coordinates
-    az, rg = get_radar_coords(ifg0, params)
-    # calculate per-pixel look angle (also calculates and saves indcidence and azimuth angles)
-    look_angle = calc_local_geometry(ifg0, ifg0_path, az, rg, lon, lat, params)
-    # loop over all Ifgs in stack
-    ifgs = [shared.Ifg(p) for p in ifg_paths] if isinstance(ifgs[0], str) else ifgs
-    process_ifgs = mpiops.array_split(ifgs)
-    for ifg in process_ifgs:
-        bperp = calc_local_baseline(ifg, az, look_angle, params)
-    # todo: add code to invert for DEM error using the per-pixel baseline values and the unwrapped phase
+    # not currently implemented for ROIPAC data which breaks some tests
+    # if statement can be deleted once ROIPAC is deprecated from PyRate
+    if not ifg0.meta_data[ifc.PYRATE_INSAR_PROCESSOR] == 'ROIPAC':
+
+      # calculate per-pixel lon/lat
+      lon, lat = get_lonlat_coords(ifg0)
+      # calculate per-pixel radar coordinates
+      az, rg = get_radar_coords(ifg0, params)
+      # calculate per-pixel look angle (also calculates and saves indcidence and azimuth angles)
+      look_angle = calc_local_geometry(ifg0, ifg0_path, az, rg, lon, lat, params)
+      # loop over all Ifgs in stack
+      ifgs = [shared.Ifg(p) for p in ifg_paths] if isinstance(ifgs[0], str) else ifgs
+      process_ifgs = mpiops.array_split(ifgs)
+      for ifg in process_ifgs:
+          bperp = calc_local_baseline(ifg, az, look_angle, params)
+      # todo: add code to invert for DEM error using the per-pixel baseline values saved in bperp and the unwrapped phase
 
 
 def get_lonlat_coords(ifg):
@@ -164,7 +168,7 @@ def calc_local_geometry(ifg, ifg_path, az, rg, lon, lat, params):
     #                                np.sin(epsilon)))
     #azimuth_angle_diff = azimuth_angle2 - azimuth_angle
     #print(np.nanmin(azimuth_angle_diff), np.nanmax(azimuth_angle_diff))
-    # the difference between Vincety's azimuth calculation and the spherical approximation is ~0.001 radians
+    # the difference between Vincenty's azimuth calculation and the spherical approximation is ~0.001 radians
 
     # for validation with GAMMA output only
     azimuth_angle_gamma = -(azimuth_angle - np.pi / 2) # local heading towards satellite
@@ -172,10 +176,10 @@ def calc_local_geometry(ifg, ifg_path, az, rg, lon, lat, params):
     # this could be improved by using orbital state vectors to calculate that satellite positions (see above comment)
 
     # save angles to npy arrays
-    look_angle_file = os.path.join(params[cf.OUT_DIR],'look_angle.npy')
-    np.save(file=look_angle_file, arr=look_angle)
+    #look_angle_file = os.path.join(params[cf.OUT_DIR],'look_angle.npy')
+    #np.save(file=look_angle_file, arr=look_angle)
 
-    # save angles to geotiff
+    # save angles as geotiff files in out directory
     gt, md, wkt = shared.get_geotiff_header_info(ifg_path)
     md[ifc.EPOCH_DATE] = None # needs to have a value in write_output_geotiff
     look_angle_file = os.path.join(params[cf.OUT_DIR], 'look_angle.tif')
@@ -235,7 +239,8 @@ def calc_local_baseline(ifg, az, look_angle, params):
 
 def vincinv(lat1, lon1, lat2, lon2, semimaj, semimin):
     """
-    Vincenty's Inverse Formula, adapted from GeodePy
+    Vincenty's Inverse Formula, adapted from GeodePy function vincinv
+    (see https://github.com/GeoscienceAustralia/GeodePy/blob/master/geodepy/geodesy.py)
     :param lat1: Latitude of Point 1 (radians)
     :param lon1: Longitude of Point 1 (radians)
     :param lat2: Latitude of Point 2 (radians)
