@@ -209,6 +209,7 @@ def __update_meta_data(p_unset, c, l, params):
     # update data type
     if c is not None:  # it's a interferogram when COH_MASK=1
         md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MLOOKED_COH_MASKED_IFG)
+        md[ifc.COH_THRESH] = str(params[cf.COH_THRESH])
     else:
         if v == ifc.DEM:  # it's a dem
             md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MLOOKED_DEM)
