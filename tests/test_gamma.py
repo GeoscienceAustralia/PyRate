@@ -228,29 +228,29 @@ class TestGammaHeaderParsingTests:
 
 
 # Test data for the epoch header combination
-H0 = {ifc.FIRST_DATE : date(2009, 7, 13),
-      ifc.FIRST_DATE : time(12),
+H0 = {ifc.FIRST_DATE: date(2009, 7, 13),
+      ifc.FIRST_TIME: time(12),
       ifc.PYRATE_WAVELENGTH_METRES: 1.8,
       ifc.PYRATE_INCIDENCE_DEGREES: 35.565,
       }
 
-H1 = {ifc.FIRST_DATE : date(2009, 8, 17),
-      ifc.FIRST_DATE : time(12, 10, 10),
+H1 = {ifc.FIRST_DATE: date(2009, 8, 17),
+      ifc.FIRST_TIME: time(12, 10, 10),
       ifc.PYRATE_WAVELENGTH_METRES: 1.8,
       ifc.PYRATE_INCIDENCE_DEGREES: 35.56,
       }
 
-H1_ERR1 = {ifc.FIRST_DATE : date(2009, 8, 17),
-          ifc.FIRST_DATE : time(12),
-          ifc.PYRATE_WAVELENGTH_METRES: 2.4,
-          ifc.PYRATE_INCIDENCE_DEGREES: 35.56,
-          }
+H1_ERR1 = {ifc.FIRST_DATE: date(2009, 8, 17),
+           ifc.FIRST_TIME: time(12),
+           ifc.PYRATE_WAVELENGTH_METRES: 2.4,
+           ifc.PYRATE_INCIDENCE_DEGREES: 35.56,
+           }
 
-H1_ERR2 = {ifc.FIRST_DATE : date(2009, 8, 17),
-          ifc.FIRST_DATE : time(12),
-          ifc.PYRATE_WAVELENGTH_METRES: 1.8,
-          ifc.PYRATE_INCIDENCE_DEGREES: 35.76,
-          }
+H1_ERR2 = {ifc.FIRST_DATE: date(2009, 8, 17),
+           ifc.FIRST_TIME: time(12),
+           ifc.PYRATE_WAVELENGTH_METRES: 1.8,
+           ifc.PYRATE_INCIDENCE_DEGREES: 35.76,
+           }
 
 
 class TestHeaderCombination:

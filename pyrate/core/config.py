@@ -57,7 +57,6 @@ SLC_DIR = 'slcFileDir'
 #: STR; Name of the file list containing the pool of available header files
 HDR_FILE_LIST = 'hdrfilelist'
 
-
 INTERFEROGRAM_FILES = 'interferogram_files'
 HEADER_FILE_PATHS = 'header_file_paths'
 COHERENCE_FILE_PATHS = 'coherence_file_paths'
@@ -72,7 +71,7 @@ NO_DATA_VALUE = 'noDataValue'
 #: FLOAT; No data averaging threshold for prepifg
 NO_DATA_AVERAGING_THRESHOLD = 'noDataAveragingThreshold'
 # BOOL (1/2/3); Re-project data from Line of sight, 1 = vertical, 2 = horizontal, 3 = no conversion
-#REPROJECTION = 'prjflag' # NOT CURRENTLY USED
+# REPROJECTION = 'prjflag' # NOT CURRENTLY USED
 #: BOOL (0/1): Convert no data values to Nan
 NAN_CONVERSION = 'nan_conversion'
 
@@ -110,7 +109,6 @@ REF_MIN_FRAC = 'refminfrac'
 #: BOOL (1/2); Reference phase estimation method (1: median of the whole interferogram, 2: median within the window surrounding the reference pixel)
 REF_EST_METHOD = 'refest'
 
-
 MAXVAR = 'maxvar'
 VCMT = 'vcmt'
 PREREAD_IFGS = 'preread_ifgs'
@@ -135,7 +133,7 @@ BASE_FILE_LIST = 'basefilelist'
 #: STR; Name of the file containing the GAMMA lookup table between lat/lon and radar coordinates (row/col)
 LT_FILE = 'ltfile'
 
-#atmospheric error correction parameters NOT CURRENTLY USED
+# atmospheric error correction parameters NOT CURRENTLY USED
 APS_CORRECTION = 'apscorrect'
 APS_METHOD = 'apsmethod'
 APS_INCIDENCE_MAP = 'incidencemap'
@@ -167,8 +165,8 @@ LR_MAXSIG = 'maxsig'
 
 # atmospheric delay errors fitting parameters NOT CURRENTLY USED
 # atmfitmethod = 1: interferogram by interferogram; atmfitmethod = 2, epoch by epoch
-#ATM_FIT = 'atmfit'
-#ATM_FIT_METHOD = 'atmfitmethod'
+# ATM_FIT = 'atmfit'
+# ATM_FIT_METHOD = 'atmfitmethod'
 
 # APS correction parameters
 #: BOOL (0/1) Perform APS correction (1: yes, 0: no)
@@ -202,7 +200,7 @@ TIME_SERIES_SM_ORDER = 'smorder'
 #: FLOAT; Laplacian smoothing factor (values used is 10**smfactor)
 TIME_SERIES_SM_FACTOR = 'smfactor'
 # tsinterp is automatically assigned in the code; not needed in conf file
-#TIME_SERIES_INTERP = 'tsinterp'
+# TIME_SERIES_INTERP = 'tsinterp'
 
 #: BOOL (0/1/2); Use parallelisation/Multi-threading (0: in serial, 1: in parallel by rows, 2: in parallel by pixel)
 PARALLEL = 'parallel'
@@ -217,10 +215,10 @@ QUADRATIC = 2
 PART_CUBIC = 3
 
 # Orbital error name look up for logging
-ORB_METHOD_NAMES = {INDEPENDENT_METHOD: 'INDEPENDENT', 
+ORB_METHOD_NAMES = {INDEPENDENT_METHOD: 'INDEPENDENT',
                     NETWORK_METHOD: 'NETWORK'}
-ORB_DEGREE_NAMES = {PLANAR: 'PLANAR', 
-                    QUADRATIC: 'QUADRATIC', 
+ORB_DEGREE_NAMES = {PLANAR: 'PLANAR',
+                    QUADRATIC: 'QUADRATIC',
                     PART_CUBIC: 'PART CUBIC'}
 
 # dir for temp files
@@ -230,14 +228,14 @@ TMPDIR = 'tmpdir'
 # format is	key : (conversion, default value)
 # None = no conversion
 PARAM_CONVERSION = {
-#    REPROJECTION : (int, 3), # Default no conversion, CONVERSION NOT IMPLEMENTED
-    IFG_CROP_OPT : (int, 1), # default to area 'intersection' option
-    IFG_LKSX : (int, NO_MULTILOOKING),
-    IFG_LKSY : (int, NO_MULTILOOKING),
-    IFG_XFIRST : (float, None),
-    IFG_XLAST : (float, None),
-    IFG_YFIRST : (float, None),
-    IFG_YLAST : (float, None),
+    #    REPROJECTION : (int, 3), # Default no conversion, CONVERSION NOT IMPLEMENTED
+    IFG_CROP_OPT: (int, 1),  # default to area 'intersection' option
+    IFG_LKSX: (int, NO_MULTILOOKING),
+    IFG_LKSY: (int, NO_MULTILOOKING),
+    IFG_XFIRST: (float, None),
+    IFG_XLAST: (float, None),
+    IFG_YFIRST: (float, None),
+    IFG_YLAST: (float, None),
     NO_DATA_VALUE: (float, 0.0),
 
     COH_MASK: (int, 0),
@@ -262,8 +260,8 @@ PARAM_CONVERSION = {
     LR_PTHRESH: (int, 3),
     LR_MAXSIG: (int, 10),
 
-    #ATM_FIT: (int, 0), NOT CURRENTLY USED
-    #ATM_FIT_METHOD: (int, 2),
+    # ATM_FIT: (int, 0), NOT CURRENTLY USED
+    # ATM_FIT_METHOD: (int, 2),
 
     APSEST: (int, 0),
     TLPF_METHOD: (int, 1),
@@ -286,7 +284,7 @@ PARAM_CONVERSION = {
     PROCESSOR: (int, None),
     NAN_CONVERSION: (int, 0),
     NO_DATA_AVERAGING_THRESHOLD: (float, 0.0),
-    }
+}
 
 PATHS = [
     OBS_DIR,
@@ -338,7 +336,7 @@ def get_config_params(path: str) -> Dict:
                 pos = line.find('~')
                 if pos != -1:
                     # create expanded line
-                    line = line[:pos] + os.environ['HOME'] + line[(pos+1):]
+                    line = line[:pos] + os.environ['HOME'] + line[(pos + 1):]
             txt += line
     params = _parse_conf_file(txt)
     params[TMPDIR] = os.path.join(os.path.abspath(params[OUT_DIR]), 'tmpdir')
@@ -356,6 +354,7 @@ def _parse_conf_file(content) -> Dict:
     Returns:
         A dictionary of parameters.
     """
+
     def _is_valid(line):
         """
         Check if line is not empty or has % or #
@@ -509,10 +508,10 @@ def coherence_paths_for(path: str, params: dict, tif=False) -> str:
     else:
         coh_file_paths = [f.unwrapped_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.unwrapped_path]
 
-    if len(coh_file_paths) > 2:
+    if len(coh_file_paths) > 1:
         raise ConfigException(f"'{COH_FILE_DIR}': found more than one coherence "
-                      f"file for '{path}'. There must be only one "
-                      f"coherence file per interferogram. Found {coh_file_paths}.")
+                              f"file for '{path}'. There must be only one "
+                              f"coherence file per interferogram. Found {coh_file_paths}.")
     return coh_file_paths[0]
 
 
@@ -531,17 +530,17 @@ def baseline_paths_for(path: str, params: dict) -> str:
         tif: Find converted tif if True (_cc.tif), else find .cc file.
 
     Returns:
-        Path to coherence file.
+        Path to baseline file.
     """
 
     _, filename = split(path)
     epoch = re.search(sixteen_digits_pattern, filename).group(0)
     base_file_paths = [f.unwrapped_path for f in params[BASELINE_FILE_PATHS] if epoch in f.unwrapped_path]
 
-    if len(base_file_paths) > 2:
+    if len(base_file_paths) > 1:
         raise ConfigException(f"'{BASE_FILE_DIR}': found more than one baseline "
-                      f"file for '{path}'. There must be only one "
-                      f"baseline file per interferogram. Found {base_file_paths}.")
+                              f"file for '{path}'. There must be only one "
+                              f"baseline file per interferogram. Found {base_file_paths}.")
     return base_file_paths[0]
 
 
@@ -724,7 +723,7 @@ _APSEST_VALIDATION = {
         f"'{TLPF_METHOD}': must select option 1, 2 or 3."
     ),
     TLPF_CUTOFF: (
-        lambda a: a >= YEARS_PER_DAY, # 1 day in years
+        lambda a: a >= YEARS_PER_DAY,  # 1 day in years
         f"'{TLPF_CUTOFF}': must be >= {YEARS_PER_DAY}."
     ),
     TLPF_PTHR: (

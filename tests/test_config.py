@@ -462,3 +462,11 @@ class TestOneIncidenceOrElevationMap(UnitTestAdaptation):
         self.assertIsNotNone(params[config.APS_ELEVATION_MAP])
         self.assertIn(config.APS_ELEVATION_EXT, params.keys())
         self.assertIn(config.APS_ELEVATION_MAP, params.keys())
+
+
+def test_baseline_paths_for():
+    pass
+
+
+def test_coherence_paths_for():
+    pass
