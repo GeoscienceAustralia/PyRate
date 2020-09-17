@@ -300,7 +300,9 @@ class Configuration:
 
         self.dem_file = MultiplePaths(self.demfile, self.__dict__, input_type=InputTypes.DEM)
 
-        self.lt_file = MultiplePaths(self.ltfile, self.__dict__, input_type=InputTypes.LT)
+        if self.ltfile is not None:
+            # if self.processor != 0:  # not roipac
+            self.ltfile = MultiplePaths(self.ltfile, self.__dict__, input_type=InputTypes.LT)
 
         # backward compatibility for string paths
         for key in self.__dict__:

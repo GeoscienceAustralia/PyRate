@@ -854,7 +854,6 @@ def read_lookup_table(head, data_path, xlooks, ylooks):
     with open(data_path, 'rb') as f:
         for y in range(nrows_lt): # loop through all lines in file
             # this could potentially be made quicker by skipping unwanted bytes in the f.read command?
-            log.info(f"reading row {y} of lookup table file")
             data = struct.unpack(fmtstr, f.read(row_bytes))
             # but only read data from lines in row index:
             if y in row_idx:
