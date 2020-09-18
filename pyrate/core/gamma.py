@@ -39,6 +39,7 @@ GAMMA_DATUM = 'ellipsoid_name'
 GAMMA_FREQUENCY = 'radar_frequency'
 GAMMA_INCIDENCE = 'incidence_angle'
 GAMMA_HEADING = 'heading'
+GAMMA_AZIMUTH = 'azimuth_angle'
 GAMMA_RANGE_PIX = 'range_pixel_spacing'
 GAMMA_RANGE_N = 'range_samples'
 GAMMA_RANGE_LOOKS = 'range_looks'
@@ -98,6 +99,12 @@ def parse_epoch_header(path):
         msg = 'Unrecognised unit field for heading: %s'
         raise GammaException(msg % unit)
     subset[ifc.PYRATE_HEADING_DEGREES] = float(sat_heading)
+
+    sat_azimuth, unit = lookup[GAMMA_AZIMUTH]
+    if unit != "degrees":  # pragma: no cover
+        msg = 'Unrecognised unit field for azimuth_angle: %s'
+        raise GammaException(msg % unit)
+    subset[ifc.PYRATE_AZIMUTH_DEGREES] = float(sat_azimuth)
 
     range_pix, unit = lookup[GAMMA_RANGE_PIX]
     if unit != "m":  # pragma: no cover
@@ -297,6 +304,14 @@ def combine_headers(hdr0, hdr1, dem_hdr, base_hdr):
     else:
         args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
         msg = "Satellite heading angles differ by more than 0.1 degrees"
+        raise GammaException(msg % args)
+
+    azimuth_ang = hdr0[ifc.PYRATE_AZIMUTH_DEGREES]
+    if np.isclose(azimuth_ang, hdr1[ifc.PYRATE_AZIMUTH_DEGREES], atol=1e-1):
+        chdr[ifc.PYRATE_AZIMUTH_DEGREES] = azimuth_ang
+    else:
+        args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
+        msg = "Satellite azimuth angles differ by more than 0.1 degrees"
         raise GammaException(msg % args)
 
     range_pix = hdr0[ifc.PYRATE_RANGE_PIX_METRES]

@@ -109,11 +109,13 @@ def calc_local_geometry(ifg, ifg_path, az, rg, lon, lat, params):
     near_range = float(ifg.meta_data[ifc.PYRATE_NEAR_RANGE_METRES])
     rps = float(ifg.meta_data[ifc.PYRATE_RANGE_PIX_METRES])
     heading = float(ifg.meta_data[ifc.PYRATE_HEADING_DEGREES])
+    azimuth = float(ifg.meta_data[ifc.PYRATE_AZIMUTH_DEGREES])
 
     # convert angles to radians
     lon = np.radians(lon)
     lat = np.radians(lat)
     heading = np.radians(heading)
+    azimuth = np.radians(azimuth)
 
     # Earth radius at given latitude
     re = np.sqrt(np.divide(np.square(a**2 * np.cos(lat)) + np.square(b**2 * np.sin(lat)), \
@@ -137,8 +139,8 @@ def calc_local_geometry(ifg, ifg_path, az, rg, lon, lat, params):
 
     # local azimuth angle at pixel ij using constant satellite heading angle and spherical approximations
     epsilon = np.pi - look_angle - (np.pi - incidence_angle) # angle at the Earth's center between se and re
-    # azimuth of satellite look vector(for right-looking SAR)
-    sat_azi = heading + np.pi / 2
+    # azimuth of satellite look vector (satellite heading + azimuth of look direction (+90 deg for right-looking SAR)
+    sat_azi = heading + azimuth
     # the following equations are adapted from Section 4.4 (page 4-16) in EARTH-REFERENCED AIRCRAFT NAVIGATION AND
     # SURVEILLANCE ANALYSIS (https://ntlrepository.blob.core.windows.net/lib/59000/59300/59358/DOT-VNTSC-FAA-16-12.pdf)
     sat_lon = np.divide(np.arcsin(-(np.multiply(np.sin(epsilon), np.sin(sat_azi)))), np.cos(lat)) + lon # Eq. 103
@@ -169,7 +171,7 @@ def calc_local_geometry(ifg, ifg_path, az, rg, lon, lat, params):
     # the difference between Vincenty's azimuth calculation and the spherical approximation is ~0.001 radians
 
     # todo (once new test data is ready): move next line into test for validation with GAMMA output
-    #azimuth_angle_gamma = -(azimuth_angle - np.pi / 2) # local heading towards satellite
+    #azimuth_angle_gamma = -(azimuth_angle - np.pi / 2) # local azimuth towards satellite as output by GAMMA
     # maximum differences to the GAMMA-derived local azimuth angles for Sentinel-1 test data are within +/-0.5 deg
     # this could be improved by using orbital state vectors to calculate that satellite positions (see above comment)
 
@@ -209,7 +211,8 @@ def calc_local_baseline(ifg, az, look_angle, params):
     base_C_local = base_C + baserate_C * (az - mean_az) / prf
     base_N_local = base_N + baserate_N * (az - mean_az) / prf
 
-    # calculate the per-pixel perpendicular baseline
+    # calculate the per-pixel perpendicular baseline (see Eq. 3.5 in Baehr, 2012 available here:
+    # http://www.dgk.badw.de/fileadmin/user_upload/Files/DGK/docs/c-719.pdf)
     bperp = np.multiply(base_C_local, np.cos(look_angle)) - np.multiply(base_N_local, np.sin(look_angle))
 
     # save bperp to geotiff (temporary for visualisation)

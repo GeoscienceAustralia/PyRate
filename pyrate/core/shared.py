@@ -917,7 +917,7 @@ def collate_metadata(header):
         if header[ifc.PYRATE_INSAR_PROCESSOR] == GAMMA:
             for k in [ifc.FIRST_TIME, ifc.SECOND_TIME,
                       ifc.PYRATE_NROWS, ifc.PYRATE_NCOLS,
-                      ifc.PYRATE_INCIDENCE_DEGREES, ifc.PYRATE_HEADING_DEGREES,
+                      ifc.PYRATE_INCIDENCE_DEGREES, ifc.PYRATE_HEADING_DEGREES, ifc.PYRATE_AZIMUTH_DEGREES,
                       ifc.PYRATE_RANGE_PIX_METRES, ifc.PYRATE_RANGE_N, ifc.PYRATE_RANGE_LOOKS,
                       ifc.PYRATE_AZIMUTH_PIX_METRES, ifc.PYRATE_AZIMUTH_N,
                       ifc.PYRATE_AZIMUTH_LOOKS, ifc.PYRATE_PRF_HERTZ,
