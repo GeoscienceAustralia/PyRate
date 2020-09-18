@@ -73,10 +73,8 @@ def get_lonlat_coords(ifg):
     lon = np.zeros((nrows, ncols))  # pre-allocate 2D numpy array
     lat = np.zeros((nrows, ncols))  # pre-allocate 2D numpy array
     for i in range(0, nrows): # rows are y-direction
-       for j in range(0, ncols): # cols are x-direction
-           lon_ij, lat_ij = convert_pixel_value_to_geographic_coordinate(j, i, transform)
-           lon[i, j] = lon_ij
-           lat[i, j] = lat_ij
+        for j in range(0, ncols): # cols are x-direction
+            lon[i, j], lat[i, j] = convert_pixel_value_to_geographic_coordinate(j, i, transform)
 
     return lon, lat
 
@@ -91,7 +89,6 @@ def get_radar_coords(ifg, params):
     # PyRate IFG multi-looking factors
     ifglksx = params[cf.IFG_LKSX]
     ifglksy = params[cf.IFG_LKSY]
-    print(lookup_table)
     # transform float lookup table file to np array
     lt_az, lt_rg = read_lookup_table(ifg, lookup_table, ifglksx, ifglksy)
     # replace 0.0 with NaN
@@ -114,26 +111,28 @@ def calc_local_geometry(ifg, ifg_path, az, rg, lon, lat, params):
     heading = float(ifg.meta_data[ifc.PYRATE_HEADING_DEGREES])
 
     # convert angles to radians
-    lon = lon / 180 * np.pi
-    lat = lat / 180 * np.pi
-    heading = heading / 180 * np.pi
+    lon = np.radians(lon)
+    lat = np.radians(lat)
+    heading = np.radians(heading)
 
     # Earth radius at given latitude
     re = np.sqrt(np.divide(np.square(a**2 * np.cos(lat)) + np.square(b**2 * np.sin(lat)), \
                            np.square(a * np.cos(lat)) + np.square(b * np.sin(lat))))
 
-    # range measurement at pixel ij -> this requires the mli.par as input since rps would be different in the slc.par
-    range = near_range + rps*rg
+    # range measurement at pixel ij
+    range_ij = near_range + rps * rg
 
     # look angle at pixel ij -> law of cosines in "satellite - Earth centre - ground pixel" triangle
     # see e.g. Section 2 in https://www.cs.uaf.edu/~olawlor/ref/asf/sar_equations_2006_08_17.pdf
-    look_angle = np.arccos(np.divide(se**2 + np.square(range) - np.square(re), 2 * se * range))
+    look_angle = np.arccos(np.divide(se**2 + np.square(range_ij) - np.square(re), 2 * se * range_ij))
 
     # incidence angle at pixel ij -> law of cosines in "satellite - Earth centre - ground pixel" triangle
     # see e.g. Section 2 in https://www.cs.uaf.edu/~olawlor/ref/asf/sar_equations_2006_08_17.pdf
-    incidence_angle = np.pi - np.arccos(np.divide(np.square(range) + np.square(re) - se**2, 2 * np.multiply(range, re)))
-    # for validation with GAMMA output only
-    incidence_angle_gamma = np.pi / 2 - incidence_angle
+    incidence_angle = np.pi - np.arccos(np.divide(np.square(range_ij) + np.square(re) - se**2, \
+                                                  2 * np.multiply(range_ij, re)))
+
+    # todo (once new test data is ready): move next line into test for validation with GAMMA output
+    #incidence_angle_gamma = np.pi / 2 - incidence_angle
     # maximum differences to the GAMMA-derived local incidence angles for Sentinel-1 test data are within +/-0.1 deg
 
     # local azimuth angle at pixel ij using constant satellite heading angle and spherical approximations
@@ -154,15 +153,14 @@ def calc_local_geometry(ifg, ifg_path, az, rg, lon, lat, params):
     # 4. calculate the satellite XYZ position for that time by interpolating the time and velocity state vectors
 
     # calc azimuth angle using Vincenty's equations
-    azimuth_angle = np.empty(lat.shape) # pre-allocate 2D numpy array
-    azimuth_angle[:] = np.nan
+    azimuth_angle = np.empty(lat.shape) * np.nan # pre-allocate 2D numpy array
     for ix, iy in np.ndindex(lat.shape):
         if not isnan(sat_lat[ix, iy]):
             az12 = vincinv(lat[ix, iy], lon[ix, iy], sat_lat[ix, iy], sat_lon[ix, iy], a, b)
             azimuth_angle[ix, iy] = az12
     np.reshape(azimuth_angle, lat.shape)
 
-    # old code: spherical azimuth angle calculation
+    # todo: move this old code for azimuth angle calculation using a spherical Earth model to tests
     #azimuth_angle2 = np.arccos(np.divide(np.multiply(np.sin(sat_lat), np.cos(lat)) - \
     #                                np.multiply(np.multiply(np.cos(sat_lat), np.sin(lat)), np.cos(sat_lon - lon)), \
     #                                np.sin(epsilon)))
@@ -170,14 +168,10 @@ def calc_local_geometry(ifg, ifg_path, az, rg, lon, lat, params):
     #print(np.nanmin(azimuth_angle_diff), np.nanmax(azimuth_angle_diff))
     # the difference between Vincenty's azimuth calculation and the spherical approximation is ~0.001 radians
 
-    # for validation with GAMMA output only
-    azimuth_angle_gamma = -(azimuth_angle - np.pi / 2) # local heading towards satellite
+    # todo (once new test data is ready): move next line into test for validation with GAMMA output
+    #azimuth_angle_gamma = -(azimuth_angle - np.pi / 2) # local heading towards satellite
     # maximum differences to the GAMMA-derived local azimuth angles for Sentinel-1 test data are within +/-0.5 deg
     # this could be improved by using orbital state vectors to calculate that satellite positions (see above comment)
-
-    # save angles to npy arrays
-    #look_angle_file = os.path.join(params[cf.OUT_DIR],'look_angle.npy')
-    #np.save(file=look_angle_file, arr=look_angle)
 
     # save angles as geotiff files in out directory
     gt, md, wkt = shared.get_geotiff_header_info(ifg_path)
@@ -188,10 +182,6 @@ def calc_local_geometry(ifg, ifg_path, az, rg, lon, lat, params):
     shared.write_output_geotiff(md, gt, wkt, incidence_angle, incidence_angle_file, np.nan)
     azimuth_angle_file = os.path.join(params[cf.OUT_DIR], 'azimuth_angle.tif')
     shared.write_output_geotiff(md, gt, wkt, azimuth_angle, azimuth_angle_file, np.nan)
-    incidence_angle_gamma_file = os.path.join(params[cf.OUT_DIR], 'incidence_angle_gamma.tif')
-    shared.write_output_geotiff(md, gt, wkt, incidence_angle_gamma, incidence_angle_gamma_file, np.nan)
-    azimuth_angle_gamma_file = os.path.join(params[cf.OUT_DIR], 'azimuth_angle_gamma.tif')
-    shared.write_output_geotiff(md, gt, wkt, azimuth_angle_gamma, azimuth_angle_gamma_file, np.nan)
 
     return look_angle
 
@@ -208,10 +198,8 @@ def calc_local_baseline(ifg, az, look_angle, params):
     prf = float(ifg.meta_data[ifc.PYRATE_PRF_HERTZ])
     az_looks = int(ifg.meta_data[ifc.PYRATE_AZIMUTH_LOOKS])
     az_n = int(ifg.meta_data[ifc.PYRATE_AZIMUTH_N])
-    #base_T = float(ifg.meta_data[ifc.PYRATE_BASELINE_T])
     base_C = float(ifg.meta_data[ifc.PYRATE_BASELINE_C])
     base_N = float(ifg.meta_data[ifc.PYRATE_BASELINE_N])
-    #baserate_T = float(ifg.meta_data[ifc.PYRATE_BASELINE_RATE_T])
     baserate_C = float(ifg.meta_data[ifc.PYRATE_BASELINE_RATE_C])
     baserate_N = float(ifg.meta_data[ifc.PYRATE_BASELINE_RATE_N])
 
@@ -223,10 +211,6 @@ def calc_local_baseline(ifg, az, look_angle, params):
 
     # calculate the per-pixel perpendicular baseline
     bperp = np.multiply(base_C_local, np.cos(look_angle)) - np.multiply(base_N_local, np.sin(look_angle))
-
-    # save perpendicular baseline to npy array
-    bperp_on_disc = MultiplePaths.bperp_path(ifg.data_path, params)
-    np.save(file=bperp_on_disc, arr=bperp)
 
     # save bperp to geotiff (temporary for visualisation)
     gt, md, wkt = shared.get_geotiff_header_info(ifg.data_path)
@@ -300,7 +284,7 @@ def vincinv(lat1, lon1, lat2, lon2, semimaj, semimin):
 
 def dem_error_calc_wrapper(params: dict) -> None:
     """
-    MPI wrapper for orbital fit correction
+    MPI wrapper for DEM error correction
     """
     multi_paths = params[cf.INTERFEROGRAM_FILES]
     ifg_paths = [p.tmp_sampled_path for p in multi_paths]

@@ -71,8 +71,9 @@ def parse_epoch_header(path):
     """
     Returns dictionary of epoch metadata required for PyRate
 
-    :param str path: `Full path to Gamma *slc.par file`
-
+    :param str path: `Full path to Gamma *mli.par file`
+    # note that the mli.par is required as input since the baseline calculations require the input values valid for the
+    # Gamma-multi-looked products, also the Gamma lookup table gives radar coordinates for the multi-looked geometry.
     :return: subset: subset of full metadata
     :rtype: dict
     """
