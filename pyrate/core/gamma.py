@@ -220,7 +220,7 @@ def parse_dem_header(path):
 
 
 def parse_baseline_header(path):
-    """
+    """20060828-20061211_utm_cc.tif
     Returns dictionary of Baseline metadata required for PyRate
 
     :param str path: `Full path to Gamma *base.par file`
@@ -251,19 +251,23 @@ def _frequency_to_wavelength(freq):
     return ifc.SPEED_OF_LIGHT_METRES_PER_SECOND / freq
 
 
-def combine_headers(hdr0, hdr1, dem_hdr, base_hdr):
+def combine_headers(hdr0, hdr1, dem_hdr, base_hdr=None):
     """
-    Combines metadata for first and second image epochs and DEM into a
-    single dictionary for an interferogram.
+    Combines metadata for first and second image epochs, DEM and baselines
+    into a single dictionary for an interferogram.
 
     :param dict hdr0: Metadata for the first image
     :param dict hdr1: Metadata for the second image
     :param dict dem_hdr: Metadata for the DEM
+    :param dict base_hdr: Metadata for baselines (if available)
 
     :return: chdr: combined metadata
     :rtype: dict
     """
-    if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr, base_hdr]]):
+    if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr]]):
+        raise GammaException('Header args need to be dicts')
+
+    if base_hdr and not isinstance(base_hdr, dict):
         raise GammaException('Header args need to be dicts')
 
     date0, date1 = hdr0[ifc.FIRST_DATE], hdr1[ifc.FIRST_DATE]
@@ -413,9 +417,9 @@ def combine_headers(hdr0, hdr1, dem_hdr, base_hdr):
     return chdr
 
 
-def manage_headers(dem_header_file, header_paths, baseline_paths):
+def manage_headers(dem_header_file, header_paths, baseline_paths=None):
     """
-    Manage and combine  header files for GAMMA interferograms, DEM and
+    Manage and combine header files for GAMMA interferograms, DEM and
     incidence files
 
     :param str dem_header_file: DEM header path
@@ -427,12 +431,14 @@ def manage_headers(dem_header_file, header_paths, baseline_paths):
     dem_header = parse_dem_header(dem_header_file)
     # find param files containing filename dates
     if len(header_paths) == 2:
-        headers = [parse_epoch_header(hp) for hp in header_paths]
+        hdrs = [parse_epoch_header(hp) for hp in header_paths]
         if baseline_paths is not None:
             baseline_header = parse_baseline_header(baseline_paths)
+            combined_header = combine_headers(hdrs[0], hdrs[1],
+                              dem_header, baseline_header)
         else:
-            baseline_header = {}
-        combined_header = combine_headers(headers[0], headers[1], dem_header, baseline_header)
+#            baseline_header = {}
+             combined_header = combine_headers(hdrs[0], hdrs[1], dem_header)
     else:
         # probably have DEM or incidence file
         combined_header = dem_header
@@ -471,11 +477,13 @@ def gamma_header(ifg_file_path, params):
     """
     dem_hdr_path = params[cf.DEM_HEADER_FILE]
     header_paths = get_header_paths(ifg_file_path, params[cf.HDR_FILE_LIST])
-    if len(header_paths) == 2:
+    if len(header_paths) == 2 and params[cf.BASE_FILE_LIST] is not None:
         baseline_path = cf.baseline_paths_for(ifg_file_path, params)
     else:
         baseline_path = None  # don't read baseline files for DEM
+
     combined_headers = manage_headers(dem_hdr_path, header_paths, baseline_path)
+
     if os.path.basename(ifg_file_path).split('.')[1] == \
             (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
         # TODO: implement incidence class here

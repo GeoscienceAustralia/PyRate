@@ -289,6 +289,15 @@ def dem_error_calc_wrapper(params: dict) -> None:
     """
     MPI wrapper for DEM error correction
     """
+    if params[cf.BASE_FILE_LIST] is None:
+        log.info('No baseline files supplied: DEM error correction not computed')
+        return
+
+    if params[cf.LT_FILE] is None:
+        log.info('No lookup table file supplied: DEM error correction not computed')
+        return
+
+    log.info('Calculating DEM error correction')
     multi_paths = params[cf.INTERFEROGRAM_FILES]
     ifg_paths = [p.tmp_sampled_path for p in multi_paths]
     remove_dem_error(ifg_paths, params)

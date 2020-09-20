@@ -850,7 +850,7 @@ def read_lookup_table(head, data_path, xlooks, ylooks):
     row_idx = np.arange(int(ylooks/2)-1, nrows_lt, ylooks)
 
     # read the binary lookup table file and save the range/azimuth value pair for each position in ML data
-    log.info(f"reading lookup table file {data_path}")
+    log.debug(f"Reading lookup table file {data_path}")
     with open(data_path, 'rb') as f:
         for y in range(nrows_lt): # loop through all lines in file
             # this could potentially be made quicker by skipping unwanted bytes in the f.read command?
@@ -901,8 +901,6 @@ def collate_metadata(header):
     Grab metadata relevant to PyRate from input metadata
 
     :param dict header: Input file metadata dictionary
-    :flag to distinguish whether conv2tif or prepifg has called the function
-        -> 0: conv2tif, 1: prepifg
 
     :return: dict of relevant metadata for PyRate
     """
@@ -917,15 +915,19 @@ def collate_metadata(header):
         if header[ifc.PYRATE_INSAR_PROCESSOR] == GAMMA:
             for k in [ifc.FIRST_TIME, ifc.SECOND_TIME,
                       ifc.PYRATE_NROWS, ifc.PYRATE_NCOLS,
-                      ifc.PYRATE_INCIDENCE_DEGREES, ifc.PYRATE_HEADING_DEGREES, ifc.PYRATE_AZIMUTH_DEGREES,
-                      ifc.PYRATE_RANGE_PIX_METRES, ifc.PYRATE_RANGE_N, ifc.PYRATE_RANGE_LOOKS,
+                      ifc.PYRATE_INCIDENCE_DEGREES, ifc.PYRATE_HEADING_DEGREES,
+                      ifc.PYRATE_AZIMUTH_DEGREES, ifc.PYRATE_RANGE_PIX_METRES,
+                      ifc.PYRATE_RANGE_N, ifc.PYRATE_RANGE_LOOKS,
                       ifc.PYRATE_AZIMUTH_PIX_METRES, ifc.PYRATE_AZIMUTH_N,
                       ifc.PYRATE_AZIMUTH_LOOKS, ifc.PYRATE_PRF_HERTZ,
                       ifc.PYRATE_NEAR_RANGE_METRES, ifc.PYRATE_SAR_EARTH_METRES,
-                      ifc.PYRATE_SEMI_MAJOR_AXIS_METRES, ifc.PYRATE_SEMI_MINOR_AXIS_METRES,
-                      ifc.PYRATE_BASELINE_T, ifc.PYRATE_BASELINE_C, ifc.PYRATE_BASELINE_N,
-                      ifc.PYRATE_BASELINE_RATE_T, ifc.PYRATE_BASELINE_RATE_C, ifc.PYRATE_BASELINE_RATE_N]:
+                      ifc.PYRATE_SEMI_MAJOR_AXIS_METRES, ifc.PYRATE_SEMI_MINOR_AXIS_METRES]:
                 md.update({k: str(header[k])})
+            if ifc.PYRATE_BASELINE_T in header:
+                for k in [ifc.PYRATE_BASELINE_T, ifc.PYRATE_BASELINE_C,
+                          ifc.PYRATE_BASELINE_N, ifc.PYRATE_BASELINE_RATE_T,
+                          ifc.PYRATE_BASELINE_RATE_C, ifc.PYRATE_BASELINE_RATE_N]:
+                    md.update({k: str(header[k])})
 
     if _is_coherence(header):
         __common_ifg_coh_update(header, md)

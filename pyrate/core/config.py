@@ -534,7 +534,11 @@ def baseline_paths_for(path: str, params: dict) -> str:
     """
 
     _, filename = split(path)
-    epoch = re.search(sixteen_digits_pattern, filename).group(0)
+    try:
+        epoch = re.search(sixteen_digits_pattern, filename).group(0)
+    except: # catch cases where filename does not have two epochs, e.g. DEM file
+        return None
+
     base_file_paths = [f.unwrapped_path for f in params[BASELINE_FILE_PATHS] if epoch in f.unwrapped_path]
 
     if len(base_file_paths) > 1:
