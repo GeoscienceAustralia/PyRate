@@ -30,7 +30,7 @@ gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
 all_mlooked_types = [ifc.MLOOKED_COH_MASKED_IFG, ifc.MULTILOOKED, ifc.MULTILOOKED_COH,
-                     ifc.MLOOKED_DEM, ifc.MLOOKED_INC]
+                     ifc.MLOOKED_DEM]
 
 
 def coherence_masking(input_gdal_dataset: Dataset, coherence_file_path: str,
@@ -234,8 +234,6 @@ def crop_resample_average(
                 md.update({ifc.DATA_TYPE: ifc.MULTILOOKED_COH})
             elif v == ifc.DEM:
                 md.update({ifc.DATA_TYPE: ifc.MLOOKED_DEM})
-            elif v == ifc.INCIDENCE:
-                md.update({ifc.DATA_TYPE: ifc.MLOOKED_INC})
             else:
                 raise TypeError(f'Data Type metadata {v} not recognised')
 

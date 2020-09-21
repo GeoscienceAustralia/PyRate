@@ -3,6 +3,7 @@ date: 2007 01 15 21 48 23.124
 radar_frequency: 5.334694994e+09 Hz
 incidence_angle: 22.9671 degrees
 heading:                 193.1522256   degrees
+azimuth_angle:               90.0000   degrees
 range_samples:                  8630
 azimuth_lines:                  8571
 range_looks:                       8

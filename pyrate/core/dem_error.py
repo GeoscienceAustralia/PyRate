@@ -20,8 +20,8 @@ The module also outputs the per-pixel vector of the radar viewing geometry
 (i.e. local incidence and azimuth angles).
 """
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
-import os
 import numpy as np
+from os.path import join
 from math import sqrt, sin, cos, tan, asin, atan, atan2, isnan, pi
 from typing import Optional, List, Dict, Iterable
 
@@ -178,11 +178,14 @@ def calc_local_geometry(ifg, ifg_path, az, rg, lon, lat, params):
     # save angles as geotiff files in out directory
     gt, md, wkt = shared.get_geotiff_header_info(ifg_path)
     md[ifc.EPOCH_DATE] = None # needs to have a value in write_output_geotiff
-    look_angle_file = os.path.join(params[cf.OUT_DIR], 'look_angle.tif')
+    md[ifc.DATA_TYPE] = ifc.LOOK
+    look_angle_file = join(params[cf.OUT_DIR], 'look_angle.tif')
     shared.write_output_geotiff(md, gt, wkt, look_angle, look_angle_file, np.nan)
-    incidence_angle_file = os.path.join(params[cf.OUT_DIR], 'incidence_angle.tif')
+    md[ifc.DATA_TYPE] = ifc.INCIDENCE
+    incidence_angle_file = join(params[cf.OUT_DIR], 'incidence_angle.tif')
     shared.write_output_geotiff(md, gt, wkt, incidence_angle, incidence_angle_file, np.nan)
-    azimuth_angle_file = os.path.join(params[cf.OUT_DIR], 'azimuth_angle.tif')
+    md[ifc.DATA_TYPE] = ifc.AZIMUTH
+    azimuth_angle_file = join(params[cf.OUT_DIR], 'azimuth_angle.tif')
     shared.write_output_geotiff(md, gt, wkt, azimuth_angle, azimuth_angle_file, np.nan)
 
     return look_angle
@@ -218,6 +221,7 @@ def calc_local_baseline(ifg, az, look_angle, params):
     # save bperp to geotiff (temporary for visualisation)
     gt, md, wkt = shared.get_geotiff_header_info(ifg.data_path)
     md[ifc.EPOCH_DATE] = None # needs to have a value in write_output_geotiff
+    md[ifc.DATA_TYPE] = ifc.BPERP
     bperp_tif_on_disc = MultiplePaths.bperp_tif_path(ifg.data_path, params)
     shared.write_output_geotiff(md, gt, wkt, bperp, str(bperp_tif_on_disc), np.nan)
     
