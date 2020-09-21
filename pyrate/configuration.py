@@ -25,7 +25,7 @@ from pyrate.constants import NO_OF_PARALLEL_PROCESSES, sixteen_digits_pattern, t
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
 from pyrate.core.shared import extract_epochs_from_filename, InputTypes, get_tiles
-from pyrate.core.config import parse_namelist, ConfigException, ORB_ERROR_DIR, TEMP_MLOOKED_DIR
+from pyrate.core.config import parse_namelist, ConfigException, ORB_ERROR_DIR, DEM_ERROR_DIR, TEMP_MLOOKED_DIR
 from pyrate.core import config as cf, mpiops
 
 
@@ -123,6 +123,20 @@ class MultiplePaths:
                     '_orbfit.npy')
 
     @staticmethod
+    def bperp_path(ifg_path: Union[str, Path], params) -> Path:
+        if isinstance(ifg_path, str):
+            ifg_path = Path(ifg_path)
+        return Path(params[cf.OUT_DIR], cf.DEM_ERROR_DIR,
+                    ifg_path.stem + '_bperp.npy')
+
+    @staticmethod
+    def bperp_tif_path(ifg_path: Union[str, Path], params) -> Path:
+        if isinstance(ifg_path, str):
+            ifg_path = Path(ifg_path)
+        return Path(params[cf.OUT_DIR], cf.DEM_ERROR_DIR,
+                    ifg_path.stem + '_bperp.tif')
+
+    @staticmethod
     def aps_error_path(ifg_path: Union[str, Path], params) -> Path:
         if isinstance(ifg_path, str):
             ifg_path = Path(ifg_path)
@@ -175,6 +189,7 @@ class Configuration:
             self.__dict__['correct'] = list(filter(None, parser['correct'].get('steps').splitlines()))
         else:
             self.__dict__['correct'] = [
+                'demerror',
                 'orbfit',
                 'refphase',
                 'mst',
@@ -239,6 +254,10 @@ class Configuration:
         self.orb_error_dir = Path(self.outdir).joinpath(ORB_ERROR_DIR)
         self.orb_error_dir.mkdir(parents=True, exist_ok=True)
 
+        # create DEM error dir
+        self.dem_error_dir = Path(self.outdir).joinpath(DEM_ERROR_DIR)
+        self.dem_error_dir.mkdir(parents=True, exist_ok=True)
+
         # create aps error dir
         self.aps_error_dir = Path(self.outdir).joinpath(cf.APS_ERROR_DIR)
         self.aps_error_dir.mkdir(parents=True, exist_ok=True)
@@ -269,6 +288,11 @@ class Configuration:
             # if self.processor != 0:  # not roipac
             validate_file_list_values(self.cohfilelist, 1)
             self.coherence_file_paths = self.__get_files_from_attr('cohfilelist', input_type=InputTypes.COH)
+
+        if self.basefilelist is not None:
+            # if self.processor != 0:  # not roipac
+            validate_file_list_values(self.basefilelist, 1)
+            self.baseline_file_paths = self.__get_files_from_attr('basefilelist', input_type=InputTypes.BASE)
 
         self.header_file_paths = self.__get_files_from_attr('hdrfilelist', input_type=InputTypes.HEADER)
 

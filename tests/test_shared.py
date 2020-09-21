@@ -341,6 +341,7 @@ class TestWriteUnw:
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.REF_EST_METHOD] = 1
         cls.params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
+        cls.params[cf.BASE_FILE_LIST] = common.SML_TEST_GAMMA
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         cls.base_unw_paths = cf.original_ifg_paths(cls.params[cf.IFG_FILE_LIST], cls.params[cf.OBS_DIR])
         cls.base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
@@ -372,7 +373,11 @@ class TestWriteUnw:
         header = gamma.parse_epoch_header(
             os.path.join(common.SML_TEST_GAMMA, '20060828_slc.par'))
         header.update(dem_header)
-
+             
+        base_header = gamma.parse_baseline_header(
+            os.path.join(common.SML_TEST_GAMMA, '20060828-20061211_base.par'))
+        header.update(base_header)
+                
         # insert some dummy data so we are the dem in write_fullres_geotiff is not
         # not activated and ifg write_fullres_geotiff operation works
         header[ifc.PYRATE_TIME_SPAN] = 0
@@ -380,8 +385,8 @@ class TestWriteUnw:
         header[ifc.DATA_UNITS] = 'degrees'
         header[ifc.DATA_TYPE] = ifc.ORIG
         header[ifc.SECOND_TIME] = time(10)
-
-        # now create aritrary data
+        
+        # now create arbitrary data
         data = np.random.rand(dem_header[ifc.PYRATE_NROWS], dem_header[ifc.PYRATE_NCOLS])
 
         # convert numpy array to .unw

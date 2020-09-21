@@ -30,6 +30,7 @@ from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import MultiplePaths
 
+
 GAMMA = 1
 ROIPAC = 0
 GEOTIF = 2
@@ -70,6 +71,7 @@ def main(params):
     process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     do_prepifg(process_ifgs_paths, exts, params)
     mpiops.comm.barrier()
+
     log.info("Finished 'prepifg' step")
 
 
