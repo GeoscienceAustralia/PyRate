@@ -1041,7 +1041,7 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
 
     driver = gdal.GetDriverByName("GTiff")
     nrows, ncols = data.shape
-    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32)
+    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32, options=['compress=LZW'])
     # set spatial reference for geotiff
     ds.SetGeoTransform(gt)
     ds.SetProjection(wkt)
