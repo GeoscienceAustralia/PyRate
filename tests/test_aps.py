@@ -20,6 +20,7 @@ import os
 import shutil
 import pytest
 import numpy as np
+from scipy.ndimage import gaussian_filter1d
 from pyrate import conv2tif, prepifg, correct
 from pyrate.configuration import Configuration, MultiplePaths
 import pyrate.core.config as cf
@@ -57,30 +58,62 @@ def test_temporal_high_pass_filter():
     pass
 
 
-def test_tlpfilter():
-    '''
-    Test the temporal filter for a single pixel with synthetic data
-    '''
-    cutoff = 12 / DAYS_PER_YEAR # 0.03285 years
-    threshold = 1 # no nans in this test case
-    # normally distributed noise
-    n = np.array([-0.36427456,  0.69539061,  0.42181139, -2.56306134,
-                  0.55844095, -0.65562626,  0.65607911,  1.19431637,
-                  -1.43837395, -0.91656358])
-    # synthetic incremental displacement
-    d = np.array([1. , 1. , 0.7, 0.3, 0. , 0.1, 0.2, 0.6, 1. , 1. ])
-    # incremental displacement + noise
-    tsincr = d*2 + n
-    # regular time series, every 12 days
-    intv = np.ones(tsincr.shape, dtype=np.float32) * cutoff
-    span = np.cumsum(intv)
+class TestTemporalFilter:
+    """
+    Tests for the temporal filter with synthetic data for a single pixel
+    """
+    def setup_method(self):
+        self.thr = 1 # no nans in these test cases, threshold = 1
+        # instance of normally distributed noise
+        n = np.array([-0.36427456,  0.69539061,  0.42181139, -2.56306134,
+                      0.55844095, -0.65562626,  0.65607911,  1.19431637,
+                      -1.43837395, -0.91656358])
+        # synthetic incremental displacement
+        d = np.array([1. , 1. , 0.7, 0.3, 0. , 0.1, 0.2, 0.6, 1. , 1. ])
+        # incremental displacement + noise
+        self.tsincr = d*2 + n
+        # regular time series, every 12 days
+        self.interval = 12 / DAYS_PER_YEAR # 0.03285 years
+        intv = np.ones(d.shape, dtype=np.float32) * self.interval
+        self.span = np.cumsum(intv)
 
-    ts_lp = _tlpfilter(tsincr, cutoff, span, threshold)
-    exp = np.array([1.9936507, 1.9208364, 1.0252733, -0.07402889,
-                    -0.1842336, 0.24325351, 0.94737214, 1.3890865,
-                    1.1903466 ,  1.0036403])
+    def test_tlpfilter_repeatability(self):
+        """
+        TEST 1: check for repeatability against expected result from
+        _tlpfilter. Cutoff equal to sampling interval (sigma=1)
+        """
+        res = _tlpfilter(self.tsincr, self.interval, self.span, self.thr)
+        exp = np.array([1.9936507, 1.9208364, 1.0252733, -0.07402889,
+                        -0.1842336, 0.24325351, 0.94737214, 1.3890865,
+                        1.1903466 ,  1.0036403])
+        np.testing.assert_array_almost_equal(res, exp, decimal=6)
 
-    np.testing.assert_array_almost_equal(ts_lp, exp, decimal=6)
+    def test_tlpfilter_scipy_sig1(self):
+        """
+        TEST 2: compare _tlpfilter to scipy.ndimage.gaussian_filter1d. Works for
+        regularly sampled data. Cutoff equal to sampling interval (sigma=1)
+        """
+        res = _tlpfilter(self.tsincr, self.interval, self.span, self.thr)
+        exp = gaussian_filter1d(self.tsincr, sigma=1)
+        np.testing.assert_array_almost_equal(res, exp, decimal=1)
+
+    def test_tlpfilter_scipy_sig2(self):
+        """
+        TEST 3: compare _tlpfilter to scipy.ndimage.gaussian_filter1d. Works for
+        regularly sampled data. Cutoff equal to twice the sampling interval (sigma=2)
+        """
+        res = _tlpfilter(self.tsincr, self.interval*2, self.span, self.thr)
+        exp = gaussian_filter1d(self.tsincr, sigma=2)
+        np.testing.assert_array_almost_equal(res, exp, decimal=1)
+
+    def test_tlpfilter_scipy_sig05(self):
+        """
+        TEST 4: compare _tlpfilter to scipy.ndimage.gaussian_filter1d. Works for
+        regularly sampled data. Cutoff equal to half the sampling interval (sigma=0.5)
+        """
+        res = _tlpfilter(self.tsincr, self.interval*0.5, self.span, self.thr)
+        exp = gaussian_filter1d(self.tsincr, sigma=0.5)
+        np.testing.assert_array_almost_equal(res, exp, decimal=2)
 
 
 # APS correction using spatio-temporal filter
