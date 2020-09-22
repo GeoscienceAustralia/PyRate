@@ -14,10 +14,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-This Python module implements the calculation of per-pixel baseline values used
-for correcting interferograms for residual topographic effects (a.k.a. as DEM errors).
-The module also outputs the per-pixel vector of the radar viewing geometry
-(i.e. local incidence and azimuth angles).
+This Python module implements the calculation of correction for residual topographic effects (a.k.a. as DEM errors).
 """
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
 import numpy as np
