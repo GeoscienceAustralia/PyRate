@@ -845,18 +845,6 @@ class TestOneIncidenceOrElevationMap(UnitTestAdaptation):
             conf.write('{}: {}\n'.format(cf.APS_METHOD, '2'))
             conf.write('{}: {}\n'.format(cf.TIME_SERIES_SM_ORDER, 1))
 
-    def test_only_inc_file_created(self):
-        inc_ext = 'inc'
-        ele_ext = 'lv_theta'
-        self.make_input_files(inc=common.SML_TEST_INCIDENCE)
-        self.common_check(inc_ext, ele_ext)
-
-    def test_only_ele_file_created(self):
-        inc_ext = 'inc'
-        ele_ext = 'lv_theta'
-        self.make_input_files(ele=common.SML_TEST_ELEVATION)
-        self.common_check(ele_ext, inc_ext)
-
     def common_check(self, ele, inc):
         import glob
         from pyrate.configuration import Configuration
