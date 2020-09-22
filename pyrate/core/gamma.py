@@ -24,7 +24,10 @@ from datetime import date, time, timedelta
 import numpy as np
 import pyrate.core.ifgconstants as ifc
 from pyrate.core import config as cf
-from pyrate.core.shared import extract_epochs_from_filename
+from pyrate.core.shared import extract_epochs_from_filename, data_format
+from pyrate.core.logger import pyratelogger as log
+import struct
+
 
 # constants
 GAMMA_DATE = 'date'
@@ -490,6 +493,65 @@ def gamma_header(ifg_file_path, params):
         combined_headers['FILE_TYPE'] = 'Incidence'
 
     return combined_headers
+
+
+def read_lookup_table(head, data_path, xlooks, ylooks):
+    # pylint: disable = too - many - statements
+    """
+    Creates a copy of input lookup table file in a numpy array and applies the ifg ML factors
+
+    :param IFG object head: first IFG in the list to read metadata
+    :param str data_path: Input file
+    :param int xlooks: multi-looking factor in x
+    :param int ylooks: multi-looking factor in y
+
+    :return: np-array lt_data_az: azimuth (i.e. row) of radar-coded MLI
+    :return: np-array lt_data_rg: range (i.e. column) of radar-coded MLI
+    """
+    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-locals
+
+    # read relevant metadata parameters
+    nrows = head.nrows # number of rows in multi-looked data sets
+    ncols = head.ncols # number of columns in multi-looked data sets
+    nrows_lt = int(head.meta_data[ifc.PYRATE_NROWS]) # number of rows of original geotiff files
+    ncols_lt = int(head.meta_data[ifc.PYRATE_NCOLS]) # number of columns of original geotiff files
+    ifg_proc = head.meta_data[ifc.PYRATE_INSAR_PROCESSOR]
+
+    # get dimensions of lookup table file
+    bytes_per_col, fmtstr = data_format(ifg_proc, True, ncols_lt*2) # float complex data set containing value tupels
+    row_bytes = ncols_lt*2 * bytes_per_col
+    lt_data_az = np.empty((0, ncols)) # empty array with correct number of columns
+    lt_data_rg = np.empty((0, ncols)) # empty array with correct number of column
+
+    # for indexing: lookup table file contains value pairs (i.e. range, azimuth)
+    # value pair 0 would be index 0 and 1, value pair 1 would be index 2 and 3, and so on
+    # example: for a multi-looking factor of 10 we want value pair 4, 14, 24, ...
+    # this would be index 8 and 9, index 28 and 29, 48 and 49, ...
+    if xlooks == 1:
+        idx_start = 0
+    else:
+        idx_start = (int(xlooks/2)-1)*2
+    idx_rg = np.arange(idx_start, ncols_lt*2, 2*xlooks) # first value
+    idx_az = np.arange(idx_start+1, ncols_lt*2, 2*xlooks) # second value
+    # row index used (e.g. for multi-looking factor 10: 4, 14, 24, ...)
+    row_idx = np.arange(int(ylooks/2)-1, nrows_lt, ylooks)
+
+    # read the binary lookup table file and save the range/azimuth value pair for each position in ML data
+    log.debug(f"Reading lookup table file {data_path}")
+    with open(data_path, 'rb') as f:
+        for y in range(nrows_lt): # loop through all lines in file
+            # this could potentially be made quicker by skipping unwanted bytes in the f.read command?
+            data = struct.unpack(fmtstr, f.read(row_bytes))
+            # but only read data from lines in row index:
+            if y in row_idx:
+                row_data = np.array(data)
+                row_data_ml_az = row_data[idx_az] # azimuth for PyRate
+                row_data_ml_rg = row_data[idx_rg] # range for PyRate
+                lt_data_az = np.append(lt_data_az, [row_data_ml_az], axis=0)
+                lt_data_rg = np.append(lt_data_rg, [row_data_ml_rg], axis=0)
+
+    return lt_data_az, lt_data_rg
 
 
 class GammaException(Exception):

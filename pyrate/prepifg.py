@@ -25,10 +25,11 @@ from pathlib import Path
 from joblib import Parallel, delayed
 import numpy as np
 from osgeo import gdal
-from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac, ifgconstants as ifc, gdal_python
+from pyrate.core import shared, geometry, mpiops, config as cf, prepifg_helper, gamma, roipac, ifgconstants as ifc, gdal_python
 from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import MultiplePaths
+from pyrate.core.shared import Ifg
 
 
 GAMMA = 1
@@ -71,6 +72,21 @@ def main(params):
     process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     do_prepifg(process_ifgs_paths, exts, params)
     mpiops.comm.barrier()
+
+    # get geometry information and save radar coordinates and angles to tif files
+    # using metadata of the first image in the stack
+    ifg0_path = ifg_paths[0].sampled_path
+    ifg0 = Ifg(ifg0_path)
+    ifg0.open(readonly=True)
+    # not currently implemented for ROIPAC data which breaks some tests
+    # if statement can be deleted once ROIPAC is deprecated from PyRate
+    if not ifg0.meta_data[ifc.PYRATE_INSAR_PROCESSOR] == 'ROIPAC':
+        # calculate per-pixel lon/lat
+        lon, lat = geometry.get_lonlat_coords(ifg0)
+        # calculate per-pixel radar coordinates
+        az, rg = geometry.get_radar_coords(ifg0, ifg0_path, params)
+        # calculate per-pixel look angle (also calculates and saves incidence and azimuth angles)
+        look_angle = geometry.calc_local_geometry(ifg0, ifg0_path, rg, lon, lat, params)
 
     log.info("Finished 'prepifg' step")
 

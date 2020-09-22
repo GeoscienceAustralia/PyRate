@@ -618,6 +618,38 @@ class Incidence(RasterBase):   # pragma: no cover
         return self._azimuth_data
 
 
+class Geometry(RasterBase):
+    """
+    Generic raster class for single band geometry files (e.g. incidence_angle.tif or rdc_range.tif).
+    """
+
+    def __init__(self, path):
+        """
+        Geometry constructor.
+        """
+        RasterBase.__init__(self, path)
+        self._band = None
+        self._geometry_data = None
+
+    @property
+    def geometry_band(self):
+        """
+        Returns the GDALBand for the geoemtry layer.
+        """
+        if self._band is None:
+            self._band = self._get_band(1)
+        return self._band
+
+    @property
+    def geometry_data(self):
+        """
+        Returns the geometry band as an array.
+        """
+        if self._geometry_data is None:
+            self._geometry_data = self.geometry_band.ReadAsArray()
+        return self._geometry_data
+
+
 class DEM(RasterBase):
     """
     Generic raster class for single band DEM files.
@@ -758,7 +790,7 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
     ifg_proc = header[ifc.PYRATE_INSAR_PROCESSOR]
     ncols = header[ifc.PYRATE_NCOLS]
     nrows = header[ifc.PYRATE_NROWS]
-    bytes_per_col, fmtstr = _data_format(ifg_proc, _is_interferogram(header), ncols)
+    bytes_per_col, fmtstr = data_format(ifg_proc, _is_interferogram(header), ncols)
     if _is_interferogram(header) and ifg_proc == ROIPAC:
         # roipac ifg has 2 bands
         _check_raw_data(bytes_per_col*2, data_path, ncols, nrows)
@@ -805,65 +837,6 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
 
     ds = None  # manual close
     del ds
-
-
-def read_lookup_table(head, data_path, xlooks, ylooks):
-    # pylint: disable = too - many - statements
-    """
-    Creates a copy of input lookup table file in a numpy array and applies the ifg ML factors
-
-    :param IFG object head: first IFG in the list to read metadata
-    :param str data_path: Input file
-    :param int xlooks: multi-looking factor in x
-    :param int ylooks: multi-looking factor in y
-
-    :return: np-array lt_data_az: azimuth (i.e. row) of radar-coded MLI
-    :return: np-array lt_data_rg: range (i.e. column) of radar-coded MLI
-    """
-    # pylint: disable=too-many-branches
-    # pylint: disable=too-many-locals
-
-    # read relevant metadata parameters
-    nrows = head.nrows # number of rows in multi-looked data sets
-    ncols = head.ncols # number of columns in multi-looked data sets
-    nrows_lt = int(head.meta_data[ifc.PYRATE_NROWS]) # number of rows of original geotiff files
-    ncols_lt = int(head.meta_data[ifc.PYRATE_NCOLS]) # number of columns of original geotiff files
-    ifg_proc = head.meta_data[ifc.PYRATE_INSAR_PROCESSOR]
-
-    # get dimensions of lookup table file
-    bytes_per_col, fmtstr = _data_format(ifg_proc, True, ncols_lt*2) # float complex data set containing value tupels
-    row_bytes = ncols_lt*2 * bytes_per_col
-    lt_data_az = np.empty((0, ncols)) # empty array with correct number of columns
-    lt_data_rg = np.empty((0, ncols)) # empty array with correct number of column
-
-    # for indexing: lookup table file contains value pairs (i.e. range, azimuth)
-    # value pair 0 would be index 0 and 1, value pair 1 would be index 2 and 3, and so on
-    # example: for a multi-looking factor of 10 we want value pair 4, 14, 24, ...
-    # this would be index 8 and 9, index 28 and 29, 48 and 49, ...
-    if xlooks == 1:
-        idx_start = 0
-    else:
-        idx_start = (int(xlooks/2)-1)*2
-    idx_rg = np.arange(idx_start, ncols_lt*2, 2*xlooks) # first value
-    idx_az = np.arange(idx_start+1, ncols_lt*2, 2*xlooks) # second value
-    # row index used (e.g. for multi-looking factor 10: 4, 14, 24, ...)
-    row_idx = np.arange(int(ylooks/2)-1, nrows_lt, ylooks)
-
-    # read the binary lookup table file and save the range/azimuth value pair for each position in ML data
-    log.debug(f"Reading lookup table file {data_path}")
-    with open(data_path, 'rb') as f:
-        for y in range(nrows_lt): # loop through all lines in file
-            # this could potentially be made quicker by skipping unwanted bytes in the f.read command?
-            data = struct.unpack(fmtstr, f.read(row_bytes))
-            # but only read data from lines in row index:
-            if y in row_idx:
-                row_data = np.array(data)
-                row_data_ml_az = row_data[idx_az] # azimuth for PyRate
-                row_data_ml_rg = row_data[idx_rg] # range for PyRate
-                lt_data_az = np.append(lt_data_az, [row_data_ml_az], axis=0)
-                lt_data_rg = np.append(lt_data_rg, [row_data_ml_rg], axis=0)
-
-    return lt_data_az, lt_data_rg
 
 
 def gdal_dataset(out_fname, columns, rows, driver="GTiff", bands=1,
@@ -948,7 +921,7 @@ def collate_metadata(header):
     return md
 
 
-def _data_format(ifg_proc, is_ifg, ncols):
+def data_format(ifg_proc, is_ifg, ncols):
     """
     Convenience function to determine the bytesize and format of input files
     """
@@ -1041,7 +1014,7 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
 
     driver = gdal.GetDriverByName("GTiff")
     nrows, ncols = data.shape
-    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32, options=['compress=LZW'])
+    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32, options=['compress=packbits'])
     # set spatial reference for geotiff
     ds.SetGeoTransform(gt)
     ds.SetProjection(wkt)
@@ -1061,6 +1034,8 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     band = ds.GetRasterBand(1)
     band.SetNoDataValue(nodata)
     band.WriteArray(data, 0, 0)
+
+    del ds
 
 
 def write_geotiff(data, outds, nodata):
