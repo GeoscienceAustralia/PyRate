@@ -176,12 +176,8 @@ TLPF_CUTOFF = 'tlpfcutoff'
 #: INT; Number of required input observations per pixel for temporal filtering
 TLPF_PTHR = 'tlpfpthr'
 # spatially correlated noise low-pass filter parameters
-#: INT (1/2); Method for spatial filtering(1: butterworth; 2: gaussian)
-SLPF_METHOD = 'slpfmethod'
 #: FLOAT; Cutoff  value for both butterworth and gaussian filters in km
 SLPF_CUTOFF = 'slpfcutoff'
-#: INT; Order of butterworth filter (default 1)
-SLPF_ORDER = 'slpforder'
 #: INT (1/0); Do spatial interpolation at NaN locations (1 for interpolation, 0 for zero fill)
 SLPF_NANFILL = 'slpnanfill'
 #: #: STR; Method for spatial interpolation (one of: linear, nearest, cubic), only used when slpnanfill=1
@@ -270,9 +266,7 @@ PARAM_CONVERSION = {
     TLPF_CUTOFF: (int, 12),
     TLPF_PTHR: (int, 1),
 
-    SLPF_METHOD: (int, 1),
     SLPF_CUTOFF: (float, 1.0),
-    SLPF_ORDER: (int, 1),
     SLPF_NANFILL: (int, 0),
 
     DEMERROR: (int, 0),
@@ -740,17 +734,9 @@ _APSEST_VALIDATION = {
         lambda a: a >= 1,
         f"'{TLPF_PTHR}': must be >= 1."
     ),
-    SLPF_METHOD: (
-        lambda a: a in (1, 2),
-        f"'{SLPF_METHOD}': must select option 1 or 2."
-    ),
     SLPF_CUTOFF: (
         lambda a: a >= 0.001,
         f"'{SLPF_CUTOFF}': must be >= 0.001."
-    ),
-    SLPF_ORDER: (
-        lambda a: 1 <= a <= 3,
-        f"'{SLPF_ORDER}': must be between 1 and 3 (inclusive)."
     ),
     SLPF_NANFILL: (
         lambda a: a in (0, 1),

@@ -133,35 +133,21 @@ class TestTemporalFilter:
 # APS correction using spatio-temporal filter
 # apsest: ON = 1, OFF = 0
 # Spatial low-pass filter parameters
-# slpfmethod: filter method (1: butterworth; 2: gaussian)
 # slpfcutoff: cutoff d0 (greater than zero) in km for both butterworth and gaussian filters
-# slpforder: order n for butterworth filter (default 1)
 # slpnanfill: 1 for interpolation, 0 for zero fill
 # slpnanfill_method: linear, nearest, cubic; only used when slpnanfill=1
 # Temporal low-pass filter parameters
 # tlpfcutoff: cutoff t0 for gaussian filter in year;
 # tlpfpthr: valid pixel threshold;
-# slpfmethod:     2
 # slpfcutoff:     0.001
-# slpforder:      1
 # slpnanfill:     1
 # slpnanfill_method:  cubic
 # tlpfcutoff:   12
 # tlpfpthr:     1
 
 
-@pytest.fixture(params=[1, 2])
-def slpfmethod(request):
-    return request.param
-
-
 @pytest.fixture(params=[0.001, 0.01])
 def slpfcutoff(request):
-    return request.param
-
-
-@pytest.fixture(params=[1, 2])
-def slpforder(request):
     return request.param
 
 
@@ -191,10 +177,8 @@ class TestAPSErrorCorrectionsOnDiscReused:
         shutil.rmtree(cls.params[cf.OUT_DIR])
 
     @pytest.mark.slow
-    def test_aps_error_files_on_disc(self, slpfmethod, slpfcutoff, slpforder):
-        self.params[cf.SLPF_METHOD] = slpfmethod
+    def test_aps_error_files_on_disc(self, slpfcutoff):
         self.params[cf.SLPF_CUTOFF] = slpfcutoff
-        self.params[cf.SLPF_ORDER] = slpforder
         wrap_spatio_temporal_filter(self.params)
 
         # test_orb_errors_written

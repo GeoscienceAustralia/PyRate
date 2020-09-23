@@ -316,28 +316,12 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": [0, 1],
         "Required": False
     },
-    "slpfmethod": {
-        "DataType": int,
-        "DefaultValue": 1,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": [1, 2],
-        "Required": False
-    },
     "slpfcutoff": {
         "DataType": float,
         "DefaultValue": 1.0,
         "MinValue": 0,
         "MaxValue": None,
         "PossibleValues": None,
-        "Required": False
-    },
-    "slpforder": {
-        "DataType": int,
-        "DefaultValue": 1,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": [1, 2, 3],
         "Required": False
     },
     "slpnanfill": {

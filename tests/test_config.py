@@ -69,9 +69,7 @@ from pyrate.core.config import (
     APSEST,
     TLPF_CUTOFF,
     TLPF_PTHR,
-    SLPF_METHOD,
     SLPF_CUTOFF,
-    SLPF_ORDER,
     SLPF_NANFILL,
     TIME_SERIES_PTHRESH,
     TIME_SERIES_SM_FACTOR,
@@ -263,16 +261,8 @@ class TestConfigValidation(UnitTestAdaptation):
         self.assertFalse(validate(TLPF_PTHR, 0))
         self.assertTrue(validate(TLPF_PTHR, 1))
 
-        self.assertTrue(validate(SLPF_METHOD, 1))
-        self.assertTrue(validate(SLPF_METHOD, 2))
-
         self.assertTrue(validate(SLPF_CUTOFF, 0.001))
         self.assertFalse(validate(SLPF_CUTOFF, 0.0))
-
-        for i in range(1, 4):
-            self.assertTrue(validate(SLPF_ORDER, i))
-        self.assertFalse(validate(SLPF_ORDER, 0))
-        self.assertFalse(validate(SLPF_ORDER, 4))
 
         self.assertTrue(validate(SLPF_NANFILL, 0))
         self.assertTrue(validate(SLPF_NANFILL, 1))

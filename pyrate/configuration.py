@@ -136,9 +136,7 @@ class MultiplePaths:
         return Path(params[cf.OUT_DIR], cf.APS_ERROR_DIR,
                     ifg_path.stem + '_' +
                     '_'.join([str(x) for x in [
-                        params[cf.SLPF_METHOD],
                         params[cf.SLPF_CUTOFF],
-                        params[cf.SLPF_ORDER],
                         params[cf.SLPF_NANFILL],
                         params[cf.SLPF_NANFILL_METHOD],
                         params[cf.TLPF_CUTOFF],
