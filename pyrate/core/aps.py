@@ -294,8 +294,8 @@ def gaussian_spatial_filter(image, cutoff, x_size, y_size):
     yy = (yy - cy) * y_size
     dist = np.sqrt(xx ** 2 + yy ** 2)/ ifc.METRE_PER_KM # change m to km
 
-    # Gaussian low-pass filter kernel
-    H = np.exp(-0.5 * (dist / cutoff) ** 2)
+    # Apply Gaussian smoothing kernel
+    H = _kernel(dist, cutoff)
     outf = imf * H
     out = np.real(ifft2(ifftshift(outf)))
     out[np.isnan(image)] = np.nan # re-apply nans to output image
@@ -369,10 +369,15 @@ def gaussian_temporal_filter(tsincr, cutoff, span, thr):
     if m >= thr:
         for k in range(m):
             yr = span[sel] - span[sel[k]]
-            # define Gaussian filter weights with cutoff in years
-            wgt = np.exp(-0.5 * (yr / cutoff) ** 2)
+            # apply Gaussian smoothing kernel
+            wgt = _kernel(yr, cutoff)
             wgt /= np.sum(wgt)
             ts_lp[sel[k]] = np.sum(tsincr[sel] * wgt)
 
     return ts_lp
 
+def _kernel(x, cutoff):
+    """
+    Gaussian low-pass filter kernel
+    """
+    return np.exp(-0.5 * (x / cutoff) ** 2)

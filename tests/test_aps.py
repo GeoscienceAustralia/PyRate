@@ -24,7 +24,7 @@ from scipy.ndimage import gaussian_filter1d
 from pyrate import conv2tif, prepifg, correct
 from pyrate.configuration import Configuration, MultiplePaths
 import pyrate.core.config as cf
-from pyrate.core.aps import wrap_spatio_temporal_filter, _interpolate_nans
+from pyrate.core.aps import wrap_spatio_temporal_filter, _interpolate_nans, _kernel
 from pyrate.core.aps import gaussian_temporal_filter as tlpfilter
 from pyrate.core import shared
 from pyrate.core.ifgconstants import DAYS_PER_YEAR
@@ -54,9 +54,22 @@ def test_slp_filter():
     pass
 
 
-def test_temporal_high_pass_filter():
-    # TODO
-    pass
+def test_gaussian_kernel():
+    """
+    Test the Gaussian smoothing kernel
+    """
+    x = np.arange(1,10,2)
+    res = _kernel(x, 3)
+    exp = np.array([0.94595947, 0.60653066, 0.24935221, 0.06572853, 0.011109])
+    np.testing.assert_array_almost_equal(res, exp, decimal=6)
+
+    res = _kernel(x, 4)
+    exp = np.array([0.96923323, 0.7548396, 0.45783336, 0.21626517, 0.07955951])
+    np.testing.assert_array_almost_equal(res, exp, decimal=6)
+
+    res = _kernel(x, 0.001)
+    exp = np.array([0, 0, 0, 0, 0])
+    np.testing.assert_array_equal(res, exp)
 
 
 class TestTemporalFilter:
