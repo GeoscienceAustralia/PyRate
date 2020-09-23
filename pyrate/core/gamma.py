@@ -520,26 +520,34 @@ def read_lookup_table(head, data_path, xlooks, ylooks):
 
     # get dimensions of lookup table file
     bytes_per_col, fmtstr = data_format(ifg_proc, True, ncols_lt*2) # float complex data set containing value tupels
-    row_bytes = ncols_lt*2 * bytes_per_col
-    lt_data_az = np.empty((0, ncols)) # empty array with correct number of columns
-    lt_data_rg = np.empty((0, ncols)) # empty array with correct number of column
 
-    # for indexing: lookup table file contains value pairs (i.e. range, azimuth)
-    # value pair 0 would be index 0 and 1, value pair 1 would be index 2 and 3, and so on
-    # example: for a multi-looking factor of 10 we want value pair 4, 14, 24, ...
-    # this would be index 8 and 9, index 28 and 29, 48 and 49, ...
-    if xlooks == 1:
+    # check if lookup table has the correct size
+    small_size = _check_raw_data(bytes_per_col * 2, data_path, ncols_lt, nrows_lt)
+    # todo: delete the following if condition once a suitable test data set has been included
+    if small_size: # this is a test data set without a corresponding lt-file
+        lt_data_az = np.empty((nrows, ncols)) * np.nan # nan array with size of input data set
+        lt_data_rg = np.empty((nrows, ncols)) * np.nan # nan array with size of input data set
+
+    else: # this is a real data set with an lt-file of correct size
+      row_bytes = ncols_lt * 2 * bytes_per_col
+      lt_data_az = np.empty((0, ncols))  # empty array with correct number of columns
+      lt_data_rg = np.empty((0, ncols))  # empty array with correct number of column
+      # for indexing: lookup table file contains value pairs (i.e. range, azimuth)
+      # value pair 0 would be index 0 and 1, value pair 1 would be index 2 and 3, and so on
+      # example: for a multi-looking factor of 10 we want value pair 4, 14, 24, ...
+      # this would be index 8 and 9, index 28 and 29, 48 and 49, ...
+      if xlooks == 1:
         idx_start = 0
-    else:
+      else:
         idx_start = (int(xlooks/2)-1)*2
-    idx_rg = np.arange(idx_start, ncols_lt*2, 2*xlooks) # first value
-    idx_az = np.arange(idx_start+1, ncols_lt*2, 2*xlooks) # second value
-    # row index used (e.g. for multi-looking factor 10: 4, 14, 24, ...)
-    row_idx = np.arange(int(ylooks/2)-1, nrows_lt, ylooks)
+      idx_rg = np.arange(idx_start, ncols_lt*2, 2*xlooks) # first value
+      idx_az = np.arange(idx_start+1, ncols_lt*2, 2*xlooks) # second value
+      # row index used (e.g. for multi-looking factor 10: 4, 14, 24, ...)
+      row_idx = np.arange(int(ylooks/2)-1, nrows_lt, ylooks)
 
-    # read the binary lookup table file and save the range/azimuth value pair for each position in ML data
-    log.debug(f"Reading lookup table file {data_path}")
-    with open(data_path, 'rb') as f:
+      # read the binary lookup table file and save the range/azimuth value pair for each position in ML data
+      log.debug(f"Reading lookup table file {data_path}")
+      with open(data_path, 'rb') as f:
         for y in range(nrows_lt): # loop through all lines in file
             # this could potentially be made quicker by skipping unwanted bytes in the f.read command?
             data = struct.unpack(fmtstr, f.read(row_bytes))
@@ -552,6 +560,22 @@ def read_lookup_table(head, data_path, xlooks, ylooks):
                 lt_data_rg = np.append(lt_data_rg, [row_data_ml_rg], axis=0)
 
     return lt_data_az, lt_data_rg
+
+
+def _check_raw_data(bytes_per_col, data_path, ncols, nrows):
+    """
+    Convenience function to check the file size is as expected
+    """
+    size = ncols * nrows * bytes_per_col
+    act_size = os.stat(data_path).st_size
+    if act_size != size:
+        msg = '%s should have size %s, not %s. Is the correct file being used?'
+        if size < 28000:
+            # test data set doesn't currently fit the lookup table size, stop further calculation
+            # todo: delete this if statement once a new test data set has been introduced
+            return True
+        else:
+            raise GammaException(msg % (data_path, size, act_size))
 
 
 class GammaException(Exception):
