@@ -186,35 +186,40 @@ def _save_aps_corrected_phase(ifg_path, phase):
     ifg.close()
 
 
-def spatial_low_pass_filter(ts_lp, ifg, params):
+def spatial_low_pass_filter(ts_hp, ifg, params):
     """
     Filter time series data spatially using either a Butterworth or Gaussian
     low pass filter defined by a cut-off distance. If the cut-off distance is
     defined as zero in the parameters dictionary then it is calculated for
     each time step using the pyrate.covariance.cvd_from_phase method.
 
-    :param ndarray ts_lp: Array of time series data, the result of a temporal
-                low pass filter operation. shape (ifg.shape, n_epochs)
+    :param ndarray ts_hp: Array of time series data, the result of a temporal
+                       high-pass filter operation. shape (ifg.shape, n_epochs)
     :param shared.Ifg instance ifg: interferogram object
     :param dict params: Dictionary of configuration parameters
 
-    :return: ts_hp: filtered time series data of shape (ifg.shape, n_epochs)
+    :return: ts_lp: low-pass filtered time series data of shape
+                    (ifg.shape, n_epochs)
     :rtype: ndarray
     """
     log.info('Applying spatial low-pass filter')
     if params[cf.SLPF_NANFILL] == 0:
-        ts_lp[np.isnan(ts_lp)] = 0  # need it here for cvd and fft
+        ts_hp[np.isnan(ts_hp)] = 0  # need it here for cvd and fft
     else:
         # optionally interpolate, operation is inplace
-        _interpolate_nans(ts_lp, params[cf.SLPF_NANFILL_METHOD])
+        _interpolate_nans(ts_hp, params[cf.SLPF_NANFILL_METHOD])
     r_dist = RDist(ifg)()
-    nvels = ts_lp.shape[2]
+    nvels = ts_hp.shape[2]
+    cutoff = params[cf.SLPF_CUTOFF]
+    if cutoff != 0:
+        log.info(f'Gaussian spatial filter cutoff is {cutoff:.3f} km for all ' \
+                 f'{nvels} time-series images')
 
     process_nvel = mpiops.array_split(range(nvels))
     process_ts_lp = {}
 
     for i in process_nvel:
-        process_ts_lp[i] = _slpfilter(ts_lp[:, :, i], ifg, r_dist, params)
+        process_ts_lp[i] = _slpfilter(ts_hp[:, :, i], ifg, r_dist, cutoff)
 
     ts_lp_d = shared.join_dicts(mpiops.comm.allgather(process_ts_lp))
     ts_lp = np.dstack([v[1] for v in sorted(ts_lp_d.items())])
@@ -246,49 +251,55 @@ def _interpolate_nans_2d(a, rows, cols, method):
         (rows[~np.isnan(a)], cols[~np.isnan(a)]),  # points we know
         a[~np.isnan(a)],  # values we know
         (rows[np.isnan(a)], cols[np.isnan(a)]),  # points to interpolate
-        method=method
-    )
+        method=method)
     a[np.isnan(a)] = 0  # zero fill boundary/edge nans
 
 
-def _slpfilter(phase, ifg, r_dist, params):
+def _slpfilter(phase, ifg, r_dist, cutoff):
     """
     Wrapper function for spatial low pass filter
     """
     if np.all(np.isnan(phase)):  # return for nan matrix
         return phase
-    cutoff = params[cf.SLPF_CUTOFF]
 
     if cutoff == 0:
         _, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha=True)
         cutoff = 1.0/alpha
-    rows, cols = ifg.shape
-    return _slp_filter(phase, cutoff, rows, cols, ifg.x_size, ifg.y_size, params)
+        log.info(f'Gaussian spatial filter cutoff is {cutoff:.3f} km')
+
+    return gaussian_spatial_filter(phase, cutoff, ifg.x_size, ifg.y_size)
 
 
-def _slp_filter(phase, cutoff, rows, cols, x_size, y_size, params):
+def gaussian_spatial_filter(image, cutoff, x_size, y_size):
     """
-    Function to perform spatial low pass filter
+    Function to apply a Gaussian spatial low-pass filter to a 2D image with
+    unequal pixel resolution in x and y dimensions.
+
+    :param ndarray image: 2D image to be filtered
+    :param float cutoff: filter cutoff in kilometres
+    :param float x_size: pixel size in x dimension, in metres
+    :param float y_size: pixel size in y dimension, in metres
+
+    :return: out: Gaussian low-pass filtered 2D image
+    :rtype: ndarray
     """
+    rows, cols = image.shape
     cx = np.floor(cols/2)
     cy = np.floor(rows/2)
     # fft for the input image
-    imf = fftshift(fft2(phase))
+    imf = fftshift(fft2(image))
     # calculate distance
-    distfact = 1.0e3  # to convert into meters
     [xx, yy] = np.meshgrid(range(cols), range(rows))
-    xx = (xx - cx) * x_size  # these are in meters as x_size in meters
+    xx = (xx - cx) * x_size  # these are in meters as x_size in metres
     yy = (yy - cy) * y_size
-    dist = np.sqrt(xx ** 2 + yy ** 2)/distfact  # km
+    dist = np.sqrt(xx ** 2 + yy ** 2)/ ifc.METRE_PER_KM # change m to km
 
-    if params[cf.SLPF_METHOD] == 1:  # butterworth low pass filter
-        H = 1. / (1 + ((dist / cutoff) ** (2 * params[cf.SLPF_ORDER])))
-    else:  # Gaussian low pass filter
-        H = np.exp(-(dist ** 2) / (2 * cutoff ** 2))
+    # Gaussian low-pass filter kernel
+    H = np.exp(-0.5 * (dist / cutoff) ** 2)
     outf = imf * H
     out = np.real(ifft2(ifftshift(outf)))
-    out[np.isnan(phase)] = np.nan
-    return out  # out is units of phase, i.e. mm
+    out[np.isnan(image)] = np.nan # re-apply nans to output image
+    return out
 
 
 # TODO: use tiles here and distribute amongst processes
@@ -328,23 +339,34 @@ def temporal_high_pass_filter(tsincr, epochlist, params):
         tsfilt_incr_each_row[r] = np.empty(tsincr.shape[1:], dtype=np.float32) * np.nan
         for j in range(cols):
             # Result of gaussian filter is low frequency time series
-            tsfilt_incr_each_row[r][j, :] = _tlpfilter(tsincr[r, j, :], cutoff_yr, span, threshold)
+            tsfilt_incr_each_row[r][j, :] = gaussian_temporal_filter(tsincr[r, j, :], \
+                                                     cutoff_yr, span, threshold)
 
     tsfilt_incr_combined = shared.join_dicts(mpiops.comm.allgather(tsfilt_incr_each_row))
     tsfilt_incr = np.array([v[1] for v in tsfilt_incr_combined.items()])
     log.debug("Finished applying temporal high-pass filter")
-    return tsincr - tsfilt_incr # Return the high frequency time series
+    # Return the high frequency time series by subtracting low-pass result from input tsincr
+    return tsincr - tsfilt_incr
 
 
-def _tlpfilter(tsincr, cutoff, span, threshold):
+def gaussian_temporal_filter(tsincr, cutoff, span, thr):
     """
-    Apply Gaussian temporal low pass filter to one pixel
+    Function to apply a Gaussian temporal low-pass filter to a 1D time-series
+    vector for one pixel with irregular temporal sampling.
+
+    :param ndarray tsincr: 1D time-series vector to be filtered
+    :param float cutoff: filter cutoff in years
+    :param ndarray span: 1D vector of cumulative time spans, in years
+    :param int thr: threshold for non-nan values in tsincr
+
+    :return: ts_lp: low-pass filtered time series vector
+    :rtype: ndarray
     """
     nanmat = ~isnan(tsincr)
     sel = np.nonzero(nanmat)[0]  # don't select if nan
     ts_lp = np.empty(tsincr.shape, dtype=np.float32) * np.nan
     m = len(sel)
-    if m >= threshold:
+    if m >= thr:
         for k in range(m):
             yr = span[sel] - span[sel[k]]
             # define Gaussian filter weights with cutoff in years

@@ -327,7 +327,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
     "slpfcutoff": {
         "DataType": float,
         "DefaultValue": 1.0,
-        "MinValue": 0.001,
+        "MinValue": 0,
         "MaxValue": None,
         "PossibleValues": None,
         "Required": False

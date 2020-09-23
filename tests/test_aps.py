@@ -24,7 +24,8 @@ from scipy.ndimage import gaussian_filter1d
 from pyrate import conv2tif, prepifg, correct
 from pyrate.configuration import Configuration, MultiplePaths
 import pyrate.core.config as cf
-from pyrate.core.aps import wrap_spatio_temporal_filter, _interpolate_nans, _tlpfilter
+from pyrate.core.aps import wrap_spatio_temporal_filter, _interpolate_nans
+from pyrate.core.aps import gaussian_temporal_filter as tlpfilter
 from pyrate.core import shared
 from pyrate.core.ifgconstants import DAYS_PER_YEAR
 from tests import common
@@ -80,9 +81,9 @@ class TestTemporalFilter:
     def test_tlpfilter_repeatability(self):
         """
         TEST 1: check for repeatability against expected result from
-        _tlpfilter. Cutoff equal to sampling interval (sigma=1)
+        tlpfilter. Cutoff equal to sampling interval (sigma=1)
         """
-        res = _tlpfilter(self.tsincr, self.interval, self.span, self.thr)
+        res = tlpfilter(self.tsincr, self.interval, self.span, self.thr)
         exp = np.array([1.9936507, 1.9208364, 1.0252733, -0.07402889,
                         -0.1842336, 0.24325351, 0.94737214, 1.3890865,
                         1.1903466 ,  1.0036403])
@@ -90,28 +91,28 @@ class TestTemporalFilter:
 
     def test_tlpfilter_scipy_sig1(self):
         """
-        TEST 2: compare _tlpfilter to scipy.ndimage.gaussian_filter1d. Works for
+        TEST 2: compare tlpfilter to scipy.ndimage.gaussian_filter1d. Works for
         regularly sampled data. Cutoff equal to sampling interval (sigma=1)
         """
-        res = _tlpfilter(self.tsincr, self.interval, self.span, self.thr)
+        res = tlpfilter(self.tsincr, self.interval, self.span, self.thr)
         exp = gaussian_filter1d(self.tsincr, sigma=1)
         np.testing.assert_array_almost_equal(res, exp, decimal=1)
 
     def test_tlpfilter_scipy_sig2(self):
         """
-        TEST 3: compare _tlpfilter to scipy.ndimage.gaussian_filter1d. Works for
+        TEST 3: compare tlpfilter to scipy.ndimage.gaussian_filter1d. Works for
         regularly sampled data. Cutoff equal to twice the sampling interval (sigma=2)
         """
-        res = _tlpfilter(self.tsincr, self.interval*2, self.span, self.thr)
+        res = tlpfilter(self.tsincr, self.interval*2, self.span, self.thr)
         exp = gaussian_filter1d(self.tsincr, sigma=2)
         np.testing.assert_array_almost_equal(res, exp, decimal=1)
 
     def test_tlpfilter_scipy_sig05(self):
         """
-        TEST 4: compare _tlpfilter to scipy.ndimage.gaussian_filter1d. Works for
+        TEST 4: compare tlpfilter to scipy.ndimage.gaussian_filter1d. Works for
         regularly sampled data. Cutoff equal to half the sampling interval (sigma=0.5)
         """
-        res = _tlpfilter(self.tsincr, self.interval*0.5, self.span, self.thr)
+        res = tlpfilter(self.tsincr, self.interval*0.5, self.span, self.thr)
         exp = gaussian_filter1d(self.tsincr, sigma=0.5)
         np.testing.assert_array_almost_equal(res, exp, decimal=2)
 
