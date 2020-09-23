@@ -82,9 +82,8 @@ def spatio_temporal_filter(tsincr, ifg_paths, params, preread_ifgs):
 
     :param ndarray tsincr: incremental time series array of size
                 (ifg.shape, nepochs-1)
-    :param list ifg: List of pyrate.shared.Ifg class objects.
+    :param list ifg_paths: List of interferogram file paths
     :param dict params: Dictionary of configuration parameter
-    :param list tiles: List of pyrate.shared.Tile class objects
     :param dict preread_ifgs: Dictionary of shared.PrereadIfg class instances
 
     :return: None, corrected interferograms are saved to disk
@@ -100,14 +99,15 @@ def spatio_temporal_filter(tsincr, ifg_paths, params, preread_ifgs):
     ifg.close()
 
 
-def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles: List[shared.Tile]):
+def _calc_svd_time_series(ifg_paths, params, preread_ifgs,
+                          tiles: List[shared.Tile]):
     """
     Helper function to obtain time series for spatio-temporal filter
     using SVD method
     """
     # Is there other existing functions that can perform this same job?
-    log.info('Calculating time series via SVD method for '
-             'APS correction')
+    log.info('Calculating incremental time series via SVD method for APS '
+             'correction')
     # copy params temporarily
     new_params = deepcopy(params)
     new_params[cf.TIME_SERIES_METHOD] = 2  # use SVD method
@@ -116,11 +116,13 @@ def _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles: List[shared.Ti
 
     nvels = None
     for t in process_tiles:
-        log.debug('Calculating time series for tile {} during APS correction'.format(t.index))
-        ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
+        log.debug(f'Calculating time series for tile {t.index} during APS '
+                  f'correction')
+        ifgp = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_tile = np.load(Configuration.mst_path(params, t.index))
-        tsincr = time_series(ifg_parts, new_params, vcmt=None, mst=mst_tile)[0]
-        np.save(file=os.path.join(params[cf.TMPDIR], 'tsincr_aps_{}.npy'.format(t.index)), arr=tsincr)
+        tsincr = time_series(ifgp, new_params, vcmt=None, mst=mst_tile)[0]
+        np.save(file=os.path.join(params[cf.TMPDIR],
+                f'tsincr_aps_{t.index}.npy'), arr=tsincr)
         nvels = tsincr.shape[2]
 
     nvels = mpiops.comm.bcast(nvels, root=0)
@@ -140,7 +142,8 @@ def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
     tsincr_p = {}
     process_nvels = mpiops.array_split(range(nvels))
     for i in process_nvels:
-        tsincr_p[i] = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='tsincr_aps', index=i)
+        tsincr_p[i] = assemble_tiles(shape, params[cf.TMPDIR], tiles,
+                                     out_type='tsincr_aps', index=i)
     tsincr_g = shared.join_dicts(mpiops.comm.allgather(tsincr_p))
     return np.dstack([v[1] for v in sorted(tsincr_g.items())])
 
@@ -166,9 +169,9 @@ def _ts_to_ifgs(tsincr, preread_ifgs, params):
     num_ifgs_tuples = [(int(num), ifg) for num, ifg in num_ifgs_tuples]
 
     for i, ifg in num_ifgs_tuples:
-        aps_correction_on_disc = MultiplePaths.aps_error_path(ifg.tmp_path, params)
+        aps_error_on_disc = MultiplePaths.aps_error_path(ifg.tmp_path, params)
         phase = np.sum(tsincr[:, :, index_first[i]: index_second[i]], axis=2)
-        np.save(file=aps_correction_on_disc, arr=phase)
+        np.save(file=aps_error_on_disc, arr=phase)
         _save_aps_corrected_phase(ifg.tmp_path, phase)
 
 
@@ -188,8 +191,8 @@ def _save_aps_corrected_phase(ifg_path, phase):
 
 def spatial_low_pass_filter(ts_hp, ifg, params):
     """
-    Filter time series data spatially using either a Butterworth or Gaussian
-    low pass filter defined by a cut-off distance. If the cut-off distance is
+    Filter time series data spatially using a Gaussian low-pass
+    filter defined by a cut-off distance. If the cut-off distance is
     defined as zero in the parameters dictionary then it is calculated for
     each time step using the pyrate.covariance.cvd_from_phase method.
 
@@ -208,11 +211,14 @@ def spatial_low_pass_filter(ts_hp, ifg, params):
     else:
         # optionally interpolate, operation is inplace
         _interpolate_nans(ts_hp, params[cf.SLPF_NANFILL_METHOD])
-    r_dist = RDist(ifg)()
+
     nvels = ts_hp.shape[2]
     cutoff = params[cf.SLPF_CUTOFF]
-    if cutoff != 0:
-        log.info(f'Gaussian spatial filter cutoff is {cutoff:.3f} km for all ' \
+    if cutoff == 0:
+        r_dist = RDist(ifg)() # only needed for cvd_for_phase
+    else:
+        r_dist = None
+        log.info(f'Gaussian spatial filter cutoff is {cutoff:.3f} km for all '
                  f'{nvels} time-series images')
 
     process_nvel = mpiops.array_split(range(nvels))
@@ -314,7 +320,8 @@ def temporal_high_pass_filter(tsincr, epochlist, params):
     :param list epochlist: List of shared.EpochList class instances
     :param dict params: Dictionary of configuration parameters
 
-    :return: ts_hp: filtered high frequency time series data, shape (ifg.shape, nepochs)
+    :return: ts_hp: filtered high frequency time series data,
+                    shape (ifg.shape, nepochs)
     :rtype: ndarray
     """
     log.info('Applying temporal high-pass filter')
@@ -326,27 +333,28 @@ def temporal_high_pass_filter(tsincr, epochlist, params):
 
     # convert cutoff in days to years
     cutoff_yr = cutoff_day / ifc.DAYS_PER_YEAR
-    log.info(f'Gaussian temporal filter cutoff is {cutoff_day} days ({cutoff_yr:.4f} years)')
+    log.info(f'Gaussian temporal filter cutoff is {cutoff_day} days '
+             f'({cutoff_yr:.4f} years)')
 
     intv = np.diff(epochlist.spans)  # time interval for the neighboring epochs
     span = epochlist.spans[: tsincr.shape[2]] + intv/2  # accumulated time
     rows, cols = tsincr.shape[:2]
 
-    tsfilt_incr_each_row = {}
+    tsfilt_row = {}
     process_rows = mpiops.array_split(list(range(rows)))
 
     for r in process_rows:
-        tsfilt_incr_each_row[r] = np.empty(tsincr.shape[1:], dtype=np.float32) * np.nan
+        tsfilt_row[r] = np.empty(tsincr.shape[1:], dtype=np.float32) * np.nan
         for j in range(cols):
             # Result of gaussian filter is low frequency time series
-            tsfilt_incr_each_row[r][j, :] = gaussian_temporal_filter(tsincr[r, j, :], \
+            tsfilt_row[r][j, :] = gaussian_temporal_filter(tsincr[r, j, :],
                                                      cutoff_yr, span, threshold)
 
-    tsfilt_incr_combined = shared.join_dicts(mpiops.comm.allgather(tsfilt_incr_each_row))
-    tsfilt_incr = np.array([v[1] for v in tsfilt_incr_combined.items()])
+    tsfilt_combined = shared.join_dicts(mpiops.comm.allgather(tsfilt_row))
+    tsfilt = np.array([v[1] for v in tsfilt_combined.items()])
     log.debug("Finished applying temporal high-pass filter")
-    # Return the high frequency time series by subtracting low-pass result from input tsincr
-    return tsincr - tsfilt_incr
+    # Return the high-pass time series by subtracting low-pass result from input
+    return tsincr - tsfilt
 
 
 def gaussian_temporal_filter(tsincr, cutoff, span, thr):
