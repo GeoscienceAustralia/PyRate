@@ -26,6 +26,7 @@ from numpy import dot, vstack, zeros, meshgrid
 import numpy as np
 from numpy.linalg import pinv
 from scipy.linalg import lstsq
+from joblib import Parallel, delayed
 
 from pyrate.core.algorithm import first_second_ids, get_all_epochs
 from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, mst, mpiops
@@ -91,9 +92,16 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
         if params[cf.ORBITAL_FIT_LOOKS_X] > 1 or params[cf.ORBITAL_FIT_LOOKS_Y] > 1:
             log.warning('Multi-looking is not applied in independent orbit method')
         ifgs = [shared.Ifg(p) for p in ifg_paths] if isinstance(ifgs[0], str) else ifgs
-        process_ifgs = mpiops.array_split(ifgs)
-        for ifg in process_ifgs:
-            independent_orbital_correction(ifg, params=params)
+
+        if params[cf.PARALLEL]:
+            Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
+                delayed(independent_orbital_correction)(ifg, params) for ifg in ifgs
+            )
+        else:
+            process_ifgs = mpiops.array_split(ifgs)
+            for ifg in process_ifgs:
+                independent_orbital_correction(ifg, params=params)
+
     elif method == NETWORK_METHOD:
         log.info('Calculating orbital correction using network method')
         # Here we do all the multilooking in one process, but in memory
