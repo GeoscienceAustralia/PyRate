@@ -68,11 +68,11 @@ def get_radar_coords(ifg, ifg_path, params):
     md[ifc.EPOCH_DATE] = None  # needs to have a value in write_output_geotiff
     md[ifc.DATA_TYPE] = ifc.RDC_AZIMUTH
     rdc_az_file = os.path.join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
-    _remove_file_if_exists(rdc_az_file)
+    remove_file_if_exists(rdc_az_file)
     shared.write_output_geotiff(md, gt, wkt, lt_az, rdc_az_file, np.nan)
     md[ifc.DATA_TYPE] = ifc.RDC_RANGE
     rdc_rg_file = os.path.join(params[cf.OUT_DIR], 'rdc_range.tif')
-    _remove_file_if_exists(rdc_rg_file)
+    remove_file_if_exists(rdc_rg_file)
     shared.write_output_geotiff(md, gt, wkt, lt_rg, rdc_rg_file, np.nan)
 
     return lt_az, lt_rg
@@ -136,12 +136,15 @@ def calc_local_geometry(ifg, ifg_path, rg, lon, lat, params):
     # 4. calculate the satellite XYZ position for that time by interpolating the time and velocity state vectors
 
     # calc azimuth angle using Vincenty's equations
-    azimuth_angle = np.empty(lat.shape) * np.nan # pre-allocate 2D numpy array
-    for ix, iy in np.ndindex(lat.shape):
-        if not isnan(sat_lat[ix, iy]):
-            az12 = vincinv(lat[ix, iy], lon[ix, iy], sat_lat[ix, iy], sat_lon[ix, iy], a, b)
-            azimuth_angle[ix, iy] = az12
-    np.reshape(azimuth_angle, lat.shape)
+    if np.isscalar(lat): # function works also for scalar input instead of numpy array
+        azimuth_angle = vincinv(lat, lon, sat_lat, sat_lon, a, b)
+    else:
+        azimuth_angle = np.empty(lat.shape) * np.nan # pre-allocate 2D numpy array
+        for ix, iy in np.ndindex(lat.shape):
+            if not isnan(sat_lat[ix, iy]):
+                az12 = vincinv(lat[ix, iy], lon[ix, iy], sat_lat[ix, iy], sat_lon[ix, iy], a, b)
+                azimuth_angle[ix, iy] = az12
+        np.reshape(azimuth_angle, lat.shape)
 
     # todo: move this old code for azimuth angle calculation using a spherical Earth model to tests
     #azimuth_angle2 = np.arccos(np.divide(np.multiply(np.sin(sat_lat), np.cos(lat)) - \
@@ -162,15 +165,15 @@ def calc_local_geometry(ifg, ifg_path, rg, lon, lat, params):
         md[ifc.EPOCH_DATE] = None # needs to have a value in write_output_geotiff
         md[ifc.DATA_TYPE] = ifc.LOOK
         look_angle_file = os.path.join(params[cf.OUT_DIR], 'look_angle.tif')
-        _remove_file_if_exists(look_angle_file)
+        remove_file_if_exists(look_angle_file)
         shared.write_output_geotiff(md, gt, wkt, look_angle, look_angle_file, np.nan)
         md[ifc.DATA_TYPE] = ifc.INCIDENCE
         incidence_angle_file = os.path.join(params[cf.OUT_DIR], 'incidence_angle.tif')
-        _remove_file_if_exists(incidence_angle_file)
+        remove_file_if_exists(incidence_angle_file)
         shared.write_output_geotiff(md, gt, wkt, incidence_angle, incidence_angle_file, np.nan)
         md[ifc.DATA_TYPE] = ifc.AZIMUTH
         azimuth_angle_file = os.path.join(params[cf.OUT_DIR], 'azimuth_angle.tif')
-        _remove_file_if_exists(azimuth_angle_file)
+        remove_file_if_exists(azimuth_angle_file)
         shared.write_output_geotiff(md, gt, wkt, azimuth_angle, azimuth_angle_file, np.nan)
 
     return look_angle
@@ -203,13 +206,6 @@ def calc_local_baseline(ifg, az, look_angle, params):
     # http://www.dgk.badw.de/fileadmin/user_upload/Files/DGK/docs/c-719.pdf)
     bperp = np.multiply(base_C_local, np.cos(look_angle)) - np.multiply(base_N_local, np.sin(look_angle))
 
-    # save bperp to geotiff (temporary for visualisation)
-    gt, md, wkt = shared.get_geotiff_header_info(ifg.data_path)
-    md[ifc.EPOCH_DATE] = None # needs to have a value in write_output_geotiff
-    md[ifc.DATA_TYPE] = ifc.BPERP
-    bperp_tif_on_disc = MultiplePaths.bperp_tif_path(ifg.data_path, params)
-    shared.write_output_geotiff(md, gt, wkt, bperp, str(bperp_tif_on_disc), np.nan)
-    
     return bperp
 
 
@@ -274,7 +270,7 @@ def vincinv(lat1, lon1, lat2, lon2, semimaj, semimin):
     return round(azimuth1to2, 9)
 
 
-def _remove_file_if_exists(file):
+def remove_file_if_exists(file):
     """
         Function to remove a geometry file if it already exists.
     """

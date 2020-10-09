@@ -123,18 +123,11 @@ class MultiplePaths:
                     '_orbfit.npy')
 
     @staticmethod
-    def bperp_path(ifg_path: Union[str, Path], params) -> Path:
+    def dem_error_path(ifg_path: Union[str, Path], params) -> Path:
         if isinstance(ifg_path, str):
             ifg_path = Path(ifg_path)
         return Path(params[cf.OUT_DIR], cf.DEM_ERROR_DIR,
-                    ifg_path.stem + '_bperp.npy')
-
-    @staticmethod
-    def bperp_tif_path(ifg_path: Union[str, Path], params) -> Path:
-        if isinstance(ifg_path, str):
-            ifg_path = Path(ifg_path)
-        return Path(params[cf.OUT_DIR], cf.DEM_ERROR_DIR,
-                    ifg_path.stem + '_bperp.tif')
+                    ifg_path.stem + '_dem_error.npy')
 
     @staticmethod
     def aps_error_path(ifg_path: Union[str, Path], params) -> Path:
@@ -189,12 +182,12 @@ class Configuration:
             self.__dict__['correct'] = list(filter(None, parser['correct'].get('steps').splitlines()))
         else:
             self.__dict__['correct'] = [
-                'demerror',
                 'orbfit',
                 'refphase',
                 'mst',
                 'apscorrect',
                 'maxvar',
+                'demerror',
             ]
 
         # Validate required parameters exist.
