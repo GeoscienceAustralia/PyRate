@@ -93,12 +93,21 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
             log.warning('Multi-looking is not applied in independent orbit method')
         ifgs = [shared.Ifg(p) for p in ifg_paths] if isinstance(ifgs[0], str) else ifgs
 
+        # retain compatibility with existing independent method tests
+        if (params[cf.ORBITAL_FIT_LOOKS_X] > 1) or (params[cf.ORBITAL_FIT_LOOKS_Y] > 1):
+            mlooked = __create_multilooked_dataset(params)
+        else:
+            mlooked = ifgs
+            for i in mlooked:
+                if not i.is_open:
+                    i.open()
+        _validate_mlooked(mlooked, ifg_paths)
         if params[cf.PARALLEL]:
             Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-                delayed(independent_orbital_correction)(ifg, params) for ifg in ifgs
+                delayed(independent_orbital_correction)(ifg, params) for ifg in mlooked
             )
         else:
-            process_ifgs = mpiops.array_split(ifgs)
+            process_ifgs = mpiops.array_split(mlooked)
             for ifg in process_ifgs:
                 independent_orbital_correction(ifg, params=params)
 
@@ -110,14 +119,14 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
         # A performance comparison should be made for saving multilooked
         # files on disc vs in memory single process multilooking
         if mpiops.rank == MAIN_PROCESS:
-            mlooked = __create_multilooked_dataset_for_network_correction(params)
+            mlooked = __create_multilooked_dataset(params)
             _validate_mlooked(mlooked, ifg_paths)
             network_orbital_correction(ifg_paths, params, mlooked)
     else:
         raise OrbitalError("Unrecognised orbital correction method")
 
 
-def __create_multilooked_dataset_for_network_correction(params):
+def __create_multilooked_dataset(params):
     multi_paths = params[cf.INTERFEROGRAM_FILES]
     ifg_paths = [p.tmp_sampled_path for p in multi_paths]
     headers = [find_header(p, params) for p in multi_paths]
