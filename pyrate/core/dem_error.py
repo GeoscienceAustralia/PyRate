@@ -35,44 +35,49 @@ def dem_error_calc_wrapper(params: dict) -> None:
     """
     MPI wrapper for DEM error correction
     """
-    if params[cf.BASE_FILE_LIST] is None:
-        msg = f"No baseline files supplied: DEM error correction not computed"
-        raise DEMError(msg)
-
-    if params[cf.LT_FILE] is None:
-        msg = f"No lookup table file supplied: DEM error correction not computed"
-        raise DEMError(msg)
-
-    log.info('Calculating DEM error correction')
-
     # geometry information needed to calculate Bperp for each pixel using first IFG in list
     ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     ifg0_path = ifg_paths[0]
     ifg0 = Ifg(ifg0_path)
     ifg0.open(readonly=True)
-    # read radar azimuth and range tif files
-    rdc_az_file = join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
-    geom_az = Geometry(rdc_az_file)
-    geom_az.open(readonly=True)
-    az = geom_az.geometry_data
-    rdc_rg_file = join(params[cf.OUT_DIR], 'rdc_range.tif')
-    geom_rg = Geometry(rdc_rg_file)
-    geom_rg.open(readonly=True)
-    rg = geom_rg.geometry_data
 
-    # split into tiles to calculate DEM error correction
-    if not Configuration.vcmt_path(params).exists():
+    # not currently implemented for ROIPAC data which breaks some tests
+    # if statement can be deleted once ROIPAC is deprecated from PyRate
+    if not ifg0.meta_data[ifc.PYRATE_INSAR_PROCESSOR] == 'ROIPAC':
+
+      if params[cf.BASE_FILE_LIST] is None:
+        msg = f"No baseline files supplied: DEM error correction not computed"
+        raise DEMError(msg)
+
+      if params[cf.LT_FILE] is None:
+        msg = f"No lookup table file supplied: DEM error correction not computed"
+        raise DEMError(msg)
+
+      log.info('Calculating DEM error correction')
+
+      # read radar azimuth and range tif files
+      rdc_az_file = join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
+      geom_az = Geometry(rdc_az_file)
+      geom_az.open(readonly=True)
+      az = geom_az.geometry_data
+      rdc_rg_file = join(params[cf.OUT_DIR], 'rdc_range.tif')
+      geom_rg = Geometry(rdc_rg_file)
+      geom_rg.open(readonly=True)
+      rg = geom_rg.geometry_data
+
+      # split into tiles to calculate DEM error correction
+      if not Configuration.vcmt_path(params).exists():
         raise FileNotFoundError("VCMT is not found on disc. Have you run the 'correct' step?")
-    params[cf.PREREAD_IFGS] = cp.load(open(Configuration.preread_ifgs(params), 'rb'))
-    params[cf.VCMT] = np.load(Configuration.vcmt_path(params))
-    params[cf.TILES] = Configuration.get_tiles(params)
-    tiles = params[cf.TILES]
-    preread_ifgs = params[cf.PREREAD_IFGS]
-    vcmt = params[cf.VCMT]
+      params[cf.PREREAD_IFGS] = cp.load(open(Configuration.preread_ifgs(params), 'rb'))
+      params[cf.VCMT] = np.load(Configuration.vcmt_path(params))
+      params[cf.TILES] = Configuration.get_tiles(params)
+      tiles = params[cf.TILES]
+      preread_ifgs = params[cf.PREREAD_IFGS]
+      vcmt = params[cf.VCMT]
 
-    # read lon and lat values of multi-looked ifg (first ifg only)
-    lon, lat = geometry.get_lonlat_coords(ifg0)
-    # cut rg and az to tile size
+      # read lon and lat values of multi-looked ifg (first ifg only)
+      lon, lat = geometry.get_lonlat_coords(ifg0)
+      # cut rg and az to tile size
 
     # the following code is a quick way to do the bperp calculation, but is not identical to the GAMMA output
     # where the near range of the first SLC is used for each pair.
@@ -81,9 +86,9 @@ def dem_error_calc_wrapper(params: dict) -> None:
     #bperp = geometry.calc_local_baseline(ifg0, az, look_angle, params)
     #print(bperp.shape)
 
-    # process in tiles
-    process_tiles = mpiops.array_split(tiles)
-    for t in process_tiles:
+      # process in tiles
+      process_tiles = mpiops.array_split(tiles)
+      for t in process_tiles:
         ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         lon_parts = lon[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
         lat_parts = lat[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
@@ -122,24 +127,24 @@ def dem_error_calc_wrapper(params: dict) -> None:
         np.save(file=os.path.join(params[cf.TMPDIR], 'dem_error_correction_{}.npy'.format(t.index)), \
                 arr=tmp_array)
 
-    # wait for all processes to finish
-    mpiops.comm.barrier()
+      # wait for all processes to finish
+      mpiops.comm.barrier()
 
-    # re-assemble tiles and save into dem_error dir
-    shape = preread_ifgs[ifg_paths[0]].shape
+      # re-assemble tiles and save into dem_error dir
+      shape = preread_ifgs[ifg_paths[0]].shape
 
-    # save dem error as geotiff file in out directory
-    gt, md, wkt = shared.get_geotiff_header_info(ifg_path)
-    md[ifc.EPOCH_DATE] = None  # needs to have a value in write_output_geotiff
-    md[ifc.DATA_TYPE] = ifc.DEM_ERROR
-    dem_error = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='dem_error', index=None)
-    dem_error_file = os.path.join(params[cf.OUT_DIR], 'dem_error.tif')
-    geometry.remove_file_if_exists(dem_error_file)
-    shared.write_output_geotiff(md, gt, wkt, dem_error, dem_error_file, np.nan)
+      # save dem error as geotiff file in out directory
+      gt, md, wkt = shared.get_geotiff_header_info(ifg_path)
+      md[ifc.EPOCH_DATE] = None  # needs to have a value in write_output_geotiff
+      md[ifc.DATA_TYPE] = ifc.DEM_ERROR
+      dem_error = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='dem_error', index=None)
+      dem_error_file = os.path.join(params[cf.OUT_DIR], 'dem_error.tif')
+      geometry.remove_file_if_exists(dem_error_file)
+      shared.write_output_geotiff(md, gt, wkt, dem_error, dem_error_file, np.nan)
 
-    # loop over all ifgs
-    idx = 0
-    for ifg_path in ifg_paths:
+      # loop over all ifgs
+      idx = 0
+      for ifg_path in ifg_paths:
         ifg = Ifg(ifg_path)
         ifg.open(readonly=True)
         # read dem error correction file from tmpdir (size
@@ -150,7 +155,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
         dem_error_correction_on_disc = MultiplePaths.dem_error_path(ifg.data_path, params)
         np.save(file=dem_error_correction_on_disc, arr=dem_error_correction_ifg)
 
-    log.info('Finished DEM error correction')
+      log.info('Finished DEM error correction')
 
 
 def calc_dem_errors(ifgs, bperp, vcmt=None):
