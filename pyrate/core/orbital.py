@@ -92,22 +92,12 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
         if params[cf.ORBITAL_FIT_LOOKS_X] > 1 or params[cf.ORBITAL_FIT_LOOKS_Y] > 1:
             log.warning('Multi-looking is not applied in independent orbit method')
         ifgs = [shared.Ifg(p) for p in ifg_paths] if isinstance(ifgs[0], str) else ifgs
-
-        # retain compatibility with existing independent method tests
-        if (params[cf.ORBITAL_FIT_LOOKS_X] > 1) or (params[cf.ORBITAL_FIT_LOOKS_Y] > 1):
-            mlooked = __create_multilooked_dataset(params)
-        else:
-            mlooked = ifgs
-            for i in mlooked:
-                if not i.is_open:
-                    i.open()
-        _validate_mlooked(mlooked, ifg_paths)
         if params[cf.PARALLEL]:
             Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-                delayed(independent_orbital_correction)(ifg, params) for ifg in mlooked
+                delayed(independent_orbital_correction)(ifg, params) for ifg in ifgs
             )
         else:
-            process_ifgs = mpiops.array_split(mlooked)
+            process_ifgs = mpiops.array_split(ifgs)
             for ifg in process_ifgs:
                 independent_orbital_correction(ifg, params=params)
 
@@ -119,32 +109,39 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
         # A performance comparison should be made for saving multilooked
         # files on disc vs in memory single process multilooking
         if mpiops.rank == MAIN_PROCESS:
-            mlooked = __create_multilooked_dataset(params)
+            mlooked = __create_multilooked_datasets(params)
             _validate_mlooked(mlooked, ifg_paths)
             network_orbital_correction(ifg_paths, params, mlooked)
     else:
         raise OrbitalError("Unrecognised orbital correction method")
 
 
-def __create_multilooked_dataset(params):
+def __create_multilooked_datasets(params):
     multi_paths = params[cf.INTERFEROGRAM_FILES]
     ifg_paths = [p.tmp_sampled_path for p in multi_paths]
-    headers = [find_header(p, params) for p in multi_paths]
     crop_opt = prepifg_helper.ALREADY_SAME_SIZE
     xlooks = params[cf.ORBITAL_FIT_LOOKS_X]
     ylooks = params[cf.ORBITAL_FIT_LOOKS_Y]
-    thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     rasters = [shared.dem_or_ifg(r) for r in ifg_paths]
     exts = prepifg_helper.get_analysis_extent(crop_opt, rasters, xlooks, ylooks, None)
+    mlooked_datasets = [_create_mlooked_dataset(m, i, exts, params) for m, i in zip(multi_paths, ifg_paths)]
 
-    out_paths = [tempfile.mktemp() for _ in ifg_paths]
-    mlooked_dataset = [prepifg_helper.prepare_ifg(d, xlooks, ylooks, exts, thresh, crop_opt, h, False, p) for d, h, p
-                       in zip(ifg_paths, headers, out_paths)]
-    mlooked = [Ifg(m[1]) for m in mlooked_dataset]
+    mlooked = [Ifg(m[1]) for m in mlooked_datasets]
     for m in mlooked:
         m.initialize()
         shared.nan_and_mm_convert(m, params)
     return mlooked
+
+
+def _create_mlooked_dataset(multi_path, ifg_path, exts, params):
+    header = find_header(multi_path, params)
+    thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
+    crop_opt = prepifg_helper.ALREADY_SAME_SIZE
+    xlooks = params[cf.ORBITAL_FIT_LOOKS_X]
+    ylooks = params[cf.ORBITAL_FIT_LOOKS_Y]
+    out_path = tempfile.mktemp()
+    mlooked_dataset = prepifg_helper.prepare_ifg(ifg_path, xlooks, ylooks, exts, thresh, crop_opt, header, False, out_path)
+    return mlooked_dataset
 
 
 def __orb_params_check(params):
