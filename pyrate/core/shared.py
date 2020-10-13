@@ -278,7 +278,7 @@ class Ifg(RasterBase):
     interferometric phase raster band data and related data.
     """
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, path: Union[str, Path]):
+    def __init__(self, path: Union[str, Path, gdal.Dataset]):
         """
         Interferogram constructor, for 2-band Ifg raster datasets.
 
