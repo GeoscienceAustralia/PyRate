@@ -381,6 +381,14 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
+    "de_pthr": {
+        "DataType": int,
+        "DefaultValue": 10,
+        "MinValue": 4,
+        "MaxValue": None,
+        "PossibleValues": None,
+        "Required": False
+    },
     "tsmethod": {
         "DataType": int,
         "DefaultValue": 2,
