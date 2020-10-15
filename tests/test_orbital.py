@@ -988,3 +988,39 @@ class TestOrbErrorCorrectionsReappliedDoesNotChangePhaseData:
             i.open()
         phase_now = [i.phase_data for i in ifgs]
         np.testing.assert_array_equal(phase_now, phase_prev)
+
+
+@pytest.fixture(params=[2, 3, 4])
+def orbfit_looks(request):
+    return request.param
+
+
+class TestOrbfitIndependentMethodWithMultilooking:
+
+    @classmethod
+    def setup_class(cls):
+        cls.conf = TEST_CONF_GAMMA
+        params = Configuration(cls.conf).__dict__
+        conv2tif.main(params)
+        params = Configuration(cls.conf).__dict__
+        prepifg.main(params)
+        cls.params = Configuration(cls.conf).__dict__
+        correct._copy_mlooked(cls.params)
+        correct._create_ifg_dict(cls.params)
+
+    @classmethod
+    def teardown_class(cls):
+        shutil.rmtree(cls.params[cf.OUT_DIR])
+
+    def test_independent_method_works(self, orbfit_looks, orbfit_degrees, orbfit_method=1):
+        self.params[cf.ORBITAL_FIT_METHOD] = orbfit_method
+        self.params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
+        self.params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_looks
+        self.params[cf.ORBITAL_FIT_LOOKS_X] = orbfit_looks
+        multi_paths = self.params[cf.INTERFEROGRAM_FILES]
+        self.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
+        remove_orbital_error(self.ifg_paths, self.params)
+        ifgs = [Ifg(p) for p in self.ifg_paths]
+        for i in ifgs:
+            i.open()
+            assert i.shape == (72, 47)  # shape should not change
