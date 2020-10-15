@@ -26,7 +26,6 @@ from math import sqrt, sin, cos, tan, asin, atan, atan2, isnan, pi
 from pyrate.core import shared, ifgconstants as ifc, config as cf
 from pyrate.core.refpixel import convert_pixel_value_to_geographic_coordinate
 from pyrate.core.gamma import read_lookup_table
-from pyrate.configuration import MultiplePaths
 
 
 def get_lonlat_coords(ifg):
@@ -47,7 +46,7 @@ def get_lonlat_coords(ifg):
     return lon, lat
 
 
-def get_radar_coords(ifg, ifg_path, params):
+def get_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax):
     """
     Function to get radar coordinates for each pixel in the multi-looked interferogram dataset.
     Radar coordinates are identical for each interferogram in the stack.
@@ -57,8 +56,8 @@ def get_radar_coords(ifg, ifg_path, params):
     # PyRate IFG multi-looking factors
     ifglksx = params[cf.IFG_LKSX]
     ifglksy = params[cf.IFG_LKSY]
-    # transform float lookup table file to np array
-    lt_az, lt_rg = read_lookup_table(ifg, lookup_table, ifglksx, ifglksy)
+     # transform float lookup table file to np array
+    lt_az, lt_rg = read_lookup_table(ifg, lookup_table, ifglksx, ifglksy, xmin, xmax, ymin, ymax)
     # replace 0.0 with NaN
     lt_az[lt_az==0.0] = np.nan
     lt_rg[lt_rg == 0.0] = np.nan

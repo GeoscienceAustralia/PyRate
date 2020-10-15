@@ -30,6 +30,7 @@ from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import MultiplePaths
 from pyrate.core.shared import Ifg
+from pyrate.core.refpixel import convert_geographic_coordinate_to_pixel_value
 
 
 GAMMA = 1
@@ -69,11 +70,19 @@ def main(params):
     ifgs = [prepifg_helper.dem_or_ifg(p.converted_path) for p in ifg_paths]
     exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks, user_exts=user_exts)
 
+    # get pixel values of crop (needed to crop lookup table file)
+    transform = ifgs[0].dataset.GetGeoTransform()
+    # pixel extent of cropped area (original IFG input)
+    xmin, ymax = convert_geographic_coordinate_to_pixel_value(exts[0], exts[1], transform)
+    xmax, ymin = convert_geographic_coordinate_to_pixel_value(exts[2], exts[3], transform)
+    # xmin, xmax: columns of crop
+    # ymin, ymax: rows of crop
+
     process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     do_prepifg(process_ifgs_paths, exts, params)
     mpiops.comm.barrier()
 
-    mpiops.run_once(_write_geometry_files, ifg_paths, params)
+    mpiops.run_once(_write_geometry_files, ifg_paths, params, xmin, xmax, ymin, ymax)
 
     log.info("Finished 'prepifg' step")
 
@@ -263,7 +272,7 @@ def find_header(path: MultiplePaths, params: dict):
     return header
 
 
-def _write_geometry_files(ifg_paths, params):
+def _write_geometry_files(ifg_paths, params, xmin, xmax, ymin, ymax):
     """
     Calculate geometry files using the information in the first interferogram in the stack, i.e.:
     - rdc_azimuth.tif (azimuth radar coordinate at each pixel)
@@ -283,7 +292,7 @@ def _write_geometry_files(ifg_paths, params):
         # calculate per-pixel lon/lat
         lon, lat = geometry.get_lonlat_coords(ifg0)
         # calculate per-pixel radar coordinates
-        az, rg = geometry.get_radar_coords(ifg0, ifg0_path, params)
+        az, rg = geometry.get_radar_coords(ifg0, ifg0_path, params, xmin, xmax, ymin, ymax)
         # calculate per-pixel look angle (also calculates and saves incidence and azimuth angles)
         geometry.calc_local_geometry(ifg0, ifg0_path, rg, lon, lat, params)
 

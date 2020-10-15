@@ -80,7 +80,6 @@ def dem_error_calc_wrapper(params: dict) -> None:
         preread_ifgs = params[cf.PREREAD_IFGS]
         vcmt = params[cf.VCMT]
         threshold = params[cf.DE_PTHR]
-        print(threshold)
 
         # read lon and lat values of multi-looked ifg (first ifg only)
         lon, lat = geometry.get_lonlat_coords(ifg0)

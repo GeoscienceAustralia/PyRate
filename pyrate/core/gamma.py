@@ -495,7 +495,7 @@ def gamma_header(ifg_file_path, params):
     return combined_headers
 
 
-def read_lookup_table(head, data_path, xlooks, ylooks):
+def read_lookup_table(head, data_path, xlooks, ylooks, xmin, xmax, ymin, ymax):
     # pylint: disable = too - many - statements
     """
     Creates a copy of input lookup table file in a numpy array and applies the ifg ML factors
@@ -512,12 +512,16 @@ def read_lookup_table(head, data_path, xlooks, ylooks):
     # pylint: disable=too-many-locals
 
     # read relevant metadata parameters
-    nrows = head.nrows # number of rows in multi-looked data sets
-    ncols = head.ncols # number of columns in multi-looked data sets
     nrows_lt = int(head.meta_data[ifc.PYRATE_NROWS]) # number of rows of original geotiff files
     ncols_lt = int(head.meta_data[ifc.PYRATE_NCOLS]) # number of columns of original geotiff files
-    ifg_proc = head.meta_data[ifc.PYRATE_INSAR_PROCESSOR]
+    # calculate multi-looked number of rows and columns
+    #nrows = round(nrows_lt / ylooks)
+    #ncols = round(ncols_lt / xlooks)
+    # old code has read this info from the Ifg class, which fails for cropped data
+    nrows = head.nrows # number of rows in multi-looked data sets
+    ncols = head.ncols # number of columns in multi-looked data sets
 
+    ifg_proc = head.meta_data[ifc.PYRATE_INSAR_PROCESSOR]
     # get dimensions of lookup table file
     bytes_per_col, fmtstr = data_format(ifg_proc, True, ncols_lt*2) # float complex data set containing value tupels
 
@@ -536,14 +540,24 @@ def read_lookup_table(head, data_path, xlooks, ylooks):
       # value pair 0 would be index 0 and 1, value pair 1 would be index 2 and 3, and so on
       # example: for a multi-looking factor of 10 we want value pair 4, 14, 24, ...
       # this would be index 8 and 9, index 28 and 29, 48 and 49, ...
+      # start column needs to be added in case cropping is applied
       if xlooks == 1:
-        idx_start = 0
+        # old code not working for cropped data sets:
+        #idx_start = 0
+        idx_start = xmin
       else:
-        idx_start = (int(xlooks/2)-1)*2
-      idx_rg = np.arange(idx_start, ncols_lt*2, 2*xlooks) # first value
-      idx_az = np.arange(idx_start+1, ncols_lt*2, 2*xlooks) # second value
+        # old code not working for cropped data sets:
+        #idx_start = (int(xlooks / 2) - 1) * 2
+        idx_start = (xmin + int(xlooks / 2) - 1) * 2
+      # old code not working for cropped data sets:
+      #idx_rg = np.arange(idx_start, ncols_lt*2, 2*xlooks) # first value
+      #idx_az = np.arange(idx_start+1, ncols_lt*2, 2*xlooks) # second value
+      idx_rg = np.arange(idx_start, xmax * 2, 2 * xlooks)  # first value
+      idx_az = np.arange(idx_start + 1, xmax * 2, 2 * xlooks)  # second value
       # row index used (e.g. for multi-looking factor 10: 4, 14, 24, ...)
-      row_idx = np.arange(int(ylooks/2)-1, nrows_lt, ylooks)
+      # old code not working for cropped data sets:
+      #row_idx = np.arange(int(ylooks/2)-1, nrows_lt, ylooks)
+      row_idx = np.arange(ymin + int(ylooks / 2) - 1, ymax, ylooks)
 
       # read the binary lookup table file and save the range/azimuth value pair for each position in ML data
       log.debug(f"Reading lookup table file {data_path}")
