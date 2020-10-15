@@ -990,9 +990,11 @@ class TestOrbErrorCorrectionsReappliedDoesNotChangePhaseData:
         np.testing.assert_array_equal(phase_now, phase_prev)
 
 
-@pytest.fixture(params=[2, 3, 4])
+@pytest.fixture(params=[np.random.choice([2, 3, 4], 4)])
 def orbfit_looks(request):
-    return request.param
+    x_lk = request.param
+    y_lk = np.random.choice([2, 3, 4], 4)
+    return x_lk, y_lk
 
 
 class TestOrbfitIndependentMethodWithMultilooking:
@@ -1012,11 +1014,16 @@ class TestOrbfitIndependentMethodWithMultilooking:
     def teardown_class(cls):
         shutil.rmtree(cls.params[cf.OUT_DIR])
 
-    def test_independent_method_works(self, orbfit_looks, orbfit_degrees, orbfit_method=1):
+    def test_independent_method_works_with_multilooking(self, orbfit_looks, orbfit_degrees, orbfit_method=1):
+        """
+        tests when multilooking is used in orbfit method 1 correction
+        also tests that multilooking factors in x and y can be different
+        """
+        xlks, ylks = orbfit_looks
         self.params[cf.ORBITAL_FIT_METHOD] = orbfit_method
         self.params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
-        self.params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_looks
-        self.params[cf.ORBITAL_FIT_LOOKS_X] = orbfit_looks
+        self.params[cf.ORBITAL_FIT_LOOKS_Y] = ylks
+        self.params[cf.ORBITAL_FIT_LOOKS_X] = xlks
         multi_paths = self.params[cf.INTERFEROGRAM_FILES]
         self.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
         remove_orbital_error(self.ifg_paths, self.params)
