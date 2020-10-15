@@ -89,14 +89,19 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
     if method == INDEPENDENT_METHOD:
         log.info('Calculating orbital correction using independent method')
         ifgs = [shared.Ifg(p) for p in ifg_paths] if isinstance(ifgs[0], str) else ifgs
+        degree = params[cf.ORBITAL_FIT_DEGREE]
+        offset = params[cf.ORBFIT_OFFSET]
+        # calculate forward model & morph back to 2D
+        original_dm = get_design_matrix(ifgs[0], degree, offset)
+
         if params[cf.PARALLEL]:
             Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-                delayed(independent_orbital_correction)(ifg, params) for ifg in ifgs
+                delayed(independent_orbital_correction)(ifg, original_dm, params) for ifg in ifgs
             )
         else:
             process_ifgs = mpiops.array_split(ifgs)
             for ifg in process_ifgs:
-                independent_orbital_correction(ifg, params=params)
+                independent_orbital_correction(ifg, design_matrix=original_dm, params=params)
 
     elif method == NETWORK_METHOD:
         log.info('Calculating orbital correction using network method')
@@ -202,7 +207,7 @@ def _get_num_params(degree, offset=None):
     return nparams
 
 
-def independent_orbital_correction(ifg, params):
+def independent_orbital_correction(ifg, design_matrix, params):
     """
     Calculates and removes an orbital error surface from a single independent
     interferogram.
@@ -245,12 +250,10 @@ def independent_orbital_correction(ifg, params):
         data = vphase[~isnan(vphase)]
         model = lstsq(clean_dm, data)[0]  # first arg is the model params
 
-        # calculate forward model & morph back to 2D
-        original_dm = get_design_matrix(original_ifg, degree, offset)
         if offset:
-            fullorb = np.reshape(np.dot(original_dm[:, :-1], model[:-1]), original_ifg.phase_data.shape)
+            fullorb = np.reshape(np.dot(design_matrix[:, :-1], model[:-1]), original_ifg.phase_data.shape)
         else:
-            fullorb = np.reshape(np.dot(original_dm, model), original_ifg.phase_data.shape)
+            fullorb = np.reshape(np.dot(design_matrix, model), original_ifg.phase_data.shape)
 
         if not orbfit_correction_on_disc.parent.exists():
             shared.mkdir_p(orbfit_correction_on_disc.parent)
@@ -404,6 +407,8 @@ def get_design_matrix(ifg, degree, offset, scale=100.0):
     :return: dm: design matrix
     :rtype: ndarray
     """
+    if not ifg.is_open:
+        ifg.open()
 
     if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
         raise OrbitalError("Invalid degree argument")
