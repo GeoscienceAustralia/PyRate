@@ -88,20 +88,20 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
 
     if method == INDEPENDENT_METHOD:
         log.info('Calculating orbital correction using independent method')
-        ifgs = [shared.Ifg(p) for p in ifg_paths] if isinstance(ifgs[0], str) else ifgs
+        ifg0 = shared.Ifg(ifg_paths[0]) if isinstance(ifg_paths[0], str) else ifg_paths[0]
         degree = params[cf.ORBITAL_FIT_DEGREE]
         offset = params[cf.ORBFIT_OFFSET]
         # calculate forward model & morph back to 2D
-        original_dm = get_design_matrix(ifgs[0], degree, offset)
+        original_dm = get_design_matrix(ifg0, degree, offset)
 
         if params[cf.PARALLEL]:
             Parallel(n_jobs=params[cf.PROCESSES], verbose=50)(
-                delayed(independent_orbital_correction)(ifg, original_dm, params) for ifg in ifgs
+                delayed(independent_orbital_correction)(ifg_path, original_dm, params) for ifg_path in ifg_paths
             )
         else:
-            process_ifgs = mpiops.array_split(ifgs)
-            for ifg in process_ifgs:
-                independent_orbital_correction(ifg, design_matrix=original_dm, params=params)
+            process_ifg_paths = mpiops.array_split(ifg_paths)
+            for ifg_path in process_ifg_paths:
+                independent_orbital_correction(ifg_path, design_matrix=original_dm, params=params)
 
     elif method == NETWORK_METHOD:
         log.info('Calculating orbital correction using network method')
@@ -207,7 +207,7 @@ def _get_num_params(degree, offset=None):
     return nparams
 
 
-def independent_orbital_correction(ifg, design_matrix, params):
+def independent_orbital_correction(ifg_path, design_matrix, params):
     """
     Calculates and removes an orbital error surface from a single independent
     interferogram.
@@ -221,12 +221,13 @@ def independent_orbital_correction(ifg, design_matrix, params):
 
     :return: None - interferogram phase data is updated and saved to disk
     """
+    ifg = shared.dem_or_ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
+    ifg_path = ifg.data_path
     degree = params[cf.ORBITAL_FIT_DEGREE]
     offset = params[cf.ORBFIT_OFFSET]
-    data_path = ifg.data_path
-    multi_path = MultiplePaths(data_path, params)
+    multi_path = MultiplePaths(ifg_path, params)
     original_ifg = ifg  # keep a backup
-    orbfit_correction_on_disc = MultiplePaths.orb_error_path(data_path, params)
+    orbfit_correction_on_disc = MultiplePaths.orb_error_path(ifg_path, params)
     if not ifg.is_open:
         ifg.open()
 
@@ -238,7 +239,7 @@ def independent_orbital_correction(ifg, design_matrix, params):
         ifg = Ifg(mlooked)
 
     if orbfit_correction_on_disc.exists():
-        log.info(f'Reusing already computed orbital fit correction for {data_path}')
+        log.info(f'Reusing already computed orbital fit correction for {ifg_path}')
         orbital_correction = np.load(file=orbfit_correction_on_disc)
     else:
         # vectorise, keeping NODATA
