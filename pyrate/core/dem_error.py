@@ -26,8 +26,7 @@ from numpy.linalg import inv, LinAlgError
 from pyrate.core import geometry, shared, mpiops, config as cf, ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core.shared import Ifg, Geometry
-from pyrate.configuration import Configuration
-from pyrate.configuration import MultiplePaths
+from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.merge import assemble_tiles
 
 
@@ -42,13 +41,19 @@ def dem_error_calc_wrapper(params: dict) -> None:
         return
     # geometry information needed to calculate Bperp for each pixel using first IFG in list
     ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
-    ifg0_path = ifg_paths[0]
-    ifg0 = Ifg(ifg0_path)
-    ifg0.open(readonly=True)
 
-    # not currently implemented for ROIPAC data which breaks some tests
-    # if statement can be deleted once ROIPAC is deprecated from PyRate
-    if not ifg0.meta_data[ifc.PYRATE_INSAR_PROCESSOR] == 'ROIPAC':
+    # check if DEM error correction is already available
+    if mpiops.run_once(__check_and_apply_demerrors_found_on_disc, ifg_paths, params):
+        log.warning("Reusing DEM error correction from previous run!!!")
+    else:
+      # read and open the first IFG in list
+      ifg0_path = ifg_paths[0]
+      ifg0 = Ifg(ifg0_path)
+      ifg0.open(readonly=True)
+
+      # not currently implemented for ROIPAC data which breaks some tests
+      # if statement can be deleted once ROIPAC is deprecated from PyRate
+      if not ifg0.meta_data[ifc.PYRATE_INSAR_PROCESSOR] == 'ROIPAC':
 
         if params[cf.BASE_FILE_LIST] is None:
             msg = f"No baseline files supplied: DEM error correction not computed"
@@ -78,6 +83,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
         params[cf.TILES] = Configuration.get_tiles(params)
         tiles = params[cf.TILES]
         preread_ifgs = params[cf.PREREAD_IFGS]
+        # todo: subtract other corrections (e.g. orbital) from displacement phase before estimating the DEM error
         vcmt = params[cf.VCMT]
         threshold = params[cf.DE_PTHR]
 
@@ -85,12 +91,11 @@ def dem_error_calc_wrapper(params: dict) -> None:
         lon, lat = geometry.get_lonlat_coords(ifg0)
         # cut rg and az to tile size
 
-    # the following code is a quick way to do the bperp calculation, but is not identical to the GAMMA output
-    # where the near range of the first SLC is used for each pair.
-    # calculate look angle for interferograms (using the Near Range of the first SLC)
-    #look_angle = geometry.calc_local_geometry(ifg0, None, rg, lon, lat, params)
-    #bperp = geometry.calc_local_baseline(ifg0, az, look_angle, params)
-    #print(bperp.shape)
+        # the following code is a quick way to do the bperp calculation, but is not identical to the GAMMA output
+        # where the near range of the first SLC is used for each pair.
+        # calculate look angle for interferograms (using the Near Range of the first SLC)
+        #look_angle = geometry.calc_local_geometry(ifg0, None, rg, lon, lat, params)
+        #bperp = geometry.calc_local_baseline(ifg0, az, look_angle, params)
 
         # process in tiles
         process_tiles = mpiops.array_split(tiles)
@@ -109,14 +114,13 @@ def dem_error_calc_wrapper(params: dict) -> None:
                 ifg = Ifg(ifg_path)
                 ifg.open(readonly=True)
                 # calculate look angle for interferograms (using the Near Range of the primary SLC)
-                look_angle = geometry.calc_local_geometry(ifg, None, rg_parts, lon_parts, lat_parts, params)
+                look_angle, range_dist = geometry.calc_local_geometry(ifg, None, rg_parts, lon_parts, lat_parts, params)
                 bperp[ifg_num, :, :] = geometry.calc_local_baseline(ifg, az_parts, look_angle, params)
                 ifg_num += 1
 
-
             log.debug('Calculating DEM error for tile {} during DEM error correction'.format(t.index))
             #mst_tile = np.load(Configuration.mst_path(params, t.index))
-            dem_error, dem_error_correction = calc_dem_errors(ifg_parts, bperp, threshold, vcmt)
+            dem_error, dem_error_correction = calc_dem_errors(ifg_parts, bperp, look_angle, range_dist, threshold, vcmt)
             # dem_error contains the estimated DEM error for each pixel (i.e. the topographic change relative to the DEM)
             # size [row, col]
             # dem_error_correction contains the correction value for each interferogram
@@ -141,26 +145,25 @@ def dem_error_calc_wrapper(params: dict) -> None:
     log.info('Finished DEM error correction')
 
 
-def calc_dem_errors(ifgs, bperp, threshold, vcmt):
+def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold, vcmt):
     """
     Calculates the per-pixel DEM error using least-squares adjustment of phase data and
     perpendicular baseline. The least-squares adjustment co-estimates the velocities.
 
         - *nrows* is the number of rows in the ifgs,
         - *ncols* is the  number of columns in the ifgs, and
-        - *nepochs* is the number of unique epochs (dates)
 
     :param list ifgs: list of interferogram class objects.
-    :param dict params: Dictionary of configuration parameters
     :param ndarray bperp: Per-pixel perpendicular baseline for each interferogram
+    :param ndarray look_angle: Per-pixel look angle
+    :param ndarray range_dist: Per-pixel range distance measurement
+    :param int threshold: minimum number of redundant phase values at pixel (config parameter de_pthr)
     :param ndarray vcmt: Positive definite temporal variance covariance matrix
-    :param ndarray mst: [optional] Minimum spanning tree array
 
     :return: ndarray dem_error: estimated per-pixel dem error (nrows x ncols)
     :return: ndarray dem_error_correction: DEM error correction for each pixel and interferogram (nifgs x nrows x ncols)
     """
     ifg_data, mst, ncols, nrows, bperp_data, ifg_time_span = _perpixel_setup(ifgs, bperp)
-    nifgs = ifg_data.shape[0]
     if threshold < 4:
         msg = f"pixel threshold too low (i.e. <4) resulting in singularities in DEM error estimation"
         raise DEMError(msg)
@@ -171,19 +174,22 @@ def calc_dem_errors(ifgs, bperp, threshold, vcmt):
     for row in range(nrows):
         for col in range(ncols):
             # calc DEM error for each pixel with valid Bperp and ifg phase data
-            # todo use a threshold for the minimum number of ifgs per pixel
             # check pixel for non-redundant ifgs
             sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
-            if len(sel) >= threshold:
+            if len(sel) >= threshold: # given threshold for number of valid pixels in time series
                 ifgv = ifg_data[sel, row, col]
                 bperp_pix = bperp_data[sel, row, col]
+                #geom = bperp_pix / (range_dist[row, col] * np.sin(look_angle[row, col]))
                 time_span = ifg_time_span[sel]
                 # new covariance matrix using actual number of observations
                 m = len(sel)
-                Qyy = np.eye(m)
+                Qyy = np.eye(m) # in case the weights are not used -> linalg.lstsq can be used instead
+                # results get unstable when using the VCM information -> todo: why?
                 #Qyy[:m, :m] = vcmt[sel, np.vstack(sel)]
                 # Design matrix of least-squares system
-                A = np.column_stack((np.ones(m), bperp_pix , time_span))
+                A = np.column_stack((np.ones(m), bperp_pix, time_span))
+                #A = np.column_stack((np.ones(m), geom , time_span))
+                # displacement observations (in mm)
                 y = np.vstack(ifgv)
                 # solve weighted least-squares system (not available in scipy!)
                 try:
@@ -195,7 +201,12 @@ def calc_dem_errors(ifgs, bperp, threshold, vcmt):
                 except LinAlgError as err: # nan value for DEM error in case of singular Qyy matrix
                     if 'Singular matrix' in str(err):
                         dem_error[row][col] = np.nan
+
+    # calculate correction value for each IFG by multiplying the least-squares estimate with the Bperp value
     dem_error_correction = np.multiply(dem_error, bperp_data)
+    # calculate metric difference to DEM by multiplying the estimate with the per-pixel geometry
+    # (i.e. range distance and look angle, see Eq. (2.4.12) in Hanssen (2001)) and scaling by 0.001 (obs are in mm)
+    dem_error = np.multiply(dem_error, np.multiply(range_dist, np.sin(look_angle))) * 0.001
 
     return dem_error, dem_error_correction
 
@@ -246,13 +257,47 @@ def _write_dem_errors(ifg_paths, params, preread_ifgs, tiles):
     idx = 0
     for ifg_path in ifg_paths:
         ifg = Ifg(ifg_path)
-        ifg.open(readonly=True)
+        ifg.open()
         # read dem error correction file from tmpdir (size
         dem_error_correction_ifg = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='dem_error_correction', \
                                                   index=idx)
         idx += 1
         dem_error_correction_on_disc = MultiplePaths.dem_error_path(ifg.data_path, params)
         np.save(file=dem_error_correction_on_disc, arr=dem_error_correction_ifg)
+
+        # subtract DEM error from the ifg
+        ifg.phase_data -= dem_error_correction_ifg
+        _save_dem_error_corrected_phase(ifg)
+
+
+def __check_and_apply_demerrors_found_on_disc(ifg_paths, params):
+    """
+    Convenience function to check if DEM error correction files have already been produced in a previous run
+    """
+    saved_dem_err_paths = [MultiplePaths.dem_error_path(ifg_path, params) for ifg_path in ifg_paths]
+    for d, i in zip(saved_dem_err_paths, ifg_paths):
+        if d.exists():
+            dem_corr = np.load(d)
+            if isinstance(i, str):
+                # are paths
+                ifg = Ifg(i)
+                ifg.open()
+            else:
+                ifg = i
+            ifg.phase_data -= dem_corr
+            # set orbfit meta tag and save phase to file
+            _save_dem_error_corrected_phase(ifg)
+    return all(d.exists() for d in saved_dem_err_paths)
+
+
+def _save_dem_error_corrected_phase(ifg):
+    """
+    Convenience function to update metadata and save latest phase after DEM error correction
+    """
+    # set orbfit tags after orbital error correction
+    ifg.dataset.SetMetadataItem(ifc.PYRATE_DEM_ERROR, ifc.DEM_ERROR_REMOVED)
+    ifg.write_modified_phase()
+    ifg.close()
 
 
 def _remove_file_if_exists(file):

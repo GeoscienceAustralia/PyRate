@@ -102,16 +102,16 @@ def calc_local_geometry(ifg, ifg_path, rg, lon, lat, params):
                            np.square(a * np.cos(lat)) + np.square(b * np.sin(lat))))
 
     # range measurement at pixel ij
-    range_ij = near_range + rps * rg
+    range_dist = near_range + rps * rg
 
     # look angle at pixel ij -> law of cosines in "satellite - Earth centre - ground pixel" triangle
     # see e.g. Section 2 in https://www.cs.uaf.edu/~olawlor/ref/asf/sar_equations_2006_08_17.pdf
-    look_angle = np.arccos(np.divide(se**2 + np.square(range_ij) - np.square(re), 2 * se * range_ij))
+    look_angle = np.arccos(np.divide(se**2 + np.square(range_dist) - np.square(re), 2 * se * range_dist))
 
     # incidence angle at pixel ij -> law of cosines in "satellite - Earth centre - ground pixel" triangle
     # see e.g. Section 2 in https://www.cs.uaf.edu/~olawlor/ref/asf/sar_equations_2006_08_17.pdf
-    incidence_angle = np.pi - np.arccos(np.divide(np.square(range_ij) + np.square(re) - se**2, \
-                                                  2 * np.multiply(range_ij, re)))
+    incidence_angle = np.pi - np.arccos(np.divide(np.square(range_dist) + np.square(re) - se**2, \
+                                                  2 * np.multiply(range_dist, re)))
 
     # todo (once new test data is ready): move next line into test for validation with GAMMA output
     #incidence_angle_gamma = np.pi / 2 - incidence_angle
@@ -175,7 +175,7 @@ def calc_local_geometry(ifg, ifg_path, rg, lon, lat, params):
         remove_file_if_exists(azimuth_angle_file)
         shared.write_output_geotiff(md, gt, wkt, azimuth_angle, azimuth_angle_file, np.nan)
 
-    return look_angle
+    return look_angle, range_dist
 
 
 def calc_local_baseline(ifg, az, look_angle, params):

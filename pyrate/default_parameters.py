@@ -381,6 +381,14 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
+    "demerror": {
+        "DataType": int,
+        "DefaultValue": 0,
+        "MinValue": None,
+        "MaxValue": None,
+        "PossibleValues": [0, 1],
+        "Required": False
+    },
     "de_pthr": {
         "DataType": int,
         "DefaultValue": 10,
