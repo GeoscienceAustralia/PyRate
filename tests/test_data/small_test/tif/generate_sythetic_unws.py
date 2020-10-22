@@ -1,3 +1,4 @@
+from collections import namedtuple
 from datetime import datetime, date
 import numpy as np
 import networkx as nx
@@ -5,6 +6,8 @@ from tests import common
 
 np.random.seed(10)
 num = 200
+
+LoopIfgMock = namedtuple('LoopIfg', ['first', 'second', 'nan_fraction'])
 
 
 def generate_random_edges(ifgs):
@@ -22,8 +25,10 @@ def generate_random_edges(ifgs):
 
     weights = np.random.rand(num) * 0.1
     edges_with_weights = [(i.first, i.second, i.nan_fraction) for i in ifgs]
+    original_loopifgs = [LoopIfgMock(i.first, i.second, i.nan_fraction) for i in ifgs]
     all_edges = edges_with_weights + [(p, s, w) for p, s, w in zip(primary, secondary, weights)]
-    return all_edges
+    all_ifgs = original_loopifgs + [LoopIfgMock(p, s, w) for p, s, w in zip(primary, secondary, weights)]
+    return all_edges, all_ifgs
 
 
 def find_closed_loops(all_edges):
@@ -32,10 +37,11 @@ def find_closed_loops(all_edges):
 
     dg = nx.DiGraph(g)
     simple_cycles = nx.simple_cycles(dg)  # will have all edges
-    simple_cycles = [scc for scc in simple_cycles if len(scc) > 2]
+    simple_cycles = [scc for scc in simple_cycles if len(scc) > 2]  # discard edges
     return simple_cycles
 
+
 _, ifgs = common.copy_and_setup_small_data()
-all_edges = generate_random_edges(ifgs)
+all_edges, all_mock_ifgs = generate_random_edges(ifgs)
 all_loops = find_closed_loops(all_edges)
 
