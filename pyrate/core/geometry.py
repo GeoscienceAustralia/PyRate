@@ -56,7 +56,7 @@ def get_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax):
     # PyRate IFG multi-looking factors
     ifglksx = params[cf.IFG_LKSX]
     ifglksy = params[cf.IFG_LKSY]
-     # transform float lookup table file to np array
+     # transform float lookup table file to np array, min/max pixel coordinates are required for cropping
     lt_az, lt_rg = read_lookup_table(ifg, lookup_table, ifglksx, ifglksy, xmin, xmax, ymin, ymax)
     # replace 0.0 with NaN
     lt_az[lt_az==0.0] = np.nan
@@ -178,7 +178,7 @@ def calc_local_geometry(ifg, ifg_path, rg, lon, lat, params):
     return look_angle, range_dist
 
 
-def calc_local_baseline(ifg, az, look_angle, params):
+def calc_local_baseline(ifg, az, look_angle):
     """
     Function to calculate perpendicular baseline values for each pixel.
     """

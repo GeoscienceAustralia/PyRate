@@ -95,7 +95,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
         # where the near range of the first SLC is used for each pair.
         # calculate look angle for interferograms (using the Near Range of the first SLC)
         #look_angle = geometry.calc_local_geometry(ifg0, None, rg, lon, lat, params)
-        #bperp = geometry.calc_local_baseline(ifg0, az, look_angle, params)
+        #bperp = geometry.calc_local_baseline(ifg0, az, look_angle)
 
         # process in tiles
         process_tiles = mpiops.array_split(tiles)
@@ -115,7 +115,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
                 ifg.open(readonly=True)
                 # calculate look angle for interferograms (using the Near Range of the primary SLC)
                 look_angle, range_dist = geometry.calc_local_geometry(ifg, None, rg_parts, lon_parts, lat_parts, params)
-                bperp[ifg_num, :, :] = geometry.calc_local_baseline(ifg, az_parts, look_angle, params)
+                bperp[ifg_num, :, :] = geometry.calc_local_baseline(ifg, az_parts, look_angle)
                 ifg_num += 1
 
             log.debug('Calculating DEM error for tile {} during DEM error correction'.format(t.index))
@@ -140,7 +140,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
 
         # write dem error and correction values to file
         mpiops.run_once(_write_dem_errors, ifg_paths, params, preread_ifgs, tiles)
-
+        shared.save_numpy_phase(ifg_paths, params)
 
     log.info('Finished DEM error correction')
 
@@ -158,7 +158,7 @@ def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold, vcmt):
     :param ndarray look_angle: Per-pixel look angle
     :param ndarray range_dist: Per-pixel range distance measurement
     :param int threshold: minimum number of redundant phase values at pixel (config parameter de_pthr)
-    :param ndarray vcmt: Positive definite temporal variance covariance matrix
+    :param ndarray vcmt: Positive definite temporal variance covariance matrix -> not currently used
 
     :return: ndarray dem_error: estimated per-pixel dem error (nrows x ncols)
     :return: ndarray dem_error_correction: DEM error correction for each pixel and interferogram (nifgs x nrows x ncols)
@@ -186,17 +186,22 @@ def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold, vcmt):
                 Qyy = np.eye(m) # in case the weights are not used -> linalg.lstsq can be used instead
                 # results get unstable when using the VCM information -> todo: why?
                 #Qyy[:m, :m] = vcmt[sel, np.vstack(sel)]
-                # Design matrix of least-squares system
+                # Design matrix of least-squares system, velocities are co-estimated as done in StaMPS or MintPy
                 A = np.column_stack((np.ones(m), bperp_pix, time_span))
                 #A = np.column_stack((np.ones(m), geom , time_span))
                 # displacement observations (in mm)
                 y = np.vstack(ifgv)
                 # solve weighted least-squares system (not available in scipy!)
-                try:
-                    inv(Qyy) # Var-cov matrix of observations could be singular
+                try: # Var-cov matrix of observations could be singular
+                    inv(Qyy)
+                    # in case vcmt can't be used, below code could use linalg.solve instead of matrix multiplication
+                    # normal equaion matrix N = A'PA = A'inv(Qyy)A
                     N = np.matmul(np.matmul(np.transpose(A), inv(Qyy)), A)
+                    # Covariance matrix of parameters
                     Qxx = inv(N)
+                    # estimated parameters: x = Qxx * A'Py = (A'PA)^-1 * A'Py
                     xhat = np.matmul(np.matmul(np.matmul(Qxx, np.transpose(A)), inv(Qyy)), y)
+                    # dem error estimate for the pixel is the second parameter (cf. design matrix)
                     dem_error[row][col] = xhat[1]
                 except LinAlgError as err: # nan value for DEM error in case of singular Qyy matrix
                     if 'Singular matrix' in str(err):
@@ -213,7 +218,7 @@ def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold, vcmt):
 
 def _perpixel_setup(ifgs, bperp):
     """
-    Convenience function for setting up time series computation parameters
+    Convenience function for setting up DEM error computation parameters
 
     :param list ifgs: list of interferogram class objects.
     :param ndarray bperp: Per-pixel perpendicular baseline for each interferogram
@@ -240,7 +245,9 @@ def _perpixel_setup(ifgs, bperp):
 
 
 def _write_dem_errors(ifg_paths, params, preread_ifgs, tiles):
-
+    """
+    Convenience function for writing DEM error (one file) and DEM error correction for each IFG to disc
+    """
     # re-assemble tiles and save into dem_error dir
     shape = preread_ifgs[ifg_paths[0]].shape
 

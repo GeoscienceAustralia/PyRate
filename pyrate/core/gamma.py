@@ -504,6 +504,10 @@ def read_lookup_table(head, data_path, xlooks, ylooks, xmin, xmax, ymin, ymax):
     :param str data_path: Input file
     :param int xlooks: multi-looking factor in x
     :param int ylooks: multi-looking factor in y
+    :param int xmin: start pixel of cropped extent in x
+    :param int xmax: end pixel of cropped extent in x
+    :param int ymin: start pixel of cropped extent in y
+    :param int ymax: end pixel of cropped extent in y
 
     :return: np-array lt_data_az: azimuth (i.e. row) of radar-coded MLI
     :return: np-array lt_data_rg: range (i.e. column) of radar-coded MLI
@@ -514,12 +518,8 @@ def read_lookup_table(head, data_path, xlooks, ylooks, xmin, xmax, ymin, ymax):
     # read relevant metadata parameters
     nrows_lt = int(head.meta_data[ifc.PYRATE_NROWS]) # number of rows of original geotiff files
     ncols_lt = int(head.meta_data[ifc.PYRATE_NCOLS]) # number of columns of original geotiff files
-    # calculate multi-looked number of rows and columns
-    #nrows = round(nrows_lt / ylooks)
-    #ncols = round(ncols_lt / xlooks)
-    # old code has read this info from the Ifg class, which fails for cropped data
-    nrows = head.nrows # number of rows in multi-looked data sets
-    ncols = head.ncols # number of columns in multi-looked data sets
+    nrows = head.nrows # number of rows in multi-looked and cropped data sets
+    ncols = head.ncols # number of columns in multi-looked and cropped data sets
 
     ifg_proc = head.meta_data[ifc.PYRATE_INSAR_PROCESSOR]
     # get dimensions of lookup table file
@@ -545,22 +545,18 @@ def read_lookup_table(head, data_path, xlooks, ylooks, xmin, xmax, ymin, ymax):
             idx_start = xmin + int(xlooks / 2) - 1
         else: # for odd ml factors
             idx_start = xmin + int((xlooks - 1) / 2)
-        # old code not working for cropped data sets:
-        #idx_rg = np.arange(idx_start, ncols_lt*2, 2*xlooks) # first value
-        #idx_az = np.arange(idx_start+1, ncols_lt*2, 2*xlooks) # second value
+        # indices of range info in lookup table for the cropped and multi-looked data set
         idx_rg = np.arange(2 * idx_start, xmax * 2, 2 * xlooks)  # first value
         idx_az = np.arange(2 * idx_start + 1, xmax * 2, 2 * xlooks)  # second value
-        # row index used (e.g. for multi-looking factor 10: 4, 14, 24, ...)
-        # old code not working for cropped data sets:
-        #row_idx = np.arange(int(ylooks/2)-1, nrows_lt, ylooks)
-        # set up row idx, e.g. for ml=10: 4, 14, 24, ...
+        # set up row idx, e.g. for ml=10 (without cropping): 4, 14, 24, ...
         if (ylooks % 2) == 0: # for even ml factors
             idx_start = ymin + int(ylooks / 2) - 1
         else: # for odd ml factors
             idx_start = ymin + int((ylooks - 1) / 2)
         row_idx = np.arange(idx_start, ymax, ylooks)
 
-        # read the binary lookup table file and save the range/azimuth value pair for each position in ML data
+        # read the binary lookup table file and save the range/azimuth value pair for each position in the cropped and
+        # multi-looked data set
         log.debug(f"Reading lookup table file {data_path}")
         with open(data_path, 'rb') as f:
             for y in range(nrows_lt): # loop through all lines in file
