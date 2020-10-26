@@ -300,9 +300,13 @@ def gaussian_spatial_filter(image, cutoff, x_size, y_size):
     yy = (yy - cy) * y_size
     dist = np.sqrt(xx ** 2 + yy ** 2)/ ifc.METRE_PER_KM # change m to km
 
+    # Estimate sigma value for Gaussian kernel function in spectral domain
+    # by converting cutoff distance to wavenumber and applying a scaling
+    # factor based on fixed kernel window size. 
+    sigma = np.std(dist) * (1 / cutoff)
     # Apply Gaussian smoothing kernel
-    H = _kernel(dist, cutoff)
-    outf = imf * H
+    wgt = _kernel(dist, sigma)
+    outf = imf * wgt
     out = np.real(ifft2(ifftshift(outf)))
     out[np.isnan(image)] = np.nan # re-apply nans to output image
     return out
@@ -384,8 +388,8 @@ def gaussian_temporal_filter(tsincr, cutoff, span, thr):
 
     return ts_lp
 
-def _kernel(x, cutoff):
+def _kernel(x, sigma):
     """
     Gaussian low-pass filter kernel
     """
-    return np.exp(-0.5 * (x / cutoff) ** 2)
+    return np.exp(-0.5 * (x / sigma) ** 2)
