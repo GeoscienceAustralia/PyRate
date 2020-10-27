@@ -40,21 +40,22 @@ def filter_loops_to_increasing_sequence_loops(loops):
     filtered_loops = set()
     for i, l in enumerate(loops):
         gt = [l[ii+1] > l[ii] for ii in range(len(l)-1)]
-        if np.sum(~np.array(gt)) > 1:
+        if np.sum(~np.array(gt)) > 1:  # more than one sequence
             continue  # don't take this one
-        elif np.sum(~np.array(gt)) == 1:  # take this but change to increasing sequence
+        elif np.sum(~np.array(gt)) == 1:  # can be turned into increasing sequence
+            # take this but change to increasing sequence
             index_of_false = gt.index(False)
             new_l = l[index_of_false+1:] + l[0:index_of_false + 1]
             if all([new_l[ii+1] > new_l[ii] for ii in range(len(new_l)-1)]):
                 filtered_loops.add(tuple(new_l))
         else:
-            if all(gt):
+            if all(gt):  # increasing sequence returned by networkx
                 filtered_loops.add(tuple(l))
     print('len(filtered_loops): ', len(filtered_loops))
     return filtered_loops
 
 
-def associate_ifgs_with_loops(loops, ifgs):
+def associate_ifgs_with_loops(loops, available_edges):
     loops_to_ifgs = {}
 
     for i, l in enumerate(loops):
@@ -63,6 +64,7 @@ def associate_ifgs_with_loops(loops, ifgs):
             ifg = Edge(ll, l[ii + 1])
             loop_ifgs.append(ifg)
         ifg = Edge(l[0], l[-1])
+        assert ifg in available_edges, f'{ifg} not found in original list'
         loop_ifgs.append(ifg)
         loops_to_ifgs[i] = loop_ifgs
 
@@ -81,7 +83,6 @@ def create_mock_ifgs_unless_already_available(ifgs_used, original_ifgs, all_ifgs
 def setup_data(ifg_files):
     ifg_files.sort()
     ifgs = [dem_or_ifg(i) for i in ifg_files]
-
     for i in ifgs:
         i.open()
         i.nodata_value = 0
@@ -96,9 +97,9 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 new_test_files = Path('/home/sudipta/Documents/GEOTIFF').glob('*.tif')
 ifgs = setup_data([f.as_posix() for f in new_test_files if '_dem.tif' not in f.as_posix()])
-edges = [(i.first, i.second) for i in ifgs]
+edges = [Edge(i.first, i.second) for i in ifgs]
 all_loops = find_closed_loops(edges)
 increasing_loops = filter_loops_to_increasing_sequence_loops(all_loops)
 print(len(increasing_loops))
-loops_to_ifgs = associate_ifgs_with_loops(increasing_loops, ifgs)
+loops_to_ifgs = associate_ifgs_with_loops(increasing_loops, edges)
 
