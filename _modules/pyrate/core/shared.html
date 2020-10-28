@@ -970,8 +970,6 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">_check_raw_data</span><span class="p">(</span><span class="n">bytes_per_col</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">nrows</span><span class="p">)</span>
 
-    <span class="n">_check_pixel_res_mismatch</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
-
     <span class="c1"># position and projection data</span>
     <span class="n">gt</span> <span class="o">=</span> <span class="p">[</span><span class="n">header</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_LONG</span><span class="p">],</span> <span class="n">header</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_X_STEP</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">header</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_LAT</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">header</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_Y_STEP</span><span class="p">]]</span>
     <span class="n">srs</span> <span class="o">=</span> <span class="n">osr</span><span class="o">.</span><span class="n">SpatialReference</span><span class="p">()</span>
@@ -1104,18 +1102,6 @@
     <span class="k">if</span> <span class="n">act_size</span> <span class="o">!=</span> <span class="n">size</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> should have size </span><span class="si">%s</span><span class="s1">, not </span><span class="si">%s</span><span class="s1">. Is the correct file being used?&#39;</span>
         <span class="k">raise</span> <span class="n">GeotiffException</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">act_size</span><span class="p">))</span>
-
-
-<span class="k">def</span> <span class="nf">_check_pixel_res_mismatch</span><span class="p">(</span><span class="n">header</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convenience function to check equality of pixel resolution in X and Y dimensions</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># pylint: disable=invalid-name</span>
-    <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span> <span class="o">=</span> <span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="n">header</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_X_STEP</span><span class="p">],</span> <span class="n">header</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_Y_STEP</span><span class="p">]]]</span>
-
-    <span class="k">if</span> <span class="n">xs</span> <span class="o">!=</span> <span class="n">ys</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;X and Y cell sizes do not match: </span><span class="si">%s</span><span class="s1"> &amp; </span><span class="si">%s</span><span class="s1">&#39;</span>
-        <span class="k">raise</span> <span class="n">GeotiffException</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">))</span>
 
 
 <div class="viewcode-block" id="write_unw_from_data_or_geotiff"><a class="viewcode-back" href="../../../shared.html#pyrate.core.shared.write_unw_from_data_or_geotiff">[docs]</a><span class="k">def</span> <span class="nf">write_unw_from_data_or_geotiff</span><span class="p">(</span><span class="n">geotif_or_data</span><span class="p">,</span> <span class="n">dest_unw</span><span class="p">,</span> <span class="n">ifg_proc</span><span class="p">):</span>
