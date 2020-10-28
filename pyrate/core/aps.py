@@ -206,14 +206,11 @@ def spatial_low_pass_filter(ts_hp, ifg, params):
     :rtype: ndarray
     """
     log.info('Applying spatial low-pass filter')
-    if params[cf.SLPF_NANFILL] == 0:
-        ts_hp[np.isnan(ts_hp)] = 0  # need it here for cvd and fft
-    else:
-        # optionally interpolate, operation is inplace
-        _interpolate_nans(ts_hp, params[cf.SLPF_NANFILL_METHOD])
 
     nvels = ts_hp.shape[2]
     cutoff = params[cf.SLPF_CUTOFF]
+    nanfill = params[cf.SLPF_NANFILL]
+    fillmethod = params[cf.SLPF_NANFILL_METHOD]
     if cutoff == 0:
         r_dist = RDist(ifg)() # only needed for cvd_for_phase
     else:
@@ -225,7 +222,7 @@ def spatial_low_pass_filter(ts_hp, ifg, params):
     process_ts_lp = {}
 
     for i in process_nvel:
-        process_ts_lp[i] = _slpfilter(ts_hp[:, :, i], ifg, r_dist, cutoff)
+        process_ts_lp[i] = _slpfilter(ts_hp[:, :, i], ifg, r_dist, cutoff, nanfill, fillmethod)
 
     ts_lp_d = shared.join_dicts(mpiops.comm.allgather(process_ts_lp))
     ts_lp = np.dstack([v[1] for v in sorted(ts_lp_d.items())])
@@ -233,35 +230,24 @@ def spatial_low_pass_filter(ts_hp, ifg, params):
     return ts_lp
 
 
-def _interpolate_nans(arr, method='linear'):
+def _interpolate_nans_2d(arr, method):
     """
-    Fill any NaN values in arr with interpolated values. Nanfill and
-    interpolation are performed in place.
-    """
-    rows, cols = np.indices(arr.shape[:2])
-    for i in range(arr.shape[2]):
-        a = arr[:, :, i]
-        _interpolate_nans_2d(a, rows, cols, method)
+    In-place array interpolation and NaN-fill
+    using scipy.interpolation.griddata.
 
-
-def _interpolate_nans_2d(a, rows, cols, method):
-    """
-    In-place array interpolation and nanfill
-
-    :param ndarray a: 2d ndarray to be interpolated
-    :param ndarray rows: 2d ndarray of row indices
-    :param ndarray cols: 2d ndarray of col indices
+    :param ndarray arr: 2D ndarray to be interpolated
     :param str method: Method; one of 'nearest', 'linear', and 'cubic'
     """
-    a[np.isnan(a)] = griddata(
-        (rows[~np.isnan(a)], cols[~np.isnan(a)]),  # points we know
-        a[~np.isnan(a)],  # values we know
-        (rows[np.isnan(a)], cols[np.isnan(a)]),  # points to interpolate
-        method=method)
-    a[np.isnan(a)] = 0  # zero fill boundary/edge nans
+    log.debug(f'Interpolating array with "{method}" method')
+    r, c = np.indices(arr.shape)
+    arr[np.isnan(arr)] = griddata(
+        (r[~np.isnan(arr)], c[~np.isnan(arr)]),  # points we know
+        arr[~np.isnan(arr)],  # values we know
+        (r[np.isnan(arr)], c[np.isnan(arr)]),  # points to interpolate
+        method=method, fill_value=0)
 
 
-def _slpfilter(phase, ifg, r_dist, cutoff):
+def _slpfilter(phase, ifg, r_dist, cutoff, nanfill, fillmethod):
     """
     Wrapper function for spatial low pass filter
     """
@@ -273,28 +259,39 @@ def _slpfilter(phase, ifg, r_dist, cutoff):
         cutoff = 1.0/alpha
         log.info(f'Gaussian spatial filter cutoff is {cutoff:.3f} km')
 
-    return gaussian_spatial_filter(phase, cutoff, ifg.x_size, ifg.y_size)
+    return gaussian_spatial_filter(phase, cutoff, ifg.x_size, ifg.y_size, nanfill, fillmethod)
 
 
-def gaussian_spatial_filter(image, cutoff, x_size, y_size):
+def gaussian_spatial_filter(image, cutoff, x_size, y_size, nanfill=True, fillmethod='nearest'):
     """
     Function to apply a Gaussian spatial low-pass filter to a 2D image with
-    unequal pixel resolution in x and y dimensions.
+    unequal pixel resolution in x and y dimensions. Performs filtering in the
+    Fourier domain.
 
     :param ndarray image: 2D image to be filtered
     :param float cutoff: filter cutoff in kilometres
     :param float x_size: pixel size in x dimension, in metres
     :param float y_size: pixel size in y dimension, in metres
+    :param bool nanfill: interpolate image to fill NaNs
+    :param str fillmethod: interpolation method ('nearest', 'cubic', or 'linear')
 
     :return: out: Gaussian low-pass filtered 2D image
     :rtype: ndarray
     """
+    # create NaN mask of image
+    mask = np.isnan(image)
+    # in-place nearest-neighbour interpolation to fill NaNs
+    # nearest neighbour will fill values outside the convex hull
+    if nanfill:
+        _interpolate_nans_2d(image, fillmethod)
+    # fast fourier transform of the input image
+    imf = fftshift(fft2(image))
+
     rows, cols = image.shape
+    # calculate centre coords of image
     cx = np.floor(cols/2)
     cy = np.floor(rows/2)
-    # fft for the input image
-    imf = fftshift(fft2(image))
-    # calculate distance
+    # calculate distance array
     [xx, yy] = np.meshgrid(range(cols), range(rows))
     xx = (xx - cx) * x_size  # these are in meters as x_size in metres
     yy = (yy - cy) * y_size
@@ -304,11 +301,13 @@ def gaussian_spatial_filter(image, cutoff, x_size, y_size):
     # by converting cutoff distance to wavenumber and applying a scaling
     # factor based on fixed kernel window size. 
     sigma = np.std(dist) * (1 / cutoff)
-    # Apply Gaussian smoothing kernel
+    # Calculate kernel weights
     wgt = _kernel(dist, sigma)
+    # Apply Gaussian smoothing kernel
     outf = imf * wgt
+    # Inverse Fourier transform
     out = np.real(ifft2(ifftshift(outf)))
-    out[np.isnan(image)] = np.nan # re-apply nans to output image
+    out[mask] = np.nan # re-insert nans in output image
     return out
 
 

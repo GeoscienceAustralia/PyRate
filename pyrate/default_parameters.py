@@ -326,7 +326,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
     },
     "slpnanfill": {
         "DataType": int,
-        "DefaultValue": 0,
+        "DefaultValue": 1,
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": [0, 1],
@@ -334,7 +334,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
     },
     "slpnanfill_method": {
         "DataType": str,
-        "DefaultValue": "cubic",
+        "DefaultValue": "nearest",
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": ["linear", "nearest", "cubic"],

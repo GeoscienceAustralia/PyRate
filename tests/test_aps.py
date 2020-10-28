@@ -24,7 +24,7 @@ from scipy.ndimage import gaussian_filter1d
 from pyrate import conv2tif, prepifg, correct
 from pyrate.configuration import Configuration, MultiplePaths
 import pyrate.core.config as cf
-from pyrate.core.aps import wrap_spatio_temporal_filter, _interpolate_nans, _kernel
+from pyrate.core.aps import wrap_spatio_temporal_filter, _interpolate_nans_2d, _kernel
 from pyrate.core.aps import gaussian_temporal_filter as tlpfilter
 from pyrate.core import shared
 from pyrate.core.ifgconstants import DAYS_PER_YEAR
@@ -36,11 +36,11 @@ def slpnanfill_method(request):
     return request.param
 
 
-def test_interpolate_nans(slpnanfill_method):
-    arr = np.random.rand(20, 10, 5)
+def test_interpolate_nans_2d(slpnanfill_method):
+    arr = np.random.rand(200, 100)
     arr[arr < 0.1] = np.nan  # insert some nans
     assert np.sum(np.isnan(arr)) != 0  # some nans present
-    _interpolate_nans(arr, method=slpnanfill_method)
+    _interpolate_nans_2d(arr, method=slpnanfill_method)
     assert np.sum(np.isnan(arr)) == 0  # should not be any nans
 
 
