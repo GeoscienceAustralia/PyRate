@@ -1,57 +1,60 @@
 from collections import namedtuple
 from pathlib import Path
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Tuple
 from datetime import datetime, date, timedelta
 import numpy as np
 import networkx as nx
 from pyrate.core.shared import dem_or_ifg
 
 Edge = namedtuple('Edge', ['first', 'second'])
-WeightedEdge = namedtuple('Edge', ['first', 'second', 'weight'])
+SignedEdge = namedtuple('SignedEdge', ['edge', 'sign'])
+WeightedEdge = namedtuple('WeightedEdge', ['first', 'second', 'weight'])
 
 
-def find_closed_loops(weighted_edges: List[WeightedEdge]) -> List[date]:
+def discard_edges_with_same_members(simple_cycles):
+    seen_sc_sets = set()
+    filtered_sc = []
+    for sc in simple_cycles:
+        loop = sc[:]
+        sc.sort()
+        sc = tuple(sc)
+        if sc not in seen_sc_sets:
+            filtered_sc.append(loop)
+        seen_sc_sets.add(sc)
+    return filtered_sc
+
+
+def find_closed_loops(weighted_edges: List[WeightedEdge]) -> List[List[date]]:
     g = nx.Graph()
     g.add_weighted_edges_from(weighted_edges)
     dg = nx.DiGraph(g)
     simple_cycles = nx.simple_cycles(dg)  # will have all edges
     simple_cycles = [scc for scc in simple_cycles if len(scc) > 2]  # discard edges
-    # TODO: also discard loops when the loop members are the same?
-    return simple_cycles
+
+    # also discard loops when the loop members are the same
+    return discard_edges_with_same_members(simple_cycles)
 
 
-def filter_loops_to_increasing_sequence_loops(loops):
-    filtered_loops = set()
+def add_signs_to_loops(loops, available_edges) -> Dict[int, List[SignedEdge]]:
+    signed_loops = dict()
+    available_edges = set(available_edges)  # hash it once for O(1) lookup
     for i, l in enumerate(loops):
-        gt = [l[ii+1] > l[ii] for ii in range(len(l)-1)]
-        if np.sum(~np.array(gt)) > 1:  # more than one sequence
-            continue  # don't take this one
-        elif np.sum(~np.array(gt)) == 1:  # can be turned into increasing sequence
-            # take this but change to increasing sequence
-            index_of_false = gt.index(False)
-            new_l = l[index_of_false+1:] + l[0:index_of_false + 1]
-            if all([new_l[ii+1] > new_l[ii] for ii in range(len(new_l)-1)]):
-                filtered_loops.add(tuple(new_l))
-        else:
-            if all(gt):  # increasing sequence returned by networkx
-                filtered_loops.add(tuple(l))
-    return filtered_loops
-
-
-def associate_ifgs_with_loops(loops, available_edges):
-    loops_to_ifgs = {}
-
-    for i, l in enumerate(loops):
-        loop_ifgs = []
+        signed_loop = []
+        l.append(l[0])  # add the closure loop
         for ii, ll in enumerate(l[:-1]):
-            ifg = Edge(ll, l[ii + 1], )
-            loop_ifgs.append(ifg)
-        ifg = Edge(l[0], l[-1])
-        assert ifg in available_edges, f'{ifg} not found in original list'
-        loop_ifgs.append(ifg)
-        loops_to_ifgs[i] = loop_ifgs
+            if l[ii+1] > ll:
+                edge = Edge(ll, l[ii+1])
+                assert edge in available_edges
+                signed_edge = SignedEdge(edge, 1)  # opposite direction of ifg
+            else:
+                edge = Edge(l[ii+1], ll)
+                assert edge in available_edges
+                signed_edge = SignedEdge(edge, -1)  # in direction of ifg
+            signed_loop.append(signed_edge)
 
-    return loops_to_ifgs
+        signed_loops[i] = signed_loop
+
+    return signed_loops
 
 
 def setup_edges(ifg_files: List['str'], weighted: bool = False) -> List[Union[Edge, WeightedEdge]]:
@@ -66,16 +69,16 @@ def setup_edges(ifg_files: List['str'], weighted: bool = False) -> List[Union[Ed
         return [Edge(i.first, i.second) for i in ifgs]
 
 
-def mst_closure_wrapped(ifg_files):
-    edges = setup_edges(ifg_files)
+def mst_closure_wrapped(ifg_files: List[str]):
+    available_edges = setup_edges(ifg_files)
     weighted_edges = setup_edges(ifg_files, weighted=True)
 
-    all_loops = find_closed_loops(weighted_edges)
-    increasing_loops = filter_loops_to_increasing_sequence_loops(all_loops)
-    loops_to_ifgs = associate_ifgs_with_loops(increasing_loops, edges)
-    return loops_to_ifgs
+    all_loops = find_closed_loops(weighted_edges)  # find loops with weights
+    signed_loops = add_signs_to_loops(all_loops, available_edges)
+    return signed_loops
 
 
 # new_test_files = Path('/home/sudipta/Documents/GEOTIFF').glob('*_unw.tif')
-# ifg_files = [f.as_posix() for f in new_test_files if '_dem.tif' not in f.as_posix()]
-# loops_to_ifgs = mst_closure_wrapped(ifg_files=ifg_files)
+# ifg_files = [f.as_posix() for f in new_test_files]
+# signed_loops = mst_closure_wrapped(ifg_files=ifg_files)
+# import IPython; IPython.embed()
