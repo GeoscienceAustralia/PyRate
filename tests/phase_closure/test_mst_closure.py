@@ -42,4 +42,5 @@ def test_associate_ifgs_with_loops(signed_loops, geotiffs):
     assert len(geotiffs) == 30
     assert len(signed_loops) == 541
     assert isinstance(signed_loops[0][0], SignedEdge)
+    assert isinstance(signed_loops[0][0][0], Edge)
 

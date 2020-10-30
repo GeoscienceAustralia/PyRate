@@ -8,7 +8,7 @@ from pyrate.core.shared import dem_or_ifg
 
 Edge = namedtuple('Edge', ['first', 'second'])
 SignedEdge = namedtuple('SignedEdge', ['edge', 'sign'])
-WeightedEdge = namedtuple('WeightedEdge', ['first', 'second', 'weight'])
+WeightedEdge = namedtuple('WeightedEdge', ['edge', 'weight'])
 
 
 def discard_edges_with_same_members(simple_cycles):
@@ -26,6 +26,7 @@ def discard_edges_with_same_members(simple_cycles):
 
 def find_closed_loops(weighted_edges: List[WeightedEdge]) -> List[List[date]]:
     g = nx.Graph()
+    weighted_edges = [(we.edge.first, we.edge.second, we.weight) for we in weighted_edges]
     g.add_weighted_edges_from(weighted_edges)
     dg = nx.DiGraph(g)
     simple_cycles = nx.simple_cycles(dg)  # will have all edges
@@ -35,8 +36,8 @@ def find_closed_loops(weighted_edges: List[WeightedEdge]) -> List[List[date]]:
     return discard_edges_with_same_members(simple_cycles)
 
 
-def add_signs_to_loops(loops, available_edges) -> Dict[int, List[SignedEdge]]:
-    signed_loops = dict()
+def add_signs_to_loops(loops, available_edges) -> List[List[SignedEdge]]:
+    signed_loops = []
     available_edges = set(available_edges)  # hash it once for O(1) lookup
     for i, l in enumerate(loops):
         signed_loop = []
@@ -52,7 +53,7 @@ def add_signs_to_loops(loops, available_edges) -> Dict[int, List[SignedEdge]]:
                 signed_edge = SignedEdge(edge, -1)  # in direction of ifg
             signed_loop.append(signed_edge)
 
-        signed_loops[i] = signed_loop
+        signed_loops.append(signed_loop)
 
     return signed_loops
 
@@ -64,7 +65,7 @@ def setup_edges(ifg_files: List['str'], weighted: bool = False) -> List[Union[Ed
         i.open()
         i.nodata_value = 0
     if weighted:
-        return [WeightedEdge(i.first, i.second, i.nan_fraction) for i in ifgs]
+        return [WeightedEdge(Edge(i.first, i.second), i.nan_fraction) for i in ifgs]
     else:
         return [Edge(i.first, i.second) for i in ifgs]
 
