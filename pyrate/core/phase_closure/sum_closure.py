@@ -3,12 +3,8 @@ from pathlib import Path
 from typing import List, Dict
 import numpy as np
 from pyrate.core.shared import Ifg, dem_or_ifg
-from pyrate.core.phase_closure.mst_closure import Edge, WeightedEdge, SignedEdge, mst_closure_wrapped
-
-THRESHOLD_TO_REMOVE_PIXEL = 0.25
-LARGE_DEVIATION_THRESHOLD_FOR_PIXEL = 3.14152  # pi
-THRESHOLD_TO_REMOVE_IFG = 0.5
-MAX_LOOP_LENGTH = 5  # loops upto this many edges are considered for closure checks
+from pyrate.core.phase_closure.mst_closure import Edge, WeightedEdge, SignedEdge, find_signed_closed_loops
+from pyrate.core.logger import pyratelogger as log
 IndexedIfg = namedtuple('IndexedIfg', ['index', 'Ifg'])
 
 
@@ -49,13 +45,4 @@ def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[List[Signed
                 #  the variable check_ps is increased by 1 for that pixel
                 check_ps[indices_breaching_threshold, index] += 1
 
-    return closure, check_ps
-
-
-new_test_files = Path('/home/sudipta/Documents/GEOTIFF').glob('*_unw.tif')
-ifg_files = [f.as_posix() for f in new_test_files]
-signed_loops = mst_closure_wrapped(ifg_files=ifg_files)
-retained_loops = [sl for sl in signed_loops if len(sl) <= MAX_LOOP_LENGTH]
-closure, check_ps = sum_phase_values_for_each_loop(ifg_files, retained_loops, LARGE_DEVIATION_THRESHOLD_FOR_PIXEL)
-import IPython; IPython.embed()
-
+    return closure, check_ps, ifg_num

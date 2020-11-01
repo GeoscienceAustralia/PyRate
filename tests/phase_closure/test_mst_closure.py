@@ -34,8 +34,18 @@ def signed_loops(all_loops, edges):
     return loops
 
 
-def test_setup_edges():
-    pass
+@pytest.fixture(params=[True, False])
+def weight(request):
+    return request.param
+
+
+def test_setup_edges(weight, geotiffs):
+    edges = setup_edges(geotiffs, weight)
+    assert len(edges) == len(geotiffs) == 30
+    if weight:
+        assert isinstance(edges[0], WeightedEdge)
+    else:
+        assert isinstance(edges[0], Edge)
 
 
 def test_associate_ifgs_with_loops(signed_loops, geotiffs):

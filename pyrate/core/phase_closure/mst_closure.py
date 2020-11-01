@@ -70,16 +70,10 @@ def setup_edges(ifg_files: List['str'], weighted: bool = False) -> List[Union[Ed
         return [Edge(i.first, i.second) for i in ifgs]
 
 
-def mst_closure_wrapped(ifg_files: List[str]):
+def find_signed_closed_loops(ifg_files: List[str]):
     available_edges = setup_edges(ifg_files)
     weighted_edges = setup_edges(ifg_files, weighted=True)
 
     all_loops = find_closed_loops(weighted_edges)  # find loops with weights
     signed_loops = add_signs_to_loops(all_loops, available_edges)
     return signed_loops
-
-
-# new_test_files = Path('/home/sudipta/Documents/GEOTIFF').glob('*_unw.tif')
-# ifg_files = [f.as_posix() for f in new_test_files]
-# signed_loops = mst_closure_wrapped(ifg_files=ifg_files)
-# import IPython; IPython.embed()
