@@ -8,11 +8,11 @@ from pyrate.core.phase_closure.sum_closure import sum_phase_values_for_each_loop
 from pyrate.core.logger import pyratelogger as log
 
 THRESHOLD_TO_REMOVE_PIXEL = 0.25
-LARGE_DEVIATION_THRESHOLD_FOR_PIXEL = 3.14152/2  # pi
+LARGE_DEVIATION_THRESHOLD_FOR_PIXEL = np.pi/2  # pi
 THRESHOLD_TO_REMOVE_IFG = 0.1  # ifgs with more than this fraction of pixels with error will be dropped
 LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG = 2  # pixel with phase unwrap error in at least this many loops
 PHASE_UNWRAP_ERROR_THRESHOLD = 5  # pixel with phase unwrap error in more than this many ifgs will be flagged
-MAX_LOOP_LENGTH = 5  # loops upto this many edges are considered for closure checks
+MAX_LOOP_LENGTH = 4  # loops upto this many edges are considered for closure checks
 
 
 def detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg):
@@ -53,11 +53,13 @@ def drop_ifgs_exceeding_threshold(orig_ifg_files, check_ps, num_occurences_each_
 
 
 def closure_check_wrapper():
+    from pyrate.core.phase_closure.plot_closure import plot_closure
     ifg_files = Path('/home/sudipta/Documents/GEOTIFF').glob('*_unw.tif')
     ifg_files = [f.as_posix() for f in ifg_files]
     while True:  # iterate till ifgs/loops are stable
         print('len(ifg_files):', len(ifg_files))
-        new_ifg_files = wrap_closure_check(ifg_files)
+        new_ifg_files, closure = wrap_closure_check(ifg_files)
+        plot_closure(closure=closure)
         if len(ifg_files) == len(new_ifg_files):
             break
         else:
@@ -72,7 +74,7 @@ def wrap_closure_check(ifg_files):
     )
     # ps_unwrap_error = detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg)
     selcted_ifg_files = drop_ifgs_exceeding_threshold(ifg_files, check_ps, num_occurences_each_ifg)
-    return selcted_ifg_files
+    return selcted_ifg_files, closure
 
 
 closure_check_wrapper()
