@@ -8,8 +8,8 @@ from pyrate.core.phase_closure.sum_closure import sum_phase_values_for_each_loop
 from pyrate.core.logger import pyratelogger as log
 
 THRESHOLD_TO_REMOVE_PIXEL = 0.25
-LARGE_DEVIATION_THRESHOLD_FOR_PIXEL = 3.14152/4  # pi
-THRESHOLD_TO_REMOVE_IFG = 0.2  # ifgs with more than this fraction of pixels with error will be dropped
+LARGE_DEVIATION_THRESHOLD_FOR_PIXEL = 3.14152/2  # pi
+THRESHOLD_TO_REMOVE_IFG = 0.1  # ifgs with more than this fraction of pixels with error will be dropped
 LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG = 2  # pixel with phase unwrap error in at least this many loops
 PHASE_UNWRAP_ERROR_THRESHOLD = 5  # pixel with phase unwrap error in more than this many ifgs will be flagged
 MAX_LOOP_LENGTH = 5  # loops upto this many edges are considered for closure checks
@@ -39,7 +39,7 @@ def drop_ifgs_exceeding_threshold(orig_ifg_files, check_ps, num_occurences_each_
         loop_count_of_this_ifg = num_occurences_each_ifg[i]
         if loop_count_of_this_ifg:  # if the ifg participated in at least one loop
             ifg_remove_threshold_breached = np.absolute(np.nansum(check_ps[:, :, i]))/loop_count_of_this_ifg/nrows/ncols > THRESHOLD_TO_REMOVE_IFG
-            print(Path(ifg_file).stem, ifg_remove_threshold_breached, num_occurences_each_ifg[i])
+
             if not (
                     (num_occurences_each_ifg[i] > LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG)  # min loops
                     and
@@ -55,20 +55,21 @@ def drop_ifgs_exceeding_threshold(orig_ifg_files, check_ps, num_occurences_each_
 def closure_check_wrapper():
     ifg_files = Path('/home/sudipta/Documents/GEOTIFF').glob('*_unw.tif')
     ifg_files = [f.as_posix() for f in ifg_files]
-    for _ in range(1):  # run closure loop twice
+    while True:  # iterate till ifgs/loops are stable
         print('len(ifg_files):', len(ifg_files))
-        ifg_files = wrap_closure_check(ifg_files)
+        new_ifg_files = wrap_closure_check(ifg_files)
+        if len(ifg_files) == len(new_ifg_files):
+            break
+        else:
+            ifg_files = new_ifg_files
 
 
 def wrap_closure_check(ifg_files):
     signed_loops = find_signed_closed_loops(ifg_files=ifg_files)
-    print('len(signed_loops): ', len(signed_loops))
     retained_loops = [sl for sl in signed_loops if len(sl) <= MAX_LOOP_LENGTH]
-    print('len(retained_loops): ', len(retained_loops))
     closure, check_ps, num_occurences_each_ifg = sum_phase_values_for_each_loop(
         ifg_files, retained_loops, LARGE_DEVIATION_THRESHOLD_FOR_PIXEL
     )
-    print(np.sum(closure), np.sum(check_ps), np.sum(num_occurences_each_ifg))
     # ps_unwrap_error = detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg)
     selcted_ifg_files = drop_ifgs_exceeding_threshold(ifg_files, check_ps, num_occurences_each_ifg)
     return selcted_ifg_files

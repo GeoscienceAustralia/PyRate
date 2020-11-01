@@ -22,16 +22,17 @@ def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[List[Signed
     ifgs = [v.Ifg for v in edge_to_indexed_ifgs.values()]
     n_ifgs = len(ifgs)
     n_loops = len(loops)
-    closure = np.zeros(shape=(ifgs[0].phase_data.shape + (n_loops,)))
+    closure = np.zeros(shape=(ifgs[0].phase_data.shape + (n_loops,)), dtype=np.float32)
 
-    num_occurences_each_ifg = np.zeros(shape=n_ifgs)
+    num_occurences_each_ifg = np.zeros(shape=n_ifgs, dtype=np.int16)
 
     # initiate variable for check of unwrapping issues at the same pixels in all loops
     check_ps = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)))
     for k, loop in enumerate(loops):
         for signed_edge in loop:
-            ifg = edge_to_indexed_ifgs[signed_edge.edge].Ifg
-            ifg_index = edge_to_indexed_ifgs[signed_edge.edge].index
+            indexed_ifg = edge_to_indexed_ifgs[signed_edge.edge]
+            ifg = indexed_ifg.Ifg
+            ifg_index = indexed_ifg.index
             closure[:, :, k] += signed_edge.sign * ifg.phase_data
             num_occurences_each_ifg[ifg_index] += 1
 
