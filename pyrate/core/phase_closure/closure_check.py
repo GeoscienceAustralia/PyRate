@@ -38,8 +38,7 @@ def drop_ifgs_exceeding_threshold(orig_ifg_files, check_ps, num_occurences_each_
     for i, ifg_file in enumerate(orig_ifg_files):
         loop_count_of_this_ifg = num_occurences_each_ifg[i]
         if loop_count_of_this_ifg:  # if the ifg participated in at least one loop
-            ifg_remove_threshold_breached = np.absolute(np.nansum(check_ps[:, :, i]))/loop_count_of_this_ifg/nrows/ncols > THRESHOLD_TO_REMOVE_IFG
-
+            ifg_remove_threshold_breached = np.absolute(np.sum(check_ps[:, :, i]))/loop_count_of_this_ifg/nrows/ncols > THRESHOLD_TO_REMOVE_IFG
             if not (
                     (num_occurences_each_ifg[i] > LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG)  # min loops
                     and
@@ -54,7 +53,9 @@ def drop_ifgs_exceeding_threshold(orig_ifg_files, check_ps, num_occurences_each_
 
 def closure_check_wrapper():
     from pyrate.core.phase_closure.plot_closure import plot_closure
-    ifg_files = Path('/home/sudipta/Documents/GEOTIFF').glob('*_unw.tif')
+    from pyrate.constants import PYRATEPATH
+    GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
+    ifg_files = GEOTIFF.glob('*_unw.tif')
     ifg_files = [f.as_posix() for f in ifg_files]
     while True:  # iterate till ifgs/loops are stable
         print('len(ifg_files):', len(ifg_files))

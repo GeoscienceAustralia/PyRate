@@ -14,6 +14,7 @@ def create_ifg_edge_dict(ifg_files) -> Dict[Edge, IndexedIfg]:
     for i in ifgs:
         i.open()
         i.nodata_value = 0
+        i.convert_to_nans()
     return {Edge(ifg.first, ifg.second): IndexedIfg(index, ifg) for index, ifg in enumerate(ifgs)}
 
 
@@ -36,9 +37,13 @@ def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[List[Signed
             closure[:, :, k] += signed_edge.sign * ifg.phase_data
             num_occurences_each_ifg[ifg_index] += 1
 
-        closure[:, :, k] -= np.median(closure[:, :, k])
+        closure[:, :, k] -= np.nanmedian(closure[:, :, k])
+        # handle nans elegantly
+        nan_indices = np.isnan(closure[:, :, k])
+        closure[:, :, k][nan_indices] = 0  # values with nans can't be threshold checked
 
         indices_breaching_threshold = np.absolute(closure[:, :, k]) > threshold
+        closure[:, :, k][nan_indices] = np.nan  # set them to nan again  - this is useful when we plot
         for signed_edge in loop:
             ifg_index = edge_to_indexed_ifgs[signed_edge.edge].index
             #  the variable check_ps is increased by 1 for that pixel
