@@ -1,10 +1,8 @@
 from collections import namedtuple
-from pathlib import Path
 from typing import List, Dict, Tuple
 import numpy as np
 from pyrate.core.shared import Ifg, dem_or_ifg
-from pyrate.core.phase_closure.mst_closure import Edge, WeightedEdge, SignedEdge, find_signed_closed_loops
-from pyrate.core.logger import pyratelogger as log
+from pyrate.core.phase_closure.mst_closure import Edge, SignedEdge
 IndexedIfg = namedtuple('IndexedIfg', ['index', 'Ifg'])
 
 
@@ -37,7 +35,7 @@ def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[List[Signed
             closure[:, :, k] += signed_edge.sign * ifg.phase_data
             num_occurences_each_ifg[ifg_index] += 1
 
-        closure[:, :, k] -= np.nanmedian(closure[:, :, k])
+        # closure[:, :, k] -= np.nanmedian(closure[:, :, k])  # may be able to drop median
         # handle nans elegantly
         nan_indices = np.isnan(closure[:, :, k])
         closure[:, :, k][nan_indices] = 0  # values with nans can't be threshold checked
@@ -47,6 +45,9 @@ def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[List[Signed
         for signed_edge in loop:
             ifg_index = edge_to_indexed_ifgs[signed_edge.edge].index
             #  the variable check_ps is increased by 1 for that pixel
-            check_ps[indices_breaching_threshold, ifg_index] += 1
+            # make sure we are not incrementing the nan positions in the closure
+            # as we don't know the PS of these pixels and also they were converted to zero before threshold check
+            # Therefore, we leave them out of check_ps, i.e., we don't increment their check_ps values
+            check_ps[np.logical_and(indices_breaching_threshold, ~nan_indices), ifg_index] += 1
 
     return closure, check_ps, num_occurences_each_ifg
