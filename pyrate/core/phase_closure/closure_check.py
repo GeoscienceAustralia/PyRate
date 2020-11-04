@@ -31,6 +31,14 @@ def detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg):
 
 
 def drop_ifgs_exceeding_threshold(orig_ifg_files, check_ps, num_occurences_each_ifg):
+    """
+    We demand two thresholds breaches for an ifg to be dropped.
+    1. The first one is the basic ifg loop participation count check.
+    2. The second threshold check is a weighted average check of pixels breached taking all loops into account.
+        (a) check_ps contains unwrapping error count for each pixel for each ifg seen in any loop
+        (b) sum(check_ps[:, :, i]) is pixel total count with unwrapping error for i-th ifg over all loops
+        (c) divide by loop_count_of_this_ifg and num of cells (nrows x ncols) for a weighted measure of threshold
+    """
     orig_ifg_files.sort()
     nrows, ncols, n_ifgs = check_ps.shape
     selected_ifg_files = []
@@ -39,7 +47,7 @@ def drop_ifgs_exceeding_threshold(orig_ifg_files, check_ps, num_occurences_each_
         if loop_count_of_this_ifg:  # if the ifg participated in at least one loop
             ifg_remove_threshold_breached = np.sum(check_ps[:, :, i])/loop_count_of_this_ifg/nrows/ncols > THRESHOLD_TO_REMOVE_IFG
             if not (
-                    (num_occurences_each_ifg[i] > LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG)  # min loops
+                    (num_occurences_each_ifg[i] > LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG)  # min loops count # check 1
                     and
                     ifg_remove_threshold_breached  # and breached threshold
             ):
