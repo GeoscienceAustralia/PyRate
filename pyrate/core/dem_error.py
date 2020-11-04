@@ -210,8 +210,9 @@ def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold, vcmt):
     # calculate correction value for each IFG by multiplying the least-squares estimate with the Bperp value
     dem_error_correction = np.multiply(dem_error, bperp_data)
     # calculate metric difference to DEM by multiplying the estimate with the per-pixel geometry
-    # (i.e. range distance and look angle, see Eq. (2.4.12) in Hanssen (2001)) and scaling by 0.001 (obs are in mm)
-    dem_error = np.multiply(dem_error, np.multiply(range_dist, np.sin(look_angle))) * 0.001
+    # (i.e. range distance and look angle, see Eq. (2.4.12) in Hanssen (2001))
+    # also scale by -0.001 since the phase observations are in mm with positive values away from the sensor
+    dem_error = np.multiply(dem_error, np.multiply(range_dist, np.sin(look_angle))) * (-0.001)
 
     return dem_error, dem_error_correction
 
