@@ -13,12 +13,13 @@ cmap = mpl.cm.Spectral
 
 def plot_closure(closure: np.ndarray, loops: List[List[SignedEdge]]):
     nrows, ncols, n_loops = closure.shape
-    fig = plt.figure()
 
     plt_rows = np.int(np.sqrt(n_loops))
     plt_cols = n_loops//plt_rows
     if n_loops % plt_rows:
         plt_cols += 1
+
+    fig = plt.figure(figsize=(6*plt_rows, 4*plt_cols))
 
     tot_plots = 1
     for p_r in range(plt_rows):
@@ -41,4 +42,4 @@ def plot_closure(closure: np.ndarray, loops: List[List[SignedEdge]]):
     # ax = fig.add_subplot(plt_rows, plt_cols, tot_plots+1)
     # fig.colorbar(mpl.cm.ScalarMappable(cmap=cmap), cax=ax, orientation='horizontal', label='radians')
 
-    plt.show()
+    plt.savefig(f'Closure-{len(loops)}.png')
