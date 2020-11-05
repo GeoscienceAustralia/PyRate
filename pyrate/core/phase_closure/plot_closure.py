@@ -1,7 +1,9 @@
+from typing import List
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from pyrate.core.phase_closure.mst_closure import SignedEdge
 
 PI = np.pi
 
@@ -9,7 +11,7 @@ cmap = mpl.cm.Spectral
 # norm = mpl.colors.Normalize(vmin=-PI/2, vmax=PI/2)
 
 
-def plot_closure(closure: np.ndarray):
+def plot_closure(closure: np.ndarray, loops: List[List[SignedEdge]]):
     nrows, ncols, n_loops = closure.shape
     fig = plt.figure()
 
@@ -23,7 +25,12 @@ def plot_closure(closure: np.ndarray):
         for p_c in range(plt_cols):
             ax = fig.add_subplot(plt_rows, plt_cols, tot_plots)
             data = closure[:, :, p_r * (p_c-1) + p_c]
+            loop = loops[p_r * (p_c-1) + p_c]
+            leg = ',\n'.join([se.edge.first.isoformat() + '-' + se.edge.second.isoformat() for se in loop])
             im = ax.imshow(data, vmin=-PI/2, vmax=PI/2, cmap=cmap)
+            text = ax.text(10, 10, leg, bbox={'facecolor': 'white', 'pad': 5})
+            text.set_fontsize(min(10, int(n_loops/10)))
+
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="5%", pad=0.05)
             plt.colorbar(im, cax=cax)

@@ -16,7 +16,9 @@ def create_ifg_edge_dict(ifg_files) -> Dict[Edge, IndexedIfg]:
     return {Edge(ifg.first, ifg.second): IndexedIfg(index, ifg) for index, ifg in enumerate(ifgs)}
 
 
-def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[List[SignedEdge]], threshold: float):
+def sum_phase_values_for_each_loop(
+        ifg_files: List[str], loops: List[List[SignedEdge]], threshold: float, use_median: bool = True
+        ):
     edge_to_indexed_ifgs = create_ifg_edge_dict(ifg_files)
     ifgs = [v.Ifg for v in edge_to_indexed_ifgs.values()]
     n_ifgs = len(ifgs)
@@ -34,8 +36,8 @@ def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[List[Signed
             ifg_index = indexed_ifg.index
             closure[:, :, k] += signed_edge.sign * ifg.phase_data
             num_occurences_each_ifg[ifg_index] += 1
-
-        # closure[:, :, k] -= np.nanmedian(closure[:, :, k])  # may be able to drop median
+        if use_median:
+            closure[:, :, k] -= np.nanmedian(closure[:, :, k])  # may be able to drop median
         # handle nans elegantly
         nan_indices = np.isnan(closure[:, :, k])
         closure[:, :, k][nan_indices] = 0  # values with nans can't be threshold checked

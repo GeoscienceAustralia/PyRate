@@ -68,7 +68,7 @@ def setup_edges(ifg_files: List['str'], weighted: bool = False) -> List[Union[Ed
         return [Edge(i.first, i.second) for i in ifgs]
 
 
-def find_signed_closed_loops(ifg_files: List[str]):
+def find_signed_closed_loops(ifg_files: List[str]) -> List[List[SignedEdge]]:
     available_edges = setup_edges(ifg_files)
     weighted_edges = setup_edges(ifg_files, weighted=True)
 

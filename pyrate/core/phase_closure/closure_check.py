@@ -12,6 +12,7 @@ THRESHOLD_TO_REMOVE_IFG = 0.1  # ifgs with more than this fraction of pixels wit
 LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG = 2  # pixel with phase unwrap error in at least this many loops
 PHASE_UNWRAP_ERROR_THRESHOLD = 5  # pixel with phase unwrap error in more than this many ifgs will be flagged
 MAX_LOOP_LENGTH = 4  # loops upto this many edges are considered for closure checks
+SUBTRACT_MEDIAN_IN_CLOSURE_CHECK = True
 
 
 def detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg):
@@ -66,8 +67,8 @@ def closure_check_wrapper():
     ifg_files = [f.as_posix() for f in ifg_files]
     while True:  # iterate till ifgs/loops are stable
         print('len(ifg_files):', len(ifg_files))
-        new_ifg_files, closure = wrap_closure_check(ifg_files)
-        plot_closure(closure=closure)
+        new_ifg_files, closure, loops = wrap_closure_check(ifg_files)
+        plot_closure(closure=closure, loops=loops)
         if len(ifg_files) == len(new_ifg_files):
             break
         else:
@@ -78,11 +79,11 @@ def wrap_closure_check(ifg_files):
     signed_loops = find_signed_closed_loops(ifg_files=ifg_files)
     retained_loops = [sl for sl in signed_loops if len(sl) <= MAX_LOOP_LENGTH]
     closure, check_ps, num_occurences_each_ifg = sum_phase_values_for_each_loop(
-        ifg_files, retained_loops, LARGE_DEVIATION_THRESHOLD_FOR_PIXEL
+        ifg_files, retained_loops, LARGE_DEVIATION_THRESHOLD_FOR_PIXEL, SUBTRACT_MEDIAN_IN_CLOSURE_CHECK
     )
     # ps_unwrap_error = detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg)
     selcted_ifg_files = drop_ifgs_exceeding_threshold(ifg_files, check_ps, num_occurences_each_ifg)
-    return selcted_ifg_files, closure
+    return selcted_ifg_files, closure, retained_loops
 
 
 closure_check_wrapper()
