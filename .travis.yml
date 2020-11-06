@@ -58,6 +58,8 @@ install:
 
 
 script:
+  - git clone https://github.com/jmettes/PyRate-data.git
+  - ls -LR PyRate-data
   - pytest tests/ -m "slow"
   - pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/ -m "not slow"
 
