@@ -184,10 +184,10 @@ class Configuration:
             self.__dict__['correct'] = [
                 'orbfit',
                 'refphase',
+                'demerror',
                 'mst',
                 'apscorrect',
                 'maxvar',
-                'demerror',
             ]
 
         # Validate required parameters exist.

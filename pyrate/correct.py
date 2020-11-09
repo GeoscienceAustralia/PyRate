@@ -142,10 +142,10 @@ def _update_params_with_tiles(params: dict) -> None:
 correct_steps = {
     'orbfit': orb_fit_calc_wrapper,
     'refphase': ref_phase_est_wrapper,
+    'demerror': dem_error_calc_wrapper,
     'mst': mst_calc_wrapper,
     'apscorrect': wrap_spatio_temporal_filter,
     'maxvar': maxvar_vcm_calc_wrapper,
-    'demerror': dem_error_calc_wrapper,
 }
 
 

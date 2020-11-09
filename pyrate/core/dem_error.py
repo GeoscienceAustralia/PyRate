@@ -21,7 +21,7 @@ import os
 import numpy as np
 from os.path import join
 import pickle as cp
-from numpy.linalg import inv, LinAlgError
+from numpy.linalg import inv, LinAlgError, lstsq
 
 from pyrate.core import geometry, shared, mpiops, config as cf, ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
@@ -76,15 +76,11 @@ def dem_error_calc_wrapper(params: dict) -> None:
         rg = geom_rg.geometry_data
 
         # split into tiles to calculate DEM error correction
-        if not Configuration.vcmt_path(params).exists():
-            raise FileNotFoundError("VCMT is not found on disc. Have you run the 'correct' step?")
         params[cf.PREREAD_IFGS] = cp.load(open(Configuration.preread_ifgs(params), 'rb'))
-        params[cf.VCMT] = np.load(Configuration.vcmt_path(params))
         params[cf.TILES] = Configuration.get_tiles(params)
         tiles = params[cf.TILES]
         preread_ifgs = params[cf.PREREAD_IFGS]
         # todo: subtract other corrections (e.g. orbital) from displacement phase before estimating the DEM error
-        vcmt = params[cf.VCMT]
         threshold = params[cf.DE_PTHR]
 
         # read lon and lat values of multi-looked ifg (first ifg only)
@@ -120,7 +116,10 @@ def dem_error_calc_wrapper(params: dict) -> None:
 
             log.debug('Calculating DEM error for tile {} during DEM error correction'.format(t.index))
             #mst_tile = np.load(Configuration.mst_path(params, t.index))
-            dem_error, dem_error_correction = calc_dem_errors(ifg_parts, bperp, look_angle, range_dist, threshold, vcmt)
+            # calculate the DEM error estimate and the correction values for each IFG
+            # current implementation uses the look angle and range distance matrix of the primary SLC in the last IFG
+            # todo: check the impact of using the same information from another SLC
+            dem_error, dem_error_correction = calc_dem_errors(ifg_parts, bperp, look_angle, range_dist, threshold)
             # dem_error contains the estimated DEM error for each pixel (i.e. the topographic change relative to the DEM)
             # size [row, col]
             # dem_error_correction contains the correction value for each interferogram
@@ -145,7 +144,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
     log.info('Finished DEM error correction')
 
 
-def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold, vcmt):
+def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold):
     """
     Calculates the per-pixel DEM error using least-squares adjustment of phase data and
     perpendicular baseline. The least-squares adjustment co-estimates the velocities.
@@ -158,14 +157,13 @@ def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold, vcmt):
     :param ndarray look_angle: Per-pixel look angle
     :param ndarray range_dist: Per-pixel range distance measurement
     :param int threshold: minimum number of redundant phase values at pixel (config parameter de_pthr)
-    :param ndarray vcmt: Positive definite temporal variance covariance matrix -> not currently used
 
     :return: ndarray dem_error: estimated per-pixel dem error (nrows x ncols)
     :return: ndarray dem_error_correction: DEM error correction for each pixel and interferogram (nifgs x nrows x ncols)
     """
     ifg_data, mst, ncols, nrows, bperp_data, ifg_time_span = _perpixel_setup(ifgs, bperp)
     if threshold < 4:
-        msg = f"pixel threshold too low (i.e. <4) resulting in singularities in DEM error estimation"
+        msg = f"pixel threshold too low (i.e. <4) resulting in non-redundant DEM error estimation"
         raise DEMError(msg)
     # pixel-by-pixel calculation
     # preallocate empty arrays for results
@@ -177,35 +175,20 @@ def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold, vcmt):
             # check pixel for non-redundant ifgs
             sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
             if len(sel) >= threshold: # given threshold for number of valid pixels in time series
-                ifgv = ifg_data[sel, row, col]
+                # phase observations (in mm)
+                y = ifg_data[sel, row, col]
                 bperp_pix = bperp_data[sel, row, col]
+                # using the actual geometry of a particular IFG would be possible but is likely not signif. different
                 #geom = bperp_pix / (range_dist[row, col] * np.sin(look_angle[row, col]))
                 time_span = ifg_time_span[sel]
                 # new covariance matrix using actual number of observations
                 m = len(sel)
-                Qyy = np.eye(m) # in case the weights are not used -> linalg.lstsq can be used instead
-                # results get unstable when using the VCM information -> todo: why?
-                #Qyy[:m, :m] = vcmt[sel, np.vstack(sel)]
                 # Design matrix of least-squares system, velocities are co-estimated as done in StaMPS or MintPy
                 A = np.column_stack((np.ones(m), bperp_pix, time_span))
-                #A = np.column_stack((np.ones(m), geom , time_span))
-                # displacement observations (in mm)
-                y = np.vstack(ifgv)
-                # solve weighted least-squares system (not available in scipy!)
-                try: # Var-cov matrix of observations could be singular
-                    inv(Qyy)
-                    # in case vcmt can't be used, below code could use linalg.solve instead of matrix multiplication
-                    # normal equaion matrix N = A'PA = A'inv(Qyy)A
-                    N = np.matmul(np.matmul(np.transpose(A), inv(Qyy)), A)
-                    # Covariance matrix of parameters
-                    Qxx = inv(N)
-                    # estimated parameters: x = Qxx * A'Py = (A'PA)^-1 * A'Py
-                    xhat = np.matmul(np.matmul(np.matmul(Qxx, np.transpose(A)), inv(Qyy)), y)
-                    # dem error estimate for the pixel is the second parameter (cf. design matrix)
-                    dem_error[row][col] = xhat[1]
-                except LinAlgError as err: # nan value for DEM error in case of singular Qyy matrix
-                    if 'Singular matrix' in str(err):
-                        dem_error[row][col] = np.nan
+                # solve ordinary least-squares system using numpy.linalg.lstsq function
+                xhat, res, rnk, s = np.linalg.lstsq(A, y, rcond=None)
+                # dem error estimate for the pixel is the second parameter (cf. design matrix)
+                dem_error[row][col] = xhat[1]
 
     # calculate correction value for each IFG by multiplying the least-squares estimate with the Bperp value
     dem_error_correction = np.multiply(dem_error, bperp_data)

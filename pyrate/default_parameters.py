@@ -471,7 +471,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
     },
     "correct": {
         "DataType": list,
-        "DefaultValue": ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack'],
+        "DefaultValue": ['orbfit', 'refphase', 'demerror', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack'],
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": None,

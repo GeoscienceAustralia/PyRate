@@ -116,6 +116,7 @@ def calc_local_geometry(ifg, ifg_path, rg, lon, lat, params):
     # todo (once new test data is ready): move next line into test for validation with GAMMA output
     #incidence_angle_gamma = np.pi / 2 - incidence_angle
     # maximum differences to the GAMMA-derived local incidence angles for Sentinel-1 test data are within +/-0.1 deg
+    # to improve the accuracy further one would need to consider the local slope observed from the DEM
 
     # local azimuth angle at pixel ij using constant satellite heading angle and spherical approximations
     epsilon = np.pi - look_angle - (np.pi - incidence_angle) # angle at the Earth's center between se and re
