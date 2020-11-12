@@ -28,7 +28,7 @@ from pyrate.core.refpixel import convert_pixel_value_to_geographic_coordinate
 from pyrate.core.gamma import read_lookup_table
 
 
-def get_lonlat_coords(ifg):
+def get_lonlat_coords_slow(ifg):
     """
     Function to get longitude and latitude coordinates for each pixel in the multi-looked.
     interferogram dataset. Coordinates are identical for each interferogram in the stack.
@@ -46,7 +46,7 @@ def get_lonlat_coords(ifg):
     return lon, lat
 
 
-def get_lonlat_coords_vectorised(ifg):
+def get_lonlat_coords(ifg):
     """
     Function to get longitude and latitude coordinates for each pixel in the multi-looked.
     interferogram dataset. Coordinates are identical for each interferogram in the stack.
