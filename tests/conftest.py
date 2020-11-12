@@ -23,7 +23,7 @@ import tempfile
 import pytest
 from pyrate.core import mpiops, config as cf, shared
 from pyrate.configuration import Configuration
-from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
+from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA, SML_TEST_DEM_TIF
 from tests.common import ROIPAC_SYSTEM_CONF, GAMMA_SYSTEM_CONF, GEOTIF_SYSTEM_CONF, SML_TEST_COH_LIST
 
 
@@ -143,3 +143,10 @@ def gamma_conf(request):
 @pytest.fixture
 def coh_list_file():
     return SML_TEST_COH_LIST
+
+
+@pytest.fixture
+def dem():
+    d = shared.dem_or_ifg(SML_TEST_DEM_TIF)
+    d.open()
+    return d

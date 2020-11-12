@@ -46,6 +46,27 @@ def get_lonlat_coords(ifg):
     return lon, lat
 
 
+def get_lonlat_coords_vectorised(ifg):
+    """
+    Function to get longitude and latitude coordinates for each pixel in the multi-looked.
+    interferogram dataset. Coordinates are identical for each interferogram in the stack.
+    """
+    # assume all interferograms have same projection and will share the same transform
+    transform = ifg.dataset.GetGeoTransform()
+    # number of rows and columns in dataset
+    nrows, ncols = ifg.shape
+    yOrigin = transform[3]
+    pixelHeight = -transform[5]
+    xOrigin = transform[0]
+    pixelWidth = transform[1]
+
+    lons = np.arange(0, ncols) * pixelWidth + xOrigin
+    lats = yOrigin - np.arange(0, nrows) * pixelHeight
+    lon, lat = np.meshgrid(lons, lats)
+
+    return lon, lat
+
+
 def get_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax):
     """
     Function to get radar coordinates for each pixel in the multi-looked interferogram dataset.

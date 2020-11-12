@@ -1378,7 +1378,7 @@ def mpi_vs_multiprocess_logging(step, params):
             log.info(f"Running '{step}' step in serial")
 
 
-def dem_or_ifg(data_path):
+def dem_or_ifg(data_path) -> Union[Ifg, DEM]:
     """
     Returns an Ifg or DEM class object from input geotiff file.
 

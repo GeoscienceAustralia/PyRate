@@ -46,100 +46,101 @@ def dem_error_calc_wrapper(params: dict) -> None:
     if mpiops.run_once(__check_and_apply_demerrors_found_on_disc, ifg_paths, params):
         log.warning("Reusing DEM error correction from previous run!!!")
     else:
-      # read and open the first IFG in list
-      ifg0_path = ifg_paths[0]
-      ifg0 = Ifg(ifg0_path)
-      ifg0.open(readonly=True)
+        # read and open the first IFG in list
+        ifg0_path = ifg_paths[0]
+        ifg0 = Ifg(ifg0_path)
+        ifg0.open(readonly=True)
 
-      # not currently implemented for ROIPAC data which breaks some tests
-      # if statement can be deleted once ROIPAC is deprecated from PyRate
-      if not ifg0.meta_data[ifc.PYRATE_INSAR_PROCESSOR] == 'ROIPAC':
+        # not currently implemented for ROIPAC data which breaks some tests
+        # if statement can be deleted once ROIPAC is deprecated from PyRate
+        if not ifg0.meta_data[ifc.PYRATE_INSAR_PROCESSOR] == 'ROIPAC':
 
-        if params[cf.BASE_FILE_LIST] is None:
-            msg = f"No baseline files supplied: DEM error correction not computed"
-            raise DEMError(msg)
+            if params[cf.BASE_FILE_LIST] is None:
+                msg = f"No baseline files supplied: DEM error correction not computed"
+                raise DEMError(msg)
 
-        if params[cf.LT_FILE] is None:
-            msg = f"No lookup table file supplied: DEM error correction not computed"
-            raise DEMError(msg)
+            if params[cf.LT_FILE] is None:
+                msg = f"No lookup table file supplied: DEM error correction not computed"
+                raise DEMError(msg)
 
-        log.info('Calculating per-pixel baseline')
+            log.info('Calculating per-pixel baseline')
 
-        # read radar azimuth and range tif files
-        rdc_az_file = join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
-        geom_az = Geometry(rdc_az_file)
-        geom_az.open(readonly=True)
-        az = geom_az.geometry_data
-        rdc_rg_file = join(params[cf.OUT_DIR], 'rdc_range.tif')
-        geom_rg = Geometry(rdc_rg_file)
-        geom_rg.open(readonly=True)
-        rg = geom_rg.geometry_data
+            # read radar azimuth and range tif files
+            rdc_az_file = join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
+            geom_az = Geometry(rdc_az_file)
+            geom_az.open(readonly=True)
+            az = geom_az.geometry_data
+            rdc_rg_file = join(params[cf.OUT_DIR], 'rdc_range.tif')
+            geom_rg = Geometry(rdc_rg_file)
+            geom_rg.open(readonly=True)
+            rg = geom_rg.geometry_data
 
-        # split into tiles to calculate DEM error correction
-        params[cf.PREREAD_IFGS] = cp.load(open(Configuration.preread_ifgs(params), 'rb'))
-        params[cf.TILES] = Configuration.get_tiles(params)
-        tiles = params[cf.TILES]
-        preread_ifgs = params[cf.PREREAD_IFGS]
-        # todo: subtract other corrections (e.g. orbital) from displacement phase before estimating the DEM error
-        threshold = params[cf.DE_PTHR]
+            # split into tiles to calculate DEM error correction
+            params[cf.PREREAD_IFGS] = cp.load(open(Configuration.preread_ifgs(params), 'rb'))
+            params[cf.TILES] = Configuration.get_tiles(params)
+            tiles = params[cf.TILES]
+            preread_ifgs = params[cf.PREREAD_IFGS]
+            # todo: subtract other corrections (e.g. orbital) from displacement phase before estimating the DEM error
+            threshold = params[cf.DE_PTHR]
 
-        # read lon and lat values of multi-looked ifg (first ifg only)
-        lon, lat = geometry.get_lonlat_coords(ifg0)
-        # cut rg and az to tile size
+            # read lon and lat values of multi-looked ifg (first ifg only)
+            lon, lat = geometry.get_lonlat_coords(ifg0)
+            # cut rg and az to tile size
 
-        # the following code is a quick way to do the bperp calculation, but is not identical to the GAMMA output
-        # where the near range of the first SLC is used for each pair.
-        # calculate look angle for interferograms (using the Near Range of the first SLC)
-        #look_angle = geometry.calc_local_geometry(ifg0, None, rg, lon, lat, params)
-        #bperp = geometry.calc_local_baseline(ifg0, az, look_angle)
+            # the following code is a quick way to do the bperp calculation, but is not identical to the GAMMA output
+            # where the near range of the first SLC is used for each pair.
+            # calculate look angle for interferograms (using the Near Range of the first SLC)
+            # look_angle = geometry.calc_local_geometry(ifg0, None, rg, lon, lat, params)
+            # bperp = geometry.calc_local_baseline(ifg0, az, look_angle)
 
-        # process in tiles
-        process_tiles = mpiops.array_split(tiles)
-        for t in process_tiles:
-            ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
-            lon_parts = lon[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
-            lat_parts = lat[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
-            az_parts = az[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
-            rg_parts = rg[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
+            # process in tiles
+            process_tiles = mpiops.array_split(tiles)
+            for t in process_tiles:
+                ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
+                lon_parts = lon[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
+                lat_parts = lat[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
+                az_parts = az[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
+                rg_parts = rg[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
 
-            nifgs = len(ifg_paths)
-            bperp = np.empty((nifgs, lon_parts.shape[0], lon_parts.shape[1])) * np.nan
-            ifg_num = 0
-            # calculate per-pixel perpendicular baseline for each IFG
-            for ifg_path in ifg_paths: # loop could be avoided by approximating the look angle for the first Ifg
-                ifg = Ifg(ifg_path)
-                ifg.open(readonly=True)
-                # calculate look angle for interferograms (using the Near Range of the primary SLC)
-                look_angle, range_dist = geometry.calc_local_geometry(ifg, None, rg_parts, lon_parts, lat_parts, params)
-                bperp[ifg_num, :, :] = geometry.calc_local_baseline(ifg, az_parts, look_angle)
-                ifg_num += 1
+                nifgs = len(ifg_paths)
+                bperp = np.empty((nifgs, lon_parts.shape[0], lon_parts.shape[1])) * np.nan
+                ifg_num = 0
+                # calculate per-pixel perpendicular baseline for each IFG
+                for ifg_path in ifg_paths:  # loop could be avoided by approximating the look angle for the first Ifg
+                    ifg = Ifg(ifg_path)
+                    ifg.open(readonly=True)
+                    # calculate look angle for interferograms (using the Near Range of the primary SLC)
+                    look_angle, range_dist = geometry.calc_local_geometry(ifg, None, rg_parts, lon_parts, lat_parts,
+                                                                          params)
+                    bperp[ifg_num, :, :] = geometry.calc_local_baseline(ifg, az_parts, look_angle)
+                    ifg_num += 1
 
-            log.debug('Calculating DEM error for tile {} during DEM error correction'.format(t.index))
-            #mst_tile = np.load(Configuration.mst_path(params, t.index))
-            # calculate the DEM error estimate and the correction values for each IFG
-            # current implementation uses the look angle and range distance matrix of the primary SLC in the last IFG
-            # todo: check the impact of using the same information from another SLC
-            dem_error, dem_error_correction = calc_dem_errors(ifg_parts, bperp, look_angle, range_dist, threshold)
-            # dem_error contains the estimated DEM error for each pixel (i.e. the topographic change relative to the DEM)
-            # size [row, col]
-            # dem_error_correction contains the correction value for each interferogram
-            # size [num_ifg, row, col]
+                log.debug('Calculating DEM error for tile {} during DEM error correction'.format(t.index))
+                # mst_tile = np.load(Configuration.mst_path(params, t.index))
+                # calculate the DEM error estimate and the correction values for each IFG
+                # current implementation uses the look angle and range distance matrix of the primary SLC in the last IFG
+                # todo: check the impact of using the same information from another SLC
+                dem_error, dem_error_correction = calc_dem_errors(ifg_parts, bperp, look_angle, range_dist, threshold)
+                # dem_error contains the estimated DEM error for each pixel (i.e. the topographic change relative to the DEM)
+                # size [row, col]
+                # dem_error_correction contains the correction value for each interferogram
+                # size [num_ifg, row, col]
 
-            # save tiled data in tmpdir
-            np.save(file=os.path.join(params[cf.TMPDIR], 'dem_error_{}.npy'.format(t.index)), arr=dem_error)
-            # swap the axes of 3D array to fit the style used in function assemble_tiles
-            tmp_array = np.moveaxis(dem_error_correction, 0, -1)
-            # new dimension is [row, col, num_ifg]
-            # save tiled data into tmpdir
-            np.save(file=os.path.join(params[cf.TMPDIR], 'dem_error_correction_{}.npy'.format(t.index)), \
-                    arr=tmp_array)
+                # save tiled data in tmpdir
+                np.save(file=os.path.join(params[cf.TMPDIR], 'dem_error_{}.npy'.format(t.index)), arr=dem_error)
+                # swap the axes of 3D array to fit the style used in function assemble_tiles
+                tmp_array = np.moveaxis(dem_error_correction, 0, -1)
+                # new dimension is [row, col, num_ifg]
+                # save tiled data into tmpdir
+                np.save(file=os.path.join(params[cf.TMPDIR], 'dem_error_correction_{}.npy'.format(t.index)), \
+                        arr=tmp_array)
 
-        # wait for all processes to finish
-        mpiops.comm.barrier()
+            # wait for all processes to finish
+            mpiops.comm.barrier()
 
-        # write dem error and correction values to file
-        mpiops.run_once(_write_dem_errors, ifg_paths, params, preread_ifgs, tiles)
-        shared.save_numpy_phase(ifg_paths, params)
+            # write dem error and correction values to file
+            mpiops.run_once(_write_dem_errors, ifg_paths, params, preread_ifgs, tiles)
+            shared.save_numpy_phase(ifg_paths, params)
 
     log.info('Finished DEM error correction')
 
@@ -174,12 +175,12 @@ def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold):
             # calc DEM error for each pixel with valid Bperp and ifg phase data
             # check pixel for non-redundant ifgs
             sel = np.nonzero(mst[:, row, col])[0]  # trues in mst are chosen
-            if len(sel) >= threshold: # given threshold for number of valid pixels in time series
+            if len(sel) >= threshold:  # given threshold for number of valid pixels in time series
                 # phase observations (in mm)
                 y = ifg_data[sel, row, col]
                 bperp_pix = bperp_data[sel, row, col]
                 # using the actual geometry of a particular IFG would be possible but is likely not signif. different
-                #geom = bperp_pix / (range_dist[row, col] * np.sin(look_angle[row, col]))
+                # geom = bperp_pix / (range_dist[row, col] * np.sin(look_angle[row, col]))
                 time_span = ifg_time_span[sel]
                 # new covariance matrix using actual number of observations
                 m = len(sel)
@@ -215,10 +216,10 @@ def _perpixel_setup(ifgs, bperp):
     ncols = ifgs[0].ncols
     nifgs = len(ifgs)
     ifg_data = np.zeros((nifgs, nrows, ncols), dtype=np.float32)
-    bperp_data =  np.zeros((nifgs, nrows, ncols), dtype=np.float32)
+    bperp_data = np.zeros((nifgs, nrows, ncols), dtype=np.float32)
     for ifg_num in range(nifgs):
-         ifg_data[ifg_num] = ifgs[ifg_num].phase_data
-         bperp_data[ifg_num] = bperp[ifg_num]
+        ifg_data[ifg_num] = ifgs[ifg_num].phase_data
+        bperp_data[ifg_num] = bperp[ifg_num]
     mst = ~np.isnan(ifg_data)
 
     ifg_time_span = np.zeros((nifgs))
