@@ -91,15 +91,25 @@ def convert_pixel_value_to_geographic_coordinate(refx, refy, transform):
         Tuple of lon, lat geographic coordinate.
     """
 
-    xOrigin = transform[0]
-    yOrigin = transform[3]
-    pixelWidth = transform[1]
-    pixelHeight = -transform[5]
+    lon = lon_from_pixel_coordinate(refx, transform)
 
-    lon = refx*pixelWidth + xOrigin
-    lat = yOrigin - refy*pixelHeight
+    lat = lat_from_pixel_coordinate(refy, transform)
 
     return lon, lat
+
+
+def lat_from_pixel_coordinate(refy, transform):
+    yOrigin = transform[3]
+    pixelHeight = -transform[5]
+    lat = yOrigin - refy * pixelHeight
+    return lat
+
+
+def lon_from_pixel_coordinate(refx, transform):
+    xOrigin = transform[0]
+    pixelWidth = transform[1]
+    lon = refx * pixelWidth + xOrigin
+    return lon
 
 
 def convert_geographic_coordinate_to_pixel_value(lon, lat, transform):
