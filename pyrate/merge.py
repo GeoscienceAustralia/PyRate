@@ -23,6 +23,7 @@ import numpy as np
 from osgeo import gdal
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 from pyrate.core import shared, stack, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.logger import pyratelogger as log
@@ -228,7 +229,7 @@ def create_png_and_kml_from_tif(output_folder_path: str, output_type: str) -> No
     log.debug(f'Finished creating quicklook image for {output_type}')
 
 
-def assemble_tiles(s, dir, tiles, out_type, index=None):
+def assemble_tiles(s, dir, tiles, out_type, index: Optional[int] = None):
     """
     Function to reassemble tiles from numpy files in to a merged array
 

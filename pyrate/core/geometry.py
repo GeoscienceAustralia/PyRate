@@ -22,6 +22,7 @@ This Python module implements the calculation and output of the per-pixel vector
 import numpy as np
 import os
 from math import sqrt, sin, cos, tan, asin, atan, atan2, isnan, pi
+from pathlib import Path
 
 from pyrate.core import shared, ifgconstants as ifc, config as cf
 from pyrate.core.refpixel import convert_pixel_value_to_geographic_coordinate
@@ -295,10 +296,4 @@ def remove_file_if_exists(file):
     """
         Function to remove a geometry file if it already exists.
     """
-    try:
-        os.remove(file)
-    except OSError:
-        pass
-
-
-
+    Path(file).unlink(missing_ok=True)

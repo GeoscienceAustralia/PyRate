@@ -240,7 +240,7 @@ def _write_dem_errors(ifg_paths, params, preread_ifgs, tiles):
     gt, md, wkt = shared.get_geotiff_header_info(ifg_paths[0])
     md[ifc.EPOCH_DATE] = None  # needs to have a value in write_output_geotiff
     md[ifc.DATA_TYPE] = ifc.DEM_ERROR
-    dem_error = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='dem_error', index=None)
+    dem_error = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='dem_error')
     dem_error_file = os.path.join(params[cf.OUT_DIR], 'dem_error.tif')
     geometry.remove_file_if_exists(dem_error_file)
     shared.write_output_geotiff(md, gt, wkt, dem_error, dem_error_file, np.nan)
@@ -251,7 +251,7 @@ def _write_dem_errors(ifg_paths, params, preread_ifgs, tiles):
         ifg = Ifg(ifg_path)
         ifg.open()
         # read dem error correction file from tmpdir (size
-        dem_error_correction_ifg = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='dem_error_correction', \
+        dem_error_correction_ifg = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='dem_error_correction',
                                                   index=idx)
         idx += 1
         dem_error_correction_on_disc = MultiplePaths.dem_error_path(ifg.data_path, params)
@@ -290,16 +290,6 @@ def _save_dem_error_corrected_phase(ifg):
     ifg.dataset.SetMetadataItem(ifc.PYRATE_DEM_ERROR, ifc.DEM_ERROR_REMOVED)
     ifg.write_modified_phase()
     ifg.close()
-
-
-def _remove_file_if_exists(file):
-    """
-        Function to remove a geometry file if it already exists.
-    """
-    try:
-        os.remove(file)
-    except OSError:
-        pass
 
 
 class DEMError(Exception):
