@@ -70,19 +70,12 @@ def main(params):
     ifgs = [prepifg_helper.dem_or_ifg(p.converted_path) for p in ifg_paths]
     exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks, user_exts=user_exts)
 
-    # get pixel values of crop (needed to crop lookup table file)
     transform = ifgs[0].dataset.GetGeoTransform()
-    # pixel extent of cropped area (original IFG input)
-    xmin, ymax = convert_geographic_coordinate_to_pixel_value(exts[0], exts[1], transform)
-    xmax, ymin = convert_geographic_coordinate_to_pixel_value(exts[2], exts[3], transform)
-    # xmin, xmax: columns of crop
-    # ymin, ymax: rows of crop
 
     process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     do_prepifg(process_ifgs_paths, exts, params)
-    mpiops.comm.barrier()
 
-    mpiops.run_once(_write_geometry_files, ifg_paths, params, xmin, xmax, ymin, ymax)
+    mpiops.run_once(_write_geometry_files, params, exts, transform, ifg_paths[0])
 
     log.info("Finished 'prepifg' step")
 
@@ -123,6 +116,7 @@ def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float
         else:
             for m_path in multi_paths:
                 _prepifg_multiprocessing(m_path, exts, params)
+    mpiops.comm.barrier()
 
 
 COMMON_OPTIONS = "-co BLOCKXSIZE=256 -co BLOCKYSIZE=256 -co TILED=YES --config GDAL_CACHEMAX=64 -q"
@@ -272,7 +266,8 @@ def find_header(path: MultiplePaths, params: dict):
     return header
 
 
-def _write_geometry_files(ifg_paths, params, xmin, xmax, ymin, ymax):
+def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float], transform,
+                          ifg_path: MultiplePaths) -> None:
     """
     Calculate geometry files using the information in the first interferogram in the stack, i.e.:
     - rdc_azimuth.tif (azimuth radar coordinate at each pixel)
@@ -283,16 +278,23 @@ def _write_geometry_files(ifg_paths, params, xmin, xmax, ymin, ymax):
     """
     # get geometry information and save radar coordinates and angles to tif files
     # using metadata of the first image in the stack
-    ifg0_path = ifg_paths[0].sampled_path
-    ifg0 = Ifg(ifg0_path)
-    ifg0.open(readonly=True)
+    # get pixel values of crop (needed to crop lookup table file)
+    # pixel extent of cropped area (original IFG input)
+    xmin, ymax = convert_geographic_coordinate_to_pixel_value(exts[0], exts[1], transform)
+    xmax, ymin = convert_geographic_coordinate_to_pixel_value(exts[2], exts[3], transform)
+    # xmin, xmax: columns of crop
+    # ymin, ymax: rows of crop
+
+    ifg_path = ifg_path.sampled_path
+    ifg = Ifg(ifg_path)
+    ifg.open(readonly=True)
+
     # not currently implemented for ROIPAC data which breaks some tests
     # if statement can be deleted once ROIPAC is deprecated from PyRate
-    if not ifg0.meta_data[ifc.PYRATE_INSAR_PROCESSOR] == 'ROIPAC':
+    if not ifg.meta_data[ifc.PYRATE_INSAR_PROCESSOR] == 'ROIPAC':
         # calculate per-pixel lon/lat
-        lon, lat = geometry.get_lonlat_coords(ifg0)
+        lon, lat = geometry.get_lonlat_coords(ifg)
         # calculate per-pixel radar coordinates
-        az, rg = geometry.get_radar_coords(ifg0, ifg0_path, params, xmin, xmax, ymin, ymax)
+        az, rg = geometry.get_and_write_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax)
         # calculate per-pixel look angle (also calculates and saves incidence and azimuth angles)
-        geometry.calc_local_geometry(ifg0, ifg0_path, rg, lon, lat, params)
-
+        geometry.write_local_geometry_files(ifg, ifg_path, rg, lon, lat, params)

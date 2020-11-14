@@ -26,6 +26,7 @@ from numpy.linalg import inv, LinAlgError, lstsq
 from pyrate.core import geometry, shared, mpiops, config as cf, ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core.shared import Ifg, Geometry
+from pyrate.core.timeseries import TimeSeriesError
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.merge import assemble_tiles
 
@@ -104,16 +105,15 @@ def dem_error_calc_wrapper(params: dict) -> None:
 
                 nifgs = len(ifg_paths)
                 bperp = np.empty((nifgs, lon_parts.shape[0], lon_parts.shape[1])) * np.nan
-                ifg_num = 0
                 # calculate per-pixel perpendicular baseline for each IFG
-                for ifg_path in ifg_paths:  # loop could be avoided by approximating the look angle for the first Ifg
+                for ifg_num, ifg_path in enumerate(
+                        ifg_paths):  # loop could be avoided by approximating the look angle for the first Ifg
                     ifg = Ifg(ifg_path)
                     ifg.open(readonly=True)
                     # calculate look angle for interferograms (using the Near Range of the primary SLC)
-                    look_angle, range_dist = geometry.calc_local_geometry(ifg, None, rg_parts, lon_parts, lat_parts,
-                                                                          params)
+                    look_angle, range_dist = geometry.write_local_geometry_files(ifg, None, rg_parts, lon_parts,
+                                                                                 lat_parts, params)
                     bperp[ifg_num, :, :] = geometry.calc_local_baseline(ifg, az_parts, look_angle)
-                    ifg_num += 1
 
                 log.debug('Calculating DEM error for tile {} during DEM error correction'.format(t.index))
                 # mst_tile = np.load(Configuration.mst_path(params, t.index))
@@ -132,7 +132,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
                 tmp_array = np.moveaxis(dem_error_correction, 0, -1)
                 # new dimension is [row, col, num_ifg]
                 # save tiled data into tmpdir
-                np.save(file=os.path.join(params[cf.TMPDIR], 'dem_error_correction_{}.npy'.format(t.index)), \
+                np.save(file=os.path.join(params[cf.TMPDIR], 'dem_error_correction_{}.npy'.format(t.index)),
                         arr=tmp_array)
 
             # wait for all processes to finish

@@ -68,7 +68,7 @@ def get_lonlat_coords(ifg):
     return lon, lat
 
 
-def get_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax):
+def get_and_write_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax):
     """
     Function to get radar coordinates for each pixel in the multi-looked interferogram dataset.
     Radar coordinates are identical for each interferogram in the stack.
@@ -81,7 +81,7 @@ def get_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax):
      # transform float lookup table file to np array, min/max pixel coordinates are required for cropping
     lt_az, lt_rg = read_lookup_table(ifg, lookup_table, ifglksx, ifglksy, xmin, xmax, ymin, ymax)
     # replace 0.0 with NaN
-    lt_az[lt_az==0.0] = np.nan
+    lt_az[lt_az == 0.0] = np.nan
     lt_rg[lt_rg == 0.0] = np.nan
 
     # save radar coordinates to tif file
@@ -99,7 +99,7 @@ def get_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax):
     return lt_az, lt_rg
 
 
-def calc_local_geometry(ifg, ifg_path, rg, lon, lat, params):
+def write_local_geometry_files(ifg, ifg_path, rg, lon, lat, params):
     """
     Function to calculate local look angle, incidence angle and geodetic azimuth for each pixel.
     """
@@ -258,9 +258,6 @@ def vincinv(lat1, lon1, lat2, lon2, semimaj, semimin):
     omega = lon
     # Iterate until the change in lambda, lambda_sigma, is insignificant
     # (< 1e-12) or after 1000 iterations have been completed
-    alpha = 0
-    sigma = 0
-    cos_two_sigma_m = 0
     for i in range(1000):
         # Eq. 74
         sin_sigma = sqrt((cos(u2)*sin(lon))**2 + (cos(u1)*sin(u2) - sin(u1)*cos(u2)*cos(lon))**2)
@@ -275,17 +272,15 @@ def vincinv(lat1, lon1, lat2, lon2, semimaj, semimin):
         # Eq. 79
         c = (f / 16) * cos(alpha)**2 * (4 + f * (4 - 3*cos(alpha)**2))
         # Eq. 80
-        new_lon = omega + (1 - c) * f * sin(alpha) * (sigma + c*sin(sigma)
-                                                                * (cos_two_sigma_m + c * cos(sigma)
-                                                                   * (-1 + 2*(cos_two_sigma_m**2))))
+        new_lon = omega + (1 - c) * f * sin(alpha) * (
+                sigma + c*sin(sigma) * (cos_two_sigma_m + c * cos(sigma) * (-1 + 2*(cos_two_sigma_m**2)))
+        )
         delta_lon = new_lon - lon
         lon = new_lon
         if abs(delta_lon) < 1e-12:
             break
     # Calculate the azimuth from point 1 to point 2
-    azimuth1to2 = atan2((cos(u2)*sin(lon)),
-                                (cos(u1)*sin(u2)
-                                 - sin(u1)*cos(u2)*cos(lon)))
+    azimuth1to2 = atan2((cos(u2)*sin(lon)), (cos(u1)*sin(u2) - sin(u1)*cos(u2)*cos(lon)))
     if azimuth1to2 < 0:
         azimuth1to2 = azimuth1to2 + 2*pi
 

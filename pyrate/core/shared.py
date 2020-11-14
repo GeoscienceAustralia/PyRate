@@ -390,6 +390,7 @@ class Ifg(RasterBase):
         """
         Returns phase band as an array.
         """
+        # TODO: enhance this to use x/y offset and size
         if self._phase_data is None:
             self._phase_data = self.phase_band.ReadAsArray()
         return self._phase_data
@@ -495,11 +496,37 @@ class Ifg(RasterBase):
         self.dataset.FlushCache()  # write to disc
 
 
+class Tile:
+    """
+    Tile class for containing a sub-part of an interferogram
+    """
+    def __init__(self, index, top_left, bottom_right):
+        """
+        Parameters
+        ----------
+        index: int
+            identifying index of a tile
+        top_left: tuple
+            ifg index of top left of tile
+        bottom_right: tuple
+            ifg index of bottom right of tile
+        """
+
+        self.index = index
+        self.top_left = top_left
+        self.bottom_right = bottom_right
+        self.top_left_y, self.top_left_x = top_left
+        self.bottom_right_y, self.bottom_right_x = bottom_right
+
+    def __str__(self):
+        return "Convenience Tile class containing tile co-ordinates"
+
+
 class IfgPart(object):
     """
     Create a tile (subset) of an Ifg data object
     """
-    def __init__(self, ifg_or_path, tile, ifg_dict=None, params=None):
+    def __init__(self, ifg_or_path, tile: Tile, ifg_dict=None, params=None):
         """
         Interferogram tile constructor.
 
@@ -533,7 +560,7 @@ class IfgPart(object):
         if isinstance(ifg, Ifg):
             self.read_required(ifg)
 
-    def read_required(self, ifg):
+    def read_required(self, ifg: Ifg):
         """
         Read interferogram file if not already open.
         """
@@ -630,6 +657,7 @@ class Geometry(RasterBase):
         RasterBase.__init__(self, path)
         self._band = None
         self._geometry_data = None
+        # IfgPart.__init__()
 
     @property
     def geometry_band(self):
@@ -648,6 +676,10 @@ class Geometry(RasterBase):
         if self._geometry_data is None:
             self._geometry_data = self.geometry_band.ReadAsArray()
         return self._geometry_data
+
+
+class GeometryPart(IfgPart):
+    pass
 
 
 class DEM(RasterBase):
@@ -1074,6 +1106,7 @@ class GeotiffException(Exception):
     Geotiff exception class
     """
 
+
 def create_tiles(shape, nrows=2, ncols=2):
     """
     Return a list of tiles containing nrows x ncols with each tile preserving
@@ -1101,32 +1134,6 @@ def create_tiles(shape, nrows=2, ncols=2):
     col_arr = np.array_split(range(no_x), ncols)
     row_arr = np.array_split(range(no_y), nrows)
     return [Tile(i, (r[0], c[0]), (r[-1]+1, c[-1]+1)) for i, (r, c) in enumerate(product(row_arr, col_arr))]
-
-
-class Tile():
-    """
-    Tile class for containing a sub-part of an interferogram
-    """
-    def __init__(self, index, top_left, bottom_right):
-        """
-        Parameters
-        ----------
-        index: int
-            identifying index of a tile
-        top_left: tuple
-            ifg index of top left of tile
-        bottom_right: tuple
-            ifg index of bottom right of tile
-        """
-
-        self.index = index
-        self.top_left = top_left
-        self.bottom_right = bottom_right
-        self.top_left_y, self.top_left_x = top_left
-        self.bottom_right_y, self.bottom_right_x = bottom_right
-
-    def __str__(self):
-        return "Convenience Tile class containing tile co-ordinates"
 
 
 def get_tiles(ifg_path, rows, cols) -> List[Tile]:
