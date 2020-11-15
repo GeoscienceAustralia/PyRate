@@ -57,17 +57,16 @@ def gamma_bperp():
 
 
 # TODO: calculate this with pyrate dem_error
-pyrate_bperp = np.array([33.48592183, 3.44669685, -75.37369399, -26.88597679, -33.25298942, -108.84360354, 3.74075472, \
-                         -3.19700977, -14.58390611, 10.06920291, -51.12649599, -5.74544068, -17.36872483, -30.4772929, \
-                         7.12691256, -37.68943916, -73.14248882, -11.45674522, -24.64851804, 12.69928323, -32.16248418, \
-                         -20.86746046, 61.514626, 48.30928659, -13.17640207, 24.28126177, -36.84111057, -20.5870326, \
+pyrate_bperp = np.array([33.48592183, 3.44669685, -75.37369399, -26.88597679, -33.25298942, -108.84360354, 3.74075472,
+                         -3.19700977, -14.58390611, 10.06920291, -51.12649599, -5.74544068, -17.36872483, -30.4772929,
+                         7.12691256, -37.68943916, -73.14248882, -11.45674522, -24.64851804, 12.69928323, -32.16248418,
+                         -20.86746046, 61.514626, 48.30928659, -13.17640207, 24.28126177, -36.84111057, -20.5870326,
                          77.8291117, -8.66115426])
 
 
 # compare the GAMMA and PyRate Bperp estimates
 def test_pyrate_bperp_matches_gamma_bperp(gamma_bperp):
-    np.testing.assert_array_almost_equal(pyrate_bperp/1e6, gamma_bperp/1e6)  # max difference < 10mm
-
+    np.testing.assert_array_almost_equal(pyrate_bperp / 1e6, gamma_bperp / 1e6)  # max difference < 10mm
 
 # diff = bperp_int - pyrate_bperp
 # print(1000 * np.mean(diff))  # mean difference in mm
