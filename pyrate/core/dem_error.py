@@ -77,8 +77,6 @@ def dem_error_calc_wrapper(params: dict) -> None:
             rg = geom_rg.geometry_data
 
             # split into tiles to calculate DEM error correction
-            params[cf.PREREAD_IFGS] = cp.load(open(Configuration.preread_ifgs(params), 'rb'))
-            params[cf.TILES] = Configuration.get_tiles(params)
             tiles = params[cf.TILES]
             preread_ifgs = params[cf.PREREAD_IFGS]
             # todo: subtract other corrections (e.g. orbital) from displacement phase before estimating the DEM error
