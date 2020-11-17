@@ -266,16 +266,27 @@ def find_header(path: MultiplePaths, params: dict):
     return header
 
 
-def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float], transform,
-                          ifg_path: MultiplePaths) -> None:
+def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
+                          transform, ifg_path: MultiplePaths) -> None:
     """
-    Calculate geometry files using the information in the first interferogram in the stack, i.e.:
+    Calculate geometry and save to geotiff files using the information in the
+    first interferogram in the stack, i.e.:
     - rdc_azimuth.tif (azimuth radar coordinate at each pixel)
     - rdc_range.tif (range radar coordinate at each pixel)
     - azimuth_angle.tif (satellite azimuth angle at each pixel)
     - incidence_angle.tif (incidence angle at each pixel)
     - look_angle.tif (look angle at each pixel)
     """
+    ifg_path = ifg_path.sampled_path
+    ifg = Ifg(ifg_path)
+    ifg.open(readonly=True)
+
+    # not currently implemented for ROIPAC data which breaks some tests
+    # if statement can be deleted once ROIPAC is deprecated from PyRate
+    if ifg.meta_data[ifc.PYRATE_INSAR_PROCESSOR] == 'ROIPAC':
+        log.warning('Geometry calculations are not implemented for ROI_PAC')
+        return
+
     # get geometry information and save radar coordinates and angles to tif files
     # using metadata of the first image in the stack
     # get pixel values of crop (needed to crop lookup table file)
@@ -285,16 +296,39 @@ def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
     # xmin, xmax: columns of crop
     # ymin, ymax: rows of crop
 
-    ifg_path = ifg_path.sampled_path
-    ifg = Ifg(ifg_path)
-    ifg.open(readonly=True)
+    # calculate per-pixel lon/lat
+    lon, lat = geometry.get_lonlat_coords(ifg)
+    # calculate per-pixel radar coordinates
+    az, rg = geometry.calc_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax)
+    # calculate per-pixel look angle (also calculates and saves incidence and azimuth angles)
+    lk_ang, inc_ang, az_ang, _ = geometry.calc_pixel_geometry(ifg, ifg_path, rg, lon, lat, params)
 
-    # not currently implemented for ROIPAC data which breaks some tests
-    # if statement can be deleted once ROIPAC is deprecated from PyRate
-    if not ifg.meta_data[ifc.PYRATE_INSAR_PROCESSOR] == 'ROIPAC':
-        # calculate per-pixel lon/lat
-        lon, lat = geometry.get_lonlat_coords(ifg)
-        # calculate per-pixel radar coordinates
-        az, rg = geometry.get_and_write_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax)
-        # calculate per-pixel look angle (also calculates and saves incidence and azimuth angles)
-        geometry.write_local_geometry_files(ifg, ifg_path, rg, lon, lat, params)
+    # save radar coordinates and angles to geotiff files
+    for out, ot in zip([az, rg, lk_ang, inc_ang, az_ang],
+            ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle']):
+        _save_geom_files(ifg_path, params[cf.OUT_DIR], out, ot)
+
+
+def _save_geom_files(ifg_path, outdir, array, out_type):
+    """
+    Convenience function to save geometry geotiff files
+    """
+    log.debug('Saving PyRate outputs {}'.format(out_type))
+    gt, md, wkt = shared.get_geotiff_header_info(ifg_path)
+
+    if out_type == 'rdc_azimuth':
+        md[ifc.DATA_TYPE] = ifc.RDC_AZIMUTH
+    elif out_type == 'rdc_range':
+        md[ifc.DATA_TYPE] = ifc.RDC_RANGE
+    elif out_type == 'look_angle':
+        md[ifc.DATA_TYPE] = ifc.LOOK
+    elif out_type == 'incidence_angle':
+        md[ifc.DATA_TYPE] = ifc.INCIDENCE
+    elif out_type == 'azimuth_angle':
+        md[ifc.DATA_TYPE] = ifc.AZIMUTH
+
+    dest = os.path.join(outdir, out_type + ".tif")
+    shared.remove_file_if_exists(dest)
+    log.info(f"Writing geotiff: {dest}")
+    shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
+

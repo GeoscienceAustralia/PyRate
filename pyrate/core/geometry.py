@@ -22,7 +22,7 @@ This Python module implements the calculation and output of the per-pixel vector
 import numpy as np
 import os
 from math import sqrt, sin, cos, tan, asin, atan, atan2, isnan, pi
-from pyrate.core import shared, ifgconstants as ifc, config as cf
+from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.refpixel import convert_pixel_value_to_geographic_coordinate
 from pyrate.core.gamma import read_lookup_table
 
@@ -66,10 +66,11 @@ def get_lonlat_coords(ifg):
     return lon, lat
 
 
-def get_and_write_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax):
+def calc_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax):
     """
-    Function to get radar coordinates for each pixel in the multi-looked interferogram dataset.
-    Radar coordinates are identical for each interferogram in the stack.
+    Function to calculate radar coordinates for each pixel in the multi-looked
+    interferogram dataset. Radar coordinates are identical for each interferogram
+    in the stack.
     """
     # lookup table file:
     lookup_table = params[cf.LT_FILE]
@@ -82,21 +83,10 @@ def get_and_write_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax):
     lt_az[lt_az == 0.0] = np.nan
     lt_rg[lt_rg == 0.0] = np.nan
 
-    # save radar coordinates to tif file
-    gt, md, wkt = shared.get_geotiff_header_info(ifg_path)
-    md[ifc.DATA_TYPE] = ifc.RDC_AZIMUTH
-    rdc_az_file = os.path.join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
-    shared.remove_file_if_exists(rdc_az_file)
-    shared.write_output_geotiff(md, gt, wkt, lt_az, rdc_az_file, np.nan)
-    md[ifc.DATA_TYPE] = ifc.RDC_RANGE
-    rdc_rg_file = os.path.join(params[cf.OUT_DIR], 'rdc_range.tif')
-    shared.remove_file_if_exists(rdc_rg_file)
-    shared.write_output_geotiff(md, gt, wkt, lt_rg, rdc_rg_file, np.nan)
-
     return lt_az, lt_rg
 
 
-def write_local_geometry_files(ifg, ifg_path, rg, lon, lat, params):
+def calc_pixel_geometry(ifg, ifg_path, rg, lon, lat, params):
     """
     Function to calculate local look angle, incidence angle and geodetic azimuth for each pixel.
     """
@@ -178,23 +168,7 @@ def write_local_geometry_files(ifg, ifg_path, rg, lon, lat, params):
     # maximum differences to the GAMMA-derived local azimuth angles for Sentinel-1 test data are within +/-0.5 deg
     # this could be improved by using orbital state vectors to calculate that satellite positions (see above comment)
 
-    if ifg_path is not None:
-        # save angles as geotiff files in out directory
-        gt, md, wkt = shared.get_geotiff_header_info(ifg_path)
-        md[ifc.DATA_TYPE] = ifc.LOOK
-        look_angle_file = os.path.join(params[cf.OUT_DIR], 'look_angle.tif')
-        shared.remove_file_if_exists(look_angle_file)
-        shared.write_output_geotiff(md, gt, wkt, look_angle, look_angle_file, np.nan)
-        md[ifc.DATA_TYPE] = ifc.INCIDENCE
-        incidence_angle_file = os.path.join(params[cf.OUT_DIR], 'incidence_angle.tif')
-        shared.remove_file_if_exists(incidence_angle_file)
-        shared.write_output_geotiff(md, gt, wkt, incidence_angle, incidence_angle_file, np.nan)
-        md[ifc.DATA_TYPE] = ifc.AZIMUTH
-        azimuth_angle_file = os.path.join(params[cf.OUT_DIR], 'azimuth_angle.tif')
-        shared.remove_file_if_exists(azimuth_angle_file)
-        shared.write_output_geotiff(md, gt, wkt, azimuth_angle, azimuth_angle_file, np.nan)
-
-    return look_angle, range_dist
+    return look_angle, incidence_angle, azimuth_angle, range_dist
 
 
 def calc_local_baseline(ifg, az, look_angle):
