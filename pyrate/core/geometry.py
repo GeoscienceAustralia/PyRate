@@ -84,7 +84,6 @@ def get_and_write_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax):
 
     # save radar coordinates to tif file
     gt, md, wkt = shared.get_geotiff_header_info(ifg_path)
-    md[ifc.EPOCH_DATE] = None  # needs to have a value in write_output_geotiff
     md[ifc.DATA_TYPE] = ifc.RDC_AZIMUTH
     rdc_az_file = os.path.join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
     shared.remove_file_if_exists(rdc_az_file)
@@ -182,7 +181,6 @@ def write_local_geometry_files(ifg, ifg_path, rg, lon, lat, params):
     if ifg_path is not None:
         # save angles as geotiff files in out directory
         gt, md, wkt = shared.get_geotiff_header_info(ifg_path)
-        md[ifc.EPOCH_DATE] = None # needs to have a value in write_output_geotiff
         md[ifc.DATA_TYPE] = ifc.LOOK
         look_angle_file = os.path.join(params[cf.OUT_DIR], 'look_angle.tif')
         shared.remove_file_if_exists(look_angle_file)
