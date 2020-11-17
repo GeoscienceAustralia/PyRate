@@ -118,7 +118,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
                 # calculate the DEM error estimate and the correction values for each IFG
                 # current implementation uses the look angle and range distance matrix of the primary SLC in the last IFG
                 # todo: check the impact of using the same information from another SLC
-                dem_error, dem_error_correction = calc_dem_errors(ifg_parts, bperp, look_angle, range_dist, threshold)
+                dem_error, dem_error_correction, _ = calc_dem_errors(ifg_parts, bperp, look_angle, range_dist, threshold)
                 # dem_error contains the estimated DEM error for each pixel (i.e. the topographic change relative to the DEM)
                 # size [row, col]
                 # dem_error_correction contains the correction value for each interferogram
@@ -159,6 +159,7 @@ def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold):
 
     :return: ndarray dem_error: estimated per-pixel dem error (nrows x ncols)
     :return: ndarray dem_error_correction: DEM error correction for each pixel and interferogram (nifgs x nrows x ncols)
+    :return: ndarray vel: velocity estimate for each pixel (nrows x ncols)
     """
     ifg_data, mst, ncols, nrows, bperp_data, ifg_time_span = _perpixel_setup(ifgs, bperp)
     if threshold < 4:
@@ -167,6 +168,7 @@ def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold):
     # pixel-by-pixel calculation
     # preallocate empty arrays for results
     dem_error = np.empty([nrows, ncols], dtype=np.float32) * np.nan
+    vel = np.empty([nrows, ncols], dtype=np.float32) * np.nan
     # nested loops to loop over the 2 image dimensions
     for row in range(nrows):
         for col in range(ncols):
@@ -188,6 +190,8 @@ def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold):
                 xhat, res, rnk, s = np.linalg.lstsq(A, y, rcond=None)
                 # dem error estimate for the pixel is the second parameter (cf. design matrix)
                 dem_error[row][col] = xhat[1]
+                # velocity estimate for the pixel is the third parameter (cf. design matrix)
+                vel[row][col] = xhat[2]
 
     # calculate correction value for each IFG by multiplying the least-squares estimate with the Bperp value
     dem_error_correction = np.multiply(dem_error, bperp_data)
@@ -196,7 +200,7 @@ def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold):
     # also scale by -0.001 since the phase observations are in mm with positive values away from the sensor
     dem_error = np.multiply(dem_error, np.multiply(range_dist, np.sin(look_angle))) * (-0.001)
 
-    return dem_error, dem_error_correction
+    return dem_error, dem_error_correction, vel
 
 
 def _perpixel_setup(ifgs, bperp):
@@ -248,7 +252,7 @@ def _write_dem_errors(ifg_paths, params, preread_ifgs, tiles):
     for ifg_path in ifg_paths:
         ifg = Ifg(ifg_path)
         ifg.open()
-        # read dem error correction file from tmpdir (size
+        # read dem error correction file from tmpdir
         dem_error_correction_ifg = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='dem_error_correction',
                                                   index=idx)
         idx += 1
@@ -275,7 +279,7 @@ def __check_and_apply_demerrors_found_on_disc(ifg_paths, params):
             else:
                 ifg = i
             ifg.phase_data -= dem_corr
-            # set orbfit meta tag and save phase to file
+            # set geotiff meta tag and save phase to file
             _save_dem_error_corrected_phase(ifg)
     return all(d.exists() for d in saved_dem_err_paths)
 
@@ -284,7 +288,7 @@ def _save_dem_error_corrected_phase(ifg):
     """
     Convenience function to update metadata and save latest phase after DEM error correction
     """
-    # set orbfit tags after orbital error correction
+    # update geotiff tags after DEM error correction
     ifg.dataset.SetMetadataItem(ifc.PYRATE_DEM_ERROR, ifc.DEM_ERROR_REMOVED)
     ifg.write_modified_phase()
     ifg.close()
