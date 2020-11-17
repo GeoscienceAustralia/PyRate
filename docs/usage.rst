@@ -44,20 +44,24 @@ Example of an interferogram file list for `GAMMA` flat-binary files::
       Any naming convention is appropriate as long as an epoch pair of format
       ``YYYYMMDD-YYYYMMDD`` or ``YYMMDD-YYMMDD`` exists in the filename.
 
-The ``hdrfilelist`` gives the list of `GAMMA` SLC header text files.
-Example of a `GAMMA` SLC header file list::
+The ``hdrfilelist`` gives the list of `GAMMA` Multi-Look Intensity (MLI) header
+text files. Example of a `GAMMA` MLI header file list::
 
-    /absolute/path/to/20150702_slc.par
-    /absolute/path/to/20150920_slc.par
-    /absolute/path/to/20151219_slc.par
-    /absolute/path/to/20160109_slc.par
-    /absolute/path/to/20160202_slc.par
-    /absolute/path/to/20160415_slc.par
+    /absolute/path/to/20150702_mli.par
+    /absolute/path/to/20150920_mli.par
+    /absolute/path/to/20151219_mli.par
+    /absolute/path/to/20160109_mli.par
+    /absolute/path/to/20160202_mli.par
+    /absolute/path/to/20160415_mli.par
 
 .. note::
 
-    - SLC header filenames must contain a single date epoch in the format
+    - MLI header filenames must contain a single date epoch in the format
       ``YYYYMMDD`` or ``YYMMDD``.
+    - `GAMMA` Single-Look Complex (SLC) header files could be used instead, but
+      the geometry calculations in ``prepifg`` will not work, and subsequently
+      the DEM Error correction step in ``correct`` will not work. Both require
+      parameters valid for the multi-looked radar-coded interferograms.
 
 The ``cohfilelist`` is an optional list which contains the pool of all available
 coherence files to be used for optional coherence masking.
@@ -73,7 +77,7 @@ Example of a coherence file list for `GAMMA` flat-binary files::
       The epoch pair must be in the format ``YYYYMMDD-YYYYMMDD`` or
       ``YYMMDD-YYMMDD``. Otherwise, any naming convention is appropriate.
 
-The date epochs in filenames are used to match the corresponding SLC header
+The date epochs in filenames are used to match the corresponding MLI header
 or coherence files to each interferogram. It is recommended to provide a complete
 list of available headers/coherence files for a stack in their respective lists,
 since only the necessary files will be used. This allows you to process a subset
@@ -166,7 +170,7 @@ need to be converted into geotiff format using the optional ``conv2tif`` step.
       geotiffs using the `GAMMA` program ``data2geotiff``, which is included in all
       `GAMMA` software distributions.
     - In this case, ``ifgfilelist`` and ``cohfilelist`` would contain the absolute
-      paths to these geotiff files. Even when using geotiff files, the SLC header files
+      paths to these geotiff files. Even when using geotiff files, the MLI header files
       are still required by ``prepifg``.
     - If a DEM is to be processed by ``prepifg``, it's file format should match the
       input interferograms (e.g. geotiff or flat-binary files).
@@ -350,8 +354,8 @@ interferometry softwares. `PyRate` will determine the input format from the
 Each `GAMMA` geocoded unwrapped interferogram requires three header files
 to extract metadata required for data formatting: a geocoded DEM header
 file (``demHeaderFile`` keyword in the configuration file) and the relevant
-SLC image header files (``*slc.par``) found in the ``hdrfilelist``.
-The header files for the first and second SLC images used in the formation
+MLI image header files (``*mli.par``) found in the ``hdrfilelist``.
+The header files for the first and second MLI images used in the formation
 of a particular interferogram are found automatically by date-string pattern
 matching based on date epochs given in the filenames.
 A DEM with matching size and geometry to the interferograms can also be processed.
