@@ -1,15 +1,14 @@
 import numpy as np
 import glob
 import os
+from os.path import join
 from scipy.interpolate import griddata
 import math
 import pytest
-import shutil
 from tests import common
 from pyrate.configuration import Configuration
 from pyrate import prepifg, correct
 import pyrate.core.config as cf
-from pyrate.core import shared
 import pyrate.core.geometry as geom
 from pyrate.core.shared import Ifg, Geometry
 
@@ -64,79 +63,63 @@ def gamma_bperp():
     return bperp_int
 
 
-# TODO: calculate this with pyrate dem_error
-pyrate_bperp = np.array([33.48592183, 3.44669685, -75.37369399, -26.88597679, -33.25298942, -108.84360354, 3.74075472,
-                         -3.19700977, -14.58390611, 10.06920291, -51.12649599, -5.74544068, -17.36872483, -30.4772929,
-                         7.12691256, -37.68943916, -73.14248882, -11.45674522, -24.64851804, 12.69928323, -32.16248418,
-                         -20.86746046, 61.514626, 48.30928659, -13.17640207, 24.28126177, -36.84111057, -20.5870326,
-                         77.8291117, -8.66115426])
+@pytest.fixture
+def pyrate_bperp():
+    # calculate Bperp using PyRate functions
+    params = Configuration(common.MEXICO_CONF).__dict__
+    # run prepifg
+    prepifg.main(params)
+    # read radar azimuth and range tif files
+    rdc_az_file = join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
+    geom_az = Geometry(rdc_az_file)
+    geom_az.open(readonly=True)
+    az = geom_az.geometry_data
+    rdc_rg_file = join(params[cf.OUT_DIR], 'rdc_range.tif')
+    geom_rg = Geometry(rdc_rg_file)
+    geom_rg.open(readonly=True)
+    rg = geom_rg.geometry_data
+
+    # copy IFGs to temp folder
+    correct._copy_mlooked(params)
+    multi_paths = params[cf.INTERFEROGRAM_FILES]
+    tmp_paths = [ifg_path.tmp_sampled_path for ifg_path in multi_paths]
+    # keep only ifg files in path list (i.e. remove coherence and dem files)
+    ifg_paths = [item for item in tmp_paths if 'ifg.tif' in item]
+    # read and open the first IFG in list
+    ifg0_path = ifg_paths[0]
+    ifg0 = Ifg(ifg0_path)
+    ifg0.open(readonly=True)
+    # geometry information needed to calculate Bperp for each pixel using first IFG in list
+    lon, lat = geom.get_lonlat_coords(ifg0)
+
+    # values for test pixel at 50, 29
+    az_pix = az[50, 29]
+    rg_pix = rg[50, 29]
+    lon_pix = lon[50, 29]
+    lat_pix = lat[50, 29]
+
+    # calculate Bperp
+    nifgs = len(ifg_paths)
+    bperp = np.empty((nifgs)) * np.nan
+    # calculate per-pixel perpendicular baseline for each IFG
+    for ifg_num, ifg_path in enumerate(
+            ifg_paths):  # loop could be avoided by approximating the look angle for the first Ifg
+        ifg = Ifg(ifg_path)
+        ifg.open(readonly=True)
+        # calculate look angle for interferograms (using the Near Range of the primary SLC)
+        look_angle, range_dist = geom.write_local_geometry_files(ifg, None, rg_pix, lon_pix,
+                                                                 lat_pix, params)
+        bperp[ifg_num] = geom.calc_local_baseline(ifg, az_pix, look_angle)
+
+    return bperp
 
 
-# compare the GAMMA and PyRate Bperp estimates
-def test_pyrate_bperp_matches_gamma_bperp(gamma_bperp):
-    np.testing.assert_array_almost_equal(pyrate_bperp / 1e6, gamma_bperp / 1e6)  # max difference < 10mm
-
-# diff = bperp_int - pyrate_bperp
-# print(1000 * np.mean(diff))  # mean difference in mm
-# print(1000 * np.max(diff))  # max difference in mm
-# Mean difference: 0.19 mm, maximum difference: 1.29 mm
-
-class TestDEMerror:
-
-    @classmethod
-    @pytest.fixture(autouse=True)
-    def setup_method(cls):
-        cls.conf = common.MEXICO_CONF
-        params = Configuration(cls.conf).__dict__
-        prepifg.main(params)
-        cls.params = Configuration(cls.conf).__dict__
-        correct._copy_mlooked(cls.params)
-        correct._update_params_with_tiles(cls.params)
-        correct._create_ifg_dict(cls.params)
-        multi_paths = cls.params[cf.INTERFEROGRAM_FILES]
-        cls.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
-        cls.ifgs = [shared.Ifg(i) for i in cls.ifg_paths]
-        for i in cls.ifgs:
-            i.open()
-        shared.save_numpy_phase(cls.ifg_paths, cls.params)
-        correct.mst_calc_wrapper(cls.params)
-
-    @classmethod
-    def teardown_method(cls):
-        pass
-
-    def calc_pyrate_bperp(self, row, col):
-
-        print(self)
-        # read radar azimuth and range tif files
-        rdc_az_file = join(self.params[cf.OUT_DIR], 'rdc_azimuth.tif')
-        geom_az = Geometry(rdc_az_file)
-        geom_az.open(readonly=True)
-        az = geom_az.geometry_data
-        rdc_rg_file = join(self.params[cf.OUT_DIR], 'rdc_range.tif')
-        geom_rg = Geometry(rdc_rg_file)
-        geom_rg.open(readonly=True)
-        rg = geom_rg.geometry_data
-
-        ifg0 = self.ifgs[0]
-        lon, lat = geom.get_lonlat_coords(ifg0)
-
-        # values for test pixel at 50, 29
-        az_pix = az[50, 29]
-        rg_pix = rg[50, 29]
-        lon_pix = lon[50, 29]
-        lat_pix = lat[50, 29]
-
-        ifg_paths = self.ifg_paths
-        nifgs = len(ifg_paths)
-        bperp_pyrate = np.empty((nifgs, 1, 1)) * np.nan
-        # calculate per-pixel perpendicular baseline for each IFG
-        for ifg_num, ifg_path in enumerate(
-                ifg_paths):  # loop could be avoided by approximating the look angle for the first Ifg
-            ifg = Ifg(ifg_path)
-            ifg.open(readonly=True)
-            # calculate look angle for interferograms (using the Near Range of the primary SLC)
-            look_angle, range_dist = geom.write_local_geometry_files(ifg, None, rg_pix, lon_pix,
-                                                                         lat_pix, self.params)
-            bperp_pyrate[ifg_num, :, :] = geom.calc_local_baseline(ifg, az_pix, look_angle)
+def test_pyrate_bperp_matches_gamma_bperp(gamma_bperp, pyrate_bperp):
+    # compare the GAMMA and PyRate Bperp estimates
+    np.testing.assert_array_almost_equal(gamma_bperp / 1e6, pyrate_bperp / 1e6)  # max difference < 10mm
+    # screen output if need be:
+    diff = gamma_bperp - pyrate_bperp
+    print(1000 * np.mean(diff))  # mean difference in mm
+    print(1000 * np.max(diff))  # max difference in mm
+    # Mean difference: 0.19 mm, maximum difference: 1.29 mm
 
