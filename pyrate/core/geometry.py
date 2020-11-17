@@ -66,7 +66,7 @@ def get_lonlat_coords(ifg):
     return lon, lat
 
 
-def calc_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax):
+def calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax):
     """
     Function to calculate radar coordinates for each pixel in the multi-looked
     interferogram dataset. Radar coordinates are identical for each interferogram
@@ -86,7 +86,7 @@ def calc_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax):
     return lt_az, lt_rg
 
 
-def calc_pixel_geometry(ifg, ifg_path, rg, lon, lat, params):
+def calc_pixel_geometry(ifg, rg, params):
     """
     Function to calculate local look angle, incidence angle and geodetic azimuth for each pixel.
     """
@@ -99,6 +99,9 @@ def calc_pixel_geometry(ifg, ifg_path, rg, lon, lat, params):
     rps = float(ifg.meta_data[ifc.PYRATE_RANGE_PIX_METRES])
     heading = float(ifg.meta_data[ifc.PYRATE_HEADING_DEGREES])
     azimuth = float(ifg.meta_data[ifc.PYRATE_AZIMUTH_DEGREES])
+
+    # calculate per-pixel lon/lat
+    lon, lat = get_lonlat_coords(ifg)
 
     # convert angles to radians
     lon = np.radians(lon)

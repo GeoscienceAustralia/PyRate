@@ -296,12 +296,10 @@ def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
     # xmin, xmax: columns of crop
     # ymin, ymax: rows of crop
 
-    # calculate per-pixel lon/lat
-    lon, lat = geometry.get_lonlat_coords(ifg)
     # calculate per-pixel radar coordinates
     az, rg = geometry.calc_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax)
     # calculate per-pixel look angle (also calculates and saves incidence and azimuth angles)
-    lk_ang, inc_ang, az_ang, _ = geometry.calc_pixel_geometry(ifg, ifg_path, rg, lon, lat, params)
+    lk_ang, inc_ang, az_ang, _ = geometry.calc_pixel_geometry(ifg, ifg_path, rg, params)
 
     # save radar coordinates and angles to geotiff files
     for out, ot in zip([az, rg, lk_ang, inc_ang, az_ang],
