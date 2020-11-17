@@ -829,8 +829,6 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
     else:
         _check_raw_data(bytes_per_col, data_path, ncols, nrows)
 
-    _check_pixel_res_mismatch(header)
-
     # position and projection data
     gt = [header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0, header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]]
     srs = osr.SpatialReference()
@@ -982,18 +980,6 @@ def _check_raw_data(bytes_per_col, data_path, ncols, nrows):
     if act_size != size:
         msg = '%s should have size %s, not %s. Is the correct file being used?'
         raise GeotiffException(msg % (data_path, size, act_size))
-
-
-def _check_pixel_res_mismatch(header):
-    """
-    Convenience function to check equality of pixel resolution in X and Y dimensions
-    """
-    # pylint: disable=invalid-name
-    xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP], header[ifc.PYRATE_Y_STEP]]]
-
-    if xs != ys:
-        msg = 'X and Y cell sizes do not match: %s & %s'
-        raise GeotiffException(msg % (xs, ys))
 
 
 def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):

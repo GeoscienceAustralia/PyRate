@@ -28,7 +28,7 @@ The following system dependencies are required by PyRate:
 - `GDAL <https://gdal.org/download.html>`_, versions 3.0.2 or 3.0.4
 - `Open MPI <https://www.open-mpi.org/software/ompi/v4.0/>`_, versions 2.1.6, 3.0.4, 3.1.4 or 4.0.2
 
-The versions of each package stated above have been tested to work.
+The versions of each package stated above have been tested to work using `Travis CI <https://travis-ci.org/github/GeoscienceAustralia/PyRate>`_ continuous integration testing.
 
 Python dependencies for PyRate are::
 
