@@ -1441,3 +1441,13 @@ def output_tiff_filename(inpath, outpath):
     else:
         name = os.path.join(outpath, fname + '_' + ext + '.tif')
     return name
+
+
+def remove_file_if_exists(file):
+    """
+        Function to remove a geometry file if it already exists.
+    """
+    try:
+        os.remove(file)
+    except OSError:
+        pass

@@ -1,12 +1,20 @@
 import numpy as np
+import glob
+import os
 from scipy.interpolate import griddata
 import math
 import pytest
-from pyrate.constants import PYRATEPATH
+import shutil
+from tests import common
+from pyrate.configuration import Configuration
+from pyrate import prepifg, correct
+import pyrate.core.config as cf
+from pyrate.core import shared
+import pyrate.core.geometry as geom
+from pyrate.core.shared import Ifg, Geometry
 
-test_data = PYRATEPATH.joinpath('tests', 'test_data')
-geotiffs = test_data.joinpath('geotiffs')
-geometry = test_data.joinpath('geometry')
+
+geometry_path = common.MEXICO_TEST_DIR_GEOMETRY
 
 
 @pytest.fixture
@@ -30,7 +38,7 @@ def gamma_bperp():
     teststr4 = str(az2).rjust(6, ' ') + str(rg2).rjust(7, ' ')
 
     # loop through all corresponding bperp.par files in base.par list
-    bperp_files = sorted(list(geometry.glob('*_bperp.par')))
+    bperp_files = sorted(list(glob.glob(os.path.join(geometry_path, '*_bperp.par'))))
     bperp_int = np.empty(shape=(len(bperp_files)))
     for i, bperp_file in enumerate(bperp_files):
         # read Mexico city bperp file
@@ -72,3 +80,63 @@ def test_pyrate_bperp_matches_gamma_bperp(gamma_bperp):
 # print(1000 * np.mean(diff))  # mean difference in mm
 # print(1000 * np.max(diff))  # max difference in mm
 # Mean difference: 0.19 mm, maximum difference: 1.29 mm
+
+class TestDEMerror:
+
+    @classmethod
+    @pytest.fixture(autouse=True)
+    def setup_method(cls):
+        cls.conf = common.MEXICO_CONF
+        params = Configuration(cls.conf).__dict__
+        prepifg.main(params)
+        cls.params = Configuration(cls.conf).__dict__
+        correct._copy_mlooked(cls.params)
+        correct._update_params_with_tiles(cls.params)
+        correct._create_ifg_dict(cls.params)
+        multi_paths = cls.params[cf.INTERFEROGRAM_FILES]
+        cls.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
+        cls.ifgs = [shared.Ifg(i) for i in cls.ifg_paths]
+        for i in cls.ifgs:
+            i.open()
+        shared.save_numpy_phase(cls.ifg_paths, cls.params)
+        correct.mst_calc_wrapper(cls.params)
+
+    @classmethod
+    def teardown_method(cls):
+        pass
+
+    def calc_pyrate_bperp(self, row, col):
+
+        print(self)
+        # read radar azimuth and range tif files
+        rdc_az_file = join(self.params[cf.OUT_DIR], 'rdc_azimuth.tif')
+        geom_az = Geometry(rdc_az_file)
+        geom_az.open(readonly=True)
+        az = geom_az.geometry_data
+        rdc_rg_file = join(self.params[cf.OUT_DIR], 'rdc_range.tif')
+        geom_rg = Geometry(rdc_rg_file)
+        geom_rg.open(readonly=True)
+        rg = geom_rg.geometry_data
+
+        ifg0 = self.ifgs[0]
+        lon, lat = geom.get_lonlat_coords(ifg0)
+
+        # values for test pixel at 50, 29
+        az_pix = az[50, 29]
+        rg_pix = rg[50, 29]
+        lon_pix = lon[50, 29]
+        lat_pix = lat[50, 29]
+
+        ifg_paths = self.ifg_paths
+        nifgs = len(ifg_paths)
+        bperp_pyrate = np.empty((nifgs, 1, 1)) * np.nan
+        # calculate per-pixel perpendicular baseline for each IFG
+        for ifg_num, ifg_path in enumerate(
+                ifg_paths):  # loop could be avoided by approximating the look angle for the first Ifg
+            ifg = Ifg(ifg_path)
+            ifg.open(readonly=True)
+            # calculate look angle for interferograms (using the Near Range of the primary SLC)
+            look_angle, range_dist = geom.write_local_geometry_files(ifg, None, rg_pix, lon_pix,
+                                                                         lat_pix, self.params)
+            bperp_pyrate[ifg_num, :, :] = geom.calc_local_baseline(ifg, az_pix, look_angle)
+

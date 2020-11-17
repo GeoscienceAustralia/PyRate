@@ -240,7 +240,7 @@ def _write_dem_errors(ifg_paths, params, preread_ifgs, tiles):
     md[ifc.DATA_TYPE] = ifc.DEM_ERROR
     dem_error = assemble_tiles(shape, params[cf.TMPDIR], tiles, out_type='dem_error')
     dem_error_file = os.path.join(params[cf.OUT_DIR], 'dem_error.tif')
-    geometry.remove_file_if_exists(dem_error_file)
+    shared.remove_file_if_exists(dem_error_file)
     shared.write_output_geotiff(md, gt, wkt, dem_error, dem_error_file, np.nan)
 
     # loop over all ifgs

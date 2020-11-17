@@ -22,8 +22,6 @@ This Python module implements the calculation and output of the per-pixel vector
 import numpy as np
 import os
 from math import sqrt, sin, cos, tan, asin, atan, atan2, isnan, pi
-from pathlib import Path
-
 from pyrate.core import shared, ifgconstants as ifc, config as cf
 from pyrate.core.refpixel import convert_pixel_value_to_geographic_coordinate
 from pyrate.core.gamma import read_lookup_table
@@ -89,11 +87,11 @@ def get_and_write_radar_coords(ifg, ifg_path, params, xmin, xmax, ymin, ymax):
     md[ifc.EPOCH_DATE] = None  # needs to have a value in write_output_geotiff
     md[ifc.DATA_TYPE] = ifc.RDC_AZIMUTH
     rdc_az_file = os.path.join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
-    remove_file_if_exists(rdc_az_file)
+    shared.remove_file_if_exists(rdc_az_file)
     shared.write_output_geotiff(md, gt, wkt, lt_az, rdc_az_file, np.nan)
     md[ifc.DATA_TYPE] = ifc.RDC_RANGE
     rdc_rg_file = os.path.join(params[cf.OUT_DIR], 'rdc_range.tif')
-    remove_file_if_exists(rdc_rg_file)
+    shared.remove_file_if_exists(rdc_rg_file)
     shared.write_output_geotiff(md, gt, wkt, lt_rg, rdc_rg_file, np.nan)
 
     return lt_az, lt_rg
@@ -187,15 +185,15 @@ def write_local_geometry_files(ifg, ifg_path, rg, lon, lat, params):
         md[ifc.EPOCH_DATE] = None # needs to have a value in write_output_geotiff
         md[ifc.DATA_TYPE] = ifc.LOOK
         look_angle_file = os.path.join(params[cf.OUT_DIR], 'look_angle.tif')
-        remove_file_if_exists(look_angle_file)
+        shared.remove_file_if_exists(look_angle_file)
         shared.write_output_geotiff(md, gt, wkt, look_angle, look_angle_file, np.nan)
         md[ifc.DATA_TYPE] = ifc.INCIDENCE
         incidence_angle_file = os.path.join(params[cf.OUT_DIR], 'incidence_angle.tif')
-        remove_file_if_exists(incidence_angle_file)
+        shared.remove_file_if_exists(incidence_angle_file)
         shared.write_output_geotiff(md, gt, wkt, incidence_angle, incidence_angle_file, np.nan)
         md[ifc.DATA_TYPE] = ifc.AZIMUTH
         azimuth_angle_file = os.path.join(params[cf.OUT_DIR], 'azimuth_angle.tif')
-        remove_file_if_exists(azimuth_angle_file)
+        shared.remove_file_if_exists(azimuth_angle_file)
         shared.write_output_geotiff(md, gt, wkt, azimuth_angle, azimuth_angle_file, np.nan)
 
     return look_angle, range_dist
@@ -286,9 +284,3 @@ def vincinv(lat1, lon1, lat2, lon2, semimaj, semimin):
 
     return round(azimuth1to2, 9)
 
-
-def remove_file_if_exists(file):
-    """
-        Function to remove a geometry file if it already exists.
-    """
-    Path(file).unlink(missing_ok=True)
