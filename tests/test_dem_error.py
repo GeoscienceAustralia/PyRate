@@ -16,11 +16,32 @@ from pyrate.core.shared import Ifg, Geometry
 geometry_path = common.MEXICO_TEST_DIR_GEOMETRY
 
 
+def setup():
+    params = Configuration(common.MEXICO_CONF).__dict__
+    # run prepifg
+    prepifg.main(params)
+    # copy IFGs to temp folder
+    correct._copy_mlooked(params)
+    # read radar azimuth and range tif files
+    rdc_az_file = join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
+    geom_az = Geometry(rdc_az_file)
+    geom_az.open(readonly=True)
+    az = geom_az.geometry_data
+    rdc_rg_file = join(params[cf.OUT_DIR], 'rdc_range.tif')
+    geom_rg = Geometry(rdc_rg_file)
+    geom_rg.open(readonly=True)
+    rg = geom_rg.geometry_data
+
+    return az, rg, params
+
+
 @pytest.fixture
-def gamma_bperp():
+def gamma_bperp(x0=50, y0=29):
+    # calculate Bperp from GAMMA out files (interpolation required)
     # interpolation location (azimuth and range coordinate of crop A pixel (50,29)
-    az0 = 2636.9912
-    rg0 = 103.4759
+    az, rg, params = setup()
+    az0 = az[x0, y0]
+    rg0 = rg[x0, y0]
 
     # round azimuth and range coordinates to closest step (500 for az, 200 for rg)
     azstep = 500
@@ -64,23 +85,10 @@ def gamma_bperp():
 
 
 @pytest.fixture
-def pyrate_bperp():
+def pyrate_bperp(x0=50, y0=29):
     # calculate Bperp using PyRate functions
-    params = Configuration(common.MEXICO_CONF).__dict__
-    # run prepifg
-    prepifg.main(params)
-    # read radar azimuth and range tif files
-    rdc_az_file = join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
-    geom_az = Geometry(rdc_az_file)
-    geom_az.open(readonly=True)
-    az = geom_az.geometry_data
-    rdc_rg_file = join(params[cf.OUT_DIR], 'rdc_range.tif')
-    geom_rg = Geometry(rdc_rg_file)
-    geom_rg.open(readonly=True)
-    rg = geom_rg.geometry_data
 
-    # copy IFGs to temp folder
-    correct._copy_mlooked(params)
+    az, rg, params = setup()
     multi_paths = params[cf.INTERFEROGRAM_FILES]
     tmp_paths = [ifg_path.tmp_sampled_path for ifg_path in multi_paths]
     # keep only ifg files in path list (i.e. remove coherence and dem files)
@@ -93,10 +101,10 @@ def pyrate_bperp():
     lon, lat = geom.get_lonlat_coords(ifg0)
 
     # values for test pixel at 50, 29
-    az_pix = az[50, 29]
-    rg_pix = rg[50, 29]
-    lon_pix = lon[50, 29]
-    lat_pix = lat[50, 29]
+    az0 = az[x0, y0]
+    rg0 = rg[x0, y0]
+    lon0 = lon[x0, y0]
+    lat0 = lat[x0, y0]
 
     # calculate Bperp
     nifgs = len(ifg_paths)
@@ -107,9 +115,9 @@ def pyrate_bperp():
         ifg = Ifg(ifg_path)
         ifg.open(readonly=True)
         # calculate look angle for interferograms (using the Near Range of the primary SLC)
-        look_angle, range_dist = geom.write_local_geometry_files(ifg, None, rg_pix, lon_pix,
-                                                                 lat_pix, params)
-        bperp[ifg_num] = geom.calc_local_baseline(ifg, az_pix, look_angle)
+        look_angle, range_dist = geom.write_local_geometry_files(ifg, None, rg0, lon0,
+                                                                 lat0, params)
+        bperp[ifg_num] = geom.calc_local_baseline(ifg, az0, look_angle)
 
     return bperp
 
