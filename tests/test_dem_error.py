@@ -1,10 +1,11 @@
-import numpy as np
+import shutil
 import glob
 import os
 from os.path import join
 from scipy.interpolate import griddata
 import math
 import pytest
+import numpy as np
 from tests import common
 from pyrate.configuration import Configuration
 from pyrate import prepifg, correct
@@ -48,16 +49,16 @@ class TestPyRateGammaBperp:
         Calculate Bperp for specified pixel from GAMMA out files (interpolation required)
         x0, y0 is the interpolation location in azimuth and range
         """
-        az0 = self.az[x, y]
-        rg0 = self.rg[x, y]
-
         # round azimuth and range coordinates to closest step (500 for az, 200 for rg)
         azstep = 500
         rgstep = 200
-        az1 = azstep * math.floor(az0 / azstep)
-        rg1 = rgstep * math.floor(rg0 / rgstep)
-        az2 = azstep * math.ceil(az0 / azstep)
-        rg2 = rgstep * math.ceil(rg0 / rgstep)
+        az = self.az[x, y]
+        rg = self.rg[x, y]
+
+        az1 = azstep * math.floor(az / azstep)
+        rg1 = rgstep * math.floor(rg / rgstep)
+        az2 = azstep * math.ceil(az / azstep)
+        rg2 = rgstep * math.ceil(rg / rgstep)
 
         # four coordinates for bi-linear interpolation
         teststr1 = str(az1).rjust(6, ' ') + str(rg1).rjust(7, ' ')
@@ -87,7 +88,7 @@ class TestPyRateGammaBperp:
                           (az2, rg1, bperp3),
                           (az2, rg2, bperp4)])
             # interpolate using scipy function "griddata"
-            bperp_int[i] = griddata(n[:, 0:2], n[:, 2], [(az0, rg0)], method='linear')
+            bperp_int[i] = griddata(n[:, 0:2], n[:, 2], [(az, rg)], method='linear')
 
         return bperp_int
 
@@ -125,10 +126,16 @@ class TestPyRateGammaBperp:
 
     @classmethod
     def teardown_method(cls):
-        pass
+        shutil.rmtree(cls.params[cf.OUT_DIR], ignore_errors=True)
 
     def test_pyrate_bperp_matches_gamma_bperp(self, point):
         x, y = point
+        az = self.az[x, y]
+        rg = self.rg[x, y]
+
+        if az < 0 or rg < 0:
+            pytest.skip('skipped due to -ve az')
+
         res = self.pbperp[x, y, :]
         exp = self.gamma_bperp(* point)
         np.testing.assert_array_almost_equal(exp, res, 2)  # max difference < 10mm
