@@ -70,10 +70,15 @@ def calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax):
     """
     Function to calculate radar coordinates for each pixel in the multi-looked
     interferogram dataset. Radar coordinates are identical for each interferogram
-    in the stack.
+    in the stack. Uses the Gamma lookup table defined in the configuration file.
     """
     # lookup table file:
     lookup_table = params[cf.LT_FILE]
+
+    if lookup_table is None:
+        msg = f"No lookup table file supplied: Geometry cannot be computed"
+        raise FileNotFoundError(msg)
+
     # PyRate IFG multi-looking factors
     ifglksx = params[cf.IFG_LKSX]
     ifglksy = params[cf.IFG_LKSY]
@@ -86,7 +91,7 @@ def calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax):
     return lt_az, lt_rg
 
 
-def calc_pixel_geometry(ifg, rg, params):
+def calc_pixel_geometry(ifg, rg, lon, lat, params):
     """
     Function to calculate local look angle, incidence angle and geodetic azimuth for each pixel.
     """
@@ -99,9 +104,6 @@ def calc_pixel_geometry(ifg, rg, params):
     rps = float(ifg.meta_data[ifc.PYRATE_RANGE_PIX_METRES])
     heading = float(ifg.meta_data[ifc.PYRATE_HEADING_DEGREES])
     azimuth = float(ifg.meta_data[ifc.PYRATE_AZIMUTH_DEGREES])
-
-    # calculate per-pixel lon/lat
-    lon, lat = get_lonlat_coords(ifg)
 
     # convert angles to radians
     lon = np.radians(lon)

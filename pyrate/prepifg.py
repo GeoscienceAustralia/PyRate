@@ -75,7 +75,11 @@ def main(params):
     process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     do_prepifg(process_ifgs_paths, exts, params)
 
-    mpiops.run_once(_write_geometry_files, params, exts, transform, ifg_paths[0])
+    if params[cf.LT_FILE] is not None:
+        log.info("Calculating and writing geometry files")
+        mpiops.run_once(_write_geometry_files, params, exts, transform, ifg_paths[0])
+    else:
+        log.info("Skipping geometry calculations: Lookup table not provided")
 
     log.info("Finished 'prepifg' step")
 
@@ -281,10 +285,13 @@ def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
     ifg = Ifg(ifg_path)
     ifg.open(readonly=True)
 
+    # calculate per-pixel lon/lat
+    lon, lat = geometry.get_lonlat_coords(ifg)
+
     # not currently implemented for ROIPAC data which breaks some tests
     # if statement can be deleted once ROIPAC is deprecated from PyRate
     if ifg.meta_data[ifc.PYRATE_INSAR_PROCESSOR] == 'ROIPAC':
-        log.warning('Geometry calculations are not implemented for ROI_PAC')
+        log.warning("Geometry calculations are not implemented for ROI_PAC")
         return
 
     # get geometry information and save radar coordinates and angles to tif files
@@ -298,12 +305,13 @@ def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
 
     # calculate per-pixel radar coordinates
     az, rg = geometry.calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax)
+
     # calculate per-pixel look angle (also calculates and saves incidence and azimuth angles)
-    lk_ang, inc_ang, az_ang, _ = geometry.calc_pixel_geometry(ifg, rg, params)
+    lk_ang, inc_ang, az_ang, rg_dist = geometry.calc_pixel_geometry(ifg, rg, lon, lat, params)
 
     # save radar coordinates and angles to geotiff files
-    for out, ot in zip([az, rg, lk_ang, inc_ang, az_ang],
-            ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle']):
+    for out, ot in zip([az, rg, lk_ang, inc_ang, az_ang, rg_dist],
+            ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle', 'range_dist']):
         _save_geom_files(ifg_path, params[cf.OUT_DIR], out, ot)
 
 
@@ -324,6 +332,8 @@ def _save_geom_files(ifg_path, outdir, array, out_type):
         md[ifc.DATA_TYPE] = ifc.INCIDENCE
     elif out_type == 'azimuth_angle':
         md[ifc.DATA_TYPE] = ifc.AZIMUTH
+    elif out_type == 'range_dist':
+        md[ifc.DATA_TYPE] = ifc.RANGE_DIST
 
     dest = os.path.join(outdir, out_type + ".tif")
     shared.remove_file_if_exists(dest)
