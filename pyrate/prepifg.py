@@ -75,7 +75,11 @@ def main(params):
     process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     do_prepifg(process_ifgs_paths, exts, params)
 
-    mpiops.run_once(_write_geometry_files, params, exts, transform, ifg_paths[0])
+    if params[cf.LT_FILE] is not None:
+        log.info("Calculating and writing geometry files")
+        mpiops.run_once(_write_geometry_files, params, exts, transform, ifg_paths[0])
+    else:
+        log.info("Skipping geometry calculations: Lookup table not provided")
 
     log.info("Finished 'prepifg' step")
 
@@ -284,7 +288,7 @@ def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
     # not currently implemented for ROIPAC data which breaks some tests
     # if statement can be deleted once ROIPAC is deprecated from PyRate
     if ifg.meta_data[ifc.PYRATE_INSAR_PROCESSOR] == 'ROIPAC':
-        log.warning('Geometry calculations are not implemented for ROI_PAC')
+        log.warning("Geometry calculations are not implemented for ROI_PAC")
         return
 
     # get geometry information and save radar coordinates and angles to tif files
