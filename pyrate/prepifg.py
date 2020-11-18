@@ -303,11 +303,11 @@ def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
     # calculate per-pixel radar coordinates
     az, rg = geometry.calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax)
     # calculate per-pixel look angle (also calculates and saves incidence and azimuth angles)
-    lk_ang, inc_ang, az_ang, _ = geometry.calc_pixel_geometry(ifg, rg, params)
+    lk_ang, inc_ang, az_ang, rg_dist = geometry.calc_pixel_geometry(ifg, rg, params)
 
     # save radar coordinates and angles to geotiff files
-    for out, ot in zip([az, rg, lk_ang, inc_ang, az_ang],
-            ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle']):
+    for out, ot in zip([az, rg, lk_ang, inc_ang, az_ang, rg_dist],
+            ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle', 'range_dist']):
         _save_geom_files(ifg_path, params[cf.OUT_DIR], out, ot)
 
 
@@ -328,6 +328,8 @@ def _save_geom_files(ifg_path, outdir, array, out_type):
         md[ifc.DATA_TYPE] = ifc.INCIDENCE
     elif out_type == 'azimuth_angle':
         md[ifc.DATA_TYPE] = ifc.AZIMUTH
+    elif out_type == 'range_dist':
+        md[ifc.DATA_TYPE] = ifc.RANGE_DIST
 
     dest = os.path.join(outdir, out_type + ".tif")
     shared.remove_file_if_exists(dest)
