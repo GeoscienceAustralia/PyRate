@@ -16,32 +16,13 @@ from pyrate.core.shared import Ifg, Geometry
 geometry_path = common.MEXICO_TEST_DIR_GEOMETRY
 
 
-def setup():
-    params = Configuration(common.MEXICO_CONF).__dict__
-    # run prepifg
-    prepifg.main(params)
-    # copy IFGs to temp folder
-    correct._copy_mlooked(params)
-    # read radar azimuth and range tif files
-    rdc_az_file = join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
-    geom_az = Geometry(rdc_az_file)
-    geom_az.open(readonly=True)
-    az = geom_az.geometry_data
-    rdc_rg_file = join(params[cf.OUT_DIR], 'rdc_range.tif')
-    geom_rg = Geometry(rdc_rg_file)
-    geom_rg.open(readonly=True)
-    rg = geom_rg.geometry_data
-
-    return az, rg, params
-
-
-@pytest.fixture
-def gamma_bperp(x0=50, y0=29):
-    # calculate Bperp from GAMMA out files (interpolation required)
-    # interpolation location (azimuth and range coordinate of crop A pixel (50,29)
-    az, rg, params = setup()
-    az0 = az[x0, y0]
-    rg0 = rg[x0, y0]
+def gamma_bperp(self, x0, y0):
+    """
+    Calculate Bperp for specified pixel from GAMMA out files (interpolation required)
+    x0, y0 is the interpolation location in azimuth and range
+    """
+    az0 = self.az[x0, y0]
+    rg0 = self.rg[x0, y0]
 
     # round azimuth and range coordinates to closest step (500 for az, 200 for rg)
     azstep = 500
@@ -84,12 +65,11 @@ def gamma_bperp(x0=50, y0=29):
     return bperp_int
 
 
-@pytest.fixture
-def pyrate_bperp(x0=50, y0=29):
-    # calculate Bperp using PyRate functions
-
-    az, rg, params = setup()
-    multi_paths = params[cf.INTERFEROGRAM_FILES]
+def pyrate_bperp(self):
+    """
+    Calculate Bperp image for each ifg using PyRate functions
+    """
+    multi_paths = self.params[cf.INTERFEROGRAM_FILES]
     tmp_paths = [ifg_path.tmp_sampled_path for ifg_path in multi_paths]
     # keep only ifg files in path list (i.e. remove coherence and dem files)
     ifg_paths = [item for item in tmp_paths if 'ifg.tif' in item]
@@ -97,37 +77,67 @@ def pyrate_bperp(x0=50, y0=29):
     ifg0_path = ifg_paths[0]
     ifg0 = Ifg(ifg0_path)
     ifg0.open(readonly=True)
-    # geometry information needed to calculate Bperp for each pixel using first IFG in list
-    lon, lat = geom.get_lonlat_coords(ifg0)
-
-    # values for test pixel at 50, 29
-    az0 = az[x0, y0]
-    rg0 = rg[x0, y0]
-    lon0 = lon[x0, y0]
-    lat0 = lat[x0, y0]
-
-    # calculate Bperp
+    # size of ifg dataset
+    nrows, ncols = ifg0.shape
     nifgs = len(ifg_paths)
-    bperp = np.empty((nifgs)) * np.nan
+    bperp = np.empty(shape=(nrows, ncols, nifgs)) * np.nan
+
     # calculate per-pixel perpendicular baseline for each IFG
     for ifg_num, ifg_path in enumerate(
             ifg_paths):  # loop could be avoided by approximating the look angle for the first Ifg
         ifg = Ifg(ifg_path)
         ifg.open(readonly=True)
         # calculate look angle for interferograms (using the Near Range of the primary SLC)
-        look_angle, range_dist = geom.write_local_geometry_files(ifg, None, rg0, lon0,
-                                                                 lat0, params)
-        bperp[ifg_num] = geom.calc_local_baseline(ifg, az0, look_angle)
+        look_angle, _, _, _ = geom.calc_pixel_geometry(ifg, self.rg, self.params)
+        bperp[:, :, ifg_num] = geom.calc_local_baseline(ifg, self.az, look_angle)
 
     return bperp
 
+class TestPyRateGammaBperp:
 
-def test_pyrate_bperp_matches_gamma_bperp(gamma_bperp, pyrate_bperp):
-    # compare the GAMMA and PyRate Bperp estimates
-    np.testing.assert_array_almost_equal(gamma_bperp / 1e6, pyrate_bperp / 1e6)  # max difference < 10mm
-    # screen output if need be:
-    diff = gamma_bperp - pyrate_bperp
-    print(1000 * np.mean(diff))  # mean difference in mm
-    print(1000 * np.max(diff))  # max difference in mm
-    # Mean difference: 0.19 mm, maximum difference: 1.29 mm
+    @classmethod
+    def setup_method(cls):
+        cls.params = Configuration(common.MEXICO_CONF).__dict__
+        # run prepifg
+        prepifg.main(cls.params)
+        # copy IFGs to temp folder
+        correct._copy_mlooked(cls.params)
+        # read radar azimuth and range tif files
+        rdc_az_file = join(cls.params[cf.OUT_DIR], 'rdc_azimuth.tif')
+        geom_az = Geometry(rdc_az_file)
+        geom_az.open(readonly=True)
+        cls.az = geom_az.geometry_data
+        rdc_rg_file = join(cls.params[cf.OUT_DIR], 'rdc_range.tif')
+        geom_rg = Geometry(rdc_rg_file)
+        geom_rg.open(readonly=True)
+        cls.rg = geom_rg.geometry_data
+        # calc bperp using pyrate funcs
+        cls.pbperp = pyrate_bperp(cls)
+
+    @classmethod
+    def teardown_method(cls):
+        pass
+
+    def test_pyrate_bperp_matches_gamma_bperp_x50_y29(self):
+        x0 = 50; y0 = 29
+        res = self.pbperp[x0, y0, :]
+        exp = gamma_bperp(self, x0, y0)
+        np.testing.assert_array_almost_equal(exp, res, 3)  # max difference < 10mm
+        # screen output if need be:
+        #diff = exp - res
+        #print(1000 * np.mean(diff))  # mean difference in mm
+        #print(1000 * np.max(diff))  # max difference in mm
+        # Mean difference: 0.19 mm, maximum difference: 1.29 mm
+
+    def test_pyrate_bperp_matches_gamma_bperp_x59_y99(self):
+        x0 = 59; y0 = 99
+        res = self.pbperp[x0, y0, :]
+        exp = gamma_bperp(self, x0, y0)
+        np.testing.assert_array_almost_equal(exp, res, 3)
+
+    def test_pyrate_bperp_matches_gamma_bperp_x3_y2(self):
+        x0 = 3; y0 = 2
+        res = self.pbperp[x0, y0, :]
+        exp = gamma_bperp(self, x0, y0)
+        np.testing.assert_array_almost_equal(exp, res, 2) # Max absolute difference: 0.00239929
 
