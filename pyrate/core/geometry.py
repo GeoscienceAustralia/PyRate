@@ -70,10 +70,15 @@ def calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax):
     """
     Function to calculate radar coordinates for each pixel in the multi-looked
     interferogram dataset. Radar coordinates are identical for each interferogram
-    in the stack.
+    in the stack. Uses the Gamma lookup table defined in the configuration file.
     """
     # lookup table file:
     lookup_table = params[cf.LT_FILE]
+
+    if lookup_table is None:
+        msg = f"No lookup table file supplied: Geometry cannot be computed"
+        raise FileNotFoundError(msg)
+
     # PyRate IFG multi-looking factors
     ifglksx = params[cf.IFG_LKSX]
     ifglksy = params[cf.IFG_LKSY]
