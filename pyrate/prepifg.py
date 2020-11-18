@@ -285,6 +285,9 @@ def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
     ifg = Ifg(ifg_path)
     ifg.open(readonly=True)
 
+    # calculate per-pixel lon/lat
+    lon, lat = geometry.get_lonlat_coords(ifg)
+
     # not currently implemented for ROIPAC data which breaks some tests
     # if statement can be deleted once ROIPAC is deprecated from PyRate
     if ifg.meta_data[ifc.PYRATE_INSAR_PROCESSOR] == 'ROIPAC':
@@ -302,8 +305,9 @@ def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
 
     # calculate per-pixel radar coordinates
     az, rg = geometry.calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax)
+
     # calculate per-pixel look angle (also calculates and saves incidence and azimuth angles)
-    lk_ang, inc_ang, az_ang, rg_dist = geometry.calc_pixel_geometry(ifg, rg, params)
+    lk_ang, inc_ang, az_ang, rg_dist = geometry.calc_pixel_geometry(ifg, rg, lon, lat, params)
 
     # save radar coordinates and angles to geotiff files
     for out, ot in zip([az, rg, lk_ang, inc_ang, az_ang, rg_dist],

@@ -82,13 +82,16 @@ def pyrate_bperp(self):
     nifgs = len(ifg_paths)
     bperp = np.empty(shape=(nrows, ncols, nifgs)) * np.nan
 
+    # calculate per-pixel lon/lat
+    lon, lat = geom.get_lonlat_coords(ifg0)
+
     # calculate per-pixel perpendicular baseline for each IFG
     for ifg_num, ifg_path in enumerate(
             ifg_paths):  # loop could be avoided by approximating the look angle for the first Ifg
         ifg = Ifg(ifg_path)
         ifg.open(readonly=True)
         # calculate look angle for interferograms (using the Near Range of the primary SLC)
-        look_angle, _, _, _ = geom.calc_pixel_geometry(ifg, self.rg, self.params)
+        look_angle, _, _, _ = geom.calc_pixel_geometry(ifg, self.rg, lon, lat, self.params)
         bperp[:, :, ifg_num] = geom.calc_local_baseline(ifg, self.az, look_angle)
 
     return bperp

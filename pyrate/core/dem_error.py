@@ -66,7 +66,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
 
             log.info('Calculating per-pixel baseline')
 
-            # read radar azimuth and range tif files
+            # read azimuth and range coords from tif files generated in prepifg
             rdc_az_file = join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
             geom_az = Geometry(rdc_az_file)
             geom_az.open(readonly=True)
@@ -109,7 +109,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
                     ifg = Ifg(ifg_path)
                     ifg.open(readonly=True)
                     # calculate look angle for interferograms (using the Near Range of the primary SLC)
-                    look_angle, range_dist = geometry.write_local_geometry_files(ifg, None, rg_parts, lon_parts,
+                    look_angle, _, _, range_dist = geometry.calc_pixel_geometry(ifg, rg_parts, lon_parts,
                                                                                  lat_parts, params)
                     bperp[ifg_num, :, :] = geometry.calc_local_baseline(ifg, az_parts, look_angle)
 
