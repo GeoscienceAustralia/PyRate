@@ -17,7 +17,7 @@ from pyrate.core.shared import Ifg, Geometry
 geometry_path = common.MEXICO_TEST_DIR_GEOMETRY
 
 
-@pytest.fixture(params=list(range(2000)))
+@pytest.fixture(params=list(range(200)))
 def point():
     x, y = np.random.randint(0, 60), np.random.randint(0, 100)
     return x, y
@@ -134,8 +134,8 @@ class TestPyRateGammaBperp:
         rg = self.rg[x, y]
 
         if az < 0 or rg < 0:
-            pytest.skip('skipped due to -ve az')
+            pytest.skip('skipped due to -ve az or rg')
 
         res = self.pbperp[x, y, :]
         exp = self.gamma_bperp(* point)
-        np.testing.assert_array_almost_equal(exp, res, 2)  # max difference < 10mm
+        np.testing.assert_array_almost_equal(exp, res, 2)  # max difference < 1cm
