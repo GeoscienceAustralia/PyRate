@@ -693,6 +693,7 @@ class DEM(RasterBase):
         """
         RasterBase.__init__(self, path)
         self._band = None
+        self._height_data = None
 
     @property
     def height_band(self):
@@ -702,6 +703,15 @@ class DEM(RasterBase):
         if self._band is None:
             self._band = self._get_band(1)
         return self._band
+
+    @property
+    def height_data(self):
+        """
+        Returns the geometry band as an array.
+        """
+        if self._height_data is None:
+            self._height_data = self.height_band.ReadAsArray()
+        return self._height_data
 
 
 class IfgException(Exception):

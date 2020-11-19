@@ -20,11 +20,12 @@ This Python module implements the calculation and output of the per-pixel vector
 """
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
 import numpy as np
-import os
+from os.path import join
 from math import sqrt, sin, cos, tan, asin, atan, atan2, isnan, pi
 from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.refpixel import convert_pixel_value_to_geographic_coordinate
 from pyrate.core.gamma import read_lookup_table
+from pyrate.core.shared import DEM
 
 
 def get_lonlat_coords_slow(ifg):
@@ -105,6 +106,12 @@ def calc_pixel_geometry(ifg, rg, lon, lat, params):
     heading = float(ifg.meta_data[ifc.PYRATE_HEADING_DEGREES])
     azimuth = float(ifg.meta_data[ifc.PYRATE_AZIMUTH_DEGREES])
 
+    # Read height data from DEM
+    dem_file = join(params[cf.OUT_DIR], 'dem.tif')
+    DEM_data = DEM(dem_file)
+    DEM_data.open(readonly=True)
+    dem_height = DEM_data.height_data
+
     # convert angles to radians
     lon = np.radians(lon)
     lat = np.radians(lat)
@@ -122,15 +129,14 @@ def calc_pixel_geometry(ifg, rg, lon, lat, params):
     # see e.g. Section 2 in https://www.cs.uaf.edu/~olawlor/ref/asf/sar_equations_2006_08_17.pdf
     look_angle = np.arccos(np.divide(se**2 + np.square(range_dist) - np.square(re), 2 * se * range_dist))
 
+    # add per-pixel height to the earth radius(from dem.tif) to obtain a more accurate ground pixel position for
+    # incidence angle calculation
+    re = re + dem_height
+
     # incidence angle at pixel ij -> law of cosines in "satellite - Earth centre - ground pixel" triangle
     # see e.g. Section 2 in https://www.cs.uaf.edu/~olawlor/ref/asf/sar_equations_2006_08_17.pdf
     incidence_angle = np.pi - np.arccos(np.divide(np.square(range_dist) + np.square(re) - se**2, \
                                                   2 * np.multiply(range_dist, re)))
-
-    # todo (once new test data is ready): move next line into test for validation with GAMMA output
-    #incidence_angle_gamma = np.pi / 2 - incidence_angle
-    # maximum differences to the GAMMA-derived local incidence angles for Sentinel-1 test data are within +/-0.1 deg
-    # to improve the accuracy further one would need to consider the local slope observed from the DEM
 
     # local azimuth angle at pixel ij using constant satellite heading angle and spherical approximations
     epsilon = np.pi - look_angle - (np.pi - incidence_angle) # angle at the Earth's center between se and re
@@ -167,11 +173,6 @@ def calc_pixel_geometry(ifg, rg, lon, lat, params):
     #azimuth_angle_diff = azimuth_angle2 - azimuth_angle
     #print(np.nanmin(azimuth_angle_diff), np.nanmax(azimuth_angle_diff))
     # the difference between Vincenty's azimuth calculation and the spherical approximation is ~0.001 radians
-
-    # todo (once new test data is ready): move next line into test for validation with GAMMA output
-    #azimuth_angle_gamma = -(azimuth_angle - np.pi / 2) # local azimuth towards satellite as output by GAMMA
-    # maximum differences to the GAMMA-derived local azimuth angles for Sentinel-1 test data are within +/-0.5 deg
-    # this could be improved by using orbital state vectors to calculate that satellite positions (see above comment)
 
     return look_angle, incidence_angle, azimuth_angle, range_dist
 

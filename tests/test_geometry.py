@@ -80,14 +80,14 @@ class TestPyRateAngleFiles:
         # convert PyRate incidence into GAMMA incidence
         res = np.pi / 2 - incidence_angle_pyrate
         # convert PyRate incidence into GAMMA incidence
-        np.testing.assert_array_almost_equal(exp, res, decimal=2) # max difference < 0.01 rad
+        np.testing.assert_array_almost_equal(exp, res, decimal=3) # max difference < 0.001 rad
         # screen output of difference if need be:
         #print(exp - res)
 
     def test_pyrate_azimuth_matches_gamma_azimuth_x94_y58(self):
         x0 = 94; y0 = 58
         # azimuth angle validation value extracted from GAMMA azimuth file for pixel location corresponding
-        # to (58,94) using gdallocationinfo 20180106_VV_8rlks_eqa_lv_phi.tif 940 3271
+        # to (94,58) using gdallocationinfo 20180106_VV_8rlks_eqa_lv_phi.tif 940 3271
         exp = -2.94684600830078 # GAMMMA azimuth angle at pixel location
         # GAMMA azimuth is defined towards satellite in an anti-clockwise angle system, with East being zero
         # PyRate azimuth angle is defined towards the satellite in a clockwise angle system with North being zero
@@ -102,7 +102,7 @@ class TestPyRateAngleFiles:
     def test_pyrate_incidence_matches_gamma_incidence_x94_y58(self):
         x0 = 94; y0 = 58
         # incidence angle validation value extracted from GAMMA incidence file for pixel location corresponding
-        # to (58,94) using gdallocationinfo 20180106_VV_8rlks_eqa_lv_theta.tif 940 3271
+        # to (94,58) using gdallocationinfo 20180106_VV_8rlks_eqa_lv_theta.tif 940 3271
         exp = 1.0111095905304
         # GAMMA angle is defined from the horizontal plane with the zenith direction being pi / 2 radians (i.e.90 deg)
         # PyRate angle is defined from the vertical axis with the zenith direction being zero
@@ -111,6 +111,6 @@ class TestPyRateAngleFiles:
         # convert PyRate incidence into GAMMA incidence
         res = np.pi / 2 - incidence_angle_pyrate
         # convert PyRate incidence into GAMMA incidence
-        np.testing.assert_array_almost_equal(exp, res, decimal=2) # max difference < 0.01 rad
+        np.testing.assert_array_almost_equal(exp, res, decimal=3) # max difference < 0.001 rad
         # screen output of difference if need be:
         #print(exp - res)
