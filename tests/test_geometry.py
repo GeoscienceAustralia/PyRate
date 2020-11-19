@@ -4,7 +4,7 @@ import pyrate.core.config as cf
 from pyrate.core.geometry import get_lonlat_coords, get_lonlat_coords_slow
 from tests import common
 from pyrate.configuration import Configuration
-from subprocess import run
+from subprocess import run, PIPE
 from pyrate import prepifg
 
 
@@ -20,8 +20,8 @@ def get_pyrate_angle(self, x0, y0, tif_file):
     Get angle at particular pixel in the azimuth/incidence tif file
     """
     # get azimuth angle value of PyRate file azimuth_angle.tif
-    out = run(f"gdallocationinfo {tif_file} {x0} {y0}", shell=True, capture_output=True,
-              text=True).stdout
+    temp = run(['gdallocationinfo', tif_file, str(x0), str(y0)], text=True, stdout=PIPE)
+    out = temp.stdout
     angle_value = float(out.split('Value:')[1].strip('\n'))
 
     return angle_value
