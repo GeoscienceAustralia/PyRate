@@ -92,7 +92,7 @@ def calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax):
     return lt_az, lt_rg
 
 
-def get_sat_positions(lat, lon, look_angle, incidence_angle, heading, azimuth):
+def get_sat_positions(lat, lon, epsilon, heading, azimuth):
     """
         Function to calculate the lon/lat position of the satellite for a given pixel location
     """
@@ -104,7 +104,6 @@ def get_sat_positions(lat, lon, look_angle, incidence_angle, heading, azimuth):
     # 4. calculate the satellite XYZ position for that time by interpolating the time and velocity state vectors
 
     # local azimuth angle at pixel ij using constant satellite heading angle and spherical approximations
-    epsilon = np.pi - look_angle - (np.pi - incidence_angle) # angle at the Earth's center between se and re
     # azimuth of satellite look vector (satellite heading + azimuth of look direction (+90 deg for right-looking SAR)
     sat_azi = heading + azimuth
     # the following equations are adapted from Section 4.4 (page 4-16) in EARTH-REFERENCED AIRCRAFT NAVIGATION AND
@@ -163,27 +162,14 @@ def calc_pixel_geometry(ifg, rg, lon, lat, params):
     incidence_angle = np.pi - np.arccos(np.divide(np.square(range_dist) + np.square(re) - se**2, \
                                                   2 * np.multiply(range_dist, re)))
 
+    # angle at the Earth's center between se and re
+    epsilon = np.pi - look_angle - (np.pi - incidence_angle)
+
     # calculate satellite positions for each pixel
-    sat_lat, sat_lon = get_sat_positions(lat, lon, look_angle, incidence_angle, heading, azimuth)
+    sat_lat, sat_lon = get_sat_positions(lat, lon, epsilon, heading, azimuth)
 
-    # calc azimuth angle using Vincenty's equations
-    if np.isscalar(lat): # function works also for scalar input instead of numpy array
-        azimuth_angle = vincinv(lat, lon, sat_lat, sat_lon, a, b)
-    else:
-        azimuth_angle = np.empty(lat.shape) * np.nan # pre-allocate 2D numpy array
-        for ix, iy in np.ndindex(lat.shape):
-            if not isnan(sat_lat[ix, iy]):
-                az12 = vincinv(lat[ix, iy], lon[ix, iy], sat_lat[ix, iy], sat_lon[ix, iy], a, b)
-                azimuth_angle[ix, iy] = az12
-        np.reshape(azimuth_angle, lat.shape)
-
-    # todo: move this old code for azimuth angle calculation using a spherical Earth model to tests
-    #azimuth_angle2 = np.arccos(np.divide(np.multiply(np.sin(sat_lat), np.cos(lat)) - \
-    #                                np.multiply(np.multiply(np.cos(sat_lat), np.sin(lat)), np.cos(sat_lon - lon)), \
-    #                                np.sin(epsilon)))
-    #azimuth_angle_diff = azimuth_angle2 - azimuth_angle
-    #print(np.nanmin(azimuth_angle_diff), np.nanmax(azimuth_angle_diff))
-    # the difference between Vincenty's azimuth calculation and the spherical approximation is ~0.001 radians
+    # # calc azimuth angle using Vincenty's equations
+    azimuth_angle = vincinv(lat, lon, sat_lat, sat_lon, a, b)
 
     return look_angle, incidence_angle, azimuth_angle, range_dist
 
@@ -222,24 +208,26 @@ def vincinv(lat1, lon1, lat2, lon2, semimaj, semimin):
     """
     Vincenty's Inverse Formula, adapted from GeodePy function vincinv
     (see https://github.com/GeoscienceAustralia/GeodePy/blob/master/geodepy/geodesy.py)
-    :param lat1: Latitude of Point 1 (radians)
-    :param lon1: Longitude of Point 1 (radians)
-    :param lat2: Latitude of Point 2 (radians)
-    :param lon2: Longitude of Point 2 (radians)
+    - only relevant parts of the Geodepy to retrieve the azimuth agnle have been used
+    - vectorised the function for use with np arrays
+    :param ndarray lat1: Latitude of Point 1 (radians)
+    :param ndarray lon1: Longitude of Point 1 (radians)
+    :param ndarray lat2: Latitude of Point 2 (radians)
+    :param ndarray lon2: Longitude of Point 2 (radians)
     :param semimaj: semi-major axis of ellipsoid
     :param semimin: semi-minor axis of ellipsoid
-    :return: azimuth1to2: Azimuth from Point 1 to 2 (Decimal Degrees)
+    :return: ndarray azimuth1to2: Azimuth from Point 1 to 2 (Decimal Degrees)
     """
-    # Exit if the two input points are the same
-    if lat1 == lat2 and lon1 == lon2:
-        return 0, 0, 0
+    # Exit if any of the two sets of input points are the same
+    if np.any(lat1 == lat2) and np.any(lon1 == lon2):
+        return 0
     # calculate flattening
     f = (semimaj-semimin)/semimaj
     # Equation numbering is from the GDA2020 Tech Manual v1.0
     # Eq. 71
-    u1 = atan((1 - f) * tan(lat1))
+    u1 = np.arctan((1 - f) * np.tan(lat1))
     # Eq. 72
-    u2 = atan((1 - f) * tan(lat2))
+    u2 = np.arctan((1 - f) * np.tan(lat2))
     # Eq. 73; initial approximation
     lon = lon2 - lon1
     omega = lon
@@ -247,29 +235,32 @@ def vincinv(lat1, lon1, lat2, lon2, semimaj, semimin):
     # (< 1e-12) or after 1000 iterations have been completed
     for i in range(1000):
         # Eq. 74
-        sin_sigma = sqrt((cos(u2)*sin(lon))**2 + (cos(u1)*sin(u2) - sin(u1)*cos(u2)*cos(lon))**2)
+        sin_sigma = np.sqrt((np.cos(u2)*np.sin(lon))**2 + (np.cos(u1)*np.sin(u2) - np.sin(u1)*np.cos(u2)*np.cos(lon))**2)
         # Eq. 75
-        cos_sigma = sin(u1)*sin(u2) + cos(u1)*cos(u2)*cos(lon)
+        cos_sigma = np.sin(u1)*np.sin(u2) + np.cos(u1)*np.cos(u2)*np.cos(lon)
         # Eq. 76
-        sigma = atan2(sin_sigma, cos_sigma)
+        sigma = np.arctan2(sin_sigma, cos_sigma)
         # Eq. 77
-        alpha = asin((cos(u1)*cos(u2)*sin(lon)) / sin_sigma)
+        alpha = np.arcsin((np.cos(u1)*np.cos(u2)*np.sin(lon)) / sin_sigma)
         # Eq. 78
-        cos_two_sigma_m = cos(sigma) - (2*sin(u1)*sin(u2) / cos(alpha)**2)
+        cos_two_sigma_m = np.cos(sigma) - (2*np.sin(u1)*np.sin(u2) / np.cos(alpha)**2)
         # Eq. 79
-        c = (f / 16) * cos(alpha)**2 * (4 + f * (4 - 3*cos(alpha)**2))
+        c = (f / 16) * np.cos(alpha)**2 * (4 + f * (4 - 3*np.cos(alpha)**2))
         # Eq. 80
-        new_lon = omega + (1 - c) * f * sin(alpha) * (
-                sigma + c*sin(sigma) * (cos_two_sigma_m + c * cos(sigma) * (-1 + 2*(cos_two_sigma_m**2)))
+        new_lon = omega + (1 - c) * f * np.sin(alpha) * (
+                sigma + c*np.sin(sigma) * (cos_two_sigma_m + c * np.cos(sigma) * (-1 + 2*(cos_two_sigma_m**2)))
         )
         delta_lon = new_lon - lon
         lon = new_lon
-        if abs(delta_lon) < 1e-12:
+        if np.all(np.absolute(delta_lon) < 1e-12):
             break
     # Calculate the azimuth from point 1 to point 2
-    azimuth1to2 = atan2((cos(u2)*sin(lon)), (cos(u1)*sin(u2) - sin(u1)*cos(u2)*cos(lon)))
-    if azimuth1to2 < 0:
-        azimuth1to2 = azimuth1to2 + 2*pi
+    azimuth1to2 = np.arctan2((np.cos(u2)*np.sin(lon)), (np.cos(u1)*np.sin(u2) - np.sin(u1)*np.cos(u2)*np.cos(lon)))
 
-    return round(azimuth1to2, 9)
+    # add 2 pi in case an angle is below zero
+    for azi in np.nditer(azimuth1to2, op_flags=['readwrite']):
+        if azi < 0:
+            azi[...] = azi + 2*np.pi
+
+    return np.round(azimuth1to2, 9)
 

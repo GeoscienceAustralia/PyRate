@@ -1,11 +1,12 @@
 import numpy as np
 from os.path import join
-import pyrate.core.config as cf
-from pyrate.core.geometry import get_lonlat_coords, get_lonlat_coords_slow
+from pyrate.core import ifgconstants as ifc, config as cf
+from pyrate.core.geometry import get_lonlat_coords, get_lonlat_coords_slow, get_sat_positions, vincinv
 from tests import common
 from pyrate.configuration import Configuration
 from subprocess import run, PIPE
-from pyrate import prepifg
+from pyrate import prepifg, correct
+from pyrate.core.shared import Ifg, Geometry
 
 
 def test_get_lonlat_coords_vectorised(dem):
@@ -33,6 +34,8 @@ class TestPyRateAngleFiles:
         cls.params = Configuration(common.MEXICO_CONF).__dict__
         # run prepifg
         prepifg.main(cls.params)
+        # copy IFGs to temp folder
+        correct._copy_mlooked(cls.params)
 
     @classmethod
     def teardown_method(cls):
@@ -114,3 +117,61 @@ class TestPyRateAngleFiles:
         np.testing.assert_array_almost_equal(exp, res, decimal=3) # max difference < 0.001 rad
         # screen output of difference if need be:
         #print(exp - res)
+
+    def test_azimuth_angle_calculation(self):
+        """
+         Calculate local azimuth angle using a spherical model and compare to result using Vincenty's equations
+        """
+        # get first IFG in stack to calculate lon/lat values
+        multi_paths = self.params[cf.INTERFEROGRAM_FILES]
+        tmp_paths = [ifg_path.tmp_sampled_path for ifg_path in multi_paths]
+        # keep only ifg files in path list (i.e. remove coherence and dem files)
+        ifg_paths = [item for item in tmp_paths if 'ifg.tif' in item]
+        # read and open the first IFG in list
+        ifg0_path = ifg_paths[0]
+        ifg0 = Ifg(ifg0_path)
+        ifg0.open(readonly=True)
+        lon, lat = get_lonlat_coords(ifg0)
+
+        # read incidence and look angle files
+        tif_file = join(self.params[cf.OUT_DIR], 'incidence_angle.tif')
+        geom = Geometry(tif_file)
+        geom.open(readonly=True)
+        incidence_angle = geom.geometry_data
+        tif_file = join(self.params[cf.OUT_DIR], 'look_angle.tif')
+        geom = Geometry(tif_file)
+        geom.open(readonly=True)
+        look_angle = geom.geometry_data
+        # get metadata
+        a = float(ifg0.meta_data[ifc.PYRATE_SEMI_MAJOR_AXIS_METRES])
+        b = float(ifg0.meta_data[ifc.PYRATE_SEMI_MINOR_AXIS_METRES])
+        heading = float(ifg0.meta_data[ifc.PYRATE_HEADING_DEGREES])
+        azimuth = float(ifg0.meta_data[ifc.PYRATE_AZIMUTH_DEGREES])
+
+        # convert all angles from deg to radians
+        lon = np.radians(lon)
+        lat = np.radians(lat)
+        heading = np.radians(heading)
+        azimuth = np.radians(azimuth)
+
+        # calculate path length epsilon and satellite positions
+        epsilon = np.pi - look_angle - (np.pi - incidence_angle)
+        sat_lat, sat_lon = get_sat_positions(lat, lon, epsilon, heading, azimuth)
+
+        # calculate azimuth angle from pixel to satellite using spherical trigonometry
+        # see Eq. 86 on page 4-11 in EARTH-REFERENCED AIRCRAFT NAVIGATION AND SURVEILLANCE ANALYSIS
+        # (https://ntlrepository.blob.core.windows.net/lib/59000/59300/59358/DOT-VNTSC-FAA-16-12.pdf)
+        azimuth_angle_spherical = np.arctan2(np.cos(sat_lat) * np.sin(sat_lon - lon) , \
+                                             np.sin(sat_lat) * np.cos(lat) - np.cos(sat_lat) * np.sin(lat) * \
+                                             np.cos(sat_lon - lon))
+        # add 2 pi in case an angle is below zero
+        for azi in np.nditer(azimuth_angle_spherical, op_flags=['readwrite']):
+            if azi < 0:
+                azi[...] = azi + 2 * np.pi
+
+        azimuth_angle_elliposidal = vincinv(lat, lon, sat_lat, sat_lon, a, b)
+
+        # the difference between Vincenty's azimuth calculation and the spherical approximation is ~0.001 radians
+        azimuth_angle_diff = azimuth_angle_spherical - azimuth_angle_elliposidal
+        # max difference < 0.01 rad
+        np.testing.assert_array_almost_equal(azimuth_angle_spherical, azimuth_angle_elliposidal, decimal=2)
