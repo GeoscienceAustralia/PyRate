@@ -92,6 +92,31 @@ def calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax):
     return lt_az, lt_rg
 
 
+def get_sat_positions(lat, lon, look_angle, incidence_angle, heading, azimuth):
+    """
+        Function to calculate the lon/lat position of the satellite for a given pixel location
+    """
+    # note that the accuracy of satellite lat/lon positions code could be improved by calculating satellite positions
+    # for each azimuth row from orbital state vectors given in .par file, using the following workflow:
+    # 1. read orbital state vectors and start/stop times from mli.par
+    # 2. for each pixel get the corresponding radar row (from matrix az)
+    # 3. get the corresponding radar time for that row (using linear interpolation)
+    # 4. calculate the satellite XYZ position for that time by interpolating the time and velocity state vectors
+
+    # local azimuth angle at pixel ij using constant satellite heading angle and spherical approximations
+    epsilon = np.pi - look_angle - (np.pi - incidence_angle) # angle at the Earth's center between se and re
+    # azimuth of satellite look vector (satellite heading + azimuth of look direction (+90 deg for right-looking SAR)
+    sat_azi = heading + azimuth
+    # the following equations are adapted from Section 4.4 (page 4-16) in EARTH-REFERENCED AIRCRAFT NAVIGATION AND
+    # SURVEILLANCE ANALYSIS (https://ntlrepository.blob.core.windows.net/lib/59000/59300/59358/DOT-VNTSC-FAA-16-12.pdf)
+    sat_lon = np.divide(np.arcsin(-(np.multiply(np.sin(epsilon), np.sin(sat_azi)))), np.cos(lat)) + lon # Eq. 103
+    temp = np.multiply(np.divide(np.cos(0.5 * (sat_azi + sat_lon - lon)), np.cos(0.5 * (sat_azi - sat_lon + lon))), \
+                       np.tan(0.5 * (np.pi / 2 + lat - epsilon))) # Eq. 104
+    sat_lat = -np.pi / 2 + 2 * np.arctan(temp)
+
+    return sat_lat, sat_lon
+
+
 def calc_pixel_geometry(ifg, rg, lon, lat, params):
     """
     Function to calculate local look angle, incidence angle and geodetic azimuth for each pixel.
@@ -138,22 +163,8 @@ def calc_pixel_geometry(ifg, rg, lon, lat, params):
     incidence_angle = np.pi - np.arccos(np.divide(np.square(range_dist) + np.square(re) - se**2, \
                                                   2 * np.multiply(range_dist, re)))
 
-    # local azimuth angle at pixel ij using constant satellite heading angle and spherical approximations
-    epsilon = np.pi - look_angle - (np.pi - incidence_angle) # angle at the Earth's center between se and re
-    # azimuth of satellite look vector (satellite heading + azimuth of look direction (+90 deg for right-looking SAR)
-    sat_azi = heading + azimuth
-    # the following equations are adapted from Section 4.4 (page 4-16) in EARTH-REFERENCED AIRCRAFT NAVIGATION AND
-    # SURVEILLANCE ANALYSIS (https://ntlrepository.blob.core.windows.net/lib/59000/59300/59358/DOT-VNTSC-FAA-16-12.pdf)
-    sat_lon = np.divide(np.arcsin(-(np.multiply(np.sin(epsilon), np.sin(sat_azi)))), np.cos(lat)) + lon # Eq. 103
-    temp = np.multiply(np.divide(np.cos(0.5 * (sat_azi + sat_lon - lon)), np.cos(0.5 * (sat_azi - sat_lon + lon))), \
-                       np.tan(0.5 * (np.pi / 2 + lat - epsilon))) # Eq. 104
-    sat_lat = -np.pi / 2 + 2 * np.arctan(temp)
-    # the above code could be improved by calculating satellite positions for each azimuth row
-    # from orbital state vectors given in .par file, using the following workflow:
-    # 1. read orbital state vectors and start/stop times from mli.par
-    # 2. for each pixel get the corresponding radar row (from matrix az)
-    # 3. get the corresponding radar time for that row (using linear interpolation)
-    # 4. calculate the satellite XYZ position for that time by interpolating the time and velocity state vectors
+    # calculate satellite positions for each pixel
+    sat_lat, sat_lon = get_sat_positions(lat, lon, look_angle, incidence_angle, heading, azimuth)
 
     # calc azimuth angle using Vincenty's equations
     if np.isscalar(lat): # function works also for scalar input instead of numpy array

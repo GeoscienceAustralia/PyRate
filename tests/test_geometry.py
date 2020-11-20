@@ -20,7 +20,7 @@ def get_pyrate_angle(self, x0, y0, tif_file):
     Get angle at particular pixel in the azimuth/incidence tif file
     """
     # get azimuth angle value of PyRate file azimuth_angle.tif
-    temp = run(['gdallocationinfo', tif_file, str(x0), str(y0)], text=True, stdout=PIPE)
+    temp = run(['gdallocationinfo', tif_file, str(x0), str(y0)], universal_newlines=True, stdout=PIPE)
     out = temp.stdout
     angle_value = float(out.split('Value:')[1].strip('\n'))
 
