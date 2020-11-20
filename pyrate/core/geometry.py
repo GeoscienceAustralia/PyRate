@@ -15,23 +15,27 @@
 #   limitations under the License.
 """
 This Python module implements the calculation and output of the per-pixel vector of the radar viewing geometry
- (i.e. local angles, incidence angles and azimuth angles) as well as the calculation of per-pixel baseline values
- used for correcting interferograms for residual topographic effects (a.k.a. as DEM errors).
+(i.e. local angles, incidence angles and azimuth angles) as well as the calculation of per-pixel baseline values
+used for correcting interferograms for residual topographic effects (a.k.a. DEM errors).
 """
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
 import numpy as np
 from os.path import join
+from typing import Tuple
 from math import sqrt, sin, cos, tan, asin, atan, atan2, isnan, pi
 from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.refpixel import convert_pixel_value_to_geographic_coordinate
 from pyrate.core.gamma import read_lookup_table
-from pyrate.core.shared import DEM
+from pyrate.core.shared import DEM, Ifg
 
 
-def get_lonlat_coords_slow(ifg):
+def get_lonlat_coords_slow(ifg: Ifg) -> Tuple[np.ndarray, np.ndarray]:
     """
     Function to get longitude and latitude coordinates for each pixel in the multi-looked.
     interferogram dataset. Coordinates are identical for each interferogram in the stack.
+    :param ifg: pyrate.core.shared.Ifg Class object.
+    :return: lon: Longitude for each pixel (decimal degrees)
+    :return: lat: Latitude for each pixel (decimal degrees)
     """
     # assume all interferograms have same projection and will share the same transform
     transform = ifg.dataset.GetGeoTransform()
@@ -46,10 +50,13 @@ def get_lonlat_coords_slow(ifg):
     return lon, lat
 
 
-def get_lonlat_coords(ifg):
+def get_lonlat_coords(ifg: Ifg) -> Tuple[np.ndarray, np.ndarray]:
     """
     Function to get longitude and latitude coordinates for each pixel in the multi-looked.
     interferogram dataset. Coordinates are identical for each interferogram in the stack.
+    :param ifg: pyrate.core.shared.Ifg Class object.
+    :return: lon: Longitude for each pixel (decimal degrees)
+    :return: lat: Latitude for each pixel (decimal degrees)
     """
     # assume all interferograms have same projection and will share the same transform
     transform = ifg.dataset.GetGeoTransform()
@@ -67,11 +74,20 @@ def get_lonlat_coords(ifg):
     return lon, lat
 
 
-def calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax):
+def calc_radar_coords(ifg: Ifg, params: dict, xmin: int, xmax: int,
+                      ymin: int, ymax: int) -> Tuple[np.ndarray, np.ndarray]:
     """
     Function to calculate radar coordinates for each pixel in the multi-looked
     interferogram dataset. Radar coordinates are identical for each interferogram
     in the stack. Uses the Gamma lookup table defined in the configuration file.
+    :param ifg: pyrate.core.shared.Ifg Class object.
+    :param params: Dictionary of PyRate configuration parameters.
+    :param xmin: Minimum longitude of cropped image (decimal degrees).
+    :param xmax: Maximum longitude of cropped image (decimal degrees)
+    :param ymin: Minimum latitude of cropped image (decimal degrees).
+    :param ymax: Maximum latitude of cropped image (decimal degrees)
+    :return: lt_az: Radar geometry azimuth coordinate for each pixel.
+    :return: lt_rg: Radar geometry range coordinate for each pixel.
     """
     # lookup table file:
     lookup_table = params[cf.LT_FILE]
@@ -92,9 +108,17 @@ def calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax):
     return lt_az, lt_rg
 
 
-def get_sat_positions(lat, lon, epsilon, heading, azimuth):
+def get_sat_positions(lat: np.ndarray, lon: np.ndarray, epsilon: np.ndarray,
+                      heading: np.float64, roll: np.float64) -> Tuple[np.ndarray, np.ndarray]:
     """
-        Function to calculate the lon/lat position of the satellite for a given pixel location
+    Function to calculate the lon/lat position of the satellite for each pixel.
+    :param lat: Ground latitude for each pixel (decimal degrees).
+    :param lon: Ground point longitude for each pixel (decimal degrees).
+    :param epsilon:
+    :param heading: Satellite flight heading (radians).
+    :param roll: Right or left look direction w.r.t. satellite heading; +ve = right looking (radians).
+    :return: sat_lat: Satellite position latitude for each pixel (decimal degrees).
+    :return: sat_lon: Satellite position longitude for each pixel (decimal degrees).
     """
     # note that the accuracy of satellite lat/lon positions code could be improved by calculating satellite positions
     # for each azimuth row from orbital state vectors given in .par file, using the following workflow:
@@ -103,9 +127,8 @@ def get_sat_positions(lat, lon, epsilon, heading, azimuth):
     # 3. get the corresponding radar time for that row (using linear interpolation)
     # 4. calculate the satellite XYZ position for that time by interpolating the time and velocity state vectors
 
-    # local azimuth angle at pixel ij using constant satellite heading angle and spherical approximations
-    # azimuth of satellite look vector (satellite heading + azimuth of look direction (+90 deg for right-looking SAR)
-    sat_azi = heading + azimuth
+    # azimuth of satellite look vector (satellite heading + look direction (+90 deg for right-looking SAR)
+    sat_azi = heading + roll
     # the following equations are adapted from Section 4.4 (page 4-16) in EARTH-REFERENCED AIRCRAFT NAVIGATION AND
     # SURVEILLANCE ANALYSIS (https://ntlrepository.blob.core.windows.net/lib/59000/59300/59358/DOT-VNTSC-FAA-16-12.pdf)
     sat_lon = np.divide(np.arcsin(-(np.multiply(np.sin(epsilon), np.sin(sat_azi)))), np.cos(lat)) + lon # Eq. 103
@@ -116,9 +139,20 @@ def get_sat_positions(lat, lon, epsilon, heading, azimuth):
     return sat_lat, sat_lon
 
 
-def calc_pixel_geometry(ifg, rg, lon, lat, params):
+def calc_pixel_geometry(ifg: Ifg, rg: np.ndarray, lon: np.ndarray,
+                        lat: np.ndarray, params: dict) -> Tuple[np.ndarray,
+                                np.ndarray, np.ndarray, np.ndarray]:
     """
-    Function to calculate local look angle, incidence angle and geodetic azimuth for each pixel.
+    Function to calculate angular satellite to ground geometries and distance for each pixel.
+    :param ifg: pyrate.core.shared.Ifg Class object.
+    :param rg: Range image coordinate for each pixel.
+    :param lon: Longitude for each pixel (decimal degrees)
+    :param lat: Latitude for each pixel (decimal degrees)
+    :param params: Dictionary of PyRate configuration parameters.
+    :return: look_angle: look angle (between nadir and look vector) for each pixel (radians).
+    :return: incidence_angle: local incidence angle (between vertical and look vector) for each pixel (radians).
+    :return: azimuth_angle: Geodetic azimuth for each pixel (radians).
+    :return: range_dist: Distance from satellite to ground for each pixel (metres).
     """
     # read relevant metadata from first IFG
     a = float(ifg.meta_data[ifc.PYRATE_SEMI_MAJOR_AXIS_METRES])
@@ -128,7 +162,9 @@ def calc_pixel_geometry(ifg, rg, lon, lat, params):
     near_range = float(ifg.meta_data[ifc.PYRATE_NEAR_RANGE_METRES])
     rps = float(ifg.meta_data[ifc.PYRATE_RANGE_PIX_METRES])
     heading = float(ifg.meta_data[ifc.PYRATE_HEADING_DEGREES])
-    azimuth = float(ifg.meta_data[ifc.PYRATE_AZIMUTH_DEGREES])
+    # direction of look vector w.r.t. satellite heading. 
+    # Gamma convention: +ve = right; -ve = left.
+    right_or_left_look = float(ifg.meta_data[ifc.PYRATE_AZIMUTH_DEGREES])
 
     # Read height data from DEM
     dem_file = join(params[cf.OUT_DIR], 'dem.tif')
@@ -136,11 +172,11 @@ def calc_pixel_geometry(ifg, rg, lon, lat, params):
     DEM_data.open(readonly=True)
     dem_height = DEM_data.height_data
 
-    # convert angles to radians
+    # convert to radians
     lon = np.radians(lon)
     lat = np.radians(lat)
     heading = np.radians(heading)
-    azimuth = np.radians(azimuth)
+    right_or_left_look = np.radians(right_or_left_look)
 
     # Earth radius at given latitude
     re = np.sqrt(np.divide(np.square(a**2 * np.cos(lat)) + np.square(b**2 * np.sin(lat)), \
@@ -166,7 +202,7 @@ def calc_pixel_geometry(ifg, rg, lon, lat, params):
     epsilon = np.pi - look_angle - (np.pi - incidence_angle)
 
     # calculate satellite positions for each pixel
-    sat_lat, sat_lon = get_sat_positions(lat, lon, epsilon, heading, azimuth)
+    sat_lat, sat_lon = get_sat_positions(lat, lon, epsilon, heading, right_or_left_look)
 
     # # calc azimuth angle using Vincenty's equations
     azimuth_angle = vincinv(lat, lon, sat_lat, sat_lon, a, b)
@@ -174,9 +210,13 @@ def calc_pixel_geometry(ifg, rg, lon, lat, params):
     return look_angle, incidence_angle, azimuth_angle, range_dist
 
 
-def calc_local_baseline(ifg, az, look_angle):
+def calc_local_baseline(ifg: Ifg, az: np.ndarray, look_angle: np.ndarray) -> np.ndarray:
     """
     Function to calculate perpendicular baseline values for each pixel.
+    :param ifg: pyrate.core.shared.Ifg Class object
+    :param az: Azimuth image coordinate for each pixel
+    :param look_angle: Look angle for each pixel (radians)
+    :return: bperp: Perpendicular baseline for each pixel (metres)
     """
     # open ifg object
     if not ifg.is_open:
@@ -204,19 +244,20 @@ def calc_local_baseline(ifg, az, look_angle):
     return bperp
 
 
-def vincinv(lat1, lon1, lat2, lon2, semimaj, semimin):
+def vincinv(lat1:np.ndarray, lon1: np.ndarray, lat2: np.ndarray, lon2: np.ndarray,
+            semimaj: float, semimin: float) -> np.ndarray:
     """
     Vincenty's Inverse Formula, adapted from GeodePy function vincinv
     (see https://github.com/GeoscienceAustralia/GeodePy/blob/master/geodepy/geodesy.py)
-    - only relevant parts of the Geodepy to retrieve the azimuth agnle have been used
-    - vectorised the function for use with np arrays
-    :param ndarray lat1: Latitude of Point 1 (radians)
-    :param ndarray lon1: Longitude of Point 1 (radians)
-    :param ndarray lat2: Latitude of Point 2 (radians)
-    :param ndarray lon2: Longitude of Point 2 (radians)
+    - only relevant parts of the Geodepy to retrieve the azimuth angle have been used
+    - vectorised the function for use with numpy arrays
+    :param lat1: Latitude of Point 1 (radians)
+    :param lon1: Longitude of Point 1 (radians)
+    :param lat2: Latitude of Point 2 (radians)
+    :param lon2: Longitude of Point 2 (radians)
     :param semimaj: semi-major axis of ellipsoid
     :param semimin: semi-minor axis of ellipsoid
-    :return: ndarray azimuth1to2: Azimuth from Point 1 to 2 (Decimal Degrees)
+    :return: azimuth1to2: Azimuth from Point 1 to 2 (Decimal Degrees)
     """
     # Exit if any of the two sets of input points are the same
     if np.any(lat1 == lat2) and np.any(lon1 == lon2):
