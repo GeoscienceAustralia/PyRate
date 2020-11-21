@@ -157,3 +157,10 @@ def dem():
     d = shared.dem_or_ifg(SML_TEST_DEM_TIF)
     d.open()
     return d
+
+
+@pytest.fixture(params=[TEST_CONF_GAMMA, MEXICO_CONF], scope='session')
+def gamma_or_mexicoa_conf(request):
+    params = Configuration(request.param).__dict__
+    yield request.param
+    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
