@@ -20,7 +20,7 @@ all other PyRate modules
 """
 # pylint: disable=too-many-lines
 import re
-from typing import List, Union
+from typing import List, Union, Optional
 
 import errno
 import math
@@ -687,13 +687,14 @@ class DEM(RasterBase):
     Generic raster class for single band DEM files.
     """
 
-    def __init__(self, path):
+    def __init__(self, path, tile=Optional[Tile]):
         """
         DEM constructor.
         """
         RasterBase.__init__(self, path)
         self._band = None
         self._height_data = None
+        self.tile = tile
 
     @property
     def height_band(self):
@@ -709,8 +710,14 @@ class DEM(RasterBase):
         """
         Returns the geometry band as an array.
         """
-        if self._height_data is None:
+        if (self._height_data is None) and (self.tile is None):
             self._height_data = self.height_band.ReadAsArray()
+        if self.tile is not None:
+            t = self.tile
+            self._height_data = self.height_band.ReadAsArray()[
+                                t.top_left_y:t.bottom_right_y,
+                                t.top_left_x:t.bottom_right_x
+                                ]
         return self._height_data
 
 

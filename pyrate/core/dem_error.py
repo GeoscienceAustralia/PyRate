@@ -107,7 +107,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
                 ifg.open(readonly=True)
                 # calculate look angle for interferograms (using the Near Range of the primary SLC)
                 look_angle, _, _, range_dist = geometry.calc_pixel_geometry(ifg, rg_parts, lon_parts,
-                                                                            lat_parts, params)
+                                                                            lat_parts, params, tile=t)
                 bperp[ifg_num, :, :] = geometry.calc_local_baseline(ifg, az_parts, look_angle)
 
             log.debug('Calculating DEM error for tile {} during DEM error correction'.format(t.index))

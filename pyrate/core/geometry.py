@@ -21,12 +21,12 @@ used for correcting interferograms for residual topographic effects (a.k.a. DEM 
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
 import numpy as np
 from os.path import join
-from typing import Tuple
+from typing import Tuple, Union, Optional
 from math import sqrt, sin, cos, tan, asin, atan, atan2, isnan, pi
 from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.refpixel import convert_pixel_value_to_geographic_coordinate
 from pyrate.core.gamma import read_lookup_table
-from pyrate.core.shared import DEM, Ifg
+from pyrate.core.shared import DEM, Ifg, IfgPart, Tile
 
 
 def get_lonlat_coords_slow(ifg: Ifg) -> Tuple[np.ndarray, np.ndarray]:
@@ -139,9 +139,8 @@ def get_sat_positions(lat: np.ndarray, lon: np.ndarray, epsilon: np.ndarray,
     return sat_lat, sat_lon
 
 
-def calc_pixel_geometry(ifg: Ifg, rg: np.ndarray, lon: np.ndarray,
-                        lat: np.ndarray, params: dict) -> Tuple[np.ndarray,
-                                np.ndarray, np.ndarray, np.ndarray]:
+def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarray,
+                        lat: np.ndarray, params: dict, tile: Optional[Tile]) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Function to calculate angular satellite to ground geometries and distance for each pixel.
     :param ifg: pyrate.core.shared.Ifg Class object.
@@ -168,7 +167,7 @@ def calc_pixel_geometry(ifg: Ifg, rg: np.ndarray, lon: np.ndarray,
 
     # Read height data from DEM
     dem_file = join(params[cf.OUT_DIR], 'dem.tif')
-    DEM_data = DEM(dem_file)
+    DEM_data = DEM(dem_file, tile=tile)
     DEM_data.open(readonly=True)
     dem_height = DEM_data.height_data
 
@@ -179,7 +178,7 @@ def calc_pixel_geometry(ifg: Ifg, rg: np.ndarray, lon: np.ndarray,
     right_or_left_look = np.radians(right_or_left_look)
 
     # Earth radius at given latitude
-    re = np.sqrt(np.divide(np.square(a**2 * np.cos(lat)) + np.square(b**2 * np.sin(lat)), \
+    re = np.sqrt(np.divide(np.square(a**2 * np.cos(lat)) + np.square(b**2 * np.sin(lat)),
                            np.square(a * np.cos(lat)) + np.square(b * np.sin(lat))))
 
     # range measurement at pixel ij
@@ -195,7 +194,7 @@ def calc_pixel_geometry(ifg: Ifg, rg: np.ndarray, lon: np.ndarray,
 
     # incidence angle at pixel ij -> law of cosines in "satellite - Earth centre - ground pixel" triangle
     # see e.g. Section 2 in https://www.cs.uaf.edu/~olawlor/ref/asf/sar_equations_2006_08_17.pdf
-    incidence_angle = np.pi - np.arccos(np.divide(np.square(range_dist) + np.square(re) - se**2, \
+    incidence_angle = np.pi - np.arccos(np.divide(np.square(range_dist) + np.square(re) - se**2,
                                                   2 * np.multiply(range_dist, re)))
 
     # angle at the Earth's center between se and re
