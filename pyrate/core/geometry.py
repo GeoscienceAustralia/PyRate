@@ -43,8 +43,8 @@ def get_lonlat_coords_slow(ifg: Ifg) -> Tuple[np.ndarray, np.ndarray]:
     nrows, ncols = ifg.shape
     lon = np.zeros((nrows, ncols))  # pre-allocate 2D numpy array
     lat = np.zeros((nrows, ncols))  # pre-allocate 2D numpy array
-    for i in range(0, nrows): # rows are y-direction
-        for j in range(0, ncols): # cols are x-direction
+    for i in range(0, nrows):  # rows are y-direction
+        for j in range(0, ncols):  # cols are x-direction
             lon[i, j], lat[i, j] = convert_pixel_value_to_geographic_coordinate(j, i, transform)
 
     return lon, lat
@@ -99,7 +99,7 @@ def calc_radar_coords(ifg: Ifg, params: dict, xmin: int, xmax: int,
     # PyRate IFG multi-looking factors
     ifglksx = params[cf.IFG_LKSX]
     ifglksy = params[cf.IFG_LKSY]
-     # transform float lookup table file to np array, min/max pixel coordinates are required for cropping
+    # transform float lookup table file to np array, min/max pixel coordinates are required for cropping
     lt_az, lt_rg = read_lookup_table(ifg, lookup_table, ifglksx, ifglksy, xmin, xmax, ymin, ymax)
     # replace 0.0 with NaN
     lt_az[lt_az == 0.0] = np.nan
@@ -131,16 +131,17 @@ def get_sat_positions(lat: np.ndarray, lon: np.ndarray, epsilon: np.ndarray,
     sat_azi = heading + roll
     # the following equations are adapted from Section 4.4 (page 4-16) in EARTH-REFERENCED AIRCRAFT NAVIGATION AND
     # SURVEILLANCE ANALYSIS (https://ntlrepository.blob.core.windows.net/lib/59000/59300/59358/DOT-VNTSC-FAA-16-12.pdf)
-    sat_lon = np.divide(np.arcsin(-(np.multiply(np.sin(epsilon), np.sin(sat_azi)))), np.cos(lat)) + lon # Eq. 103
+    sat_lon = np.divide(np.arcsin(-(np.multiply(np.sin(epsilon), np.sin(sat_azi)))), np.cos(lat)) + lon  # Eq. 103
     temp = np.multiply(np.divide(np.cos(0.5 * (sat_azi + sat_lon - lon)), np.cos(0.5 * (sat_azi - sat_lon + lon))), \
-                       np.tan(0.5 * (np.pi / 2 + lat - epsilon))) # Eq. 104
+                       np.tan(0.5 * (np.pi / 2 + lat - epsilon)))  # Eq. 104
     sat_lat = -np.pi / 2 + 2 * np.arctan(temp)
 
     return sat_lat, sat_lon
 
 
-def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarray,
-                        lat: np.ndarray, params: dict, tile: Optional[Tile]) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def calc_pixel_geometry(
+        ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarray, lat: np.ndarray, params: dict,
+        tile: Optional[Tile] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Function to calculate angular satellite to ground geometries and distance for each pixel.
     :param ifg: pyrate.core.shared.Ifg Class object.
@@ -148,6 +149,7 @@ def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarra
     :param lon: Longitude for each pixel (decimal degrees)
     :param lat: Latitude for each pixel (decimal degrees)
     :param params: Dictionary of PyRate configuration parameters.
+    :param tile: Optional Tile class instance
     :return: look_angle: look angle (between nadir and look vector) for each pixel (radians).
     :return: incidence_angle: local incidence angle (between vertical and look vector) for each pixel (radians).
     :return: azimuth_angle: Geodetic azimuth for each pixel (radians).
@@ -178,7 +180,7 @@ def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarra
     right_or_left_look = np.radians(right_or_left_look)
 
     # Earth radius at given latitude
-    re = np.sqrt(np.divide(np.square(a**2 * np.cos(lat)) + np.square(b**2 * np.sin(lat)),
+    re = np.sqrt(np.divide(np.square(a ** 2 * np.cos(lat)) + np.square(b ** 2 * np.sin(lat)),
                            np.square(a * np.cos(lat)) + np.square(b * np.sin(lat))))
 
     # range measurement at pixel ij
@@ -186,7 +188,7 @@ def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarra
 
     # look angle at pixel ij -> law of cosines in "satellite - Earth centre - ground pixel" triangle
     # see e.g. Section 2 in https://www.cs.uaf.edu/~olawlor/ref/asf/sar_equations_2006_08_17.pdf
-    look_angle = np.arccos(np.divide(se**2 + np.square(range_dist) - np.square(re), 2 * se * range_dist))
+    look_angle = np.arccos(np.divide(se ** 2 + np.square(range_dist) - np.square(re), 2 * se * range_dist))
 
     # add per-pixel height to the earth radius(from dem.tif) to obtain a more accurate ground pixel position for
     # incidence angle calculation
@@ -194,7 +196,7 @@ def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarra
 
     # incidence angle at pixel ij -> law of cosines in "satellite - Earth centre - ground pixel" triangle
     # see e.g. Section 2 in https://www.cs.uaf.edu/~olawlor/ref/asf/sar_equations_2006_08_17.pdf
-    incidence_angle = np.pi - np.arccos(np.divide(np.square(range_dist) + np.square(re) - se**2,
+    incidence_angle = np.pi - np.arccos(np.divide(np.square(range_dist) + np.square(re) - se ** 2,
                                                   2 * np.multiply(range_dist, re)))
 
     # angle at the Earth's center between se and re
@@ -231,8 +233,8 @@ def calc_local_baseline(ifg: Ifg, az: np.ndarray, look_angle: np.ndarray) -> np.
     baserate_N = float(ifg.meta_data[ifc.PYRATE_BASELINE_RATE_N])
 
     # calculate per pixel baseline vectors across track (C) and normal to the track (N)
-    mean_az = az_n / 2 - 0.5 # mean azimuth line
-    prf = prf / az_looks # Pulse Repetition Frequency needs to be adjusted according to GAMMA azimuth looks
+    mean_az = az_n / 2 - 0.5  # mean azimuth line
+    prf = prf / az_looks  # Pulse Repetition Frequency needs to be adjusted according to GAMMA azimuth looks
     base_C_local = base_C + baserate_C * (az - mean_az) / prf
     base_N_local = base_N + baserate_N * (az - mean_az) / prf
 
@@ -243,7 +245,7 @@ def calc_local_baseline(ifg: Ifg, az: np.ndarray, look_angle: np.ndarray) -> np.
     return bperp
 
 
-def vincinv(lat1:np.ndarray, lon1: np.ndarray, lat2: np.ndarray, lon2: np.ndarray,
+def vincinv(lat1: np.ndarray, lon1: np.ndarray, lat2: np.ndarray, lon2: np.ndarray,
             semimaj: float, semimin: float) -> np.ndarray:
     """
     Vincenty's Inverse Formula, adapted from GeodePy function vincinv
@@ -262,7 +264,7 @@ def vincinv(lat1:np.ndarray, lon1: np.ndarray, lat2: np.ndarray, lon2: np.ndarra
     if np.any(lat1 == lat2) and np.any(lon1 == lon2):
         return 0
     # calculate flattening
-    f = (semimaj-semimin)/semimaj
+    f = (semimaj - semimin) / semimaj
     # Equation numbering is from the GDA2020 Tech Manual v1.0
     # Eq. 71
     u1 = np.arctan((1 - f) * np.tan(lat1))
@@ -275,32 +277,33 @@ def vincinv(lat1:np.ndarray, lon1: np.ndarray, lat2: np.ndarray, lon2: np.ndarra
     # (< 1e-12) or after 1000 iterations have been completed
     for i in range(1000):
         # Eq. 74
-        sin_sigma = np.sqrt((np.cos(u2)*np.sin(lon))**2 + (np.cos(u1)*np.sin(u2) - np.sin(u1)*np.cos(u2)*np.cos(lon))**2)
+        sin_sigma = np.sqrt(
+            (np.cos(u2) * np.sin(lon)) ** 2 + (np.cos(u1) * np.sin(u2) - np.sin(u1) * np.cos(u2) * np.cos(lon)) ** 2)
         # Eq. 75
-        cos_sigma = np.sin(u1)*np.sin(u2) + np.cos(u1)*np.cos(u2)*np.cos(lon)
+        cos_sigma = np.sin(u1) * np.sin(u2) + np.cos(u1) * np.cos(u2) * np.cos(lon)
         # Eq. 76
         sigma = np.arctan2(sin_sigma, cos_sigma)
         # Eq. 77
-        alpha = np.arcsin((np.cos(u1)*np.cos(u2)*np.sin(lon)) / sin_sigma)
+        alpha = np.arcsin((np.cos(u1) * np.cos(u2) * np.sin(lon)) / sin_sigma)
         # Eq. 78
-        cos_two_sigma_m = np.cos(sigma) - (2*np.sin(u1)*np.sin(u2) / np.cos(alpha)**2)
+        cos_two_sigma_m = np.cos(sigma) - (2 * np.sin(u1) * np.sin(u2) / np.cos(alpha) ** 2)
         # Eq. 79
-        c = (f / 16) * np.cos(alpha)**2 * (4 + f * (4 - 3*np.cos(alpha)**2))
+        c = (f / 16) * np.cos(alpha) ** 2 * (4 + f * (4 - 3 * np.cos(alpha) ** 2))
         # Eq. 80
         new_lon = omega + (1 - c) * f * np.sin(alpha) * (
-                sigma + c*np.sin(sigma) * (cos_two_sigma_m + c * np.cos(sigma) * (-1 + 2*(cos_two_sigma_m**2)))
+                sigma + c * np.sin(sigma) * (cos_two_sigma_m + c * np.cos(sigma) * (-1 + 2 * (cos_two_sigma_m ** 2)))
         )
         delta_lon = new_lon - lon
         lon = new_lon
         if np.all(np.absolute(delta_lon) < 1e-12):
             break
     # Calculate the azimuth from point 1 to point 2
-    azimuth1to2 = np.arctan2((np.cos(u2)*np.sin(lon)), (np.cos(u1)*np.sin(u2) - np.sin(u1)*np.cos(u2)*np.cos(lon)))
+    azimuth1to2 = np.arctan2((np.cos(u2) * np.sin(lon)),
+                             (np.cos(u1) * np.sin(u2) - np.sin(u1) * np.cos(u2) * np.cos(lon)))
 
     # add 2 pi in case an angle is below zero
     for azi in np.nditer(azimuth1to2, op_flags=['readwrite']):
         if azi < 0:
-            azi[...] = azi + 2*np.pi
+            azi[...] = azi + 2 * np.pi
 
     return np.round(azimuth1to2, 9)
-
