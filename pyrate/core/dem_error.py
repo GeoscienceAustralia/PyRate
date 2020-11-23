@@ -19,10 +19,8 @@ This Python module implements the calculation of correction for residual topogra
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
 import os
 import numpy as np
+from typing import Tuple
 from os.path import join
-import pickle as cp
-from numpy.linalg import inv, LinAlgError, lstsq
-
 from pyrate.core import geometry, shared, mpiops, config as cf, ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core.shared import Ifg, Geometry
@@ -34,6 +32,7 @@ from pyrate.merge import assemble_tiles
 def dem_error_calc_wrapper(params: dict) -> None:
     """
     MPI wrapper for DEM error correction
+    :param params: Dictionary of PyRate configuration parameters.
     """
     if not params[cf.DEMERROR]:
         log.info("DEM error correction not required")
@@ -140,25 +139,23 @@ def dem_error_calc_wrapper(params: dict) -> None:
         log.debug('Finished DEM error correction step')
 
 
-def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold):
+def calc_dem_errors(ifgs: list, bperp: np.ndarray, look_angle: np.ndarray, range_dist: np.ndarray,
+                    threshold: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    Calculates the per-pixel DEM error using least-squares adjustment of phase data and
+    Function to calculate the DEM error for each pixel using least-squares adjustment of phase data and
     perpendicular baseline. The least-squares adjustment co-estimates the velocities.
-
         - *nrows* is the number of rows in the ifgs,
         - *ncols* is the  number of columns in the ifgs, and
-
-    :param list ifgs: list of interferogram class objects.
-    :param ndarray bperp: Per-pixel perpendicular baseline for each interferogram
-    :param ndarray look_angle: Per-pixel look angle
-    :param ndarray range_dist: Per-pixel range distance measurement
-    :param int threshold: minimum number of redundant phase values at pixel (config parameter de_pthr)
-
-    :return: ndarray dem_error: estimated per-pixel dem error (nrows x ncols)
-    :return: ndarray dem_error_correction: DEM error correction for each pixel and interferogram (nifgs x nrows x ncols)
-    :return: ndarray vel: velocity estimate for each pixel (nrows x ncols)
+    :param ifgs: list of interferogram class objects.
+    :param bperp: Per-pixel perpendicular baseline for each interferogram
+    :param look_angle: Per-pixel look angle
+    :param range_dist: Per-pixel range distance measurement
+    :param threshold: minimum number of redundant phase values at pixel (config parameter de_pthr)
+    :return: dem_error: estimated per-pixel dem error (nrows x ncols)
+    :return: dem_error_correction: DEM error correction for each pixel and interferogram (nifgs x nrows x ncols)
+    :return: vel: velocity estimate for each pixel (nrows x ncols)
     """
-    ifg_data, mst, ncols, nrows, bperp_data, ifg_time_span = _per_tile_setup(ifgs, bperp)
+    ifg_data, mst, ncols, nrows, ifg_time_span = _per_tile_setup(ifgs)
     if threshold < 4:
         msg = f"pixel threshold too low (i.e. <4) resulting in non-redundant DEM error estimation"
         raise DEMError(msg)
@@ -175,7 +172,7 @@ def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold):
             if len(sel) >= threshold:  # given threshold for number of valid pixels in time series
                 # phase observations (in mm)
                 y = ifg_data[sel, row, col]
-                bperp_pix = bperp_data[sel, row, col]
+                bperp_pix = bperp[sel, row, col]
                 # using the actual geometry of a particular IFG would be possible but is likely not signif. different
                 # geom = bperp_pix / (range_dist[row, col] * np.sin(look_angle[row, col]))
                 time_span = ifg_time_span[sel]
@@ -191,7 +188,7 @@ def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold):
                 vel[row][col] = xhat[2]
 
     # calculate correction value for each IFG by multiplying the least-squares estimate with the Bperp value
-    dem_error_correction = np.multiply(dem_error, bperp_data)
+    dem_error_correction = np.multiply(dem_error, bperp)
     # calculate metric difference to DEM by multiplying the estimate with the per-pixel geometry
     # (i.e. range distance and look angle, see Eq. (2.4.12) in Hanssen (2001))
     # also scale by -0.001 since the phase observations are in mm with positive values away from the sensor
@@ -200,12 +197,15 @@ def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold):
     return dem_error, dem_error_correction, vel
 
 
-def _per_tile_setup(ifgs, bperp):
+def _per_tile_setup(ifgs: list) -> Tuple[np.ndarray, np.ndarray, int, int, np.ndarray]:
     """
     Convenience function for setting up DEM error computation parameters
-
-    :param list ifgs: list of interferogram class objects.
-    :param ndarray bperp: Per-pixel perpendicular baseline for each interferogram
+    :param ifgs: list of interferogram class objects.
+    :return: ifg_data: phase observations for each pixel and interferogram
+    :return: mst: an array of booleans representing valid ifg connections (i.e. the minimum spanning tree)
+    :return: ncols: number of columns
+    :return: nrows: number of rows
+    :return: ifg_time_span: date difference for each interferogram
     """
     if len(ifgs) < 1:
         msg = 'Time series requires 2+ interferograms'
@@ -215,22 +215,23 @@ def _per_tile_setup(ifgs, bperp):
     ncols = ifgs[0].ncols
     nifgs = len(ifgs)
     ifg_data = np.zeros((nifgs, nrows, ncols), dtype=np.float32)
-    bperp_data = np.zeros((nifgs, nrows, ncols), dtype=np.float32)
     for ifg_num in range(nifgs):
         ifg_data[ifg_num] = ifgs[ifg_num].phase_data
-        bperp_data[ifg_num] = bperp[ifg_num]
     mst = ~np.isnan(ifg_data)
-
     ifg_time_span = np.zeros((nifgs))
     for ifg_num in range(nifgs):
         ifg_time_span[ifg_num] = ifgs[ifg_num].time_span
 
-    return ifg_data, mst, ncols, nrows, bperp_data, ifg_time_span
+    return ifg_data, mst, ncols, nrows, ifg_time_span
 
 
-def _write_dem_errors(ifg_paths, params, preread_ifgs, tiles):
+def _write_dem_errors(ifg_paths: list, params: dict, preread_ifgs: dict, tiles: list) -> None:
     """
     Convenience function for writing DEM error (one file) and DEM error correction for each IFG to disc
+    :param ifg_paths: List of interferogram class objects.
+    :param params: Dictionary of PyRate configuration parameters.
+    :param preread_ifgs: Dictionary of interferogram metadata
+    :param tiles: List of pyrate.shared.Tile class objects
     """
     # re-assemble tiles and save into dem_error dir
     shape = preread_ifgs[ifg_paths[0]].shape
@@ -260,9 +261,12 @@ def _write_dem_errors(ifg_paths, params, preread_ifgs, tiles):
         _save_dem_error_corrected_phase(ifg)
 
 
-def __check_and_apply_demerrors_found_on_disc(ifg_paths, params):
+def __check_and_apply_demerrors_found_on_disc(ifg_paths: list, params: dict) -> bool:
     """
     Convenience function to check if DEM error correction files have already been produced in a previous run
+    :param ifg_paths: List of interferogram class objects.
+    :param params: Dictionary of PyRate configuration parameters.
+    :return: bool value: True if dem error files found on disc, otherwise False.
     """
     saved_dem_err_paths = [MultiplePaths.dem_error_path(ifg_path, params) for ifg_path in ifg_paths]
     for d, i in zip(saved_dem_err_paths, ifg_paths):
@@ -277,12 +281,14 @@ def __check_and_apply_demerrors_found_on_disc(ifg_paths, params):
             ifg.phase_data -= dem_corr
             # set geotiff meta tag and save phase to file
             _save_dem_error_corrected_phase(ifg)
+
     return all(d.exists() for d in saved_dem_err_paths)
 
 
-def _save_dem_error_corrected_phase(ifg):
+def _save_dem_error_corrected_phase(ifg: Ifg) -> None:
     """
     Convenience function to update metadata and save latest phase after DEM error correction
+    :param ifg: pyrate.core.shared.Ifg Class object
     """
     # update geotiff tags after DEM error correction
     ifg.dataset.SetMetadataItem(ifc.PYRATE_DEM_ERROR, ifc.DEM_ERROR_REMOVED)

@@ -109,14 +109,14 @@ def calc_radar_coords(ifg: Ifg, params: dict, xmin: int, xmax: int,
 
 
 def get_sat_positions(lat: np.ndarray, lon: np.ndarray, epsilon: np.ndarray,
-                      heading: np.float64, roll: np.float64) -> Tuple[np.ndarray, np.ndarray]:
+                      heading: np.float64, look_dir: np.float64) -> Tuple[np.ndarray, np.ndarray]:
     """
     Function to calculate the lon/lat position of the satellite for each pixel.
     :param lat: Ground latitude for each pixel (decimal degrees).
     :param lon: Ground point longitude for each pixel (decimal degrees).
     :param epsilon:
     :param heading: Satellite flight heading (radians).
-    :param roll: Right or left look direction w.r.t. satellite heading; +ve = right looking (radians).
+    :param look_dir: look direction w.r.t. satellite heading; +ve = right looking (radians).
     :return: sat_lat: Satellite position latitude for each pixel (decimal degrees).
     :return: sat_lon: Satellite position longitude for each pixel (decimal degrees).
     """
@@ -128,7 +128,7 @@ def get_sat_positions(lat: np.ndarray, lon: np.ndarray, epsilon: np.ndarray,
     # 4. calculate the satellite XYZ position for that time by interpolating the time and velocity state vectors
 
     # azimuth of satellite look vector (satellite heading + look direction (+90 deg for right-looking SAR)
-    sat_azi = heading + roll
+    sat_azi = heading + look_dir
     # the following equations are adapted from Section 4.4 (page 4-16) in EARTH-REFERENCED AIRCRAFT NAVIGATION AND
     # SURVEILLANCE ANALYSIS (https://ntlrepository.blob.core.windows.net/lib/59000/59300/59358/DOT-VNTSC-FAA-16-12.pdf)
     sat_lon = np.divide(np.arcsin(-(np.multiply(np.sin(epsilon), np.sin(sat_azi)))), np.cos(lat)) + lon  # Eq. 103
@@ -165,7 +165,7 @@ def calc_pixel_geometry(
     heading = float(ifg.meta_data[ifc.PYRATE_HEADING_DEGREES])
     # direction of look vector w.r.t. satellite heading. 
     # Gamma convention: +ve = right; -ve = left.
-    right_or_left_look = float(ifg.meta_data[ifc.PYRATE_AZIMUTH_DEGREES])
+    look_dir = float(ifg.meta_data[ifc.PYRATE_AZIMUTH_DEGREES])
 
     # Read height data from DEM
     dem_file = join(params[cf.OUT_DIR], 'dem.tif')
@@ -177,7 +177,7 @@ def calc_pixel_geometry(
     lon = np.radians(lon)
     lat = np.radians(lat)
     heading = np.radians(heading)
-    right_or_left_look = np.radians(right_or_left_look)
+    look_dir = np.radians(look_dir)
 
     # Earth radius at given latitude
     re = np.sqrt(np.divide(np.square(a ** 2 * np.cos(lat)) + np.square(b ** 2 * np.sin(lat)),
@@ -203,7 +203,7 @@ def calc_pixel_geometry(
     epsilon = np.pi - look_angle - (np.pi - incidence_angle)
 
     # calculate satellite positions for each pixel
-    sat_lat, sat_lon = get_sat_positions(lat, lon, epsilon, heading, right_or_left_look)
+    sat_lat, sat_lon = get_sat_positions(lat, lon, epsilon, heading, look_dir)
 
     # # calc azimuth angle using Vincenty's equations
     azimuth_angle = vincinv(lat, lon, sat_lat, sat_lon, a, b)
