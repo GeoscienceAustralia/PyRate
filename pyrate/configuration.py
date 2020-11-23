@@ -127,7 +127,7 @@ class MultiplePaths:
         if isinstance(ifg_path, str):
             ifg_path = Path(ifg_path)
         return Path(params[cf.OUT_DIR], cf.DEM_ERROR_DIR,
-                    ifg_path.stem + '_dem_error.npy')
+                    ifg_path.stem + '_' + str(params[cf.DE_PTHR]) + '_dem_error.npy')
 
     @staticmethod
     def aps_error_path(ifg_path: Union[str, Path], params) -> Path:
