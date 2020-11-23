@@ -11,7 +11,7 @@ from pyrate.configuration import Configuration, MultiplePaths
 from pyrate import prepifg, correct
 import pyrate.core.config as cf
 import pyrate.core.geometry as geom
-from pyrate.core.dem_error import dem_error_calc_wrapper
+from pyrate.core.dem_error import dem_error_calc_wrapper, _calculate_bperp_for_tile
 from pyrate.core.shared import Ifg, Geometry, save_numpy_phase
 
 
@@ -107,23 +107,10 @@ class TestPyRateGammaBperp:
         ifg0 = Ifg(ifg0_path)
         ifg0.open(readonly=True)
         # size of ifg dataset
-        nrows, ncols = ifg0.shape
-        nifgs = len(ifg_paths)
-        bperp = np.empty(shape=(nrows, ncols, nifgs)) * np.nan
-
         # calculate per-pixel lon/lat
         lon, lat = geom.get_lonlat_coords(ifg0)
-
-        # calculate per-pixel perpendicular baseline for each IFG
-        for ifg_num, ifg_path in enumerate(
-                ifg_paths):  # loop could be avoided by approximating the look angle for the first Ifg
-            ifg = Ifg(ifg_path)
-            ifg.open(readonly=True)
-            # calculate look angle for interferograms (using the Near Range of the primary SLC)
-            look_angle, _, _, _ = geom.calc_pixel_geometry(ifg, cls.rg, lon, lat, cls.params)
-            bperp[:, :, ifg_num] = geom.calc_local_baseline(ifg, cls.az, look_angle)
-
-        return bperp
+        bperp = _calculate_bperp_for_tile(ifg_paths, cls.params, cls.az, cls.rg, lat, lon, tile=None)[0]
+        return np.moveaxis(bperp, (0, 1, 2), (2, 0, 1))
 
     @classmethod
     def teardown_class(cls):

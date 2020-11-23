@@ -22,32 +22,9 @@ used for correcting interferograms for residual topographic effects (a.k.a. DEM 
 import numpy as np
 from os.path import join
 from typing import Tuple, Union, Optional
-from math import sqrt, sin, cos, tan, asin, atan, atan2, isnan, pi
 from pyrate.core import ifgconstants as ifc, config as cf
-from pyrate.core.refpixel import convert_pixel_value_to_geographic_coordinate
 from pyrate.core.gamma import read_lookup_table
 from pyrate.core.shared import DEM, Ifg, IfgPart, Tile
-
-
-def get_lonlat_coords_slow(ifg: Ifg) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Function to get longitude and latitude coordinates for each pixel in the multi-looked.
-    interferogram dataset. Coordinates are identical for each interferogram in the stack.
-    :param ifg: pyrate.core.shared.Ifg Class object.
-    :return: lon: Longitude for each pixel (decimal degrees)
-    :return: lat: Latitude for each pixel (decimal degrees)
-    """
-    # assume all interferograms have same projection and will share the same transform
-    transform = ifg.dataset.GetGeoTransform()
-    # number of rows and columns in dataset
-    nrows, ncols = ifg.shape
-    lon = np.zeros((nrows, ncols))  # pre-allocate 2D numpy array
-    lat = np.zeros((nrows, ncols))  # pre-allocate 2D numpy array
-    for i in range(0, nrows):  # rows are y-direction
-        for j in range(0, ncols):  # cols are x-direction
-            lon[i, j], lat[i, j] = convert_pixel_value_to_geographic_coordinate(j, i, transform)
-
-    return lon, lat
 
 
 def get_lonlat_coords(ifg: Ifg) -> Tuple[np.ndarray, np.ndarray]:

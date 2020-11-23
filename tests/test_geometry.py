@@ -1,14 +1,37 @@
 import shutil
+from typing import Tuple
 import numpy as np
 from os.path import join
 import pytest
 from pyrate.core import ifgconstants as ifc, config as cf
-from pyrate.core.geometry import get_lonlat_coords, get_lonlat_coords_slow, get_sat_positions, vincinv
+from pyrate.core.geometry import get_lonlat_coords, get_sat_positions, vincinv
+from pyrate.core.refpixel import convert_pixel_value_to_geographic_coordinate
 from tests import common
 from pyrate.configuration import Configuration
 from subprocess import run, PIPE
 from pyrate import prepifg, correct
 from pyrate.core.shared import Ifg, Geometry
+
+
+def get_lonlat_coords_slow(ifg: Ifg) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Function to get longitude and latitude coordinates for each pixel in the multi-looked.
+    interferogram dataset. Coordinates are identical for each interferogram in the stack.
+    :param ifg: pyrate.core.shared.Ifg Class object.
+    :return: lon: Longitude for each pixel (decimal degrees)
+    :return: lat: Latitude for each pixel (decimal degrees)
+    """
+    # assume all interferograms have same projection and will share the same transform
+    transform = ifg.dataset.GetGeoTransform()
+    # number of rows and columns in dataset
+    nrows, ncols = ifg.shape
+    lon = np.zeros((nrows, ncols))  # pre-allocate 2D numpy array
+    lat = np.zeros((nrows, ncols))  # pre-allocate 2D numpy array
+    for i in range(0, nrows):  # rows are y-direction
+        for j in range(0, ncols):  # cols are x-direction
+            lon[i, j], lat[i, j] = convert_pixel_value_to_geographic_coordinate(j, i, transform)
+
+    return lon, lat
 
 
 def test_get_lonlat_coords_vectorised(dem):

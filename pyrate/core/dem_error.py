@@ -20,14 +20,13 @@ This Python module implements the calculation of correction for residual topogra
 import os
 import numpy as np
 from os.path import join
-import pickle as cp
-from numpy.linalg import inv, LinAlgError, lstsq
+from numpy.linalg import inv
 
 from pyrate.core import geometry, shared, mpiops, config as cf, ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core.shared import Ifg, Geometry
 from pyrate.core.timeseries import TimeSeriesError
-from pyrate.configuration import Configuration, MultiplePaths
+from pyrate.configuration import MultiplePaths
 from pyrate.merge import assemble_tiles
 
 
@@ -98,17 +97,8 @@ def dem_error_calc_wrapper(params: dict) -> None:
             az_parts = az[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
             rg_parts = rg[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
 
-            nifgs = len(ifg_paths)
-            bperp = np.empty((nifgs, lon_parts.shape[0], lon_parts.shape[1])) * np.nan
-            # calculate per-pixel perpendicular baseline for each IFG
-            # loop could be avoided by approximating the look angle for the first Ifg
-            for ifg_num, ifg_path in enumerate(ifg_paths):
-                ifg = Ifg(ifg_path)
-                ifg.open(readonly=True)
-                # calculate look angle for interferograms (using the Near Range of the primary SLC)
-                look_angle, _, _, range_dist = geometry.calc_pixel_geometry(ifg, rg_parts, lon_parts,
-                                                                            lat_parts, params, tile=t)
-                bperp[ifg_num, :, :] = geometry.calc_local_baseline(ifg, az_parts, look_angle)
+            bperp, look_angle, range_dist = _calculate_bperp_for_tile(ifg_paths, params, az_parts, rg_parts,
+                                                                      lat_parts, lon_parts, t)
 
             log.debug('Calculating DEM error for tile {} during DEM error correction'.format(t.index))
             # mst_tile = np.load(Configuration.mst_path(params, t.index))
@@ -138,6 +128,21 @@ def dem_error_calc_wrapper(params: dict) -> None:
         shared.save_numpy_phase(ifg_paths, params)
 
         log.debug('Finished DEM error correction step')
+
+
+def _calculate_bperp_for_tile(ifg_paths, params, az_parts, rg_parts, lat_parts, lon_parts, tile):
+    nifgs = len(ifg_paths)
+    bperp = np.empty((nifgs, lon_parts.shape[0], lon_parts.shape[1])) * np.nan
+    # calculate per-pixel perpendicular baseline for each IFG
+    # loop could be avoided by approximating the look angle for the first Ifg
+    for ifg_num, ifg_path in enumerate(ifg_paths):
+        ifg = Ifg(ifg_path)
+        ifg.open(readonly=True)
+        # calculate look angle for interferograms (using the Near Range of the primary SLC)
+        look_angle, _, _, range_dist = geometry.calc_pixel_geometry(ifg, rg_parts, lon_parts,
+                                                                    lat_parts, params, tile=tile)
+        bperp[ifg_num, :, :] = geometry.calc_local_baseline(ifg, az_parts, look_angle)
+    return bperp, look_angle, range_dist
 
 
 def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold):
