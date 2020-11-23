@@ -313,7 +313,7 @@ def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
     dem = DEM_data.height_data
 
     # calculate per-pixel look angle (also calculates and saves incidence and azimuth angles)
-    lk_ang, inc_ang, az_ang, rg_dist = geometry.calc_pixel_geometry(ifg, params, rg, lon, lat, dem)
+    lk_ang, inc_ang, az_ang, rg_dist = geometry.calc_pixel_geometry(ifg, rg, lon, lat, dem)
 
     # save radar coordinates and angles to geotiff files
     for out, ot in zip([az, rg, lk_ang, inc_ang, az_ang, rg_dist],

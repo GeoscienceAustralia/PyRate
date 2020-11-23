@@ -115,12 +115,11 @@ def get_sat_positions(lat: np.ndarray, lon: np.ndarray, epsilon: np.ndarray,
     return sat_lat, sat_lon
 
 
-def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], params: dict, rg: np.ndarray, lon: np.ndarray,
-        lat: np.ndarray, dem_height: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarray, lat: np.ndarray,
+        dem_height: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Function to calculate angular satellite to ground geometries and distance for each pixel.
     :param ifg: pyrate.core.shared.Ifg Class object.
-    :param params: Dictionary of PyRate configuration parameters.
     :param rg: Range image coordinate for each pixel.
     :param lon: Longitude for each pixel (decimal degrees).
     :param lat: Latitude for each pixel (decimal degrees).

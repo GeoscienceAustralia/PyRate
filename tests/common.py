@@ -99,8 +99,8 @@ INCID_TEST_DIR = join(BASE_TEST, 'incidence')
 
 GAMMA_TEST_DIR = join(BASE_TEST, "gamma")
 
-MEXICO_TEST_DIR = join(BASE_TEST, "geotiffs")
-MEXICO_TEST_DIR_GEOMETRY = join(BASE_TEST, "geometry")
+MEXICO_TEST_DIR = join(BASE_TEST, "cropA", "geotiffs")
+MEXICO_TEST_DIR_GEOMETRY = join(BASE_TEST, "cropA", "geometry")
 MEXICO_CONF = PYRATEPATH.joinpath("tests", "test_data", "cropA", "pyrate_mexico_cropa.conf")
 
 # small dummy ifg list to limit overall # of ifgs
