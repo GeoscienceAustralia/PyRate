@@ -101,7 +101,7 @@ GAMMA_TEST_DIR = join(BASE_TEST, "gamma")
 
 MEXICO_TEST_DIR = join(BASE_TEST, "geotiffs")
 MEXICO_TEST_DIR_GEOMETRY = join(BASE_TEST, "geometry")
-MEXICO_CONF = PYRATEPATH.joinpath("tests", "test_data", "geotiffs", "pyrate_mexico_cropa.conf")
+MEXICO_CONF = PYRATEPATH.joinpath("tests", "test_data", "cropA", "pyrate_mexico_cropa.conf")
 
 # small dummy ifg list to limit overall # of ifgs
 IFMS5 = """geo_060828-061211_unw.tif
