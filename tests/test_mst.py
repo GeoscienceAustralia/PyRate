@@ -226,7 +226,7 @@ class TestMSTFilesReusedFromDisc:
     def teardown_class(cls):
         shutil.rmtree(cls.params[cf.OUT_DIR])
 
-    def test_ref_phase_used_from_disc_on_rerun(self):
+    def test_mst_used_from_disc_on_rerun(self):
         correct._update_params_with_tiles(self.params)
         times_written = self.__run_once()
         times_written_1 = self.__run_once()

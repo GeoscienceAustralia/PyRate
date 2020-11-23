@@ -158,7 +158,7 @@ def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold):
     :return: ndarray dem_error_correction: DEM error correction for each pixel and interferogram (nifgs x nrows x ncols)
     :return: ndarray vel: velocity estimate for each pixel (nrows x ncols)
     """
-    ifg_data, mst, ncols, nrows, bperp_data, ifg_time_span = _perpixel_setup(ifgs, bperp)
+    ifg_data, mst, ncols, nrows, bperp_data, ifg_time_span = _per_tile_setup(ifgs, bperp)
     if threshold < 4:
         msg = f"pixel threshold too low (i.e. <4) resulting in non-redundant DEM error estimation"
         raise DEMError(msg)
@@ -200,7 +200,7 @@ def calc_dem_errors(ifgs, bperp, look_angle, range_dist, threshold):
     return dem_error, dem_error_correction, vel
 
 
-def _perpixel_setup(ifgs, bperp):
+def _per_tile_setup(ifgs, bperp):
     """
     Convenience function for setting up DEM error computation parameters
 

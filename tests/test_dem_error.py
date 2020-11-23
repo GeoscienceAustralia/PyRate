@@ -7,11 +7,12 @@ import math
 import pytest
 import numpy as np
 from tests import common
-from pyrate.configuration import Configuration
+from pyrate.configuration import Configuration, MultiplePaths
 from pyrate import prepifg, correct
 import pyrate.core.config as cf
 import pyrate.core.geometry as geom
-from pyrate.core.shared import Ifg, Geometry
+from pyrate.core.dem_error import dem_error_calc_wrapper
+from pyrate.core.shared import Ifg, Geometry, save_numpy_phase
 
 
 geometry_path = common.MEXICO_TEST_DIR_GEOMETRY
@@ -125,7 +126,7 @@ class TestPyRateGammaBperp:
         return bperp
 
     @classmethod
-    def teardown_method(cls):
+    def teardown_class(cls):
         shutil.rmtree(cls.params[cf.OUT_DIR], ignore_errors=True)
 
     def test_pyrate_bperp_matches_gamma_bperp(self, point):
@@ -139,3 +140,40 @@ class TestPyRateGammaBperp:
         res = self.pbperp[x, y, :]
         exp = self.gamma_bperp(* point)
         np.testing.assert_array_almost_equal(exp, res, 2)  # max difference < 1cm
+
+
+def test_calc_dem_errors():
+    pass
+
+
+class TestDEMErrorFilesReusedFromDisc:
+
+    @classmethod
+    def setup_class(cls):
+        cls.conf = common.MEXICO_CONF
+        cls.params = Configuration(cls.conf).__dict__
+        prepifg.main(cls.params)
+        cls.params = Configuration(cls.conf).__dict__
+        multi_paths = cls.params[cf.INTERFEROGRAM_FILES]
+        cls.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
+
+    @classmethod
+    def teardown_class(cls):
+        shutil.rmtree(cls.params[cf.OUT_DIR])
+
+    def test_dem_error_used_from_disc_on_rerun(self):
+        correct._update_params_with_tiles(self.params)
+        times_written = self.__run_once()
+        assert len(times_written) == len(self.ifg_paths)
+        times_written_1 = self.__run_once()
+        np.testing.assert_array_equal(times_written_1, times_written)
+
+    def __run_once(self):
+        dem_files = [MultiplePaths.dem_error_path(i, self.params) for i in self.ifg_paths]
+        correct._copy_mlooked(self.params)
+        correct._update_params_with_tiles(self.params)
+        correct._create_ifg_dict(self.params)
+        save_numpy_phase(self.ifg_paths, self.params)
+        dem_error_calc_wrapper(self.params)
+        assert all(m.exists() for m in dem_files)
+        return [os.stat(o).st_mtime for o in dem_files]
