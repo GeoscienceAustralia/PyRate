@@ -29,7 +29,7 @@ from pyrate.core import shared, geometry, mpiops, config as cf, prepifg_helper, 
 from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import MultiplePaths
-from pyrate.core.shared import Ifg
+from pyrate.core.shared import Ifg, DEM
 from pyrate.core.refpixel import convert_geographic_coordinate_to_pixel_value
 
 
@@ -306,8 +306,14 @@ def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
     # calculate per-pixel radar coordinates
     az, rg = geometry.calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax)
 
+    # Read height data from DEM
+    dem_file = os.path.join(params[cf.OUT_DIR], 'dem.tif')
+    DEM_data = DEM(dem_file, tile=None)
+    DEM_data.open(readonly=True)
+    dem = DEM_data.height_data
+
     # calculate per-pixel look angle (also calculates and saves incidence and azimuth angles)
-    lk_ang, inc_ang, az_ang, rg_dist = geometry.calc_pixel_geometry(ifg, rg, lon, lat, params)
+    lk_ang, inc_ang, az_ang, rg_dist = geometry.calc_pixel_geometry(ifg, params, rg, lon, lat, dem)
 
     # save radar coordinates and angles to geotiff files
     for out, ot in zip([az, rg, lk_ang, inc_ang, az_ang, rg_dist],

@@ -23,7 +23,7 @@ from typing import Tuple, Optional
 from os.path import join
 from pyrate.core import geometry, shared, mpiops, config as cf, ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
-from pyrate.core.shared import Ifg, Geometry, Tile
+from pyrate.core.shared import Ifg, Geometry, DEM, Tile
 from pyrate.core.timeseries import TimeSeriesError
 from pyrate.configuration import MultiplePaths
 from pyrate.merge import assemble_tiles
@@ -61,7 +61,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
             log.warning("No baseline files supplied: DEM error has not been computed")
             return
 
-        # read azimuth and range coords from tif files generated in prepifg
+        # read azimuth and range coords and DEM from tif files generated in prepifg
         rdc_az_file = join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
         geom_az = Geometry(rdc_az_file)
         geom_az.open(readonly=True)
@@ -70,6 +70,11 @@ def dem_error_calc_wrapper(params: dict) -> None:
         geom_rg = Geometry(rdc_rg_file)
         geom_rg.open(readonly=True)
         rg = geom_rg.geometry_data
+        dem_file = join(params[cf.OUT_DIR], 'dem.tif')
+        DEM_data = DEM(dem_file, tile=None)
+        DEM_data.open(readonly=True)
+        dem = DEM_data.height_data
+
 
         log.info("Calculating per-pixel baseline")
 
@@ -96,9 +101,10 @@ def dem_error_calc_wrapper(params: dict) -> None:
             lat_parts = lat[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
             az_parts = az[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
             rg_parts = rg[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
+            dem_parts = dem[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
 
             bperp, look_angle, range_dist = _calculate_bperp_for_tile(ifg_paths, params, az_parts, rg_parts,
-                                                                      lat_parts, lon_parts, t)
+                                                                      lat_parts, lon_parts, dem_parts, t)
 
             log.debug('Calculating DEM error for tile {} during DEM error correction'.format(t.index))
             # mst_tile = np.load(Configuration.mst_path(params, t.index))
@@ -131,7 +137,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
 
 
 def _calculate_bperp_for_tile(ifg_paths: list, params: dict, az_parts: np.ndarray, rg_parts: np.ndarray,
-                              lat_parts: np.ndarray, lon_parts: np.ndarray,
+        lat_parts: np.ndarray, lon_parts: np.ndarray, dem_parts: np.ndarray,
                               tile: Optional[Tile] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Function to calculate the perpendicular baseline for each pixel and interferogram in the current tile. T
@@ -141,6 +147,7 @@ def _calculate_bperp_for_tile(ifg_paths: list, params: dict, az_parts: np.ndarra
     :param rg_parts: range coordinate (i.e. column) for each pixel in the tile
     :param lat_parts: latitude for each pixel in the tile
     :param lon_parts: longitude for each pixel in the tile
+    :param dem_parts: DEM height for each pixel in the tile
     :param tile: Optional Tile class instance
     :return: bperp: perpendicular baseline for each pixel and interferogram in the tile
     :return: look_angle: look angle for each pixel in tile
@@ -154,8 +161,8 @@ def _calculate_bperp_for_tile(ifg_paths: list, params: dict, az_parts: np.ndarra
         ifg = Ifg(ifg_path)
         ifg.open(readonly=True)
         # calculate look angle for interferograms (using the Near Range of the primary SLC)
-        look_angle, _, _, range_dist = geometry.calc_pixel_geometry(ifg, rg_parts, lon_parts,
-                                                                    lat_parts, params, tile=tile)
+        look_angle, _, _, range_dist = geometry.calc_pixel_geometry(ifg, params, rg_parts, lon_parts,
+                                                                    lat_parts, dem_parts, tile=tile)
         bperp[ifg_num, :, :] = geometry.calc_local_baseline(ifg, az_parts, look_angle)
     return bperp, look_angle, range_dist
 

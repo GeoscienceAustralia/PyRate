@@ -20,11 +20,10 @@ used for correcting interferograms for residual topographic effects (a.k.a. DEM 
 """
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
 import numpy as np
-from os.path import join
-from typing import Tuple, Union, Optional
+from typing import Tuple, Union
 from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.gamma import read_lookup_table
-from pyrate.core.shared import DEM, Ifg, IfgPart, Tile
+from pyrate.core.shared import Ifg, IfgPart, Tile
 
 
 def get_lonlat_coords(ifg: Ifg) -> Tuple[np.ndarray, np.ndarray]:
@@ -116,17 +115,16 @@ def get_sat_positions(lat: np.ndarray, lon: np.ndarray, epsilon: np.ndarray,
     return sat_lat, sat_lon
 
 
-def calc_pixel_geometry(
-        ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarray, lat: np.ndarray, params: dict,
-        tile: Optional[Tile] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], params: dict, rg: np.ndarray, lon: np.ndarray,
+        lat: np.ndarray, dem_height: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Function to calculate angular satellite to ground geometries and distance for each pixel.
     :param ifg: pyrate.core.shared.Ifg Class object.
-    :param rg: Range image coordinate for each pixel.
-    :param lon: Longitude for each pixel (decimal degrees)
-    :param lat: Latitude for each pixel (decimal degrees)
     :param params: Dictionary of PyRate configuration parameters.
-    :param tile: Optional Tile class instance
+    :param rg: Range image coordinate for each pixel.
+    :param lon: Longitude for each pixel (decimal degrees).
+    :param lat: Latitude for each pixel (decimal degrees).
+    :param dem_height: Height from DEM for each pixel (metres).
     :return: look_angle: look angle (between nadir and look vector) for each pixel (radians).
     :return: incidence_angle: local incidence angle (between vertical and look vector) for each pixel (radians).
     :return: azimuth_angle: Geodetic azimuth for each pixel (radians).
@@ -143,12 +141,6 @@ def calc_pixel_geometry(
     # direction of look vector w.r.t. satellite heading. 
     # Gamma convention: +ve = right; -ve = left.
     look_dir = float(ifg.meta_data[ifc.PYRATE_AZIMUTH_DEGREES])
-
-    # Read height data from DEM
-    dem_file = join(params[cf.OUT_DIR], 'dem.tif')
-    DEM_data = DEM(dem_file, tile=tile)
-    DEM_data.open(readonly=True)
-    dem_height = DEM_data.height_data
 
     # convert to radians
     lon = np.radians(lon)
@@ -167,7 +159,7 @@ def calc_pixel_geometry(
     # see e.g. Section 2 in https://www.cs.uaf.edu/~olawlor/ref/asf/sar_equations_2006_08_17.pdf
     look_angle = np.arccos(np.divide(se ** 2 + np.square(range_dist) - np.square(re), 2 * se * range_dist))
 
-    # add per-pixel height to the earth radius(from dem.tif) to obtain a more accurate ground pixel position for
+    # add per-pixel height to the earth radius to obtain a more accurate ground pixel position for
     # incidence angle calculation
     re = re + dem_height
 

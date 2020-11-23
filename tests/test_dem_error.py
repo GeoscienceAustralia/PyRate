@@ -12,7 +12,7 @@ from pyrate import prepifg, correct
 import pyrate.core.config as cf
 import pyrate.core.geometry as geom
 from pyrate.core.dem_error import dem_error_calc_wrapper, _calculate_bperp_for_tile
-from pyrate.core.shared import Ifg, Geometry, save_numpy_phase
+from pyrate.core.shared import Ifg, Geometry, DEM, save_numpy_phase
 
 
 geometry_path = common.MEXICO_TEST_DIR_GEOMETRY
@@ -33,7 +33,7 @@ class TestPyRateGammaBperp:
         prepifg.main(cls.params)
         # copy IFGs to temp folder
         correct._copy_mlooked(cls.params)
-        # read radar azimuth and range tif files
+        # read radar azimuth, range and dem tif files
         rdc_az_file = join(cls.params[cf.OUT_DIR], 'rdc_azimuth.tif')
         geom_az = Geometry(rdc_az_file)
         geom_az.open(readonly=True)
@@ -42,6 +42,10 @@ class TestPyRateGammaBperp:
         geom_rg = Geometry(rdc_rg_file)
         geom_rg.open(readonly=True)
         cls.rg = geom_rg.geometry_data
+        dem_file = join(cls.params[cf.OUT_DIR], 'dem.tif')
+        dem_data = DEM(dem_file, tile=None)
+        dem_data.open(readonly=True)
+        cls.dem = dem_data.height_data
         # calc bperp using pyrate funcs
         cls.pbperp = cls.pyrate_bperp()
 
@@ -109,7 +113,7 @@ class TestPyRateGammaBperp:
         # size of ifg dataset
         # calculate per-pixel lon/lat
         lon, lat = geom.get_lonlat_coords(ifg0)
-        bperp = _calculate_bperp_for_tile(ifg_paths, cls.params, cls.az, cls.rg, lat, lon, tile=None)[0]
+        bperp = _calculate_bperp_for_tile(ifg_paths, cls.params, cls.az, cls.rg, lat, lon, cls.dem, tile=None)[0]
         return np.moveaxis(bperp, (0, 1, 2), (2, 0, 1))
 
     @classmethod
