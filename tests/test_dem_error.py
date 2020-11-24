@@ -12,13 +12,15 @@ from pyrate import prepifg, correct
 import pyrate.core.config as cf
 from pyrate.core.geometry import get_lonlat_coords
 from pyrate.core.dem_error import dem_error_calc_wrapper, _calculate_bperp_wrapper
+from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.shared import Ifg, Geometry, DEM, save_numpy_phase
 
 
 geometry_path = common.MEXICO_TEST_DIR_GEOMETRY
+dem_error_path = common.MEXICO_TEST_DIR_DEM_ERROR
 
 
-@pytest.fixture(params=list(range(200)))
+@pytest.fixture(params=list(range(2))) # change back to 200
 def point():
     x, y = np.random.randint(0, 60), np.random.randint(0, 100)
     return x, y
@@ -133,10 +135,6 @@ class TestPyRateGammaBperp:
         np.testing.assert_array_almost_equal(exp, res, 2)  # max difference < 1cm
 
 
-def test_calc_dem_errors():
-    pass
-
-
 class TestDEMErrorFilesReusedFromDisc:
 
     @classmethod
@@ -168,3 +166,70 @@ class TestDEMErrorFilesReusedFromDisc:
         dem_error_calc_wrapper(self.params)
         assert all(m.exists() for m in dem_files)
         return [os.stat(o).st_mtime for o in dem_files]
+
+
+class TestDEMErrorResults:
+
+    @classmethod
+    def setup_class(cls):
+        cls.conf = common.MEXICO_CONF
+        cls.params = Configuration(cls.conf).__dict__
+        prepifg.main(cls.params)
+        cls.params = Configuration(cls.conf).__dict__
+        multi_paths = cls.params[cf.INTERFEROGRAM_FILES]
+        cls.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
+        cls.params[cf.REFX_FOUND] = 8 # this is the pixel of the location given in the pyrate_mexico_cropa.conf file
+        cls.params[cf.REFY_FOUND] = 33 # however, the median of the whole interferogram is used for this validation
+
+    @classmethod
+    def teardown_class(cls):
+        shutil.rmtree(cls.params[cf.OUT_DIR])
+
+    def test_calc_dem_errors(self):
+        # validate output of current version of the code with saved files from an independent test run
+        # only the reference phase and dem_error are used in this test
+
+        # saved dem_error.tif (expected)
+        dem_error_tif_exp = join(dem_error_path, 'dem_error.tif')
+        DEM_data = DEM(dem_error_tif_exp, tile=None)
+        DEM_data.open(readonly=True)
+        dem_error_exp = DEM_data.height_data
+        # run relevant parts of the 'correct' step
+        correct._copy_mlooked(self.params)
+        correct._update_params_with_tiles(self.params)
+        correct._create_ifg_dict(self.params)
+        save_numpy_phase(self.ifg_paths, self.params)
+        # subtract the reference phase to enable comparison with a 'normal' pyrate run
+        ref_phase_est_wrapper(self.params)
+        dem_error_calc_wrapper(self.params)
+        # dem_error.tif from this run (result)
+        dem_error_tif_res = join(self.params[cf.OUT_DIR], 'dem_error.tif')
+        DEM_data = DEM(dem_error_tif_res, tile=None)
+        DEM_data.open(readonly=True)
+        dem_error_res = DEM_data.height_data
+        # check equality
+        np.testing.assert_allclose(dem_error_exp, dem_error_res)
+
+        # ifg correction files in subdirectory out/dem_error/
+        # three different ifgs:
+        # ifg1 -> short_baseline_ifg: 20180106-20180319 (ca. 3 m)
+        # ifg2 -> long_baseline_ifg: 20180130-20180412(ca. 108 m)
+        # ifg3 -> medium_baseline_ifg: 20180412-20180518 (ca. 48 m)
+        # load saved files
+        dem_error_ifg1_path = join(dem_error_path, '20180106-20180319_ifg_20_dem_error.npy')
+        dem_error_ifg1_exp = np.load(dem_error_ifg1_path)
+        dem_error_ifg2_path = join(dem_error_path, '20180130-20180412_ifg_20_dem_error.npy')
+        dem_error_ifg2_exp = np.load(dem_error_ifg2_path)
+        dem_error_ifg3_path = join(dem_error_path, '20180412-20180518_ifg_20_dem_error.npy')
+        dem_error_ifg3_exp = np.load(dem_error_ifg3_path)
+        # load correction values saved from this run (result)
+        dem_error_ifg1_path = join(self.params[cf.OUT_DIR], 'dem_error/20180106-20180319_ifg_20_dem_error.npy')
+        dem_error_ifg1_res = np.load(dem_error_ifg1_path)
+        dem_error_ifg2_path = join(self.params[cf.OUT_DIR], 'dem_error/20180130-20180412_ifg_20_dem_error.npy')
+        dem_error_ifg2_res = np.load(dem_error_ifg2_path)
+        dem_error_ifg3_path = join(self.params[cf.OUT_DIR], 'dem_error/20180412-20180518_ifg_20_dem_error.npy')
+        dem_error_ifg3_res = np.load(dem_error_ifg3_path)
+        # check equality
+        np.testing.assert_allclose(dem_error_ifg1_exp, dem_error_ifg1_res)
+        np.testing.assert_allclose(dem_error_ifg2_exp, dem_error_ifg2_res)
+        np.testing.assert_allclose(dem_error_ifg3_exp, dem_error_ifg3_res)
