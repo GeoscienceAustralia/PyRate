@@ -327,8 +327,6 @@ def parallel_ifgs(gamma_conf):
     p_ifgs = small_data_setup(datafiles=parallel_df + parallel_coh_files)
     yield p_ifgs
 
-    shutil.rmtree(params_p[cf.OBS_DIR], ignore_errors=True)
-
 
 @pytest.fixture(scope='module')
 def series_ifgs(gamma_conf):
@@ -354,9 +352,6 @@ def series_ifgs(gamma_conf):
 
     s_ifgs = small_data_setup(datafiles=serial_ifgs + coh_files)
     yield s_ifgs
-    print('======================teardown series==========================')
-
-    shutil.rmtree(params_s[cf.OBS_DIR], ignore_errors=True)
 
 
 def test_equality(series_ifgs, parallel_ifgs):
