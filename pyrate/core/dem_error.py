@@ -23,7 +23,7 @@ from typing import Tuple
 from os.path import join
 from pyrate.core import geometry, shared, mpiops, config as cf, ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
-from pyrate.core.shared import Ifg, Geometry, DEM
+from pyrate.core.shared import Ifg, Geometry, DEM, tiles_split
 from pyrate.core.timeseries import TimeSeriesError
 from pyrate.configuration import MultiplePaths
 from pyrate.merge import assemble_tiles
@@ -61,22 +61,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
             log.warning("No baseline files supplied: DEM error has not been computed")
             return
 
-        # read azimuth and range coords and DEM from tif files generated in prepifg
-        rdc_az_file = join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
-        geom_az = Geometry(rdc_az_file)
-        rdc_rg_file = join(params[cf.OUT_DIR], 'rdc_range.tif')
-        geom_rg = Geometry(rdc_rg_file)
-        dem_file = join(params[cf.OUT_DIR], 'dem.tif')
-        dem = DEM(dem_file)
-
-        # split into tiles to calculate DEM error correction
-        tiles = params[cf.TILES]
-        preread_ifgs = params[cf.PREREAD_IFGS]
         # todo: subtract other corrections (e.g. orbital) from displacement phase before estimating the DEM error
-        threshold = params[cf.DE_PTHR]
-
-        # read lon and lat values of multi-looked ifg (first ifg only)
-        lon, lat = geometry.get_lonlat_coords(ifg0)
 
         # the following code is a quick way to do the bperp calculation, but is not identical to the GAMMA output
         # where the near range of the first SLC is used for each pair.
@@ -84,46 +69,58 @@ def dem_error_calc_wrapper(params: dict) -> None:
         # look_angle = geometry.calc_local_geometry(ifg0, None, rg, lon, lat, params)
         # bperp = geometry.calc_local_baseline(ifg0, az, look_angle)
 
-        # process in tiles; cut arrays to size
-        process_tiles = mpiops.array_split(tiles)
-        for t in process_tiles:
-            ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
-            lon_parts = lon(t)
-            lat_parts = lat(t)
-            az_parts = geom_az(t)
-            rg_parts = geom_rg(t)
-            dem_parts = dem(t)
-            log.debug(f"Calculating per-pixel baseline for tile {t.index} during DEM error correction")
-            bperp, look_angle, range_dist = _calculate_bperp_wrapper(ifg_paths, az_parts, rg_parts,
-                                                                     lat_parts, lon_parts, dem_parts)
+        tiles_split(process_dem_error_per_tile, params)
 
-            log.debug(f"Calculating DEM error for tile {t.index} during DEM error correction")
-            # mst_tile = np.load(Configuration.mst_path(params, t.index))
-            # calculate the DEM error estimate and the correction values for each IFG
-            # current implementation uses the look angle and range distance matrix of the primary SLC in the last IFG
-            # todo: check the impact of using the same information from another SLC
-            dem_error, dem_error_correction, _ = calc_dem_errors(ifg_parts, bperp, look_angle, range_dist, threshold)
-            # dem_error contains the estimated DEM error for each pixel (i.e. the topographic change relative to the DEM)
-            # size [row, col]
-            # dem_error_correction contains the correction value for each interferogram
-            # size [num_ifg, row, col]
-
-            # save tiled data in tmpdir
-            np.save(file=os.path.join(params[cf.TMPDIR], 'dem_error_{}.npy'.format(t.index)), arr=dem_error)
-            # swap the axes of 3D array to fit the style used in function assemble_tiles
-            tmp_array = np.moveaxis(dem_error_correction, 0, -1)
-            # new dimension is [row, col, num_ifg]
-            # save tiled data into tmpdir
-            np.save(file=os.path.join(params[cf.TMPDIR], 'dem_error_correction_{}.npy'.format(t.index)), arr=tmp_array)
-
-        # wait for all processes to finish
-        mpiops.comm.barrier()
-
+        preread_ifgs = params[cf.PREREAD_IFGS]
         # write dem error and correction values to file
-        mpiops.run_once(_write_dem_errors, ifg_paths, params, preread_ifgs, tiles)
+        mpiops.run_once(_write_dem_errors, ifg_paths, params, preread_ifgs)
         shared.save_numpy_phase(ifg_paths, params)
 
         log.debug('Finished DEM error correction step')
+
+
+def process_dem_error_per_tile(t, params):
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    ifg0_path = ifg_paths[0]
+    ifg0 = Ifg(ifg0_path)
+    ifg0.open(readonly=True)
+    # read lon and lat values of multi-looked ifg (first ifg only)
+    lon, lat = geometry.get_lonlat_coords(ifg0)
+    # read azimuth and range coords and DEM from tif files generated in prepifg
+    rdc_az_file = join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
+    geom_az = Geometry(rdc_az_file)
+    rdc_rg_file = join(params[cf.OUT_DIR], 'rdc_range.tif')
+    geom_rg = Geometry(rdc_rg_file)
+    dem_file = join(params[cf.OUT_DIR], 'dem.tif')
+    dem = DEM(dem_file)
+    preread_ifgs = params[cf.PREREAD_IFGS]
+    threshold = params[cf.DE_PTHR]
+    ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
+    lon_parts = lon(t)
+    lat_parts = lat(t)
+    az_parts = geom_az(t)
+    rg_parts = geom_rg(t)
+    dem_parts = dem(t)
+    log.debug(f"Calculating per-pixel baseline for tile {t.index} during DEM error correction")
+    bperp, look_angle, range_dist = _calculate_bperp_wrapper(ifg_paths, az_parts, rg_parts,
+                                                             lat_parts, lon_parts, dem_parts)
+    log.debug(f"Calculating DEM error for tile {t.index} during DEM error correction")
+    # mst_tile = np.load(Configuration.mst_path(params, t.index))
+    # calculate the DEM error estimate and the correction values for each IFG
+    # current implementation uses the look angle and range distance matrix of the primary SLC in the last IFG
+    # todo: check the impact of using the same information from another SLC
+    dem_error, dem_error_correction, _ = calc_dem_errors(ifg_parts, bperp, look_angle, range_dist, threshold)
+    # dem_error contains the estimated DEM error for each pixel (i.e. the topographic change relative to the DEM)
+    # size [row, col]
+    # dem_error_correction contains the correction value for each interferogram
+    # size [num_ifg, row, col]
+    # save tiled data in tmpdir
+    np.save(file=os.path.join(params[cf.TMPDIR], 'dem_error_{}.npy'.format(t.index)), arr=dem_error)
+    # swap the axes of 3D array to fit the style used in function assemble_tiles
+    tmp_array = np.moveaxis(dem_error_correction, 0, -1)
+    # new dimension is [row, col, num_ifg]
+    # save tiled data into tmpdir
+    np.save(file=os.path.join(params[cf.TMPDIR], 'dem_error_correction_{}.npy'.format(t.index)), arr=tmp_array)
 
 
 def _calculate_bperp_wrapper(ifg_paths: list, az_parts: np.ndarray, rg_parts: np.ndarray,
@@ -240,7 +237,7 @@ def _per_tile_setup(ifgs: list) -> Tuple[np.ndarray, np.ndarray, int, int, np.nd
     return ifg_data, mst, ncols, nrows, ifg_time_span
 
 
-def _write_dem_errors(ifg_paths: list, params: dict, preread_ifgs: dict, tiles: list) -> None:
+def _write_dem_errors(ifg_paths: list, params: dict, preread_ifgs: dict) -> None:
     """
     Convenience function for writing DEM error (one file) and DEM error correction for each IFG to disc
     :param ifg_paths: List of interferogram class objects.
@@ -248,6 +245,8 @@ def _write_dem_errors(ifg_paths: list, params: dict, preread_ifgs: dict, tiles: 
     :param preread_ifgs: Dictionary of interferogram metadata
     :param tiles: List of pyrate.shared.Tile class objects
     """
+    tiles = params[cf.TILES]
+
     # re-assemble tiles and save into dem_error dir
     shape = preread_ifgs[ifg_paths[0]].shape
 
