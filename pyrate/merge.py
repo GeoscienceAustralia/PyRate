@@ -23,11 +23,12 @@ import numpy as np
 from osgeo import gdal
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 
 from pyrate.core import shared, stack, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration
+from pyrate.core.shared import Tile
 
 gdal.SetCacheMax(64)
 
@@ -229,17 +230,16 @@ def create_png_and_kml_from_tif(output_folder_path: str, output_type: str) -> No
     log.debug(f'Finished creating quicklook image for {output_type}')
 
 
-def assemble_tiles(s, dir, tiles, out_type, index: Optional[int] = None):
+def assemble_tiles(s: Tuple, dir: str, tiles: Tile, out_type: str, index: Optional[int] = None) -> np.ndarray:
     """
     Function to reassemble tiles from numpy files in to a merged array
 
-    :param tuple s: shape for merged array.
-    :param str dir: path to directory containing numpy tile files.
-    :param str out_type: product type string, used to construct numpy tile file name.
-    :param int index: array third dimension index to extract from 3D time series array tiles.
-
+    :param s: shape for merged array.
+    :param dir: path to directory containing numpy tile files.
+    :param tiles : pyrate.core.shared.Tile Class object.
+    :param out_type: product type string, used to construct numpy tile file name.
+    :param index: array third dimension index to extract from 3D time series array tiles.
     :return: merged_array: array assembled from all tiles.
-    :rtype: ndarray
     """
     log.debug('Re-assembling tiles for {}'.format(out_type))
     # pre-allocate dest array

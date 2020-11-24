@@ -1368,11 +1368,11 @@ def mpi_vs_multiprocess_logging(step, params):
             log.info(f"Running '{step}' step in serial")
 
 
-def dem_or_ifg(data_path) -> Union[Ifg, DEM]:
+def dem_or_ifg(data_path: str) -> Union[Ifg, DEM]:
     """
     Returns an Ifg or DEM class object from input geotiff file.
 
-    :param str data_path: file path name
+    :param data_path: file path name
 
     :return: Interferogram or DEM object from input file
     :rtype: Ifg or DEM class object
@@ -1387,7 +1387,7 @@ def dem_or_ifg(data_path) -> Union[Ifg, DEM]:
 
 def join_dicts(dicts: List[dict]) -> dict:
     """
-    Function to concatenate dictionaries
+    Function to concatenate a list of dictionaries.
     """
     if dicts is None:  # pragma: no cover
         return {}
@@ -1395,7 +1395,12 @@ def join_dicts(dicts: List[dict]) -> dict:
     return assembled_dict
 
 
-def tiles_split(func, params, *args, **kwargs):
+def tiles_split(func, params: dict, *args, **kwargs) -> None:
+    """
+    Function to pass tiles of a full array to an array processing function call.
+    :param func: Name of function to pass tiles to.
+    :param params: Dictionary of PyRate configuration parameters.
+    """
     tiles = params[cf.TILES]
     process_tiles = mpiops.array_split(tiles)
     if params[cf.PARALLEL]:
@@ -1407,15 +1412,13 @@ def tiles_split(func, params, *args, **kwargs):
     mpiops.comm.barrier()
 
 
-def output_tiff_filename(inpath, outpath):
+def output_tiff_filename(inpath: str, outpath: str) -> str:
     """
     Output geotiff filename for a given input filename.
 
-    :param str inpath: path of input file location
-    :param str outpath: path of output file location
-
-    :return: Geotiff filename for the given file.
-    :rtype: str
+    :param inpath: Path of input file location.
+    :param outpath: Path of output file location.
+    :return: name: Geotiff filename for the given file.
     """
     fname, ext = os.path.basename(inpath).split('.')
     outpath = os.path.dirname(inpath) if outpath is None else outpath
@@ -1426,12 +1429,13 @@ def output_tiff_filename(inpath, outpath):
     return name
 
 
-def remove_file_if_exists(file):
+def remove_file_if_exists(filename: str) -> None:
     """
     Function to remove a file if it already exists.
+    :param filename: Name of file to be removed.
     """
     try:
-        os.remove(file)
+        os.remove(filename)
     except OSError:
         pass
 
