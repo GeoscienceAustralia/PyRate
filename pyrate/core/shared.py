@@ -645,7 +645,13 @@ class Incidence(RasterBase):   # pragma: no cover
         return self._azimuth_data
 
 
-class DEM(RasterBase):
+class TileMixin:
+    def __call__(self, tile: Tile):
+        t = tile
+        return self.data[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
+
+
+class DEM(RasterBase, TileMixin):
     """
     Generic raster class for single band DEM/Geometry files.
     """
@@ -678,9 +684,18 @@ class DEM(RasterBase):
             self._data = self.band.ReadAsArray()
         return self._data
 
-    def __call__(self, tile: Tile):
-        t = tile
-        return self._data[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
+
+class MemGeometry(TileMixin):
+
+    def __init__(self, data):
+        """
+        Set phase data value
+        """
+        self._data = data
+
+    @property
+    def data(self):
+        return self._data
 
 
 Geometry = DEM

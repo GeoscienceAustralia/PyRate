@@ -112,7 +112,7 @@ class TestPyRateGammaBperp:
         # size of ifg dataset
         # calculate per-pixel lon/lat
         lon, lat = get_lonlat_coords(ifg0)
-        bperp = _calculate_bperp_wrapper(ifg_paths, cls.az, cls.rg, lat, lon, cls.dem)[0]
+        bperp = _calculate_bperp_wrapper(ifg_paths, cls.az, cls.rg, lat.data, lon.data, cls.dem)[0]
         return np.moveaxis(bperp, (0, 1, 2), (2, 0, 1))
 
     @classmethod

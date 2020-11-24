@@ -37,8 +37,8 @@ def get_lonlat_coords_slow(ifg: Ifg) -> Tuple[np.ndarray, np.ndarray]:
 def test_get_lonlat_coords_vectorised(dem):
     lon, lat = get_lonlat_coords_slow(dem)
     lon_v, lat_v = get_lonlat_coords(dem)
-    np.testing.assert_array_almost_equal(lon, lon_v)
-    np.testing.assert_array_almost_equal(lat, lat_v)
+    np.testing.assert_array_almost_equal(lon, lon_v.data)
+    np.testing.assert_array_almost_equal(lat, lat_v.data)
 
 
 @pytest.fixture(params=[(29, 50, -2.94634866714478), (94, 58, -2.94684600830078)])
@@ -157,8 +157,8 @@ class TestPyRateAngleFiles:
         azimuth = float(ifg0.meta_data[ifc.PYRATE_AZIMUTH_DEGREES])
 
         # convert all angles from deg to radians
-        lon = np.radians(lon)
-        lat = np.radians(lat)
+        lon = np.radians(lon.data)
+        lat = np.radians(lat.data)
         heading = np.radians(heading)
         azimuth = np.radians(azimuth)
 

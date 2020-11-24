@@ -23,10 +23,10 @@ import numpy as np
 from typing import Tuple, Union
 from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.gamma import read_lookup_table
-from pyrate.core.shared import Ifg, IfgPart, Tile
+from pyrate.core.shared import Ifg, IfgPart, Tile, MemGeometry
 
 
-def get_lonlat_coords(ifg: Ifg) -> Tuple[np.ndarray, np.ndarray]:
+def get_lonlat_coords(ifg: Ifg) -> Tuple[MemGeometry, MemGeometry]:
     """
     Function to get longitude and latitude coordinates for each pixel in the multi-looked.
     interferogram dataset. Coordinates are identical for each interferogram in the stack.
@@ -47,7 +47,7 @@ def get_lonlat_coords(ifg: Ifg) -> Tuple[np.ndarray, np.ndarray]:
     lats = yOrigin - np.arange(0, nrows) * pixelHeight
     lon, lat = np.meshgrid(lons, lats)
 
-    return lon, lat
+    return MemGeometry(lon), MemGeometry(lat)
 
 
 def calc_radar_coords(ifg: Ifg, params: dict, xmin: int, xmax: int,

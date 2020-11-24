@@ -64,13 +64,10 @@ def dem_error_calc_wrapper(params: dict) -> None:
         # read azimuth and range coords and DEM from tif files generated in prepifg
         rdc_az_file = join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
         geom_az = Geometry(rdc_az_file)
-        az = geom_az.data
         rdc_rg_file = join(params[cf.OUT_DIR], 'rdc_range.tif')
         geom_rg = Geometry(rdc_rg_file)
-        rg = geom_rg.data
         dem_file = join(params[cf.OUT_DIR], 'dem.tif')
         dem = DEM(dem_file)
-        dem = dem.data
 
         # split into tiles to calculate DEM error correction
         tiles = params[cf.TILES]
@@ -91,15 +88,14 @@ def dem_error_calc_wrapper(params: dict) -> None:
         process_tiles = mpiops.array_split(tiles)
         for t in process_tiles:
             ifg_parts = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
-            lon_parts = lon[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
-            lat_parts = lat[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
-            az_parts = az[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
-            rg_parts = rg[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
-            dem_parts = dem[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
-
+            lon_parts = lon(t)
+            lat_parts = lat(t)
+            az_parts = geom_az(t)
+            rg_parts = geom_rg(t)
+            dem_parts = dem(t)
             log.debug(f"Calculating per-pixel baseline for tile {t.index} during DEM error correction")
             bperp, look_angle, range_dist = _calculate_bperp_wrapper(ifg_paths, az_parts, rg_parts,
-                                                                      lat_parts, lon_parts, dem_parts)
+                                                                     lat_parts, lon_parts, dem_parts)
 
             log.debug(f"Calculating DEM error for tile {t.index} during DEM error correction")
             # mst_tile = np.load(Configuration.mst_path(params, t.index))
@@ -118,8 +114,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
             tmp_array = np.moveaxis(dem_error_correction, 0, -1)
             # new dimension is [row, col, num_ifg]
             # save tiled data into tmpdir
-            np.save(file=os.path.join(params[cf.TMPDIR], 'dem_error_correction_{}.npy'.format(t.index)),
-                    arr=tmp_array)
+            np.save(file=os.path.join(params[cf.TMPDIR], 'dem_error_correction_{}.npy'.format(t.index)), arr=tmp_array)
 
         # wait for all processes to finish
         mpiops.comm.barrier()
@@ -154,8 +149,7 @@ def _calculate_bperp_wrapper(ifg_paths: list, az_parts: np.ndarray, rg_parts: np
         ifg = Ifg(ifg_path)
         ifg.open(readonly=True)
         # calculate look angle for interferograms (using the Near Range of the primary SLC)
-        look_angle, _, _, range_dist = geometry.calc_pixel_geometry(ifg, rg_parts, lon_parts,
-                                                                    lat_parts, dem_parts)
+        look_angle, _, _, range_dist = geometry.calc_pixel_geometry(ifg, rg_parts, lon_parts, lat_parts, dem_parts)
         bperp[ifg_num, :, :] = geometry.calc_local_baseline(ifg, az_parts, look_angle)
     return bperp, look_angle, range_dist
 
