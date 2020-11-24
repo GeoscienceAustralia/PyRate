@@ -84,15 +84,16 @@ def calc_radar_coords(ifg: Ifg, params: dict, xmin: int, xmax: int,
     return lt_az, lt_rg
 
 
-def get_sat_positions(lat: np.ndarray, lon: np.ndarray, epsilon: np.ndarray,
+def get_sat_positions(lat: np.ndarray, lon: np.ndarray, look_angle: np.ndarray, inc_angle: np.ndarray,
                       heading: np.float64, look_dir: np.float64) -> Tuple[np.ndarray, np.ndarray]:
     """
     Function to calculate the lon/lat position of the satellite for each pixel.
     :param lat: Ground latitude for each pixel (decimal degrees).
     :param lon: Ground point longitude for each pixel (decimal degrees).
-    :param epsilon:
+    :param look_angle: Look angle (between nadir and look vector) for each pixel (radians).
+    :param inc_angle: Local incidence angle (between vertical and look vector) for each pixel (radians).
     :param heading: Satellite flight heading (radians).
-    :param look_dir: look direction w.r.t. satellite heading; +ve = right looking (radians).
+    :param look_dir: Look direction w.r.t. satellite heading; +ve = right looking (radians).
     :return: sat_lat: Satellite position latitude for each pixel (decimal degrees).
     :return: sat_lon: Satellite position longitude for each pixel (decimal degrees).
     """
@@ -103,6 +104,8 @@ def get_sat_positions(lat: np.ndarray, lon: np.ndarray, epsilon: np.ndarray,
     # 3. get the corresponding radar time for that row (using linear interpolation)
     # 4. calculate the satellite XYZ position for that time by interpolating the time and velocity state vectors
 
+    # angle at the Earth's center between se and re
+    epsilon = np.pi - look_angle - (np.pi - inc_angle)
     # azimuth of satellite look vector (satellite heading + look direction (+90 deg for right-looking SAR)
     sat_azi = heading + look_dir
     # the following equations are adapted from Section 4.4 (page 4-16) in EARTH-REFERENCED AIRCRAFT NAVIGATION AND
@@ -124,8 +127,8 @@ def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarra
     :param lon: Longitude for each pixel (decimal degrees).
     :param lat: Latitude for each pixel (decimal degrees).
     :param dem_height: Height from DEM for each pixel (metres).
-    :return: look_angle: look angle (between nadir and look vector) for each pixel (radians).
-    :return: incidence_angle: local incidence angle (between vertical and look vector) for each pixel (radians).
+    :return: look_angle: Look angle (between nadir and look vector) for each pixel (radians).
+    :return: incidence_angle: Local incidence angle (between vertical and look vector) for each pixel (radians).
     :return: azimuth_angle: Geodetic azimuth for each pixel (radians).
     :return: range_dist: Distance from satellite to ground for each pixel (metres).
     """
@@ -167,11 +170,8 @@ def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarra
     incidence_angle = np.pi - np.arccos(np.divide(np.square(range_dist) + np.square(re) - se ** 2,
                                                   2 * np.multiply(range_dist, re)))
 
-    # angle at the Earth's center between se and re
-    epsilon = np.pi - look_angle - (np.pi - incidence_angle)
-
     # calculate satellite positions for each pixel
-    sat_lat, sat_lon = get_sat_positions(lat, lon, epsilon, heading, look_dir)
+    sat_lat, sat_lon = get_sat_positions(lat, lon, look_angle, incidence_angle, heading, look_dir)
 
     # # calc azimuth angle using Vincenty's equations
     azimuth_angle = vincinv(lat, lon, sat_lat, sat_lon, a, b)

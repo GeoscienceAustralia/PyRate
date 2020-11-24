@@ -164,9 +164,8 @@ class TestPyRateAngleFiles:
         heading = np.radians(heading)
         azimuth = np.radians(azimuth)
 
-        # calculate path length epsilon and satellite positions
-        epsilon = np.pi - look_angle - (np.pi - incidence_angle)
-        sat_lat, sat_lon = get_sat_positions(lat, lon, epsilon, heading, azimuth)
+        # calculate satellite positions
+        sat_lat, sat_lon = get_sat_positions(lat, lon, look_angle, incidence_angle, heading, azimuth)
 
         # calculate azimuth angle from pixel to satellite using spherical trigonometry
         # see Eq. 86 on page 4-11 in EARTH-REFERENCED AIRCRAFT NAVIGATION AND SURVEILLANCE ANALYSIS
