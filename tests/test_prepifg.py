@@ -480,7 +480,7 @@ class TestPrepifgOutput(UnitTestAdaptation):
 
         self.assertEqual(dem.dataset.RasterXSize, 20 / scale)
         self.assertEqual(dem.dataset.RasterYSize, 28 / scale)
-        data = dem.height_band.ReadAsArray()
+        data = dem.data
         self.assertTrue(data.ptp() != 0)
         # close ifgs
         dem.close()

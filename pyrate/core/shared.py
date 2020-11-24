@@ -645,46 +645,9 @@ class Incidence(RasterBase):   # pragma: no cover
         return self._azimuth_data
 
 
-class Geometry(RasterBase):
-    """
-    Generic raster class for single band geometry files (e.g. incidence_angle.tif or rdc_range.tif).
-    """
-
-    def __init__(self, path):
-        """
-        Geometry constructor.
-        """
-        RasterBase.__init__(self, path)
-        self._band = None
-        self._geometry_data = None
-        # IfgPart.__init__()
-
-    @property
-    def geometry_band(self):
-        """
-        Returns the GDALBand for the geoemtry layer.
-        """
-        if self._band is None:
-            self._band = self._get_band(1)
-        return self._band
-
-    @property
-    def geometry_data(self):
-        """
-        Returns the geometry band as an array.
-        """
-        if self._geometry_data is None:
-            self._geometry_data = self.geometry_band.ReadAsArray()
-        return self._geometry_data
-
-
-class GeometryPart(IfgPart):
-    pass
-
-
 class DEM(RasterBase):
     """
-    Generic raster class for single band DEM files.
+    Generic raster class for single band DEM/Geometry files.
     """
 
     def __init__(self, path):
@@ -693,34 +656,34 @@ class DEM(RasterBase):
         """
         RasterBase.__init__(self, path)
         self._band = None
-        self._height_data = None
+        self._data = None
 
     @property
-    def height_band(self):
+    def band(self):
         """
         Returns the GDALBand for the elevation layer.
         """
+        if not self.is_open:
+            self.open()
         if self._band is None:
             self._band = self._get_band(1)
         return self._band
 
     @property
-    def height_data(self):
+    def data(self):
         """
         Returns the geometry band as an array.
         """
-        if not self.is_open:
-            self.open()
-        if self._height_data is None:
-            self._height_data = self.height_band.ReadAsArray()
-        return self._height_data
+        if self._data is None:
+            self._data = self.band.ReadAsArray()
+        return self._data
 
     def __call__(self, tile: Tile):
         t = tile
-        return self.height_band.ReadAsArray()[
-                            t.top_left_y:t.bottom_right_y,
-                            t.top_left_x:t.bottom_right_x
-                            ]
+        return self._data[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
+
+
+Geometry = DEM
 
 
 class IfgException(Exception):

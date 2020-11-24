@@ -23,7 +23,7 @@ from typing import Tuple
 from os.path import join
 from pyrate.core import geometry, shared, mpiops, config as cf, ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
-from pyrate.core.shared import Ifg, Geometry, DEM, Tile
+from pyrate.core.shared import Ifg, Geometry, DEM
 from pyrate.core.timeseries import TimeSeriesError
 from pyrate.configuration import MultiplePaths
 from pyrate.merge import assemble_tiles
@@ -64,16 +64,13 @@ def dem_error_calc_wrapper(params: dict) -> None:
         # read azimuth and range coords and DEM from tif files generated in prepifg
         rdc_az_file = join(params[cf.OUT_DIR], 'rdc_azimuth.tif')
         geom_az = Geometry(rdc_az_file)
-        geom_az.open(readonly=True)
-        az = geom_az.geometry_data
+        az = geom_az.data
         rdc_rg_file = join(params[cf.OUT_DIR], 'rdc_range.tif')
         geom_rg = Geometry(rdc_rg_file)
-        geom_rg.open(readonly=True)
-        rg = geom_rg.geometry_data
+        rg = geom_rg.data
         dem_file = join(params[cf.OUT_DIR], 'dem.tif')
-        DEM_data = DEM(dem_file, tile=None)
-        DEM_data.open(readonly=True)
-        dem = DEM_data.height_data
+        dem = DEM(dem_file)
+        dem = dem.data
 
         # split into tiles to calculate DEM error correction
         tiles = params[cf.TILES]

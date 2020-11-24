@@ -146,12 +146,10 @@ class TestPyRateAngleFiles:
         # read incidence and look angle files
         tif_file = join(self.params[cf.OUT_DIR], 'incidence_angle.tif')
         geom = Geometry(tif_file)
-        geom.open(readonly=True)
-        incidence_angle = geom.geometry_data
+        incidence_angle = geom.data
         tif_file = join(self.params[cf.OUT_DIR], 'look_angle.tif')
         geom = Geometry(tif_file)
-        geom.open(readonly=True)
-        look_angle = geom.geometry_data
+        look_angle = geom.data
         # get metadata
         a = float(ifg0.meta_data[ifc.PYRATE_SEMI_MAJOR_AXIS_METRES])
         b = float(ifg0.meta_data[ifc.PYRATE_SEMI_MINOR_AXIS_METRES])

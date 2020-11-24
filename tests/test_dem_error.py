@@ -38,16 +38,13 @@ class TestPyRateGammaBperp:
         # read radar azimuth, range and dem tif files
         rdc_az_file = join(cls.params[cf.OUT_DIR], 'rdc_azimuth.tif')
         geom_az = Geometry(rdc_az_file)
-        geom_az.open(readonly=True)
-        cls.az = geom_az.geometry_data
+        cls.az = geom_az.data
         rdc_rg_file = join(cls.params[cf.OUT_DIR], 'rdc_range.tif')
         geom_rg = Geometry(rdc_rg_file)
-        geom_rg.open(readonly=True)
-        cls.rg = geom_rg.geometry_data
+        cls.rg = geom_rg.data
         dem_file = join(cls.params[cf.OUT_DIR], 'dem.tif')
-        dem_data = DEM(dem_file, tile=None)
-        dem_data.open(readonly=True)
-        cls.dem = dem_data.height_data
+        dem_data = DEM(dem_file)
+        cls.dem = dem_data.data
         # calc bperp using pyrate funcs
         cls.pbperp = cls.pyrate_bperp()
 
@@ -191,9 +188,8 @@ class TestDEMErrorResults:
 
         # saved dem_error.tif (expected)
         dem_error_tif_exp = join(dem_error_path, 'dem_error.tif')
-        DEM_data = DEM(dem_error_tif_exp, tile=None)
-        DEM_data.open(readonly=True)
-        dem_error_exp = DEM_data.height_data
+        dem = DEM(dem_error_tif_exp)
+        dem_error_exp = dem.data
         # run relevant parts of the 'correct' step
         correct._copy_mlooked(self.params)
         correct._update_params_with_tiles(self.params)
@@ -204,9 +200,8 @@ class TestDEMErrorResults:
         dem_error_calc_wrapper(self.params)
         # dem_error.tif from this run (result)
         dem_error_tif_res = join(self.params[cf.OUT_DIR], 'dem_error.tif')
-        DEM_data = DEM(dem_error_tif_res, tile=None)
-        DEM_data.open(readonly=True)
-        dem_error_res = DEM_data.height_data
+        dem = DEM(dem_error_tif_res)
+        dem_error_res = dem.data
         # check equality
         np.testing.assert_allclose(dem_error_exp, dem_error_res)
 

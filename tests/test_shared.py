@@ -316,14 +316,13 @@ class TestDEMTests:
         with pytest.raises(RasterException):
             self.ras.open()
 
-    def test_band_fails_with_unopened_raster(self):
-        # test accessing bands with open and unopened datasets
-        with pytest.raises(RasterException):
-            self.ras.height_band
+    # def test_band_fails_with_unopened_raster(self):  # now opening if not open
+    #     # test accessing bands with open and unopened datasets
+    #     with pytest.raises(RasterException):
+    #         self.ras.band
 
     def test_band_read_with_open_raster(self):
-        self.ras.open()
-        data = self.ras.height_band.ReadAsArray()
+        data = self.ras.band.ReadAsArray()
         assert data.shape == (72, 47)
 
 
