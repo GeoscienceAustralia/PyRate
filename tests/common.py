@@ -569,7 +569,7 @@ def assert_same_files_produced(dir1, dir2, dir3, ext, num_files=None):
 
 def manipulate_test_conf(conf_file, temp_dir: Path):
     params = Configuration(conf_file).__dict__
-    copytree('tests/test_data/cropA', temp_dir)
+    copytree(params[cf.OBS_DIR], temp_dir)
     # manipulate params
     outdir = temp_dir.joinpath('out')
     outdir.mkdir(exist_ok=True)
