@@ -10,8 +10,8 @@ from tests import common
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate import prepifg, correct
 import pyrate.core.config as cf
-import pyrate.core.geometry as geom
-from pyrate.core.dem_error import dem_error_calc_wrapper, _calculate_bperp_for_tile
+from pyrate.core.geometry import get_lonlat_coords
+from pyrate.core.dem_error import dem_error_calc_wrapper, _calculate_bperp_wrapper
 from pyrate.core.shared import Ifg, Geometry, DEM, save_numpy_phase
 
 
@@ -112,8 +112,8 @@ class TestPyRateGammaBperp:
         ifg0.open(readonly=True)
         # size of ifg dataset
         # calculate per-pixel lon/lat
-        lon, lat = geom.get_lonlat_coords(ifg0)
-        bperp = _calculate_bperp_for_tile(ifg_paths, cls.az, cls.rg, lat, lon, cls.dem, tile=None)[0]
+        lon, lat = get_lonlat_coords(ifg0)
+        bperp = _calculate_bperp_wrapper(ifg_paths, cls.az, cls.rg, lat, lon, cls.dem)[0]
         return np.moveaxis(bperp, (0, 1, 2), (2, 0, 1))
 
     @classmethod

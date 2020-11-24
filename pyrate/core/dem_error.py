@@ -19,7 +19,7 @@ This Python module implements the calculation of correction for residual topogra
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
 import os
 import numpy as np
-from typing import Tuple, Optional
+from typing import Tuple
 from os.path import join
 from pyrate.core import geometry, shared, mpiops, config as cf, ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
@@ -75,9 +75,6 @@ def dem_error_calc_wrapper(params: dict) -> None:
         DEM_data.open(readonly=True)
         dem = DEM_data.height_data
 
-
-        log.info("Calculating per-pixel baseline")
-
         # split into tiles to calculate DEM error correction
         tiles = params[cf.TILES]
         preread_ifgs = params[cf.PREREAD_IFGS]
@@ -103,10 +100,11 @@ def dem_error_calc_wrapper(params: dict) -> None:
             rg_parts = rg[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
             dem_parts = dem[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
 
-            bperp, look_angle, range_dist = _calculate_bperp_for_tile(ifg_paths, az_parts, rg_parts,
-                                                                      lat_parts, lon_parts, dem_parts, t)
+            log.debug(f"Calculating per-pixel baseline for tile {t.index} during DEM error correction")
+            bperp, look_angle, range_dist = _calculate_bperp_wrapper(ifg_paths, az_parts, rg_parts,
+                                                                      lat_parts, lon_parts, dem_parts)
 
-            log.debug('Calculating DEM error for tile {} during DEM error correction'.format(t.index))
+            log.debug(f"Calculating DEM error for tile {t.index} during DEM error correction")
             # mst_tile = np.load(Configuration.mst_path(params, t.index))
             # calculate the DEM error estimate and the correction values for each IFG
             # current implementation uses the look angle and range distance matrix of the primary SLC in the last IFG
@@ -136,21 +134,20 @@ def dem_error_calc_wrapper(params: dict) -> None:
         log.debug('Finished DEM error correction step')
 
 
-def _calculate_bperp_for_tile(ifg_paths: list, az_parts: np.ndarray, rg_parts: np.ndarray,
-                              lat_parts: np.ndarray, lon_parts: np.ndarray, dem_parts: np.ndarray,
-                              tile: Optional[Tile] = None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def _calculate_bperp_wrapper(ifg_paths: list, az_parts: np.ndarray, rg_parts: np.ndarray,
+                             lat_parts: np.ndarray, lon_parts: np.ndarray, dem_parts: np.ndarray,
+                             ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    Function to calculate the perpendicular baseline for each pixel and interferogram in the current tile. T
+    Wrapper function to calculate the perpendicular baseline for each pixel in each interferogram.
     :param ifg_paths: list of pyrate.core.shared.Ifg Class objects.
-    :param az_parts: azimuth coordinate (i.e. line) for each pixel in the tile
-    :param rg_parts: range coordinate (i.e. column) for each pixel in the tile
-    :param lat_parts: latitude for each pixel in the tile
-    :param lon_parts: longitude for each pixel in the tile
-    :param dem_parts: DEM height for each pixel in the tile
-    :param tile: Optional pyrate.core.shared.Tile Class instance
-    :return: bperp: perpendicular baseline for each pixel and interferogram in the tile
-    :return: look_angle: look angle for each pixel in tile
-    :return: range_dist: range distance measurement for each pixel in the tile
+    :param az_parts: azimuth coordinate (i.e. line) for each pixel.
+    :param rg_parts: range coordinate (i.e. column) for each pixel.
+    :param lat_parts: latitude for each pixel.
+    :param lon_parts: longitude for each pixel.
+    :param dem_parts: DEM height for each pixel.
+    :return: bperp: perpendicular baseline for each pixel and interferogram.
+    :return: look_angle: look angle for each pixel.
+    :return: range_dist: range distance measurement for each pixel.
     """
     nifgs = len(ifg_paths)
     bperp = np.empty((nifgs, lon_parts.shape[0], lon_parts.shape[1])) * np.nan
@@ -161,7 +158,7 @@ def _calculate_bperp_for_tile(ifg_paths: list, az_parts: np.ndarray, rg_parts: n
         ifg.open(readonly=True)
         # calculate look angle for interferograms (using the Near Range of the primary SLC)
         look_angle, _, _, range_dist = geometry.calc_pixel_geometry(ifg, rg_parts, lon_parts,
-                                                                    lat_parts, dem_parts, tile=tile)
+                                                                    lat_parts, dem_parts)
         bperp[ifg_num, :, :] = geometry.calc_local_baseline(ifg, az_parts, look_angle)
     return bperp, look_angle, range_dist
 
