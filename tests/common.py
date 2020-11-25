@@ -64,6 +64,10 @@ SML_TEST_LINRATE = join(SML_TEST_DIR, 'linrate')
 SML_TEST_GAMMA_HEADER_LIST = join(SML_TEST_GAMMA, 'headers')
 SML_TEST_ROIPAC_HEADER_LIST = join(SML_TEST_ROIPAC, 'headers')
 
+# mexico data
+CROPA_OBS = join(BASE_TEST, 'cropA', 'geotiffs')
+CROPA_HEADERS = join(BASE_TEST, 'cropA', 'headers')
+
 SML_TEST_DEM_DIR = join(SML_TEST_DIR, 'dem')
 SML_TEST_LEGACY_PREPIFG_DIR = join(SML_TEST_DIR, 'prepifg_output')
 SML_TEST_LEGACY_ORBITAL_DIR = join(SML_TEST_DIR, 'orbital_error_correction')
@@ -568,33 +572,21 @@ def assert_same_files_produced(dir1, dir2, dir3, ext, num_files=None):
     assert_two_dirs_equal(dir1, dir3, ext, num_files)
 
 
-def manipulate_cropA_test_conf(conf_file, temp_dir: Path):
-    """
-    For tests that use Mexico CropA unit test data
-    """
-    params = Configuration(conf_file).__dict__
-    copytree('tests/test_data/cropA', temp_dir)
-    # manipulate params
-    outdir = temp_dir.joinpath('out')
-    outdir.mkdir(exist_ok=True)
-    params[cf.OUT_DIR] = outdir.as_posix()
-    params[cf.TEMP_MLOOKED_DIR] = outdir.joinpath(cf.TEMP_MLOOKED_DIR).as_posix()
-    params[cf.DEM_FILE] = temp_dir.joinpath(Path(params[cf.DEM_FILE]).name).as_posix()
-    params[cf.DEM_HEADER_FILE] = temp_dir.joinpath(Path(params[cf.DEM_HEADER_FILE]).name).as_posix()
-    params[cf.HDR_FILE_LIST] = temp_dir.joinpath(Path(params[cf.HDR_FILE_LIST]).name).as_posix()
-    params[cf.SLC_DIR] = temp_dir.as_posix()
-    params[cf.IFG_FILE_LIST] = temp_dir.joinpath(Path(params[cf.IFG_FILE_LIST]).name).as_posix()
-    params[cf.COH_FILE_DIR] = temp_dir.as_posix()
-    params[cf.TMPDIR] = temp_dir.joinpath(Path(params[cf.TMPDIR]).name).as_posix()
-    return params
-
-
 def manipulate_test_conf(conf_file, temp_obs_dir: Path):
     """
     For tests that use legacy unit test data
     """
     params = Configuration(conf_file).__dict__
-    copytree(params[cf.OBS_DIR], temp_obs_dir)
+    if conf_file == MEXICO_CONF:
+        copytree(CROPA_OBS, temp_obs_dir)
+        copytree(CROPA_HEADERS, temp_obs_dir)
+        shutil.copy2(params[cf.IFG_FILE_LIST], temp_obs_dir)
+        shutil.copy2(params[cf.HDR_FILE_LIST], temp_obs_dir)
+        shutil.copy2(params[cf.COH_FILE_LIST], temp_obs_dir)
+        shutil.copy2(params[cf.BASE_FILE_LIST], temp_obs_dir)
+        shutil.copy2(params[cf.HDR_FILE_LIST], temp_obs_dir)
+    else:
+        copytree(params[cf.OBS_DIR], temp_obs_dir)
     # manipulate params
     params[cf.OBS_DIR] = temp_obs_dir.as_posix()
     outdir = temp_obs_dir.joinpath('out')
@@ -609,6 +601,7 @@ def manipulate_test_conf(conf_file, temp_obs_dir: Path):
     params[cf.COH_FILE_DIR] = temp_obs_dir.as_posix()
     params[cf.TMPDIR] = temp_obs_dir.joinpath(Path(params[cf.TMPDIR]).name).as_posix()
     return params
+
 
 class UnitTestAdaptation:
     @staticmethod
