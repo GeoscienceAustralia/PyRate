@@ -26,7 +26,7 @@ import pytest
 import numpy as np
 from pyrate.core import config as cf
 from pyrate.configuration import Configuration
-from tests.common import MEXICO_CONF
+from tests.common import MEXICO_CROPA_CONF
 
 
 @pytest.mark.slow
@@ -63,7 +63,7 @@ def test_single_workflow(gamma_or_mexicoa_conf):
     ref_pixel_file = params[cf.REF_PIXEL_FILE]
     assert Path(ref_pixel_file).exists()
     ref_pixel = np.load(ref_pixel_file)
-    if gamma_or_mexicoa_conf == MEXICO_CONF:
+    if gamma_or_mexicoa_conf == MEXICO_CROPA_CONF:
         np.testing.assert_array_equal(ref_pixel, [42, 2])
         for f in ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle', 'range_dist']:
             assert Path(params[cf.OUT_DIR]).joinpath(f + '.tif').exists()

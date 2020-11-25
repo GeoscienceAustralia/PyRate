@@ -34,7 +34,7 @@ from tests.common import (
     PYTHON3P7,
     PYTHON3P8,
     GDAL_VERSION,
-    MEXICO_CONF
+    MEXICO_CROPA_CONF
 )
 
 # python3.7 and gdal3.0.4
@@ -127,7 +127,7 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     check_call(f"pyrate workflow -f {sr_conf}", shell=True)
 
     # convert2tif tests, 17 interferograms
-    if not gamma_conf == MEXICO_CONF:
+    if not gamma_conf == MEXICO_CROPA_CONF:
         assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw.tif", 17)
         # if coherence masking, comprare coh files were converted
         if params[cf.COH_FILE_LIST] is not None:
@@ -135,10 +135,10 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
             print("coherence files compared")
 
     if params[cf.COH_FILE_LIST] is not None:
-        no_of_files = 61 if gamma_conf == MEXICO_CONF else 35
+        no_of_files = 61 if gamma_conf == MEXICO_CROPA_CONF else 35
     else:
         # 17 ifgs + 1 dem + 17 mlooked coh files
-        no_of_files = 31 if gamma_conf == MEXICO_CONF else 18
+        no_of_files = 31 if gamma_conf == MEXICO_CROPA_CONF else 18
 
     if params[cf.DEMERROR]:
         # check files required by dem error correction are produced
@@ -158,7 +158,7 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
                                ["*_ifg.tif", "*_coh.tif", "dem.tif"], no_of_files)
 
-    num_files = 30 if gamma_conf == MEXICO_CONF else 17
+    num_files = 30 if gamma_conf == MEXICO_CROPA_CONF else 17
     # cf.TEMP_MLOOKED_DIR will contain the temp files that can be potentially deleted later
     assert_same_files_produced(params[cf.TEMP_MLOOKED_DIR], params_m[cf.TEMP_MLOOKED_DIR],
                                params_s[cf.TEMP_MLOOKED_DIR], "*_ifg.tif", num_files)

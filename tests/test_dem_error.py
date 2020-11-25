@@ -30,7 +30,7 @@ class TestPyRateGammaBperp:
 
     @classmethod
     def setup_class(cls):
-        cls.params = Configuration(common.MEXICO_CONF).__dict__
+        cls.params = Configuration(common.MEXICO_CROPA_CONF).__dict__
         # run prepifg
         prepifg.main(cls.params)
         # copy IFGs to temp folder
@@ -143,7 +143,7 @@ class TestDEMErrorFilesReusedFromDisc:
 
     @classmethod
     def setup_class(cls):
-        cls.conf = common.MEXICO_CONF
+        cls.conf = common.MEXICO_CROPA_CONF
         cls.params = Configuration(cls.conf).__dict__
         prepifg.main(cls.params)
         cls.params = Configuration(cls.conf).__dict__
@@ -176,7 +176,7 @@ class TestDEMErrorResults:
 
     @classmethod
     def setup_class(cls):
-        cls.conf = common.MEXICO_CONF
+        cls.conf = common.MEXICO_CROPA_CONF
         cls.params = Configuration(cls.conf).__dict__
         prepifg.main(cls.params)
         cls.params = Configuration(cls.conf).__dict__

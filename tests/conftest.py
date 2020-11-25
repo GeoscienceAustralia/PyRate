@@ -23,7 +23,7 @@ import tempfile
 import pytest
 from pyrate.core import mpiops, config as cf, shared
 from pyrate.configuration import Configuration
-from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA, SML_TEST_DEM_TIF, MEXICO_CONF
+from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA, SML_TEST_DEM_TIF, MEXICO_CROPA_CONF
 from tests.common import ROIPAC_SYSTEM_CONF, GAMMA_SYSTEM_CONF, GEOTIF_SYSTEM_CONF, SML_TEST_COH_LIST
 
 
@@ -130,7 +130,7 @@ def roipac_params():
 
 @pytest.fixture
 def mexico_cropa_params():
-    params = Configuration(MEXICO_CONF).__dict__
+    params = Configuration(MEXICO_CROPA_CONF).__dict__
     yield params
     shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
 
@@ -159,7 +159,7 @@ def dem():
     return d
 
 
-@pytest.fixture(params=[TEST_CONF_GAMMA, MEXICO_CONF], scope='session')
+@pytest.fixture(params=[TEST_CONF_GAMMA, MEXICO_CROPA_CONF], scope='session')
 def gamma_or_mexicoa_conf(request):
     params = Configuration(request.param).__dict__
     yield request.param

@@ -64,10 +64,6 @@ SML_TEST_LINRATE = join(SML_TEST_DIR, 'linrate')
 SML_TEST_GAMMA_HEADER_LIST = join(SML_TEST_GAMMA, 'headers')
 SML_TEST_ROIPAC_HEADER_LIST = join(SML_TEST_ROIPAC, 'headers')
 
-# mexico data
-CROPA_OBS = join(BASE_TEST, 'cropA', 'geotiffs')
-CROPA_HEADERS = join(BASE_TEST, 'cropA', 'headers')
-
 SML_TEST_DEM_DIR = join(SML_TEST_DIR, 'dem')
 SML_TEST_LEGACY_PREPIFG_DIR = join(SML_TEST_DIR, 'prepifg_output')
 SML_TEST_LEGACY_ORBITAL_DIR = join(SML_TEST_DIR, 'orbital_error_correction')
@@ -103,10 +99,11 @@ INCID_TEST_DIR = join(BASE_TEST, 'incidence')
 
 GAMMA_TEST_DIR = join(BASE_TEST, "gamma")
 
-MEXICO_TEST_DIR = join(BASE_TEST, "cropA", "geotiffs")
-MEXICO_TEST_DIR_GEOMETRY = join(BASE_TEST, "cropA", "geometry")
-MEXICO_TEST_DIR_DEM_ERROR = join(BASE_TEST, "cropA", "dem_error_result")
-MEXICO_CONF = PYRATEPATH.joinpath("tests", "test_data", "cropA", "pyrate_mexico_cropa.conf")
+MEXICO_CROPA_DIR = join(BASE_TEST, "cropA", "geotiffs")
+MEXICO_CROPA_DIR_GEOMETRY = join(BASE_TEST, "cropA", "geometry")
+MEXICO_CROPA_DIR_HEADERS = join(BASE_TEST, "cropA", "headers")
+MEXICO_CROPA_DIR_DEM_ERROR = join(BASE_TEST, "cropA", "dem_error_result")
+MEXICO_CROPA_CONF = PYRATEPATH.joinpath("tests", "test_data", "cropA", "pyrate_mexico_cropa.conf")
 
 # small dummy ifg list to limit overall # of ifgs
 IFMS5 = """geo_060828-061211_unw.tif
@@ -573,22 +570,20 @@ def assert_same_files_produced(dir1, dir2, dir3, ext, num_files=None):
 
 
 def manipulate_test_conf(conf_file, temp_obs_dir: Path):
-    """
-    For tests that use legacy unit test data
-    """
     params = Configuration(conf_file).__dict__
-    if conf_file == MEXICO_CONF:
-        copytree(CROPA_OBS, temp_obs_dir)
-        copytree(CROPA_HEADERS, temp_obs_dir)
+    if conf_file == MEXICO_CROPA_CONF:
+        copytree(MEXICO_CROPA_DIR, temp_obs_dir)
+        copytree(MEXICO_CROPA_DIR_HEADERS, temp_obs_dir)
+        copytree(MEXICO_CROPA_DIR_GEOMETRY, temp_obs_dir)
+        copytree(MEXICO_CROPA_DIR_DEM_ERROR, temp_obs_dir)
         shutil.copy2(params[cf.IFG_FILE_LIST], temp_obs_dir)
         shutil.copy2(params[cf.HDR_FILE_LIST], temp_obs_dir)
         shutil.copy2(params[cf.COH_FILE_LIST], temp_obs_dir)
         shutil.copy2(params[cf.BASE_FILE_LIST], temp_obs_dir)
-        shutil.copy2(params[cf.HDR_FILE_LIST], temp_obs_dir)
-    else:
+    else: # legacy unit test data
         copytree(params[cf.OBS_DIR], temp_obs_dir)
+        params[cf.OBS_DIR] = temp_obs_dir.as_posix()
     # manipulate params
-    params[cf.OBS_DIR] = temp_obs_dir.as_posix()
     outdir = temp_obs_dir.joinpath('out')
     outdir.mkdir(exist_ok=True)
     params[cf.OUT_DIR] = outdir.as_posix()
