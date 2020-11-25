@@ -131,6 +131,13 @@ class TestPyRateGammaBperp:
         exp = self.gamma_bperp(* point)
         np.testing.assert_array_almost_equal(exp, res, 2)  # max difference < 1cm
 
+    def test_avg_bperp_calculation(self):
+        # TODO - improve this test by reading bperp *.npy files
+        res =  np.mean(self.pbperp, axis=(0, 1), dtype=np.float64)
+        # assuming array centre is a good proxy for average value
+        # TODO - use interpolation to calculate actual Gamma array average
+        exp = self.gamma_bperp(30, 50)
+        np.testing.assert_array_almost_equal(exp, res, 2)
 
 class TestDEMErrorFilesReusedFromDisc:
 
@@ -228,3 +235,4 @@ class TestDEMErrorResults:
         np.testing.assert_allclose(dem_error_ifg1_exp, dem_error_ifg1_res)
         np.testing.assert_allclose(dem_error_ifg2_exp, dem_error_ifg2_res)
         np.testing.assert_allclose(dem_error_ifg3_exp, dem_error_ifg3_res)
+
