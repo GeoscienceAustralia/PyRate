@@ -19,7 +19,7 @@ This Python module implements the calculation of correction for residual topogra
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
 import os
 import numpy as np
-from typing import Tuple
+from typing import Tuple, Optional
 from os.path import join
 from pathlib import Path
 from pyrate.core import geometry, shared, mpiops, config as cf, ifgconstants as ifc
@@ -314,12 +314,13 @@ def __check_and_apply_demerrors_found_on_disc(ifg_paths: list, params: dict) -> 
                 ifg = i
             ifg.phase_data -= dem_corr
             # set geotiff meta tag and save phase to file
+            # TODO: calculate avg bperp and add to metadata even for reused DEM error correction
             _save_dem_error_corrected_phase(ifg)
 
     return all(d.exists() for d in saved_dem_err_paths)
 
 
-def _save_dem_error_corrected_phase(ifg: Ifg, bperp: np.float64) -> None:
+def _save_dem_error_corrected_phase(ifg: Ifg, bperp: Optional[np.float64] = None) -> None:
     """
     Convenience function to update metadata and save latest phase after DEM error correction
     :param ifg: pyrate.core.shared.Ifg Class object
@@ -327,7 +328,8 @@ def _save_dem_error_corrected_phase(ifg: Ifg, bperp: np.float64) -> None:
     """
     # update geotiff tags after DEM error correction
     ifg.dataset.SetMetadataItem(ifc.PYRATE_DEM_ERROR, ifc.DEM_ERROR_REMOVED)
-    ifg.dataset.SetMetadataItem(ifc.PYRATE_BPERP, str(bperp))
+    if bperp is not None:
+        ifg.dataset.SetMetadataItem(ifc.PYRATE_BPERP, str(bperp))
     ifg.write_modified_phase()
     ifg.close()
 
