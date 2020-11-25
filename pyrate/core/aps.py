@@ -32,16 +32,17 @@ from pyrate.core.logger import pyratelogger as log
 from pyrate.core import shared, ifgconstants as ifc, mpiops, config as cf
 from pyrate.core.covariance import cvd_from_phase, RDist
 from pyrate.core.algorithm import get_epochs
-from pyrate.core.shared import Ifg
+from pyrate.core.shared import Ifg, Tile, EpochList
 from pyrate.core.timeseries import time_series
 from pyrate.merge import assemble_tiles
 from pyrate.configuration import MultiplePaths, Configuration
 
 
-def wrap_spatio_temporal_filter(params):
+def wrap_spatio_temporal_filter(params: dict) -> None:
     """
     A wrapper for the spatio-temporal filter so it can be tested.
     See docstring for spatio_temporal_filter.
+    :param params: Dictionary of PyRate configuration parameters.
     """
     if params[cf.APSEST]:
         log.info('Doing APS spatio-temporal filtering')
@@ -73,20 +74,18 @@ def wrap_spatio_temporal_filter(params):
     shared.save_numpy_phase(ifg_paths, params)
 
 
-def spatio_temporal_filter(tsincr, ifg_paths, params, preread_ifgs):
+def spatio_temporal_filter(tsincr: np.ndarray, ifg_paths: List[str], params: dict,
+                           preread_ifgs: dict) -> None:
     """
     Applies a spatio-temporal filter to remove the atmospheric phase screen
     (APS) and saves the corrected interferograms. Before performing this step,
     the time series is computed using the SVD method. This function then
     performs temporal and spatial filtering.
 
-    :param ndarray tsincr: incremental time series array of size
-                (ifg.shape, nepochs-1)
-    :param list ifg_paths: List of interferogram file paths
-    :param dict params: Dictionary of configuration parameter
-    :param dict preread_ifgs: Dictionary of shared.PrereadIfg class instances
-
-    :return: None, corrected interferograms are saved to disk
+    :param tsincr: incremental time series array of size (ifg.shape, nepochs-1)
+    :param ifg_paths: List of interferogram file paths
+    :param params: Dictionary of PyRate configuration parameters
+    :param preread_ifgs: Dictionary of shared.PrereadIfg class instances
     """
     ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
     ifg.open()
@@ -99,8 +98,8 @@ def spatio_temporal_filter(tsincr, ifg_paths, params, preread_ifgs):
     ifg.close()
 
 
-def _calc_svd_time_series(ifg_paths, params, preread_ifgs,
-                          tiles: List[shared.Tile]):
+def _calc_svd_time_series(ifg_paths: List[str], params: dict, preread_ifgs: dict,
+                          tiles: List[Tile]) -> np.ndarray:
     """
     Helper function to obtain time series for spatio-temporal filter
     using SVD method
@@ -133,7 +132,8 @@ def _calc_svd_time_series(ifg_paths, params, preread_ifgs,
     return tsincr_g
 
 
-def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
+def _assemble_tsincr(ifg_paths: List[str], params: dict, preread_ifgs: dict,
+                     tiles: List[Tile], nvels: np.float32) -> np.ndarray:
     """
     Helper function to reconstruct time series images from tiles
     """
@@ -148,17 +148,14 @@ def _assemble_tsincr(ifg_paths, params, preread_ifgs, tiles, nvels):
     return np.dstack([v[1] for v in sorted(tsincr_g.items())])
 
 
-def _ts_to_ifgs(tsincr, preread_ifgs, params):
+def _ts_to_ifgs(tsincr: np.ndarray, preread_ifgs: dict, params: dict) -> None:
     """
     Function that converts an incremental displacement time series into
     interferometric phase observations. Used to re-construct an interferogram
     network from a time series.
-
-    :param ndarray tsincr: incremental time series array of size
-                (ifg.shape, nepochs-1)
-    :param dict preread_ifgs: Dictionary of shared.PrereadIfg class instances
-
-    :return: None, interferograms are saved to disk
+    :param tsincr: incremental time series array of size (ifg.shape, nepochs-1)
+    :param preread_ifgs: Dictionary of shared.PrereadIfg class instances
+    :param params: Dictionary of PyRate configuration parameters.
     """
     log.debug('Reconstructing interferometric observations from time series')
     ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
@@ -175,7 +172,7 @@ def _ts_to_ifgs(tsincr, preread_ifgs, params):
         _save_aps_corrected_phase(ifg.tmp_path, phase)
 
 
-def _save_aps_corrected_phase(ifg_path, phase):
+def _save_aps_corrected_phase(ifg_path: str, phase: np.ndarray) -> None:
     """
     Save (update) interferogram metadata and phase data after
     spatio-temporal filter (APS) correction.
@@ -189,21 +186,16 @@ def _save_aps_corrected_phase(ifg_path, phase):
     ifg.close()
 
 
-def spatial_low_pass_filter(ts_hp, ifg, params):
+def spatial_low_pass_filter(ts_hp: np.ndarray, ifg: Ifg, params: dict) -> np.ndarray:
     """
     Filter time series data spatially using a Gaussian low-pass
     filter defined by a cut-off distance. If the cut-off distance is
     defined as zero in the parameters dictionary then it is calculated for
     each time step using the pyrate.covariance.cvd_from_phase method.
-
-    :param ndarray ts_hp: Array of time series data, the result of a temporal
-                       high-pass filter operation. shape (ifg.shape, n_epochs)
-    :param shared.Ifg instance ifg: interferogram object
-    :param dict params: Dictionary of configuration parameters
-
-    :return: ts_lp: low-pass filtered time series data of shape
-                    (ifg.shape, n_epochs)
-    :rtype: ndarray
+    :param ts_hp: Array of temporal high-pass time series data, shape (ifg.shape, n_epochs)
+    :param ifg: pyrate.core.shared.Ifg Class object.
+    :param params: Dictionary of PyRate configuration parameters.
+    :return: ts_lp: Low-pass filtered time series data of shape (ifg.shape, n_epochs).
     """
     log.info('Applying spatial low-pass filter')
 
@@ -230,13 +222,11 @@ def spatial_low_pass_filter(ts_hp, ifg, params):
     return ts_lp
 
 
-def _interpolate_nans_2d(arr, method):
+def _interpolate_nans_2d(arr: np.ndarray, method: str) -> None:
     """
-    In-place array interpolation and NaN-fill
-    using scipy.interpolation.griddata.
-
-    :param ndarray arr: 2D ndarray to be interpolated
-    :param str method: Method; one of 'nearest', 'linear', and 'cubic'
+    In-place array interpolation and NaN-fill using scipy.interpolation.griddata.
+    :param arr: 2D ndarray to be interpolated.
+    :param method: Method; one of 'nearest', 'linear', and 'cubic'.
     """
     log.debug(f'Interpolating array with "{method}" method')
     r, c = np.indices(arr.shape)
@@ -247,7 +237,8 @@ def _interpolate_nans_2d(arr, method):
         method=method, fill_value=0)
 
 
-def _slpfilter(phase, ifg, r_dist, cutoff, nanfill, fillmethod):
+def _slpfilter(phase: np.ndarray, ifg: Ifg, r_dist: float, cutoff: float,
+                   nanfill: bool, fillmethod: str) -> np.ndarray:
     """
     Wrapper function for spatial low pass filter
     """
@@ -262,21 +253,20 @@ def _slpfilter(phase, ifg, r_dist, cutoff, nanfill, fillmethod):
     return gaussian_spatial_filter(phase, cutoff, ifg.x_size, ifg.y_size, nanfill, fillmethod)
 
 
-def gaussian_spatial_filter(image, cutoff, x_size, y_size, nanfill=True, fillmethod='nearest'):
+def gaussian_spatial_filter(image: np.ndarray, cutoff: float, x_size: float,
+                            y_size: float, nanfill: bool = True,
+                            fillmethod: str = 'nearest') -> np.ndarray:
     """
     Function to apply a Gaussian spatial low-pass filter to a 2D image with
     unequal pixel resolution in x and y dimensions. Performs filtering in the
     Fourier domain.
-
-    :param ndarray image: 2D image to be filtered
-    :param float cutoff: filter cutoff in kilometres
-    :param float x_size: pixel size in x dimension, in metres
-    :param float y_size: pixel size in y dimension, in metres
-    :param bool nanfill: interpolate image to fill NaNs
-    :param str fillmethod: interpolation method ('nearest', 'cubic', or 'linear')
-
+    :param image: 2D image to be filtered
+    :param cutoff: filter cutoff in kilometres
+    :param x_size: pixel size in x dimension, in metres
+    :param y_size: pixel size in y dimension, in metres
+    :param nanfill: interpolate image to fill NaNs
+    :param fillmethod: interpolation method ('nearest', 'cubic', or 'linear')
     :return: out: Gaussian low-pass filtered 2D image
-    :rtype: ndarray
     """
     # create NaN mask of image
     mask = np.isnan(image)
@@ -312,20 +302,16 @@ def gaussian_spatial_filter(image, cutoff, x_size, y_size, nanfill=True, fillmet
 
 
 # TODO: use tiles here and distribute amongst processes
-def temporal_high_pass_filter(tsincr, epochlist, params):
+def temporal_high_pass_filter(tsincr: np.ndarray, epochlist: EpochList,
+                              params: dict) -> np.ndarray:
     """
     Isolate high-frequency components of time series data by subtracting
     low-pass components obtained using a Gaussian filter defined by a
     cut-off time period (in days).
-
-    :param ndarray tsincr: Array of incremental time series data of shape
-                (ifg.shape, n_epochs)
-    :param list epochlist: List of shared.EpochList class instances
-    :param dict params: Dictionary of configuration parameters
-
-    :return: ts_hp: filtered high frequency time series data,
-                    shape (ifg.shape, nepochs)
-    :rtype: ndarray
+    :param tsincr: Array of incremental time series data of shape (ifg.shape, n_epochs).
+    :param epochlist: A pyrate.core.shared.EpochList Class instance.
+    :param params: Dictionary of PyRate configuration parameters.
+    :return: ts_hp: Filtered high frequency time series data; shape (ifg.shape, nepochs).
     """
     log.info('Applying temporal high-pass filter')
     threshold = params[cf.TLPF_PTHR]
@@ -360,18 +346,16 @@ def temporal_high_pass_filter(tsincr, epochlist, params):
     return tsincr - tsfilt
 
 
-def gaussian_temporal_filter(tsincr, cutoff, span, thr):
+def gaussian_temporal_filter(tsincr: np.ndarray, cutoff: float, span: np.ndarray,
+                             thr: int) -> np.ndarray:
     """
     Function to apply a Gaussian temporal low-pass filter to a 1D time-series
     vector for one pixel with irregular temporal sampling.
-
-    :param ndarray tsincr: 1D time-series vector to be filtered
-    :param float cutoff: filter cutoff in years
-    :param ndarray span: 1D vector of cumulative time spans, in years
-    :param int thr: threshold for non-nan values in tsincr
-
-    :return: ts_lp: low-pass filtered time series vector
-    :rtype: ndarray
+    :param tsincr: 1D time-series vector to be filtered.
+    :param cutoff: filter cutoff in years.
+    :param span: 1D vector of cumulative time spans, in years.
+    :param thr: threshold for non-NaN values in tsincr.
+    :return: ts_lp: Low-pass filtered time series vector.
     """
     nanmat = ~isnan(tsincr)
     sel = np.nonzero(nanmat)[0]  # don't select if nan
@@ -387,8 +371,9 @@ def gaussian_temporal_filter(tsincr, cutoff, span, thr):
 
     return ts_lp
 
-def _kernel(x, sigma):
+def _kernel(x: np.ndarray, sigma: float) -> np.ndarray:
     """
     Gaussian low-pass filter kernel
     """
     return np.exp(-0.5 * (x / sigma) ** 2)
+
