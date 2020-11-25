@@ -306,11 +306,11 @@ def combine_headers(hdr0, hdr1, dem_hdr, base_hdr=None):
 
     # use parameter of first image (as done by GAMMA during interferometric processing)
     heading_ang = hdr0[ifc.PYRATE_HEADING_DEGREES]
-    if np.isclose(heading_ang, hdr1[ifc.PYRATE_HEADING_DEGREES], atol=1e-1):
+    if np.isclose(heading_ang, hdr1[ifc.PYRATE_HEADING_DEGREES], atol=5e-1):
         chdr[ifc.PYRATE_HEADING_DEGREES] = heading_ang
     else:
         args = (chdr[ifc.FIRST_DATE], chdr[ifc.SECOND_DATE])
-        msg = "Satellite heading angles differ by more than 0.1 degrees"
+        msg = "Satellite heading angles differ by more than 0.5 degrees"
         raise GammaException(msg % args)
 
     azimuth_ang = hdr0[ifc.PYRATE_AZIMUTH_DEGREES]
