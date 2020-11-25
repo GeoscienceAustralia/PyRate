@@ -23,7 +23,7 @@ import tempfile
 import pytest
 from pyrate.core import mpiops, config as cf, shared
 from pyrate.configuration import Configuration
-from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
+from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA, SML_TEST_DEM_TIF, MEXICO_CONF
 from tests.common import ROIPAC_SYSTEM_CONF, GAMMA_SYSTEM_CONF, GEOTIF_SYSTEM_CONF, SML_TEST_COH_LIST
 
 
@@ -128,6 +128,13 @@ def roipac_params():
     shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
 
 
+@pytest.fixture
+def mexico_cropa_params():
+    params = Configuration(MEXICO_CONF).__dict__
+    yield params
+    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
+
+
 @pytest.fixture(params=[TEST_CONF_GAMMA, TEST_CONF_ROIPAC])
 def roipac_or_gamma_conf(request):
     return request.param
@@ -143,3 +150,17 @@ def gamma_conf(request):
 @pytest.fixture
 def coh_list_file():
     return SML_TEST_COH_LIST
+
+
+@pytest.fixture
+def dem():
+    d = shared.dem_or_ifg(SML_TEST_DEM_TIF)
+    d.open()
+    return d
+
+
+@pytest.fixture(params=[TEST_CONF_GAMMA, MEXICO_CONF], scope='session')
+def gamma_or_mexicoa_conf(request):
+    params = Configuration(request.param).__dict__
+    yield request.param
+    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)

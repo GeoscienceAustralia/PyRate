@@ -24,7 +24,10 @@ from datetime import date, time, timedelta
 import numpy as np
 import pyrate.core.ifgconstants as ifc
 from pyrate.core import config as cf
-from pyrate.core.shared import extract_epochs_from_filename
+from pyrate.core.shared import extract_epochs_from_filename, data_format
+from pyrate.core.logger import pyratelogger as log
+import struct
+
 
 # constants
 GAMMA_DATE = 'date'
@@ -490,6 +493,100 @@ def gamma_header(ifg_file_path, params):
         combined_headers['FILE_TYPE'] = 'Incidence'
 
     return combined_headers
+
+
+def read_lookup_table(head, data_path, xlooks, ylooks, xmin, xmax, ymin, ymax):
+    # pylint: disable = too - many - statements
+    """
+    Creates a copy of input lookup table file in a numpy array and applies the ifg ML factors
+
+    :param IFG object head: first IFG in the list to read metadata
+    :param str data_path: Input file
+    :param int xlooks: multi-looking factor in x
+    :param int ylooks: multi-looking factor in y
+    :param int xmin: start pixel of cropped extent in x
+    :param int xmax: end pixel of cropped extent in x
+    :param int ymin: start pixel of cropped extent in y
+    :param int ymax: end pixel of cropped extent in y
+
+    :return: np-array lt_data_az: azimuth (i.e. row) of radar-coded MLI
+    :return: np-array lt_data_rg: range (i.e. column) of radar-coded MLI
+    """
+    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-locals
+
+    # read relevant metadata parameters
+    nrows_lt = int(head.meta_data[ifc.PYRATE_NROWS]) # number of rows of original geotiff files
+    ncols_lt = int(head.meta_data[ifc.PYRATE_NCOLS]) # number of columns of original geotiff files
+    nrows = head.nrows # number of rows in multi-looked and cropped data sets
+    ncols = head.ncols # number of columns in multi-looked and cropped data sets
+
+    ifg_proc = head.meta_data[ifc.PYRATE_INSAR_PROCESSOR]
+    # get dimensions of lookup table file
+    bytes_per_col, fmtstr = data_format(ifg_proc, True, ncols_lt*2) # float complex data set containing value tupels
+
+    # check if lookup table has the correct size
+    small_size = _check_raw_data(bytes_per_col * 2, data_path, ncols_lt, nrows_lt)
+    # todo: delete the following if condition once a suitable test data set has been included
+    if small_size: # this is a test data set without a corresponding lt-file
+        lt_data_az = np.empty((nrows, ncols)) * np.nan # nan array with size of input data set
+        lt_data_rg = np.empty((nrows, ncols)) * np.nan # nan array with size of input data set
+
+    else: # this is a real data set with an lt-file of correct size
+        row_bytes = ncols_lt * 2 * bytes_per_col
+        lt_data_az = np.empty((0, ncols))  # empty array with correct number of columns
+        lt_data_rg = np.empty((0, ncols))  # empty array with correct number of column
+        # for indexing: lookup table file contains value pairs (i.e. range, azimuth)
+        # value pair 0 would be index 0 and 1, value pair 1 would be index 2 and 3, and so on
+        # example: for a multi-looking factor of 10 we want value pair 4, 14, 24, ...
+        # this would be index 8 and 9, index 28 and 29, 48 and 49, ...
+        # start column needs to be added in case cropping is applied
+        if (xlooks % 2) == 0:  # for even ml factors
+            idx_start = xmin + int(xlooks / 2) - 1
+        else: # for odd ml factors
+            idx_start = xmin + int((xlooks - 1) / 2)
+        # indices of range info in lookup table for the cropped and multi-looked data set
+        idx_rg = np.arange(2 * idx_start, xmax * 2, 2 * xlooks)  # first value
+        idx_az = np.arange(2 * idx_start + 1, xmax * 2, 2 * xlooks)  # second value
+        # set up row idx, e.g. for ml=10 (without cropping): 4, 14, 24, ...
+        if (ylooks % 2) == 0: # for even ml factors
+            idx_start = ymin + int(ylooks / 2) - 1
+        else: # for odd ml factors
+            idx_start = ymin + int((ylooks - 1) / 2)
+        row_idx = np.arange(idx_start, ymax, ylooks)
+
+        # read the binary lookup table file and save the range/azimuth value pair for each position in the cropped and
+        # multi-looked data set
+        log.debug(f"Reading lookup table file {data_path}")
+        with open(data_path, 'rb') as f:
+            for y in range(nrows_lt): # loop through all lines in file
+                # this could potentially be made quicker by skipping unwanted bytes in the f.read command?
+                data = struct.unpack(fmtstr, f.read(row_bytes))
+                # but only read data from lines in row index:
+                if y in row_idx:
+                    row_data = np.array(data)
+                    row_data_ml_az = row_data[idx_az] # azimuth for PyRate
+                    row_data_ml_rg = row_data[idx_rg] # range for PyRate
+                    lt_data_az = np.append(lt_data_az, [row_data_ml_az], axis=0)
+                    lt_data_rg = np.append(lt_data_rg, [row_data_ml_rg], axis=0)
+
+    return lt_data_az, lt_data_rg
+
+
+def _check_raw_data(bytes_per_col, data_path, ncols, nrows):
+    """
+    Convenience function to check the file size is as expected
+    """
+    size = ncols * nrows * bytes_per_col
+    act_size = os.stat(data_path).st_size
+    if act_size != size:
+        msg = '%s should have size %s, not %s. Is the correct file being used?'
+        if size < 28000:
+            # test data set doesn't currently fit the lookup table size, stop further calculation
+            # todo: delete this if statement once a new test data set has been introduced
+            return True
+        else:
+            raise GammaException(msg % (data_path, size, act_size))
 
 
 class GammaException(Exception):

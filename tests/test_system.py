@@ -26,6 +26,7 @@ import pytest
 import numpy as np
 from pyrate.core import config as cf
 from pyrate.configuration import Configuration
+from tests.common import MEXICO_CONF
 
 
 @pytest.mark.slow
@@ -48,11 +49,11 @@ def test_workflow(system_conf):
 
 
 @pytest.mark.slow
-def test_single_workflow(gamma_conf):
+def test_single_workflow(gamma_or_mexicoa_conf):
 
-    check_call(f"mpirun -n 4 pyrate workflow -f {gamma_conf}", shell=True)
+    check_call(f"mpirun -n 4 pyrate workflow -f {gamma_or_mexicoa_conf}", shell=True)
 
-    params = Configuration(gamma_conf).__dict__
+    params = Configuration(gamma_or_mexicoa_conf).__dict__
 
     log_file_name = 'pyrate.log.' + 'workflow'
     files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
@@ -62,14 +63,18 @@ def test_single_workflow(gamma_conf):
     ref_pixel_file = params[cf.REF_PIXEL_FILE]
     assert Path(ref_pixel_file).exists()
     ref_pixel = np.load(ref_pixel_file)
-    np.testing.assert_array_equal(ref_pixel, [38, 58])
+    if gamma_or_mexicoa_conf == MEXICO_CONF:
+        np.testing.assert_array_equal(ref_pixel, [42, 2])
+        for f in ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle', 'range_dist']:
+            assert Path(params[cf.OUT_DIR]).joinpath(f + '.tif').exists()
+    else:
+        np.testing.assert_array_equal(ref_pixel, [38, 58])
 
     # assert orbfit exists on disc
     from pyrate.core import shared
     looked_files = [p.sampled_path for p in params[cf.INTERFEROGRAM_FILES]]
     ifgs = [shared.Ifg(ifg) for ifg in looked_files]
-    orbfits_on_disc = [Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR,
-                          Path(ifg.data_path).stem + '_orbfit.npy')
+    orbfits_on_disc = [Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR, Path(ifg.data_path).stem + '_orbfit.npy')
                        for ifg in ifgs]
     assert all(orbfits_on_disc)
     shutil.rmtree(params[cf.OUT_DIR])

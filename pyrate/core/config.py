@@ -190,6 +190,12 @@ SLPF_NANFILL = 'slpnanfill'
 #: #: STR; Method for spatial interpolation (one of: linear, nearest, cubic), only used when slpnanfill=1
 SLPF_NANFILL_METHOD = 'slpnanfill_method'
 
+# DEM error correction parameters
+#: BOOL (0/1) Perform DEM error correction (1: yes, 0: no)
+DEMERROR = 'demerror'
+#: INT; Number of required input observations per pixel for DEM error estimation
+DE_PTHR = 'de_pthr'
+
 # Time series parameters
 #: INT (1/2); Method for time series inversion (1: Laplacian Smoothing; 2: SVD)
 TIME_SERIES_METHOD = 'tsmethod'
@@ -272,6 +278,10 @@ PARAM_CONVERSION = {
     SLPF_CUTOFF: (float, 1.0),
     SLPF_ORDER: (int, 1),
     SLPF_NANFILL: (int, 0),
+
+    DEMERROR: (int, 0),
+    # pixel thresh based on nepochs
+    DE_PTHR: (int, 3),
 
     # pixel thresh based on nepochs? not every project may have 20 epochs
     TIME_SERIES_PTHRESH: (int, 3),
@@ -623,6 +633,10 @@ _PARAM_VALIDATION = {
         lambda a: a in (0, 1),
         f"'{APSEST}': must select option 0 or 1."
     ),
+    DEMERROR: (
+        lambda a: a in (0, 1),
+        f"'{DEMERROR}': must select option 0 or 1."
+    ),
     PARALLEL: (
         lambda a: a in (0, 1),
         f"'{PARALLEL}': must select option 0 or 1."
@@ -752,6 +766,15 @@ _APSEST_VALIDATION = {
     ),
 }
 """dict: basic validation functions for atmospheric correction parameters."""
+
+DEMERROR_VALIDATION = {
+    DE_PTHR: (
+        lambda a: a >= 1,
+        f"'{TLPF_PTHR}': must be >= 1."
+    ),
+}
+"""dict: basic validation functions for DEM error correction parameters."""
+
 
 _TIME_SERIES_VALIDATION = {
     TIME_SERIES_PTHRESH: (

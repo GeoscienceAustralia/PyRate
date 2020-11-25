@@ -20,7 +20,7 @@ all other PyRate modules
 """
 # pylint: disable=too-many-lines
 import re
-from typing import List, Union
+from typing import List, Union, Optional
 
 import errno
 import math
@@ -390,6 +390,7 @@ class Ifg(RasterBase):
         """
         Returns phase band as an array.
         """
+        # TODO: enhance this to use x/y offset and size
         if self._phase_data is None:
             self._phase_data = self.phase_band.ReadAsArray()
         return self._phase_data
@@ -495,11 +496,37 @@ class Ifg(RasterBase):
         self.dataset.FlushCache()  # write to disc
 
 
+class Tile:
+    """
+    Tile class for containing a sub-part of an interferogram
+    """
+    def __init__(self, index, top_left, bottom_right):
+        """
+        Parameters
+        ----------
+        index: int
+            identifying index of a tile
+        top_left: tuple
+            ifg index of top left of tile
+        bottom_right: tuple
+            ifg index of bottom right of tile
+        """
+
+        self.index = index
+        self.top_left = top_left
+        self.bottom_right = bottom_right
+        self.top_left_y, self.top_left_x = top_left
+        self.bottom_right_y, self.bottom_right_x = bottom_right
+
+    def __str__(self):
+        return "Convenience Tile class containing tile co-ordinates"
+
+
 class IfgPart(object):
     """
     Create a tile (subset) of an Ifg data object
     """
-    def __init__(self, ifg_or_path, tile, ifg_dict=None, params=None):
+    def __init__(self, ifg_or_path, tile: Tile, ifg_dict=None, params=None):
         """
         Interferogram tile constructor.
 
@@ -533,7 +560,7 @@ class IfgPart(object):
         if isinstance(ifg, Ifg):
             self.read_required(ifg)
 
-    def read_required(self, ifg):
+    def read_required(self, ifg: Ifg):
         """
         Read interferogram file if not already open.
         """
@@ -618,9 +645,15 @@ class Incidence(RasterBase):   # pragma: no cover
         return self._azimuth_data
 
 
-class DEM(RasterBase):
+class TileMixin:
+    def __call__(self, tile: Tile):
+        t = tile
+        return self.data[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
+
+
+class DEM(RasterBase, TileMixin):
     """
-    Generic raster class for single band DEM files.
+    Generic raster class for single band DEM/Geometry files.
     """
 
     def __init__(self, path):
@@ -629,15 +662,43 @@ class DEM(RasterBase):
         """
         RasterBase.__init__(self, path)
         self._band = None
+        self._data = None
 
     @property
-    def height_band(self):
+    def band(self):
         """
         Returns the GDALBand for the elevation layer.
         """
+        if not self.is_open:
+            self.open()
         if self._band is None:
             self._band = self._get_band(1)
         return self._band
+
+    @property
+    def data(self):
+        """
+        Returns the geometry band as an array.
+        """
+        if self._data is None:
+            self._data = self.band.ReadAsArray()
+        return self._data
+
+
+class MemGeometry(TileMixin):
+
+    def __init__(self, data):
+        """
+        Set phase data value
+        """
+        self._data = data
+
+    @property
+    def data(self):
+        return self._data
+
+
+Geometry = DEM
 
 
 class IfgException(Exception):
@@ -758,14 +819,12 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
     ifg_proc = header[ifc.PYRATE_INSAR_PROCESSOR]
     ncols = header[ifc.PYRATE_NCOLS]
     nrows = header[ifc.PYRATE_NROWS]
-    bytes_per_col, fmtstr = _data_format(ifg_proc, _is_interferogram(header), ncols)
+    bytes_per_col, fmtstr = data_format(ifg_proc, _is_interferogram(header), ncols)
     if _is_interferogram(header) and ifg_proc == ROIPAC:
         # roipac ifg has 2 bands
         _check_raw_data(bytes_per_col*2, data_path, ncols, nrows)
     else:
         _check_raw_data(bytes_per_col, data_path, ncols, nrows)
-
-    _check_pixel_res_mismatch(header)
 
     # position and projection data
     gt = [header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0, header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]]
@@ -805,65 +864,6 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
 
     ds = None  # manual close
     del ds
-
-
-def read_lookup_table(head, data_path, xlooks, ylooks):
-    # pylint: disable = too - many - statements
-    """
-    Creates a copy of input lookup table file in a numpy array and applies the ifg ML factors
-
-    :param IFG object head: first IFG in the list to read metadata
-    :param str data_path: Input file
-    :param int xlooks: multi-looking factor in x
-    :param int ylooks: multi-looking factor in y
-
-    :return: np-array lt_data_az: azimuth (i.e. row) of radar-coded MLI
-    :return: np-array lt_data_rg: range (i.e. column) of radar-coded MLI
-    """
-    # pylint: disable=too-many-branches
-    # pylint: disable=too-many-locals
-
-    # read relevant metadata parameters
-    nrows = head.nrows # number of rows in multi-looked data sets
-    ncols = head.ncols # number of columns in multi-looked data sets
-    nrows_lt = int(head.meta_data[ifc.PYRATE_NROWS]) # number of rows of original geotiff files
-    ncols_lt = int(head.meta_data[ifc.PYRATE_NCOLS]) # number of columns of original geotiff files
-    ifg_proc = head.meta_data[ifc.PYRATE_INSAR_PROCESSOR]
-
-    # get dimensions of lookup table file
-    bytes_per_col, fmtstr = _data_format(ifg_proc, True, ncols_lt*2) # float complex data set containing value tupels
-    row_bytes = ncols_lt*2 * bytes_per_col
-    lt_data_az = np.empty((0, ncols)) # empty array with correct number of columns
-    lt_data_rg = np.empty((0, ncols)) # empty array with correct number of column
-
-    # for indexing: lookup table file contains value pairs (i.e. range, azimuth)
-    # value pair 0 would be index 0 and 1, value pair 1 would be index 2 and 3, and so on
-    # example: for a multi-looking factor of 10 we want value pair 4, 14, 24, ...
-    # this would be index 8 and 9, index 28 and 29, 48 and 49, ...
-    if xlooks == 1:
-        idx_start = 0
-    else:
-        idx_start = (int(xlooks/2)-1)*2
-    idx_rg = np.arange(idx_start, ncols_lt*2, 2*xlooks) # first value
-    idx_az = np.arange(idx_start+1, ncols_lt*2, 2*xlooks) # second value
-    # row index used (e.g. for multi-looking factor 10: 4, 14, 24, ...)
-    row_idx = np.arange(int(ylooks/2)-1, nrows_lt, ylooks)
-
-    # read the binary lookup table file and save the range/azimuth value pair for each position in ML data
-    log.debug(f"Reading lookup table file {data_path}")
-    with open(data_path, 'rb') as f:
-        for y in range(nrows_lt): # loop through all lines in file
-            # this could potentially be made quicker by skipping unwanted bytes in the f.read command?
-            data = struct.unpack(fmtstr, f.read(row_bytes))
-            # but only read data from lines in row index:
-            if y in row_idx:
-                row_data = np.array(data)
-                row_data_ml_az = row_data[idx_az] # azimuth for PyRate
-                row_data_ml_rg = row_data[idx_rg] # range for PyRate
-                lt_data_az = np.append(lt_data_az, [row_data_ml_az], axis=0)
-                lt_data_rg = np.append(lt_data_rg, [row_data_ml_rg], axis=0)
-
-    return lt_data_az, lt_data_rg
 
 
 def gdal_dataset(out_fname, columns, rows, driver="GTiff", bands=1,
@@ -948,7 +948,7 @@ def collate_metadata(header):
     return md
 
 
-def _data_format(ifg_proc, is_ifg, ncols):
+def data_format(ifg_proc, is_ifg, ncols):
     """
     Convenience function to determine the bytesize and format of input files
     """
@@ -977,18 +977,6 @@ def _check_raw_data(bytes_per_col, data_path, ncols, nrows):
     if act_size != size:
         msg = '%s should have size %s, not %s. Is the correct file being used?'
         raise GeotiffException(msg % (data_path, size, act_size))
-
-
-def _check_pixel_res_mismatch(header):
-    """
-    Convenience function to check equality of pixel resolution in X and Y dimensions
-    """
-    # pylint: disable=invalid-name
-    xs, ys = [abs(i) for i in [header[ifc.PYRATE_X_STEP], header[ifc.PYRATE_Y_STEP]]]
-
-    if xs != ys:
-        msg = 'X and Y cell sizes do not match: %s & %s'
-        raise GeotiffException(msg % (xs, ys))
 
 
 def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
@@ -1041,19 +1029,19 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
 
     driver = gdal.GetDriverByName("GTiff")
     nrows, ncols = data.shape
-    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32, options=['compress=LZW'])
+    ds = driver.Create(dest, ncols, nrows, 1, gdal.GDT_Float32, options=['compress=packbits'])
     # set spatial reference for geotiff
     ds.SetGeoTransform(gt)
     ds.SetProjection(wkt)
-    ds.SetMetadataItem(ifc.EPOCH_DATE, str(md[ifc.EPOCH_DATE]))
+#    ds.SetMetadataItem(ifc.EPOCH_DATE, str(md[ifc.EPOCH_DATE]))
 
-    # set other metadata
+    # set data type metadata
     ds.SetMetadataItem('DATA_TYPE', str(md['DATA_TYPE']))
 
-    # sequence position for time series products
-
+    # set other metadata
     for k in [ifc.SEQUENCE_POSITION, ifc.PYRATE_REFPIX_X, ifc.PYRATE_REFPIX_Y, ifc.PYRATE_REFPIX_LAT,
-              ifc.PYRATE_REFPIX_LON, ifc.PYRATE_MEAN_REF_AREA, ifc.PYRATE_STDDEV_REF_AREA]:
+              ifc.PYRATE_REFPIX_LON, ifc.PYRATE_MEAN_REF_AREA, ifc.PYRATE_STDDEV_REF_AREA,
+              ifc.EPOCH_DATE]:
         if k in md:
             ds.SetMetadataItem(k, str(md[k]))
 
@@ -1061,6 +1049,8 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     band = ds.GetRasterBand(1)
     band.SetNoDataValue(nodata)
     band.WriteArray(data, 0, 0)
+
+    del ds
 
 
 def write_geotiff(data, outds, nodata):
@@ -1099,6 +1089,7 @@ class GeotiffException(Exception):
     Geotiff exception class
     """
 
+
 def create_tiles(shape, nrows=2, ncols=2):
     """
     Return a list of tiles containing nrows x ncols with each tile preserving
@@ -1126,32 +1117,6 @@ def create_tiles(shape, nrows=2, ncols=2):
     col_arr = np.array_split(range(no_x), ncols)
     row_arr = np.array_split(range(no_y), nrows)
     return [Tile(i, (r[0], c[0]), (r[-1]+1, c[-1]+1)) for i, (r, c) in enumerate(product(row_arr, col_arr))]
-
-
-class Tile():
-    """
-    Tile class for containing a sub-part of an interferogram
-    """
-    def __init__(self, index, top_left, bottom_right):
-        """
-        Parameters
-        ----------
-        index: int
-            identifying index of a tile
-        top_left: tuple
-            ifg index of top left of tile
-        bottom_right: tuple
-            ifg index of bottom right of tile
-        """
-
-        self.index = index
-        self.top_left = top_left
-        self.bottom_right = bottom_right
-        self.top_left_y, self.top_left_x = top_left
-        self.bottom_right_y, self.bottom_right_x = bottom_right
-
-    def __str__(self):
-        return "Convenience Tile class containing tile co-ordinates"
 
 
 def get_tiles(ifg_path, rows, cols) -> List[Tile]:
@@ -1403,11 +1368,11 @@ def mpi_vs_multiprocess_logging(step, params):
             log.info(f"Running '{step}' step in serial")
 
 
-def dem_or_ifg(data_path):
+def dem_or_ifg(data_path: str) -> Union[Ifg, DEM]:
     """
     Returns an Ifg or DEM class object from input geotiff file.
 
-    :param str data_path: file path name
+    :param data_path: file path name
 
     :return: Interferogram or DEM object from input file
     :rtype: Ifg or DEM class object
@@ -1422,7 +1387,7 @@ def dem_or_ifg(data_path):
 
 def join_dicts(dicts: List[dict]) -> dict:
     """
-    Function to concatenate dictionaries
+    Function to concatenate a list of dictionaries.
     """
     if dicts is None:  # pragma: no cover
         return {}
@@ -1430,7 +1395,12 @@ def join_dicts(dicts: List[dict]) -> dict:
     return assembled_dict
 
 
-def tiles_split(func, params, *args, **kwargs):
+def tiles_split(func, params: dict, *args, **kwargs) -> None:
+    """
+    Function to pass tiles of a full array to an array processing function call.
+    :param func: Name of function to pass tiles to.
+    :param params: Dictionary of PyRate configuration parameters.
+    """
     tiles = params[cf.TILES]
     process_tiles = mpiops.array_split(tiles)
     if params[cf.PARALLEL]:
@@ -1442,15 +1412,13 @@ def tiles_split(func, params, *args, **kwargs):
     mpiops.comm.barrier()
 
 
-def output_tiff_filename(inpath, outpath):
+def output_tiff_filename(inpath: str, outpath: str) -> str:
     """
     Output geotiff filename for a given input filename.
 
-    :param str inpath: path of input file location
-    :param str outpath: path of output file location
-
-    :return: Geotiff filename for the given file.
-    :rtype: str
+    :param inpath: Path of input file location.
+    :param outpath: Path of output file location.
+    :return: name: Geotiff filename for the given file.
     """
     fname, ext = os.path.basename(inpath).split('.')
     outpath = os.path.dirname(inpath) if outpath is None else outpath
@@ -1459,3 +1427,15 @@ def output_tiff_filename(inpath, outpath):
     else:
         name = os.path.join(outpath, fname + '_' + ext + '.tif')
     return name
+
+
+def remove_file_if_exists(filename: str) -> None:
+    """
+    Function to remove a file if it already exists.
+    :param filename: Name of file to be removed.
+    """
+    try:
+        os.remove(filename)
+    except OSError:
+        pass
+

@@ -381,6 +381,22 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
+    "demerror": {
+        "DataType": int,
+        "DefaultValue": 0,
+        "MinValue": None,
+        "MaxValue": None,
+        "PossibleValues": [0, 1],
+        "Required": False
+    },
+    "de_pthr": {
+        "DataType": int,
+        "DefaultValue": 10,
+        "MinValue": 4,
+        "MaxValue": None,
+        "PossibleValues": None,
+        "Required": False
+    },
     "tsmethod": {
         "DataType": int,
         "DefaultValue": 2,
@@ -455,7 +471,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
     },
     "correct": {
         "DataType": list,
-        "DefaultValue": ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack'],
+        "DefaultValue": ['orbfit', 'refphase', 'demerror', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack'],
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": None,

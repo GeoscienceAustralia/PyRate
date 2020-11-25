@@ -25,10 +25,12 @@ from pathlib import Path
 from joblib import Parallel, delayed
 import numpy as np
 from osgeo import gdal
-from pyrate.core import shared, mpiops, config as cf, prepifg_helper, gamma, roipac, ifgconstants as ifc, gdal_python
+from pyrate.core import shared, geometry, mpiops, config as cf, prepifg_helper, gamma, roipac, ifgconstants as ifc, gdal_python
 from pyrate.core.prepifg_helper import PreprocessError
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import MultiplePaths
+from pyrate.core.shared import Ifg, DEM
+from pyrate.core.refpixel import convert_geographic_coordinate_to_pixel_value
 
 
 GAMMA = 1
@@ -68,9 +70,16 @@ def main(params):
     ifgs = [prepifg_helper.dem_or_ifg(p.converted_path) for p in ifg_paths]
     exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks, user_exts=user_exts)
 
+    transform = ifgs[0].dataset.GetGeoTransform()
+
     process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     do_prepifg(process_ifgs_paths, exts, params)
-    mpiops.comm.barrier()
+
+    if params[cf.LT_FILE] is not None:
+        log.info("Calculating and writing geometry files")
+        mpiops.run_once(_write_geometry_files, params, exts, transform, ifg_paths[0])
+    else:
+        log.info("Skipping geometry calculations: Lookup table not provided")
 
     log.info("Finished 'prepifg' step")
 
@@ -111,6 +120,7 @@ def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float
         else:
             for m_path in multi_paths:
                 _prepifg_multiprocessing(m_path, exts, params)
+    mpiops.comm.barrier()
 
 
 COMMON_OPTIONS = "-co BLOCKXSIZE=256 -co BLOCKYSIZE=256 -co TILED=YES --config GDAL_CACHEMAX=64 -q"
@@ -258,3 +268,78 @@ def find_header(path: MultiplePaths, params: dict):
         raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
     header[ifc.INPUT_TYPE] = path.input_type
     return header
+
+
+def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
+                          transform, ifg_path: MultiplePaths) -> None:
+    """
+    Calculate geometry and save to geotiff files using the information in the
+    first interferogram in the stack, i.e.:
+    - rdc_azimuth.tif (azimuth radar coordinate at each pixel)
+    - rdc_range.tif (range radar coordinate at each pixel)
+    - azimuth_angle.tif (satellite azimuth angle at each pixel)
+    - incidence_angle.tif (incidence angle at each pixel)
+    - look_angle.tif (look angle at each pixel)
+    """
+    ifg_path = ifg_path.sampled_path
+    ifg = Ifg(ifg_path)
+    ifg.open(readonly=True)
+
+    # calculate per-pixel lon/lat
+    lon, lat = geometry.get_lonlat_coords(ifg)
+
+    # not currently implemented for ROIPAC data which breaks some tests
+    # if statement can be deleted once ROIPAC is deprecated from PyRate
+    if ifg.meta_data[ifc.PYRATE_INSAR_PROCESSOR] == 'ROIPAC':
+        log.warning("Geometry calculations are not implemented for ROI_PAC")
+        return
+
+    # get geometry information and save radar coordinates and angles to tif files
+    # using metadata of the first image in the stack
+    # get pixel values of crop (needed to crop lookup table file)
+    # pixel extent of cropped area (original IFG input)
+    xmin, ymax = convert_geographic_coordinate_to_pixel_value(exts[0], exts[1], transform)
+    xmax, ymin = convert_geographic_coordinate_to_pixel_value(exts[2], exts[3], transform)
+    # xmin, xmax: columns of crop
+    # ymin, ymax: rows of crop
+
+    # calculate per-pixel radar coordinates
+    az, rg = geometry.calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax)
+
+    # Read height data from DEM
+    dem_file = os.path.join(params[cf.OUT_DIR], 'dem.tif')
+    dem = DEM(dem_file)
+    # calculate per-pixel look angle (also calculates and saves incidence and azimuth angles)
+    lk_ang, inc_ang, az_ang, rg_dist = geometry.calc_pixel_geometry(ifg, rg, lon.data, lat.data, dem.data)
+
+    # save radar coordinates and angles to geotiff files
+    for out, ot in zip([az, rg, lk_ang, inc_ang, az_ang, rg_dist],
+            ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle', 'range_dist']):
+        _save_geom_files(ifg_path, params[cf.OUT_DIR], out, ot)
+
+
+def _save_geom_files(ifg_path, outdir, array, out_type):
+    """
+    Convenience function to save geometry geotiff files
+    """
+    log.debug('Saving PyRate outputs {}'.format(out_type))
+    gt, md, wkt = shared.get_geotiff_header_info(ifg_path)
+
+    if out_type == 'rdc_azimuth':
+        md[ifc.DATA_TYPE] = ifc.RDC_AZIMUTH
+    elif out_type == 'rdc_range':
+        md[ifc.DATA_TYPE] = ifc.RDC_RANGE
+    elif out_type == 'look_angle':
+        md[ifc.DATA_TYPE] = ifc.LOOK
+    elif out_type == 'incidence_angle':
+        md[ifc.DATA_TYPE] = ifc.INCIDENCE
+    elif out_type == 'azimuth_angle':
+        md[ifc.DATA_TYPE] = ifc.AZIMUTH
+    elif out_type == 'range_dist':
+        md[ifc.DATA_TYPE] = ifc.RANGE_DIST
+
+    dest = os.path.join(outdir, out_type + ".tif")
+    shared.remove_file_if_exists(dest)
+    log.info(f"Writing geotiff: {dest}")
+    shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
+
