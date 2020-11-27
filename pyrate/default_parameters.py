@@ -342,7 +342,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
     },
     "tlpfcutoff": {
         "DataType": int,
-        "DefaultValue": 12,
+        "DefaultValue": 30,
         "MinValue": 1,
         "MaxValue": None,
         "PossibleValues": None,
