@@ -16,8 +16,8 @@ from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.shared import Ifg, Geometry, DEM, save_numpy_phase
 
 
-geometry_path = common.MEXICO_TEST_DIR_GEOMETRY
-dem_error_path = common.MEXICO_TEST_DIR_DEM_ERROR
+geometry_path = common.MEXICO_CROPA_DIR_GEOMETRY
+dem_error_path = common.MEXICO_CROPA_DIR_DEM_ERROR
 
 
 @pytest.fixture(params=list(range(2))) # change back to 200

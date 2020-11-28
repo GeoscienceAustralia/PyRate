@@ -580,9 +580,10 @@ def manipulate_test_conf(conf_file, temp_obs_dir: Path):
         shutil.copy2(params[cf.HDR_FILE_LIST], temp_obs_dir)
         shutil.copy2(params[cf.COH_FILE_LIST], temp_obs_dir)
         shutil.copy2(params[cf.BASE_FILE_LIST], temp_obs_dir)
-    else: # legacy unit test data
+    else:  # legacy unit test data
         copytree(params[cf.OBS_DIR], temp_obs_dir)
-        params[cf.OBS_DIR] = temp_obs_dir.as_posix()
+
+    params[cf.OBS_DIR] = temp_obs_dir.as_posix()
     # manipulate params
     outdir = temp_obs_dir.joinpath('out')
     outdir.mkdir(exist_ok=True)
