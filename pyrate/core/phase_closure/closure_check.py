@@ -3,12 +3,14 @@ from pathlib import Path
 from typing import List, Dict
 import numpy as np
 from pyrate.core.shared import Ifg, dem_or_ifg
+from pyrate.core import config as cf
 from pyrate.core.phase_closure.mst_closure import find_signed_closed_loops
 from pyrate.core.phase_closure.sum_closure import sum_phase_values_for_each_loop
+from pyrate.core.phase_closure.plot_closure import plot_closure
 from pyrate.core.logger import pyratelogger as log
 
-LARGE_DEVIATION_THRESHOLD_FOR_PIXEL = np.pi/2  # pi
-THRESHOLD_TO_REMOVE_IFG = 0.1  # ifgs with more than this fraction of pixels with error will be dropped
+LARGE_DEVIATION_THRESHOLD_FOR_PIXEL = np.pi/4  # pi
+THRESHOLD_TO_REMOVE_IFG = 0.07  # ifgs with more than this fraction of pixels with error will be dropped
 LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG = 2  # pixel with phase unwrap error in at least this many loops
 PHASE_UNWRAP_ERROR_THRESHOLD = 5  # pixel with phase unwrap error in more than this many ifgs will be flagged
 MAX_LOOP_LENGTH = 4  # loops upto this many edges are considered for closure checks
@@ -59,20 +61,20 @@ def drop_ifgs_exceeding_threshold(orig_ifg_files, check_ps, num_occurences_each_
     return selected_ifg_files
 
 
-def closure_check_wrapper():
-    from pyrate.core.phase_closure.plot_closure import plot_closure
-    from pyrate.constants import PYRATEPATH
-    GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
-    ifg_files = GEOTIFF.glob('*_unw.tif')
-    ifg_files = [f.as_posix() for f in ifg_files]
+def closure_check_wrapper(params, interactive_plot=False):
+    ifg_files = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    log.info(f"Performing closure check on original set of {len(ifg_files)} ifgs")
     while True:  # iterate till ifgs/loops are stable
-        print('len(ifg_files):', len(ifg_files))
         new_ifg_files, closure, loops = wrap_closure_check(ifg_files)
-        plot_closure(closure=closure, loops=loops)
+        if interactive_plot:
+            plot_closure(closure=closure, loops=loops)
         if len(ifg_files) == len(new_ifg_files):
             break
         else:
             ifg_files = new_ifg_files  # exit condition could be some other check like number_of_loops
+
+    log.info(f"After closure check {len(ifg_files)} ifgs are retained")
+    return ifg_files
 
 
 def wrap_closure_check(ifg_files):
@@ -86,4 +88,4 @@ def wrap_closure_check(ifg_files):
     return selcted_ifg_files, closure, retained_loops
 
 
-closure_check_wrapper()
+# closure_check_wrapper()

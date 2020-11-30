@@ -184,6 +184,7 @@ class Configuration:
             self.__dict__['correct'] = [
                 'orbfit',
                 'refphase',
+                'phase_closure',
                 'demerror',
                 'mst',
                 'apscorrect',

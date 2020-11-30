@@ -15,12 +15,11 @@ from pyrate.core.dem_error import dem_error_calc_wrapper, _calculate_bperp_wrapp
 from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.shared import Ifg, Geometry, DEM, save_numpy_phase
 
-
 geometry_path = common.MEXICO_CROPA_DIR_GEOMETRY
 dem_error_path = common.MEXICO_CROPA_DIR_DEM_ERROR
 
 
-@pytest.fixture(params=list(range(2))) # change back to 200
+@pytest.fixture(params=list(range(200)))
 def point():
     x, y = np.random.randint(0, 60), np.random.randint(0, 100)
     return x, y
@@ -128,16 +127,17 @@ class TestPyRateGammaBperp:
             pytest.skip('skipped due to -ve az or rg')
 
         res = self.pbperp[x, y, :]
-        exp = self.gamma_bperp(* point)
+        exp = self.gamma_bperp(*point)
         np.testing.assert_array_almost_equal(exp, res, 2)  # max difference < 1cm
 
     def test_avg_bperp_calculation(self):
         # TODO - improve this test by reading bperp *.npy files
-        res =  np.mean(self.pbperp, axis=(0, 1), dtype=np.float64)
+        res = np.mean(self.pbperp, axis=(0, 1), dtype=np.float64)
         # assuming array centre is a good proxy for average value
         # TODO - use interpolation to calculate actual Gamma array average
         exp = self.gamma_bperp(30, 50)
         np.testing.assert_array_almost_equal(exp, res, 2)
+
 
 class TestDEMErrorFilesReusedFromDisc:
 
@@ -182,8 +182,8 @@ class TestDEMErrorResults:
         cls.params = Configuration(cls.conf).__dict__
         multi_paths = cls.params[cf.INTERFEROGRAM_FILES]
         cls.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
-        cls.params[cf.REFX_FOUND] = 8 # this is the pixel of the location given in the pyrate_mexico_cropa.conf file
-        cls.params[cf.REFY_FOUND] = 33 # however, the median of the whole interferogram is used for this validation
+        cls.params[cf.REFX_FOUND] = 8  # this is the pixel of the location given in the pyrate_mexico_cropa.conf file
+        cls.params[cf.REFY_FOUND] = 33  # however, the median of the whole interferogram is used for this validation
 
     @classmethod
     def teardown_class(cls):
@@ -235,4 +235,3 @@ class TestDEMErrorResults:
         np.testing.assert_allclose(dem_error_ifg1_exp, dem_error_ifg1_res)
         np.testing.assert_allclose(dem_error_ifg2_exp, dem_error_ifg2_res)
         np.testing.assert_allclose(dem_error_ifg3_exp, dem_error_ifg3_res)
-

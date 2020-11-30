@@ -28,6 +28,7 @@ from pyrate.core.covariance import maxvar_vcm_calc_wrapper
 from pyrate.core.mst import mst_calc_wrapper
 from pyrate.core.orbital import orb_fit_calc_wrapper
 from pyrate.core.dem_error import dem_error_calc_wrapper
+from pyrate.core.phase_closure.closure_check import closure_check_wrapper
 from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.shared import PrereadIfg, get_tiles, mpi_vs_multiprocess_logging, join_dicts
@@ -142,6 +143,7 @@ def _update_params_with_tiles(params: dict) -> None:
 correct_steps = {
     'orbfit': orb_fit_calc_wrapper,
     'refphase': ref_phase_est_wrapper,
+    'phase_closure': closure_check_wrapper,
     'demerror': dem_error_calc_wrapper,
     'mst': mst_calc_wrapper,
     'apscorrect': wrap_spatio_temporal_filter,
