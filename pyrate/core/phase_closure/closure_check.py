@@ -4,9 +4,11 @@ from typing import List, Dict
 import numpy as np
 from pyrate.core.shared import Ifg, dem_or_ifg
 from pyrate.core import config as cf
+from pyrate.core.shared import InputTypes
 from pyrate.core.phase_closure.mst_closure import find_signed_closed_loops
 from pyrate.core.phase_closure.sum_closure import sum_phase_values_for_each_loop
 from pyrate.core.phase_closure.plot_closure import plot_closure
+from pyrate.configuration import MultiplePaths
 from pyrate.core.logger import pyratelogger as log
 
 LARGE_DEVIATION_THRESHOLD_FOR_PIXEL = np.pi/4  # pi
@@ -74,7 +76,26 @@ def closure_check_wrapper(params, interactive_plot=False):
             ifg_files = new_ifg_files  # exit condition could be some other check like number_of_loops
 
     log.info(f"After closure check {len(ifg_files)} ifgs are retained")
+    update_params_with_closure_checked_ifg_list(ifg_files, params)
     return ifg_files
+
+
+def update_params_with_closure_checked_ifg_list(closure_checked_ifg_files, params: dict):
+    def _filter_to_closure_checked_multiple_mpaths(multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
+        filtered_multi_paths = []
+        for m_p in multi_paths:
+            if m_p.tmp_sampled_path in closure_checked_ifg_files:
+                filtered_multi_paths.append(m_p)
+        return filtered_multi_paths
+
+    params[cf.INTERFEROGRAM_FILES] = _filter_to_closure_checked_multiple_mpaths(params[cf.INTERFEROGRAM_FILES])
+
+    # TODO: write a list of selected ifg files
+    # with open(updated_ifg_list, 'w') as f:
+    #     for p in updated_multi_paths:
+    #         f.write(p.)
+    #
+    return params
 
 
 def wrap_closure_check(ifg_files):

@@ -260,6 +260,8 @@ class Configuration:
         self.mst_dir = Path(self.outdir).joinpath(cf.MST_DIR)
         self.mst_dir.mkdir(parents=True, exist_ok=True)
 
+        self.phase_closure_dir = Path(self.outdir).joinpath(cf.PHASE_CLOSURE_DIR)
+
         # create temp multilooked files dir
         self.temp_mlooked_dir = Path(self.outdir).joinpath(TEMP_MLOOKED_DIR)
         self.temp_mlooked_dir.mkdir(parents=True, exist_ok=True)

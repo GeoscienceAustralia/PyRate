@@ -322,6 +322,7 @@ REF_PIXEL_FILE = 'ref_pixel_file'
 ORB_ERROR_DIR = 'orb_error'
 DEM_ERROR_DIR = 'dem_error'
 APS_ERROR_DIR = 'aps_error'
+PHASE_CLOSURE_DIR = 'phase_closure_dir'
 MST_DIR = 'mst_dir'
 TEMP_MLOOKED_DIR = 'temp_mlooked_dir'
 
