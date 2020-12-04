@@ -109,6 +109,3 @@ else
         make install
     fi
 fi
-
-# change back to travis build dir
-cd $TRAVIS_BUILD_DIR

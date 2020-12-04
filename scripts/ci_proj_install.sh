@@ -23,6 +23,3 @@ if [ ! -d "$PROJINST/gdal-$GDALVERSION/share/proj" ]; then
     make -s -j 2
     make install
 fi
-
-# change back to travis build dir
-cd $TRAVIS_BUILD_DIR
