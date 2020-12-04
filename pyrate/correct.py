@@ -21,6 +21,7 @@ import shutil
 import os
 from pathlib import Path
 import pickle as cp
+from typing import List
 from pyrate.core import (shared, algorithm, mpiops, config as cf)
 from pyrate.core.config import ConfigException
 from pyrate.core.aps import wrap_spatio_temporal_filter
@@ -28,12 +29,12 @@ from pyrate.core.covariance import maxvar_vcm_calc_wrapper
 from pyrate.core.mst import mst_calc_wrapper
 from pyrate.core.orbital import orb_fit_calc_wrapper
 from pyrate.core.dem_error import dem_error_calc_wrapper
-from pyrate.core.phase_closure.closure_check import closure_check_wrapper
+from pyrate.core.phase_closure.closure_check import filter_to_closure_checked_ifgs
 from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.shared import PrereadIfg, get_tiles, mpi_vs_multiprocess_logging, join_dicts
 from pyrate.core.logger import pyratelogger as log
-from pyrate.configuration import Configuration
+from pyrate.configuration import Configuration, MultiplePaths
 
 MAIN_PROCESS = 0
 
@@ -140,10 +141,29 @@ def _update_params_with_tiles(params: dict) -> None:
     params[cf.TILES] = tiles
 
 
+def update_params_with_closure_checked_ifg_list(params: dict):
+    ifg_files = filter_to_closure_checked_ifgs(params)
+    def _filter_to_closure_checked_multiple_mpaths(multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
+        filtered_multi_paths = []
+        for m_p in multi_paths:
+            if m_p.tmp_sampled_path in ifg_files:
+                filtered_multi_paths.append(m_p)
+        return filtered_multi_paths
+
+    params[cf.INTERFEROGRAM_FILES] = _filter_to_closure_checked_multiple_mpaths(params[cf.INTERFEROGRAM_FILES])
+    _create_ifg_dict(params)
+    # TODO: write a list of selected ifg files
+    # with open(updated_ifg_list, 'w') as f:
+    #     for p in updated_multi_paths:
+    #         f.write(p.)
+    #
+    return params
+
+
 correct_steps = {
     'orbfit': orb_fit_calc_wrapper,
     'refphase': ref_phase_est_wrapper,
-    'phase_closure': closure_check_wrapper,
+    'phase_closure': update_params_with_closure_checked_ifg_list,
     'demerror': dem_error_calc_wrapper,
     'mst': mst_calc_wrapper,
     'apscorrect': wrap_spatio_temporal_filter,

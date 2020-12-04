@@ -63,7 +63,7 @@ def drop_ifgs_exceeding_threshold(orig_ifg_files, check_ps, num_occurences_each_
     return selected_ifg_files
 
 
-def closure_check_wrapper(params, interactive_plot=False):
+def filter_to_closure_checked_ifgs(params, interactive_plot=False):
     ifg_files = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     log.info(f"Performing closure check on original set of {len(ifg_files)} ifgs")
     while True:  # iterate till ifgs/loops are stable
@@ -76,26 +76,7 @@ def closure_check_wrapper(params, interactive_plot=False):
             ifg_files = new_ifg_files  # exit condition could be some other check like number_of_loops
 
     log.info(f"After closure check {len(ifg_files)} ifgs are retained")
-    update_params_with_closure_checked_ifg_list(ifg_files, params)
     return ifg_files
-
-
-def update_params_with_closure_checked_ifg_list(closure_checked_ifg_files, params: dict):
-    def _filter_to_closure_checked_multiple_mpaths(multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
-        filtered_multi_paths = []
-        for m_p in multi_paths:
-            if m_p.tmp_sampled_path in closure_checked_ifg_files:
-                filtered_multi_paths.append(m_p)
-        return filtered_multi_paths
-
-    params[cf.INTERFEROGRAM_FILES] = _filter_to_closure_checked_multiple_mpaths(params[cf.INTERFEROGRAM_FILES])
-
-    # TODO: write a list of selected ifg files
-    # with open(updated_ifg_list, 'w') as f:
-    #     for p in updated_multi_paths:
-    #         f.write(p.)
-    #
-    return params
 
 
 def wrap_closure_check(ifg_files):
