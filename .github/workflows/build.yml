@@ -1,0 +1,77 @@
+name: PyRate CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-16.04
+    name: Python ${{ matrix.python }}
+    strategy:
+      matrix:
+        include:
+#          - build: 1
+#            python-version: "3.6"
+#            GDALVERSION: "3.0.2"
+#            PROJVERSION: "6.1.1"
+          - build: 2
+            python-version: "3.7"
+            GDALVERSION: "3.0.2"
+            PROJVERSION: "6.2.1"
+#          - build: 3
+#            python-version: "3.7"
+#            GDALVERSION: "3.0.4"
+#            PROJVERSION: "6.1.1"
+#          - build: 4
+#            python-version: "3.8"
+#            GDALVERSION: "3.0.4"
+#            PROJVERSION: "6.1.1"
+#
+    env:
+      PIP_WHEEL_DIR: "/home/runner/.cache/pip/wheels"
+      PIP_FIND_LINKS: "file:///home/runner/.cache/pip/wheels"
+      GDALINST: "/home/runner/gdalinstall"
+      GDALBUILD: "/home/runner/gdalbuild"
+      GDALVERSION: ${{ matrix.GDALVERSION }}
+      PROJINST: "/home/runner/gdalinstall"
+      PROJBUILD: "/home/runner/projbuild"
+      PROJVERSION: ${{ matrix.PROJVERSION }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache multiple paths
+        uses: actions/cache@v2
+        with:
+          path: |
+            /home/runner/gdalinstall
+          key: ${{ runner.os }}-GDAL-${{ matrix.GDALVERSION }}-proj-${{ matrix.PROJVERSION }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install packages
+        run: sudo apt-get install libhdf5-serial-dev libgdal-dev libatlas-dev libatlas-base-dev gfortran openmpi-bin libopenmpi-dev
+      - run: python -m pip install -U pip
+      - run: python -m pip install wheel
+      - name: Install proj ${{matrix.PROJVERSION}}
+        run: |
+          echo "PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+          source ./scripts/ci_proj_install.sh
+      - name: Install GDAL ${{matrix.GDALVERSION}}
+        run: |
+          source ./scripts/ci_gdal_install.sh
+          echo "GDAL_DATA=$GDALINST/gdal-$GDALVERSION/share/gdal" >> $GITHUB_ENV
+          echo "PROJ_LIB=$GDALINST/gdal-$GDALVERSION/share/proj" >> $GITHUB_ENV
+      - name: Install PyRate
+        run: |
+          sed -i '/^GDAL/d' requirements.txt
+          pip install -r requirements.txt -r requirements-dev.txt -r requirements-test.txt
+          pip install GDAL==$(gdal-config --version)
+          python setup.py install
+          rm -rf Py_Rate.egg-info  # remove the local egg
+          echo "PYTHONPATH=$PYRATEPATH:$PYTHONPATH" >> $GITHUB_ENV
+          chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif  # makes the file readonly, used in a test
+      - name: Test PyRate
+        run: |
+          pytest tests/ -m "slow"
+          pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/ -m "not slow"
