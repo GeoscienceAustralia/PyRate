@@ -259,7 +259,8 @@ def gaussian_spatial_filter(image: np.ndarray, cutoff: float, x_size: float,
     """
     Function to apply a Gaussian spatial low-pass filter to a 2D image with
     unequal pixel resolution in x and y dimensions. Performs filtering in the
-    Fourier domain.
+    Fourier domain. Any NaNs in the image are interpolated prior to Fourier
+    transformation, with NaNs being replaced in to the filtered output image.
     :param image: 2D image to be filtered
     :param cutoff: filter cutoff in kilometres
     :param x_size: pixel size in x dimension, in metres

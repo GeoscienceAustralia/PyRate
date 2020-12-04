@@ -20,19 +20,25 @@ import os
 import shutil
 import pytest
 import numpy as np
-from scipy.ndimage import gaussian_filter1d
+from os.path import join
+from scipy.ndimage import gaussian_filter1d, gaussian_filter
+from numpy.testing import assert_array_almost_equal
 from pyrate import conv2tif, prepifg, correct
 from pyrate.configuration import Configuration, MultiplePaths
 import pyrate.core.config as cf
 from pyrate.core.aps import wrap_spatio_temporal_filter, _interpolate_nans_2d, _kernel
-from pyrate.core.aps import gaussian_temporal_filter as tlpfilter
-from pyrate.core import shared
+from pyrate.core.aps import gaussian_temporal_filter as tlpfilter, gaussian_spatial_filter as slpfilter
+from pyrate.core.shared import Ifg, save_numpy_phase
 from pyrate.core.ifgconstants import DAYS_PER_YEAR
-from tests import common
+from tests.common import TEST_CONF_GAMMA, MEXICO_CROPA_DIR 
 
 
 @pytest.fixture(params=["linear", "nearest", "cubic"])
 def slpnanfill_method(request):
+    return request.param
+
+@pytest.fixture(params=[0.001, 0.01, 0.05, 0.1])
+def slpfcutoff_method(request):
     return request.param
 
 
@@ -44,14 +50,26 @@ def test_interpolate_nans_2d(slpnanfill_method):
     assert np.sum(np.isnan(arr)) == 0  # should not be any nans
 
 
-def test_slpfilter():
-    # TODO
-    pass
+class TestSpatialFilter:
+    """
+    Test the implementation of Gaussian spatial filter
+    """
+    def setup_method(self):
+        ifg_path = join(str(MEXICO_CROPA_DIR), 'cropA_20180106-20180130_VV_8rlks_eqa_unw.tif')
+        ifg = Ifg(ifg_path)
+        ifg.open()
+        p = ifg.phase_data
+        self.x_size = ifg.x_size
+        self.y_size = ifg.y_size
+        # convert zeros to NaNs
+        p[p == 0] = np.nan
+        self.phase = p
 
 
-def test_slp_filter():
-    # TODO
-    pass
+    def test_gaussian_filter(self, slpfcutoff_method):
+        exp = gaussian_filter(self.phase, sigma=slpfcutoff_method)
+        res = slpfilter(self.phase, cutoff=slpfcutoff_method, x_size=self.x_size, y_size=self.y_size)
+        assert_array_almost_equal(res, exp, 1)
 
 
 def test_gaussian_kernel():
@@ -155,7 +173,7 @@ class TestAPSErrorCorrectionsOnDiscReused:
 
     @classmethod
     def setup_method(cls):
-        cls.conf = common.TEST_CONF_GAMMA
+        cls.conf = TEST_CONF_GAMMA
         params = Configuration(cls.conf).__dict__
         conv2tif.main(params)
         params = Configuration(cls.conf).__dict__
@@ -166,10 +184,10 @@ class TestAPSErrorCorrectionsOnDiscReused:
         correct._create_ifg_dict(cls.params)
         multi_paths = cls.params[cf.INTERFEROGRAM_FILES]
         cls.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
-        cls.ifgs = [shared.Ifg(i) for i in cls.ifg_paths]
+        cls.ifgs = [Ifg(i) for i in cls.ifg_paths]
         for i in cls.ifgs:
             i.open()
-        shared.save_numpy_phase(cls.ifg_paths, cls.params)
+        save_numpy_phase(cls.ifg_paths, cls.params)
         correct.mst_calc_wrapper(cls.params)
 
     @classmethod
