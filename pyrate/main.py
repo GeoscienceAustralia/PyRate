@@ -38,7 +38,11 @@ from pyrate.core.timeseries import timeseries_calc_wrapper
 def _params_from_conf(config_file):
     config_file = os.path.abspath(config_file)
     config = Configuration(config_file)
-    return config.__dict__
+    params = config.__dict__
+    if config.phase_closure_filtered_ifgs_list(params).exists():
+        print("hereh ehre hererhe rhe rerh erhererher erhe rehre rehr ehrerherh erehr ====")
+        params = config.refresh_ifg_list(params)
+    return params
 
 
 def main():
@@ -115,7 +119,9 @@ def main():
         prepifg.main(params)
 
     if args.command == "correct":
-        correct.main(params)
+        config_file = os.path.abspath(args.config_file)
+        config = Configuration(config_file)
+        correct.main(config)
 
     if args.command == "timeseries":
         timeseries(params)
@@ -136,8 +142,10 @@ def main():
 
         log.info("***********CORRECT**************")
         # reset params as prepifg modifies params
-        params = mpiops.run_once(_params_from_conf, args.config_file)
-        correct.main(params)
+        # params = mpiops.run_once(_params_from_conf, args.config_file)
+        config_file = os.path.abspath(args.config_file)
+        config = Configuration(config_file)
+        correct.main(config)
 
         log.info("***********TIMESERIES**************")
         params = mpiops.run_once(_params_from_conf, args.config_file)

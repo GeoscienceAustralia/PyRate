@@ -326,6 +326,16 @@ class Configuration:
         return Path(params[cf.OUT_DIR], cf.VCMT).with_suffix('.npy')
 
     @staticmethod
+    def phase_closure_filtered_ifgs_list(params):
+        return Path(params[cf.TEMP_MLOOKED_DIR]).joinpath('phase_closure_filtered_ifgs_list')
+
+    def refresh_ifg_list(self, params):  # update params dict
+        filtered_ifgs_list = self.phase_closure_filtered_ifgs_list(params)
+        files = parse_namelist(filtered_ifgs_list.as_posix())
+        params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.__dict__, input_type=InputTypes.IFG) for p in files]
+        return params
+
+    @staticmethod
     def ref_phs_file(params):
         ref_pixel_path = Configuration.ref_pixel_path(params)
         # add ref pixel path as when ref pixel changes - ref phs path should also change

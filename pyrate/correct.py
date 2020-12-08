@@ -112,7 +112,7 @@ def _copy_mlooked(params):
         Path(p.tmp_sampled_path).chmod(0o664)  # assign write permission as prepifg output is readonly
 
 
-def main(params):
+def main(config):
     """
     Top level function to perform PyRate workflow on given interferograms
 
@@ -125,12 +125,13 @@ def main(params):
     :return: vcmt: Variance-covariance matrix array
     :rtype: ndarray
     """
+    params = config.__dict__
     mpi_vs_multiprocess_logging("correct", params)
 
     # Make a copy of the multi-looked files for manipulation during correct steps
     _copy_mlooked(params)
 
-    return correct_ifgs(params)
+    return correct_ifgs(params, config)
 
 
 def _update_params_with_tiles(params: dict) -> None:
@@ -141,7 +142,7 @@ def _update_params_with_tiles(params: dict) -> None:
     params[cf.TILES] = tiles
 
 
-def update_params_with_closure_checked_ifg_list(params: dict):
+def update_params_with_closure_checked_ifg_list(params: dict, config: Configuration):
     ifg_files = filter_to_closure_checked_ifgs(params)
     def _filter_to_closure_checked_multiple_mpaths(multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
         filtered_multi_paths = []
@@ -151,12 +152,13 @@ def update_params_with_closure_checked_ifg_list(params: dict):
         return filtered_multi_paths
 
     params[cf.INTERFEROGRAM_FILES] = _filter_to_closure_checked_multiple_mpaths(params[cf.INTERFEROGRAM_FILES])
+    print(len(params[cf.INTERFEROGRAM_FILES]))
     _create_ifg_dict(params)
-    # TODO: write a list of selected ifg files
-    # with open(updated_ifg_list, 'w') as f:
-    #     for p in updated_multi_paths:
-    #         f.write(p.)
-    #
+
+    with open(config.phase_closure_filtered_ifgs_list(params), 'w') as f:
+        lines = [p.converted_path for p in params[cf.INTERFEROGRAM_FILES]]
+        f.writelines(lines)
+
     return params
 
 
@@ -171,7 +173,7 @@ correct_steps = {
 }
 
 
-def correct_ifgs(params: dict) -> None:
+def correct_ifgs(params: dict, config: Configuration) -> None:
     """
     Top level function to perform PyRate workflow on given interferograms
 
@@ -194,7 +196,10 @@ def correct_ifgs(params: dict) -> None:
 
     # run through the correct steps in user specified sequence
     for step in params['correct']:
-        correct_steps[step](params)
+        if step == 'phase_closure':
+            correct_steps[step](params, config)
+        else:
+            correct_steps[step](params)
     log.info("Finished 'correct' step")
 
 
