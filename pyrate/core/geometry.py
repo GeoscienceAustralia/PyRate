@@ -115,7 +115,7 @@ def get_sat_positions(lat: np.ndarray, lon: np.ndarray, look_angle: np.ndarray, 
                        np.tan(0.5 * (np.pi / 2 + lat - epsilon)))  # Eq. 104
     sat_lat = -np.pi / 2 + 2 * np.arctan(temp)
 
-    return sat_lat, sat_lon
+    return np.real(sat_lat), np.real(sat_lon)
 
 
 def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarray, lat: np.ndarray,
