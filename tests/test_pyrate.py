@@ -127,14 +127,8 @@ class TestPyRate:
                 shutil.copy(path, dest)
                 os.chmod(dest, 0o660)
 
-            os.makedirs(cls.BASE_DEM_DIR)
-            orig_dem = common.SML_TEST_DEM_TIF
-            os.symlink(orig_dem, cls.BASE_DEM_FILE)
-            os.chdir(cls.BASE_DIR)
-
-            # Turn off validation because we're in a different working dir
-            #  and relative paths in config won't be work.
-            params = config.get_config_params(common.TEST_CONF_ROIPAC)
+            config = Configuration(common.TEST_CONF_ROIPAC)
+            params = config.__dict__
             params['correct'] = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar']
             params[cf.OUT_DIR] = cls.BASE_OUT_DIR
             params[cf.PROCESSOR] = 0  # roipac
@@ -152,7 +146,7 @@ class TestPyRate:
             params[cf.REF_PIXEL_FILE] = Configuration.ref_pixel_path(params)
             Path(params[cf.OUT_DIR]).joinpath(cf.APS_ERROR_DIR).mkdir(exist_ok=True, parents=True)
             Path(params[cf.OUT_DIR]).joinpath(cf.MST_DIR).mkdir(exist_ok=True, parents=True)
-            correct.correct_ifgs(params)
+            correct.correct_ifgs(config)
 
             if not hasattr(cls, 'ifgs'):
                 cls.ifgs = get_ifgs(out_dir=cls.BASE_OUT_DIR)
@@ -227,7 +221,8 @@ class TestParallelPyRate:
         output_conf = cls.tif_dir.joinpath(output_conf_file).as_posix()
         pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
 
-        params = Configuration(output_conf).__dict__
+        config = Configuration(output_conf)
+        params = config.__dict__
 
         from subprocess import check_call
         check_call(f"pyrate conv2tif -f {output_conf}", shell=True)
@@ -238,9 +233,9 @@ class TestParallelPyRate:
         ifgs = common.small_data_setup()
         correct._copy_mlooked(params)
         tiles = pyrate.core.shared.get_tiles(cls.sampled_paths[0], rows, cols)
-        correct.correct_ifgs(params)
-        pyrate.main.timeseries(params)
-        pyrate.main.stack(params)
+        correct.correct_ifgs(config)
+        pyrate.main.timeseries(config)
+        pyrate.main.stack(config)
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
         cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.OUT_DIR])
@@ -261,15 +256,16 @@ class TestParallelPyRate:
         output_conf_file = 'gamma.conf'
         output_conf = cls.tif_dir_s.joinpath(output_conf_file).as_posix()
         pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
-        params = Configuration(output_conf).__dict__
+        config = Configuration(output_conf)
+        params = config.__dict__
 
         check_call(f"pyrate conv2tif -f {output_conf}", shell=True)
         check_call(f"pyrate prepifg -f {output_conf}", shell=True)
 
         correct._copy_mlooked(params)
-        correct.correct_ifgs(params)
-        pyrate.main.timeseries(params)
-        pyrate.main.stack(params)
+        correct.correct_ifgs(config)
+        pyrate.main.timeseries(config)
+        pyrate.main.stack(config)
         cls.refpixel, cls.maxvar, cls.vcmt = \
             (params[cf.REFX], params[cf.REFY]), params[cf.MAXVAR], params[cf.VCMT]
         cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[cf.OUT_DIR])

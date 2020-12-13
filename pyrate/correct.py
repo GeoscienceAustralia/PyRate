@@ -131,7 +131,7 @@ def main(config):
     # Make a copy of the multi-looked files for manipulation during correct steps
     _copy_mlooked(params)
 
-    return correct_ifgs(params, config)
+    return correct_ifgs(config)
 
 
 def _update_params_with_tiles(params: dict) -> None:
@@ -144,14 +144,15 @@ def _update_params_with_tiles(params: dict) -> None:
 
 def update_params_with_closure_checked_ifg_list(params: dict, config: Configuration):
     ifg_files = filter_to_closure_checked_ifgs(params)
-    def _filter_to_closure_checked_multiple_mpaths(multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
+
+    def _filter_to_closure_checked_multiple_paths(multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
         filtered_multi_paths = []
         for m_p in multi_paths:
             if m_p.tmp_sampled_path in ifg_files:
                 filtered_multi_paths.append(m_p)
         return filtered_multi_paths
 
-    params[cf.INTERFEROGRAM_FILES] = _filter_to_closure_checked_multiple_mpaths(params[cf.INTERFEROGRAM_FILES])
+    params[cf.INTERFEROGRAM_FILES] = _filter_to_closure_checked_multiple_paths(params[cf.INTERFEROGRAM_FILES])
     _create_ifg_dict(params)
 
     with open(config.phase_closure_filtered_ifgs_list(params), 'w') as f:
@@ -172,20 +173,11 @@ correct_steps = {
 }
 
 
-def correct_ifgs(params: dict, config: Configuration) -> None:
+def correct_ifgs(config: Configuration) -> None:
     """
     Top level function to perform PyRate workflow on given interferograms
-
-    :param dict params: Dictionary of configuration parameters
-
-    :return: refpt: tuple of reference pixel x and y position
-    :rtype: tuple
-    :return: maxvar: array of maximum variance values of interferograms
-    :rtype: ndarray
-    :return: vcmt: Variance-covariance matrix array
-    :rtype: ndarray
     """
-
+    params = config.__dict__
     __validate_correct_steps(params)
 
     # house keeping

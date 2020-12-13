@@ -28,10 +28,12 @@ from pyrate.core.config import ConfigException
 from tests import common
 
 
-def test_unsupported_process_steps_raises(gamma_params):
+def test_unsupported_process_steps_raises(gamma_conf):
+    config = pyrate.configuration.Configuration(gamma_conf)
+    gamma_params = config.__dict__
     gamma_params['correct'] = ['orbfit2', 'something_other_step']
     with pytest.raises(ConfigException):
-        correct.correct_ifgs(gamma_params)
+        correct.correct_ifgs(config)
 
 
 def test_supported_process_steps_dont_raise(gamma_params):
