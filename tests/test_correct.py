@@ -75,8 +75,8 @@ def test_process_treats_prepif_outputs_readonly(gamma_conf, tempdir, coh_mask):
     for c in cropped_coh + cropped_ifgs:
         assert c.stat().st_mode == 33060
 
-    params = Configuration(output_conf).__dict__
-    correct.main(params)
+    config = Configuration(output_conf)
+    correct.main(config)
 
     # check all after correct steps multilooked files are still readonly
     for c in cropped_coh + cropped_ifgs + dem_ifgs:
