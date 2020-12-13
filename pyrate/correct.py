@@ -152,11 +152,10 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
         return filtered_multi_paths
 
     params[cf.INTERFEROGRAM_FILES] = _filter_to_closure_checked_multiple_mpaths(params[cf.INTERFEROGRAM_FILES])
-    print(len(params[cf.INTERFEROGRAM_FILES]))
     _create_ifg_dict(params)
 
     with open(config.phase_closure_filtered_ifgs_list(params), 'w') as f:
-        lines = [p.converted_path for p in params[cf.INTERFEROGRAM_FILES]]
+        lines = [p.converted_path + '\n' for p in params[cf.INTERFEROGRAM_FILES]]
         f.writelines(lines)
 
     return params

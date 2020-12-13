@@ -39,10 +39,17 @@ def _params_from_conf(config_file):
     config_file = os.path.abspath(config_file)
     config = Configuration(config_file)
     params = config.__dict__
-    if config.phase_closure_filtered_ifgs_list(params).exists():
-        print("hereh ehre hererhe rhe rerh erhererher erhe rehre rehr ehrerherh erehr ====")
-        params = config.refresh_ifg_list(params)
     return params
+
+
+def update_params_due_to_ifg_selection(config):
+    params = config.__dict__
+    if config.phase_closure_filtered_ifgs_list(params).exists():
+        params = config.refresh_ifg_list(params)
+        correct._create_ifg_dict(params)
+        correct._update_params_with_tiles(params)
+    return params
+
 
 
 def main():
@@ -124,10 +131,14 @@ def main():
         correct.main(config)
 
     if args.command == "timeseries":
-        timeseries(params)
+        config_file = os.path.abspath(args.config_file)
+        config = Configuration(config_file)
+        timeseries(config)
 
     if args.command == "stack":
-        stack(params)
+        config_file = os.path.abspath(args.config_file)
+        config = Configuration(config_file)
+        stack(config)
 
     if args.command == "merge":
         merge.main(params)
@@ -142,18 +153,17 @@ def main():
 
         log.info("***********CORRECT**************")
         # reset params as prepifg modifies params
-        # params = mpiops.run_once(_params_from_conf, args.config_file)
         config_file = os.path.abspath(args.config_file)
         config = Configuration(config_file)
         correct.main(config)
 
         log.info("***********TIMESERIES**************")
-        params = mpiops.run_once(_params_from_conf, args.config_file)
-        timeseries(params)
+        config = Configuration(config_file)
+        timeseries(config)
 
         log.info("***********STACK**************")
-        params = mpiops.run_once(_params_from_conf, args.config_file)
-        stack(params)
+        config = Configuration(config_file)
+        stack(config)
 
         log.info("***********MERGE**************")
         params = mpiops.run_once(_params_from_conf, args.config_file)
@@ -162,13 +172,17 @@ def main():
     log.info("--- Runtime = %s seconds ---" % (time.time() - start_time))
 
 
-def timeseries(params: dict) -> None:
+def timeseries(config: Configuration) -> None:
+    params = config.__dict__
     mpi_vs_multiprocess_logging("timeseries", params)
+    params = update_params_due_to_ifg_selection(config=config)
     timeseries_calc_wrapper(params)
 
 
-def stack(params: dict) -> None:
+def stack(config: Configuration) -> None:
+    params = config.__dict__
     mpi_vs_multiprocess_logging("stack", params)
+    params = update_params_due_to_ifg_selection(config=config)
     stack_calc_wrapper(params)
 
 
