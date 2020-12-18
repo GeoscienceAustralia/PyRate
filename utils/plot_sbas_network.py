@@ -15,8 +15,8 @@
 #   limitations under the License.
 """
 This python script can be used to generate a baseline-time plot of the 
-interferograms used in the SBAS (Small Baseline Subset) network.
-The functios 'plot_baseline_time_sbas' and 'epoch_baselines' are copies of the corresponding
+interferograms used in the PyRate SBAS (Small Baseline Subset) network.
+The functions 'plot_baseline_time_sbas' and 'epoch_baselines' are copies of the corresponding
 functions in 'calc_baselines_functions.py' in GA's gamma-insar repository, see
 https://github.com/GeoscienceAustralia/gamma_insar/blob/develop/calc_baselines_functions.py
 
@@ -69,7 +69,7 @@ def plot_baseline_time_sbas(epochs, Bperps, epoch1, epoch2, filename):
         x = [epochs[n], epochs[m]]
         y = [Bperps[n], Bperps[m]]
         #  baselines[x]
-        ax1.plot_date(x, y, xdate=True, ydate=False, linestyle='-', \
+        ax1.plot_date(x, y, xdate=True, ydate=False, linestyle='-',
         color = 'r', linewidth=1.0)
 
     # plot epochs as filled circles
@@ -95,7 +95,7 @@ def plot_baseline_time_sbas(epochs, Bperps, epoch1, epoch2, filename):
     date_max = epochs.max()
     date_range = date_max - date_min
     date_add = date_range.days/15
-    ax1.set_xlim(date_min - timedelta(days=date_add), date_max + \
+    ax1.set_xlim(date_min - timedelta(days=date_add), date_max +
                  timedelta(days=date_add))
 
     # set the Bperp axis range
@@ -113,8 +113,7 @@ def plot_baseline_time_sbas(epochs, Bperps, epoch1, epoch2, filename):
     fig.autofmt_xdate()
 
     # Save plot to PNG file
-    savepath = filename+".png"
-    plt.savefig(savepath, orientation="landscape", transparent=False,
+    plt.savefig(filename, orientation="landscape", transparent=False,
                 format="png")
     return
 
@@ -173,10 +172,18 @@ epoch1 = []
 epoch2 = []
 for tif_file in glob.glob(path_to_tif):
     md = readtif(tif_file)
-    Bperps_ifg.append(float(md['BASELINE_PERP_METRES']))
-    epoch1.append(md['FIRST_DATE'])
-    epoch2.append(md['SECOND_DATE'])
+    # look for perpendicular baseline in geotiff metadata; skip ifg if not there
+    if 'BASELINE_PERP_METRES' in md:
+        Bperps_ifg.append(float(md['BASELINE_PERP_METRES']))
+        epoch1.append(md['FIRST_DATE'])
+        epoch2.append(md['SECOND_DATE'])
 print('')
+
+# Quit if no ifg has a perpendicular baseline value
+if len(Bperps_ifg) == 0:
+    print('No perpendicular baseline values in ifg metadata. ' +
+          'First run the DEM error correction to calculate baselines.')
+    quit()
 
 # create date vector containing all epochs in the network
 epochs= list(set(epoch1+epoch2))
@@ -201,3 +208,4 @@ filename = os.path.join(path, 'temp_mlooked_dir/baseline_time_plot.png')
 plot_baseline_time_sbas(np.array(epochs), Bperps_epoch, epoch1_ix, epoch2_ix, filename)
 print('Network plot saved to ' + filename)
 print('')
+
