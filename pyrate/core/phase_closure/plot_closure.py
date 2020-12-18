@@ -1,17 +1,20 @@
 from typing import List
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 from pyrate.core.phase_closure.mst_closure import SignedEdge
 
 PI = np.pi
-
-cmap = mpl.cm.Spectral
 # norm = mpl.colors.Normalize(vmin=-PI/2, vmax=PI/2)
 
 
 def plot_closure(closure: np.ndarray, loops: List[List[SignedEdge]]):
+    try:
+        import matplotlib.pyplot as plt
+        import matplotlib as mpl
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
+        cmap = mpl.cm.Spectral
+    except ImportError as e:
+        raise ImportError(e)
+
     nrows, ncols, n_loops = closure.shape
 
     plt_rows = np.int(np.sqrt(n_loops))
