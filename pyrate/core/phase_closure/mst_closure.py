@@ -22,10 +22,10 @@ def discard_edges_with_same_members(simple_cycles):
     return filtered_sc
 
 
-def find_closed_loops(weighted_edges: List[WeightedEdge]) -> List[List[date]]:
+def find_closed_loops(edges: List[Edge]) -> List[List[date]]:
     g = nx.Graph()
-    weighted_edges = [(we.edge.first, we.edge.second, we.weight) for we in weighted_edges]
-    g.add_weighted_edges_from(weighted_edges)
+    edges = [(we.first, we.second) for we in edges]
+    g.add_edges_from(edges)
     dg = nx.DiGraph(g)
     simple_cycles = nx.simple_cycles(dg)  # will have all edges
     simple_cycles = [scc for scc in simple_cycles if len(scc) > 2]  # discard edges
@@ -70,8 +70,6 @@ def setup_edges(ifg_files: List['str'], weighted: bool = False) -> List[Union[Ed
 
 def find_signed_closed_loops(ifg_files: List[str]) -> List[List[SignedEdge]]:
     available_edges = setup_edges(ifg_files)
-    weighted_edges = setup_edges(ifg_files, weighted=True)
-
-    all_loops = find_closed_loops(weighted_edges)  # find loops with weights
+    all_loops = find_closed_loops(available_edges)  # find loops with weights
     signed_loops = add_signs_to_loops(all_loops, available_edges)
     return signed_loops
