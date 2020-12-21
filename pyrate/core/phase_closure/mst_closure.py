@@ -6,7 +6,7 @@ from pyrate.core.shared import dem_or_ifg
 
 Edge = namedtuple('Edge', ['first', 'second'])
 SignedEdge = namedtuple('SignedEdge', ['edge', 'sign'])
-WeightedEdge = namedtuple('WeightedEdge', ['edge', 'weight'])
+SignedWeightedEdge = namedtuple('SignedWeightedEdge', ['SignedEdge', 'weight'])
 
 
 def discard_edges_with_same_members(simple_cycles):
@@ -34,11 +34,11 @@ def find_closed_loops(edges: List[Edge]) -> List[List[date]]:
     return discard_edges_with_same_members(simple_cycles)
 
 
-def add_signs_to_loops(loops, available_edges) -> List[List[SignedEdge]]:
-    signed_loops = []
+def add_signs_and_weights_to_loops(loops, available_edges) -> List[List[SignedEdge]]:
+    weighted_signed_loops = []
     available_edges = set(available_edges)  # hash it once for O(1) lookup
     for i, l in enumerate(loops):
-        signed_loop = []
+        weighted_signed_loop = []
         l.append(l[0])  # add the closure loop
         for ii, ll in enumerate(l[:-1]):
             if l[ii+1] > ll:
@@ -49,27 +49,26 @@ def add_signs_to_loops(loops, available_edges) -> List[List[SignedEdge]]:
                 edge = Edge(l[ii+1], ll)
                 assert edge in available_edges
                 signed_edge = SignedEdge(edge, -1)  # in direction of ifg
-            signed_loop.append(signed_edge)
+            weighted_signed_edge = SignedWeightedEdge(signed_edge, signed_edge.edge.second - signed_edge.edge.first)
+            weighted_signed_loop.append(weighted_signed_edge)
 
-        signed_loops.append(signed_loop)
+        weighted_signed_loops.append(weighted_signed_loop)
 
-    return signed_loops
+    return weighted_signed_loops
 
 
-def setup_edges(ifg_files: List['str'], weighted: bool = False) -> List[Union[Edge, WeightedEdge]]:
+def setup_edges(ifg_files: List['str']) -> List[Edge]:
     ifg_files.sort()
     ifgs = [dem_or_ifg(i) for i in ifg_files]
     for i in ifgs:
         i.open()
         i.nodata_value = 0
-    if weighted:
-        return [WeightedEdge(Edge(i.first, i.second), i.nan_fraction) for i in ifgs]
-    else:
-        return [Edge(i.first, i.second) for i in ifgs]
+    return [Edge(i.first, i.second) for i in ifgs]
 
 
 def find_signed_closed_loops(ifg_files: List[str]) -> List[List[SignedEdge]]:
     available_edges = setup_edges(ifg_files)
     all_loops = find_closed_loops(available_edges)  # find loops with weights
-    signed_loops = add_signs_to_loops(all_loops, available_edges)
+    signed_loops = add_signs_and_weights_to_loops(all_loops, available_edges)
+    signed_loops.sort(key=lambda x: x.weight)
     return signed_loops
