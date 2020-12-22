@@ -267,7 +267,7 @@ def gaussian_spatial_filter(image: np.ndarray, cutoff: float, x_size: float,
     :param y_size: pixel size in y dimension, in metres
     :param nanfill: interpolate image to fill NaNs
     :param fillmethod: interpolation method ('nearest', 'cubic', or 'linear')
-    :return: out: Gaussian low-pass filtered 2D image
+    :return: filt: Gaussian low-pass filtered 2D image
     """
     # create NaN mask of image
     mask = np.isnan(image)
@@ -275,15 +275,20 @@ def gaussian_spatial_filter(image: np.ndarray, cutoff: float, x_size: float,
     # nearest neighbour will fill values outside the convex hull
     if nanfill:
         _interpolate_nans_2d(image, fillmethod)
-    # fast fourier transform of the input image
-    imf = fftshift(fft2(image))
 
     rows, cols = image.shape
+    pad = 4096
+    # pad the image to a large square array.
+    # TODO: implement variable padding dependent on image size
+    im = np.pad(image, ((0, pad - rows), (0, pad - cols)), 'constant')
+    # fast fourier transform of the input image
+    imf = fftshift(fft2(im))
+
     # calculate centre coords of image
-    cx = np.floor(cols/2)
-    cy = np.floor(rows/2)
+    cx = np.floor(pad/2)
+    cy = np.floor(pad/2)
     # calculate distance array
-    [xx, yy] = np.meshgrid(range(cols), range(rows))
+    [xx, yy] = np.meshgrid(range(pad), range(pad))
     xx = (xx - cx) * x_size  # these are in meters as x_size in metres
     yy = (yy - cy) * y_size
     dist = np.sqrt(xx ** 2 + yy ** 2)/ ifc.METRE_PER_KM # change m to km
@@ -298,8 +303,9 @@ def gaussian_spatial_filter(image: np.ndarray, cutoff: float, x_size: float,
     outf = imf * wgt
     # Inverse Fourier transform
     out = np.real(ifft2(ifftshift(outf)))
-    out[mask] = np.nan # re-insert nans in output image
-    return out
+    filt = out[:rows, :cols] # grab non-padded part
+    filt[mask] = np.nan # re-insert nans in output image
+    return filt
 
 
 # TODO: use tiles here and distribute amongst processes
