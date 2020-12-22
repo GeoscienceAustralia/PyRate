@@ -55,7 +55,11 @@ def find_closed_loops(edges: List[Edge]) -> List[List[date]]:
     return discard_edges_with_same_members(simple_cycles)
 
 
-def add_signs_and_weights_to_loops(loops, available_edges) -> List[List[SignedEdge]]:
+def add_signs_and_weights_to_loops(loops: List[List[date]], available_edges: List[Edge]) -> List[List[SignedEdge]]:
+    """
+    add signs and weights to loops.
+    Additionally, sort the loops (change order of ifgs appearing in loop) by weight and date
+    """
     weighted_signed_loops = []
     available_edges = set(available_edges)  # hash it once for O(1) lookup
     for i, l in enumerate(loops):
@@ -76,7 +80,8 @@ def add_signs_and_weights_to_loops(loops, available_edges) -> List[List[SignedEd
             )
             weighted_signed_loop.append(weighted_signed_edge)
 
-        weighted_signed_loop.sort(key=lambda x: x.weight)
+        # sort the loops by first the weight, and then minimum start date
+        weighted_signed_loop.sort(key=lambda x: (x.weight, x.SignedEdge.edge.first))
         weighted_signed_loops.append(weighted_signed_loop)
 
     return weighted_signed_loops
