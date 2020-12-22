@@ -5,7 +5,7 @@ import numpy as np
 from pyrate.core.shared import Ifg, dem_or_ifg
 from pyrate.core import config as cf
 from pyrate.core.shared import InputTypes
-from pyrate.core.phase_closure.mst_closure import find_signed_closed_loops
+from pyrate.core.phase_closure.mst_closure import find_signed_closed_loops, sort_loops_based_on_weights_and_date
 from pyrate.core.phase_closure.sum_closure import sum_phase_values_for_each_loop
 from pyrate.core.phase_closure.plot_closure import plot_closure
 from pyrate.configuration import MultiplePaths
@@ -17,6 +17,7 @@ LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG = 2  # pixel with phase unwrap error in a
 PHASE_UNWRAP_ERROR_THRESHOLD = 5  # pixel with phase unwrap error in more than this many ifgs will be flagged
 MAX_LOOP_LENGTH = 4  # loops upto this many edges are considered for closure checks
 SUBTRACT_MEDIAN_IN_CLOSURE_CHECK = True
+MAX_LOOP_COUNT_FOR_EACH_IFGS = 5
 
 
 def detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg):
@@ -81,13 +82,11 @@ def filter_to_closure_checked_ifgs(params, interactive_plot=False):
 
 def wrap_closure_check(ifg_files):
     signed_loops = find_signed_closed_loops(ifg_files=ifg_files)
-    retained_loops = [sl for sl in signed_loops if len(sl) <= MAX_LOOP_LENGTH]
+    sorted_signed_loops = sort_loops_based_on_weights_and_date(signed_loops)
+    retained_loops = [sl for sl in sorted_signed_loops if len(sl) <= MAX_LOOP_LENGTH]
     closure, check_ps, num_occurences_each_ifg = sum_phase_values_for_each_loop(
         ifg_files, retained_loops, LARGE_DEVIATION_THRESHOLD_FOR_PIXEL, SUBTRACT_MEDIAN_IN_CLOSURE_CHECK
     )
     # ps_unwrap_error = detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg)
     selcted_ifg_files = drop_ifgs_exceeding_threshold(ifg_files, check_ps, num_occurences_each_ifg)
     return selcted_ifg_files, closure, retained_loops
-
-
-# closure_check_wrapper()

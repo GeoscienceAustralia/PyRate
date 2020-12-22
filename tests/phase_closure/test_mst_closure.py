@@ -54,7 +54,7 @@ def test_associate_ifgs_with_loops(signed_loops, geotiffs):
     assert isinstance(signed_loops[0][0][0][0], Edge)
 
 
-def test_sort_loops_based_on_weights_and_date(signed_loops, geotiffs):
+def test_sort_loops_based_on_weights_and_date(signed_loops):
     weighted_loops = sort_loops_based_on_weights_and_date(signed_loops)
     assert len(weighted_loops) == 541
     # order
@@ -62,10 +62,10 @@ def test_sort_loops_based_on_weights_and_date(signed_loops, geotiffs):
     earliest_dates = [w.earliest_date for w in weighted_loops]
     assert np.all(np.diff(weights) >= 0)
 
-    for i, (w, d) in enumerate(zip(weights[:-1], earliest_dates[:-1])):
+    for i, (w, d, wl) in enumerate(zip(weights[:-1], earliest_dates[:-1], weighted_loops[:-1])):
         sub_list = [d]
         if w == weights[i+1]:
             sub_list.append(earliest_dates[i+1])
         if len(sub_list) > 1:
             tds = np.array([td.days for td in np.diff(sub_list)])
-            assert np.all( tds >= 0)  # assert all dates are increasing for same weights
+            assert np.all(tds >= 0)  # assert all dates are increasing for same weights

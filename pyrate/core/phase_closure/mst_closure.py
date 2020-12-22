@@ -16,11 +16,14 @@ class WeightedLoop:
 
     @property
     def weight(self):
-        return sum({l.weight for l in self.loop})
+        return sum([l.weight for l in self.loop])
 
     @property
     def earliest_date(self):
         return min({loop.SignedEdge.edge.first for loop in self.loop})
+
+    def __len__(self):
+        return len(self.loop)
 
 
 def discard_edges_with_same_members(simple_cycles):
@@ -69,6 +72,7 @@ def add_signs_and_weights_to_loops(loops, available_edges) -> List[List[SignedEd
             )
             weighted_signed_loop.append(weighted_signed_edge)
 
+        weighted_signed_loop.sort(key=lambda x: x.weight)
         weighted_signed_loops.append(weighted_signed_loop)
 
     return weighted_signed_loops
@@ -87,7 +91,6 @@ def find_signed_closed_loops(ifg_files: List[str]) -> List[List[SignedEdge]]:
     available_edges = setup_edges(ifg_files)
     all_loops = find_closed_loops(available_edges)  # find loops with weights
     signed_loops = add_signs_and_weights_to_loops(all_loops, available_edges)
-    signed_loops.sort(key=lambda x: x.weight)
     return signed_loops
 
 
