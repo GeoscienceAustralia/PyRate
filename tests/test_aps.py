@@ -30,15 +30,19 @@ from pyrate.core.aps import wrap_spatio_temporal_filter, _interpolate_nans_2d, _
 from pyrate.core.aps import gaussian_temporal_filter as tlpfilter, gaussian_spatial_filter as slpfilter
 from pyrate.core.shared import Ifg, save_numpy_phase
 from pyrate.core.ifgconstants import DAYS_PER_YEAR
-from tests.common import TEST_CONF_GAMMA, MEXICO_CROPA_DIR 
+from tests.common import TEST_CONF_GAMMA, MEXICO_CROPA_DIR, BASE_TEST 
 
 
 @pytest.fixture(params=["linear", "nearest", "cubic"])
 def slpnanfill_method(request):
     return request.param
 
-@pytest.fixture(params=[0.001, 0.01, 0.05, 0.1])
+@pytest.fixture(params=[0.1, 0.5, 1, 5])
 def slpfcutoff_method(request):
+    return request.param
+
+@pytest.fixture(params=[0.001, 0.01])
+def slpfcutoff(request):
     return request.param
 
 
@@ -55,7 +59,7 @@ class TestSpatialFilter:
     Test the implementation of Gaussian spatial filter
     """
     def setup_method(self):
-        ifg_path = join(str(MEXICO_CROPA_DIR), 'cropA_20180106-20180130_VV_8rlks_eqa_unw.tif')
+        ifg_path = join(str(BASE_TEST), 'cropB', '20180106-20180130_ifg.tif')
         ifg = Ifg(ifg_path)
         ifg.open()
         p = ifg.phase_data
@@ -67,9 +71,17 @@ class TestSpatialFilter:
 
 
     def test_gaussian_filter(self, slpfcutoff_method):
-        exp = gaussian_filter(self.phase, sigma=slpfcutoff_method)
-        res = slpfilter(self.phase, cutoff=slpfcutoff_method, x_size=self.x_size, y_size=self.y_size)
-        assert_array_almost_equal(res, exp, 1)
+        """
+        Compare against scipy.ndimage.gaussian_filter, 
+        that operates in the spatial domain on data with equal resolution in x and y
+        """
+        e = gaussian_filter(self.phase, sigma=slpfcutoff_method)
+        r = slpfilter(self.phase, cutoff=slpfcutoff_method,
+                      x_size=self.x_size, y_size=self.y_size)
+        # pull data from middle of images; away from potential edge effects
+        exp = e[50:150, 50:150]
+        res = r[50:150, 50:150]
+        assert_array_almost_equal(res, exp, 0)
 
 
 def test_gaussian_kernel():
@@ -146,27 +158,6 @@ class TestTemporalFilter:
         res = tlpfilter(self.tsincr, self.interval*0.5, self.span, self.thr)
         exp = gaussian_filter1d(self.tsincr, sigma=0.5)
         np.testing.assert_array_almost_equal(res, exp, decimal=2)
-
-
-# APS correction using spatio-temporal filter
-# apsest: ON = 1, OFF = 0
-# Spatial low-pass filter parameters
-# slpfcutoff: cutoff d0 (greater than zero) in km for both butterworth and gaussian filters
-# slpnanfill: 1 for interpolation, 0 for zero fill
-# slpnanfill_method: linear, nearest, cubic; only used when slpnanfill=1
-# Temporal low-pass filter parameters
-# tlpfcutoff: cutoff t0 for gaussian filter in year;
-# tlpfpthr: valid pixel threshold;
-# slpfcutoff:     0.001
-# slpnanfill:     1
-# slpnanfill_method:  cubic
-# tlpfcutoff:   12
-# tlpfpthr:     1
-
-
-@pytest.fixture(params=[0.001, 0.01])
-def slpfcutoff(request):
-    return request.param
 
 
 class TestAPSErrorCorrectionsOnDiscReused:
