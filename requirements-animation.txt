@@ -1,6 +1,0 @@
-rasterio
-matplotlib 
-statsmodels
-numpy
-os
-xarray
