@@ -25,6 +25,10 @@ class WeightedLoop:
     def __len__(self):
         return len(self.loop)
 
+    @property
+    def edges(self):
+        return [Edge(loop.SignedEdge.edge.first, loop.SignedEdge.edge.second) for loop in self.loop]
+
 
 def discard_edges_with_same_members(simple_cycles):
     seen_sc_sets = set()
