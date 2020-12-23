@@ -22,6 +22,20 @@ class WeightedLoop:
     def earliest_date(self):
         return min({loop.SignedEdge.edge.first for loop in self.loop})
 
+    @property
+    def primary_dates(self):
+        first_dates = [loop.SignedEdge.edge.first for loop in self.loop]
+        first_dates.sort()
+        st = ''.join([str(d) for d in first_dates])
+        return st
+
+    @property
+    def secondary_dates(self):
+        first_dates = [loop.SignedEdge.edge.second for loop in self.loop]
+        first_dates.sort()
+        st = ''.join([str(d) for d in first_dates])
+        return st
+
     def __len__(self):
         return len(self.loop)
 
@@ -30,7 +44,7 @@ class WeightedLoop:
         return [Edge(loop.SignedEdge.edge.first, loop.SignedEdge.edge.second) for loop in self.loop]
 
 
-def discard_edges_with_same_members(simple_cycles):
+def discard_cycles_with_same_members(simple_cycles):
     seen_sc_sets = set()
     filtered_sc = []
     for sc in simple_cycles:
@@ -38,8 +52,8 @@ def discard_edges_with_same_members(simple_cycles):
         sc.sort()
         sc = tuple(sc)
         if sc not in seen_sc_sets:
+            seen_sc_sets.add(sc)
             filtered_sc.append(loop)
-        seen_sc_sets.add(sc)
     return filtered_sc
 
 
@@ -52,7 +66,7 @@ def find_closed_loops(edges: List[Edge]) -> List[List[date]]:
     simple_cycles = [scc for scc in simple_cycles if len(scc) > 2]  # discard edges
 
     # also discard loops when the loop members are the same
-    return discard_edges_with_same_members(simple_cycles)
+    return discard_cycles_with_same_members(simple_cycles)
 
 
 def add_signs_and_weights_to_loops(loops: List[List[date]], available_edges: List[Edge]) -> List[List[SignedEdge]]:
@@ -81,7 +95,7 @@ def add_signs_and_weights_to_loops(loops: List[List[date]], available_edges: Lis
             weighted_signed_loop.append(weighted_signed_edge)
 
         # sort the loops by first the weight, and then minimum start date
-        weighted_signed_loop.sort(key=lambda x: (x.weight, x.SignedEdge.edge.first))
+        weighted_signed_loop.sort(key=lambda x: (x.weight, x.SignedEdge.edge.first, x.SignedEdge.edge.second))
         weighted_signed_loops.append(weighted_signed_loop)
 
     return weighted_signed_loops
@@ -105,5 +119,5 @@ def find_signed_closed_loops(ifg_files: List[str]) -> List[List[SignedEdge]]:
 
 def sort_loops_based_on_weights_and_date(signed_loops: List[List[SignedEdge]]) -> List[WeightedLoop]:
     weighted_loops = [WeightedLoop(sl) for sl in signed_loops]
-    weighted_loops.sort(key=lambda x: [x.weight, x.earliest_date])  # sort based on weights and date
+    weighted_loops.sort(key=lambda x: [x.weight, x.primary_dates, x.secondary_dates])  # sort based on weights and dates
     return weighted_loops

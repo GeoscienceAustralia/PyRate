@@ -18,7 +18,7 @@ LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG = 2  # pixel with phase unwrap error in a
 PHASE_UNWRAP_ERROR_THRESHOLD = 5  # pixel with phase unwrap error in more than this many ifgs will be flagged
 MAX_LOOP_LENGTH = 4  # loops upto this many edges are considered for closure checks
 SUBTRACT_MEDIAN_IN_CLOSURE_CHECK = True
-MAX_LOOP_COUNT_FOR_EACH_IFGS = 3
+MAX_LOOP_COUNT_FOR_EACH_IFGS = 2
 
 
 def detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg):
