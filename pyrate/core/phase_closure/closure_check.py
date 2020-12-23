@@ -6,7 +6,7 @@ from pyrate.core.shared import Ifg, dem_or_ifg
 from pyrate.core import config as cf
 from pyrate.core.shared import InputTypes
 from pyrate.core.phase_closure.mst_closure import find_signed_closed_loops, sort_loops_based_on_weights_and_date, \
-    WeightedLoop, setup_edges
+    WeightedLoop, Edge
 from pyrate.core.phase_closure.sum_closure import sum_phase_values_for_each_loop
 from pyrate.core.phase_closure.plot_closure import plot_closure
 from pyrate.configuration import MultiplePaths
@@ -37,8 +37,24 @@ def detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg):
     return ps_unwrap_error
 
 
-def drop_ifgs_if_not_part_of_any_loop(ifg_files):
-    return ifg_files
+def drop_ifgs_if_not_part_of_any_loop(ifg_files: List[str], loops: List[WeightedLoop]) -> List[str]:
+    loop_ifgs = set()
+    for weighted_loop in loops:
+        for edge in weighted_loop.loop:
+            loop_ifgs.add(Edge(edge.SignedEdge.edge.first, edge.SignedEdge.edge.second))
+
+    ifgs = [dem_or_ifg(i) for i in ifg_files]
+    for i in ifgs:
+        i.open()
+        i.nodata_value = 0
+    selected_ifg_files = []
+    for i, f in zip(ifgs, ifg_files):
+        if Edge(i.first, i.second) in loop_ifgs:
+            selected_ifg_files.append(f)
+    if len(ifg_files) != len(selected_ifg_files):
+        log.info(f'Only {len(selected_ifg_files)} of the original {len(ifg_files)} '
+                 f'participate in one or more loops, and selected for further pyrate analysis')
+    return selected_ifg_files
 
 
 def drop_ifgs_exceeding_threshold(orig_ifg_files, check_ps, num_occurences_each_ifg):
@@ -73,19 +89,17 @@ def filter_to_closure_checked_ifgs(params, interactive_plot=True):
     ifg_files = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     log.info(f"Performing closure check on original set of {len(ifg_files)} ifgs")
 
-    ifgs_with_loops = drop_ifgs_if_not_part_of_any_loop(ifg_files)
-
     while True:  # iterate till ifgs/loops are stable
-        new_ifg_files, closure, loops = wrap_closure_check(ifgs_with_loops)
+        new_ifg_files, closure, loops = wrap_closure_check(ifg_files)
         if interactive_plot:
             plot_closure(closure=closure, loops=loops)
-        if len(ifgs_with_loops) == len(new_ifg_files):
+        if len(ifg_files) == len(new_ifg_files):
             break
         else:
-            ifgs_with_loops = new_ifg_files  # exit condition could be some other check like number_of_loops
+            ifg_files = new_ifg_files  # exit condition could be some other check like number_of_loops
 
-    log.info(f"After closure check {len(ifgs_with_loops)} ifgs are retained")
-    return ifgs_with_loops
+    log.info(f"After closure check {len(ifg_files)} ifgs are retained")
+    return ifg_files
 
 
 def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop]) -> List[WeightedLoop]:
@@ -111,11 +125,12 @@ def wrap_closure_check(ifg_files):
     log.info(f"After applying MAX_LOOP_LENGTH={MAX_LOOP_LENGTH} criteria, "
              f"{len(retained_loops_meeting_max_loop_criretia)} are retained")
     retained_loops = discard_loops_containing_max_ifg_count(retained_loops_meeting_max_loop_criretia)
+    ifgs_with_loops = drop_ifgs_if_not_part_of_any_loop(ifg_files, retained_loops)
     log.info(f"After applying MAX_LOOP_COUNT_FOR_EACH_IFGS={MAX_LOOP_COUNT_FOR_EACH_IFGS} criteria, "
              f"{len(retained_loops)} loops are retained")
     closure, check_ps, num_occurences_each_ifg = sum_phase_values_for_each_loop(
-        ifg_files, retained_loops, LARGE_DEVIATION_THRESHOLD_FOR_PIXEL, SUBTRACT_MEDIAN_IN_CLOSURE_CHECK
+        ifgs_with_loops, retained_loops, LARGE_DEVIATION_THRESHOLD_FOR_PIXEL, SUBTRACT_MEDIAN_IN_CLOSURE_CHECK
     )
     # ps_unwrap_error = detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg)
-    selcted_ifg_files = drop_ifgs_exceeding_threshold(ifg_files, check_ps, num_occurences_each_ifg)
+    selcted_ifg_files = drop_ifgs_exceeding_threshold(ifgs_with_loops, check_ps, num_occurences_each_ifg)
     return selcted_ifg_files, closure, retained_loops

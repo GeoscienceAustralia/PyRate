@@ -101,7 +101,7 @@ def add_signs_and_weights_to_loops(loops: List[List[date]], available_edges: Lis
     return weighted_signed_loops
 
 
-def setup_edges(ifg_files: List['str']) -> List[Edge]:
+def setup_edges(ifg_files: List[str]) -> List[Edge]:
     ifg_files.sort()
     ifgs = [dem_or_ifg(i) for i in ifg_files]
     for i in ifgs:
