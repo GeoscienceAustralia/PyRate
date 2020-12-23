@@ -2,11 +2,10 @@ from typing import List
 import numpy as np
 from pyrate.core.phase_closure.mst_closure import WeightedLoop
 
-PI = np.pi
 # norm = mpl.colors.Normalize(vmin=-PI/2, vmax=PI/2)
 
 
-def plot_closure(closure: np.ndarray, loops: List[WeightedLoop]):
+def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], thr: float):
     try:
         import matplotlib.pyplot as plt
         import matplotlib as mpl
@@ -32,7 +31,7 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop]):
             loop = loops[plt_cols * p_r + p_c]
             leg = ',\n'.join([swe.SignedEdge.edge.first.isoformat() + '-' + swe.SignedEdge.edge.second.isoformat()
                               for swe in loop.loop])
-            im = ax.imshow(data, vmin=-PI/2, vmax=PI/2, cmap=cmap)
+            im = ax.imshow(data, vmin=-thr, vmax=thr, cmap=cmap)
             text = ax.text(20, 20, leg, bbox={'facecolor': 'white', 'pad': 5})
             text.set_fontsize(min(20, int(n_loops/5)))
 

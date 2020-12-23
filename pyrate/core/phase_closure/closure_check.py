@@ -12,7 +12,7 @@ from pyrate.core.phase_closure.plot_closure import plot_closure
 from pyrate.configuration import MultiplePaths
 from pyrate.core.logger import pyratelogger as log
 
-LARGE_DEVIATION_THRESHOLD_FOR_PIXEL = np.pi/4  # pi
+LARGE_DEVIATION_THRESHOLD_FOR_PIXEL = np.pi/2  # pi
 THRESHOLD_TO_REMOVE_IFG = 0.07  # ifgs with more than this fraction of pixels with error will be dropped
 LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG = 2  # pixel with phase unwrap error in at least this many loops
 PHASE_UNWRAP_ERROR_THRESHOLD = 5  # pixel with phase unwrap error in more than this many ifgs will be flagged
@@ -92,7 +92,7 @@ def filter_to_closure_checked_ifgs(params, interactive_plot=True):
     while True:  # iterate till ifgs/loops are stable
         new_ifg_files, closure, loops = wrap_closure_check(ifg_files)
         if interactive_plot:
-            plot_closure(closure=closure, loops=loops)
+            plot_closure(closure=closure, loops=loops, thr=LARGE_DEVIATION_THRESHOLD_FOR_PIXEL)
         if len(ifg_files) == len(new_ifg_files):
             break
         else:
