@@ -112,7 +112,7 @@ def wrap_closure_check(ifg_files):
              f"{len(retained_loops_meeting_max_loop_criretia)} are retained")
     retained_loops = discard_loops_containing_max_ifg_count(retained_loops_meeting_max_loop_criretia)
     log.info(f"After applying MAX_LOOP_COUNT_FOR_EACH_IFGS={MAX_LOOP_COUNT_FOR_EACH_IFGS} criteria, "
-             f"{len(retained_loops)} are retained")
+             f"{len(retained_loops)} loops are retained")
     closure, check_ps, num_occurences_each_ifg = sum_phase_values_for_each_loop(
         ifg_files, retained_loops, LARGE_DEVIATION_THRESHOLD_FOR_PIXEL, SUBTRACT_MEDIAN_IN_CLOSURE_CHECK
     )

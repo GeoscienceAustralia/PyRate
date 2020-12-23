@@ -143,7 +143,7 @@ def _update_params_with_tiles(params: dict) -> None:
 
 
 def update_params_with_closure_checked_ifg_list(params: dict, config: Configuration):
-    ifg_files = filter_to_closure_checked_ifgs(params)
+    ifg_files = mpiops.run_once(filter_to_closure_checked_ifgs, params)
 
     def _filter_to_closure_checked_multiple_paths(multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
         filtered_multi_paths = []
@@ -152,12 +152,13 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
                 filtered_multi_paths.append(m_p)
         return filtered_multi_paths
 
-    params[cf.INTERFEROGRAM_FILES] = _filter_to_closure_checked_multiple_paths(params[cf.INTERFEROGRAM_FILES])
+    params[cf.INTERFEROGRAM_FILES] = mpiops.run_once(_filter_to_closure_checked_multiple_paths, params[cf.INTERFEROGRAM_FILES])
     _create_ifg_dict(params)
 
-    with open(config.phase_closure_filtered_ifgs_list(params), 'w') as f:
-        lines = [p.converted_path + '\n' for p in params[cf.INTERFEROGRAM_FILES]]
-        f.writelines(lines)
+    if mpiops.rank == 0:
+        with open(config.phase_closure_filtered_ifgs_list(params), 'w') as f:
+            lines = [p.converted_path + '\n' for p in params[cf.INTERFEROGRAM_FILES]]
+            f.writelines(lines)
 
     return params
 
