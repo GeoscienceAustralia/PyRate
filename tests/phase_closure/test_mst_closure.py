@@ -1,10 +1,11 @@
+from datetime import date
 from pathlib import Path
 import numpy as np
 import pytest
 from pyrate.constants import PYRATEPATH
 from pyrate.core.phase_closure.mst_closure import (
     find_closed_loops, Edge, SignedWeightedEdge, SignedEdge, setup_edges,
-    add_signs_and_weights_to_loops, sort_loops_based_on_weights_and_date
+    add_signs_and_weights_to_loops, sort_loops_based_on_weights_and_date, WeightedLoop
 )
 
 GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
@@ -49,9 +50,13 @@ def test_setup_edges(geotiffs):
 def test_associate_ifgs_with_loops(signed_loops, geotiffs):
     assert len(geotiffs) == 30
     assert len(signed_loops) == 541
-    assert isinstance(signed_loops[0][0], SignedWeightedEdge)
-    assert isinstance(signed_loops[0][0][0], SignedEdge)
-    assert isinstance(signed_loops[0][0][0][0], Edge)
+    assert isinstance(signed_loops[0], WeightedLoop)
+    swe = signed_loops[0].loop[0]
+    assert isinstance(swe, SignedWeightedEdge)
+    assert isinstance(swe.signed_edge, SignedEdge)
+    assert isinstance(swe.edge, Edge)
+    assert isinstance(swe.first, date)
+    assert isinstance(swe.second, date)
 
 
 def test_sort_loops_based_on_weights_and_date(signed_loops):

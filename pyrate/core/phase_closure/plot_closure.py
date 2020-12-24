@@ -29,7 +29,7 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], thr: float):
             ax = fig.add_subplot(plt_rows, plt_cols, tot_plots)
             data = closure[:, :, plt_cols * p_r + p_c]
             loop = loops[plt_cols * p_r + p_c]
-            leg = ',\n'.join([swe.SignedEdge.edge.first.isoformat() + '-' + swe.SignedEdge.edge.second.isoformat()
+            leg = ',\n'.join([swe.first.isoformat() + '-' + swe.second.isoformat()
                               for swe in loop.loop])
             im = ax.imshow(data, vmin=-thr, vmax=thr, cmap=cmap)
             text = ax.text(20, 20, leg, bbox={'facecolor': 'white', 'pad': 5})

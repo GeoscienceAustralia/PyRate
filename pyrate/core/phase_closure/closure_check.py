@@ -41,7 +41,7 @@ def drop_ifgs_if_not_part_of_any_loop(ifg_files: List[str], loops: List[Weighted
     loop_ifgs = set()
     for weighted_loop in loops:
         for edge in weighted_loop.loop:
-            loop_ifgs.add(Edge(edge.SignedEdge.edge.first, edge.SignedEdge.edge.second))
+            loop_ifgs.add(Edge(edge.first, edge.second))
 
     ifgs = [dem_or_ifg(i) for i in ifg_files]
     for i in ifgs:
