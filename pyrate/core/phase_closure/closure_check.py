@@ -114,7 +114,7 @@ def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop]) -> List[We
                 ifg_counter[e] += 1
         else:
             log.debug(f"Loop {l.loop} is ignored due to all it's ifgs already seen "
-                      f"{MAX_LOOP_COUNT_FOR_EACH_IFGS} times or more")
+                     f"{MAX_LOOP_COUNT_FOR_EACH_IFGS} times or more")
     return selected_loops
 
 

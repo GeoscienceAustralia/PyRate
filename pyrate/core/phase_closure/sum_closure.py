@@ -31,10 +31,10 @@ def sum_phase_values_for_each_loop(
     check_ps = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)))
     for k, weighted_loop in enumerate(loops):
         for signed_edge in weighted_loop.loop:
-            indexed_ifg = edge_to_indexed_ifgs[signed_edge.SignedEdge.edge]
+            indexed_ifg = edge_to_indexed_ifgs[signed_edge.edge]
             ifg = indexed_ifg.Ifg
             ifg_index = indexed_ifg.index
-            closure[:, :, k] += signed_edge.SignedEdge.sign * ifg.phase_data
+            closure[:, :, k] += signed_edge.sign * ifg.phase_data
             num_occurences_each_ifg[ifg_index] += 1
         if use_median:
             closure[:, :, k] -= np.nanmedian(closure[:, :, k])  # may be able to drop median
@@ -45,7 +45,7 @@ def sum_phase_values_for_each_loop(
         indices_breaching_threshold = np.absolute(closure[:, :, k]) > threshold
         closure[:, :, k][nan_indices] = np.nan  # set them to nan again  - this is useful when we plot
         for signed_edge in weighted_loop.loop:
-            ifg_index = edge_to_indexed_ifgs[signed_edge.SignedEdge.edge].index
+            ifg_index = edge_to_indexed_ifgs[signed_edge.edge].index
             #  the variable check_ps is increased by 1 for that pixel
             # make sure we are not incrementing the nan positions in the closure
             # as we don't know the PS of these pixels and also they were converted to zero before threshold check

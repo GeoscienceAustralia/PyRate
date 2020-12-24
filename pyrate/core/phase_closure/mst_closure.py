@@ -1,24 +1,22 @@
+from collections import namedtuple
 from typing import List, Union
 from datetime import date
 import networkx as nx
 from pyrate.core.shared import dem_or_ifg
 
-
-class Edge:
-    def __init__(self, first: date, second: date):
-        self.first = first
-        self.second = second
-
-    def __repr__(self):
-        return f'{self.first}, {self.second}'
+Edge = namedtuple('Edge', ['first', 'second'])
 
 
-class SignedEdge(Edge):
+class SignedEdge:
 
     def __init__(self, edge: Edge, sign: int):
-        super().__init__(edge.first, edge.second)
         self.edge = edge
         self.sign = sign
+        self.first = self.edge.first
+        self.second = self.edge.second
+
+    def __repr__(self):
+        return f'({self.first}, {self.second})'
 
 
 class SignedWeightedEdge(SignedEdge):
@@ -95,18 +93,18 @@ def add_signs_and_weights_to_loops(loops: List[List[date]], available_edges: Lis
     Additionally, sort the loops (change order of ifgs appearing in loop) by weight and date
     """
     weighted_signed_loops = []
-    available_edges = set([repr(a) for a in available_edges])  # hash it once for O(1) lookup
+    available_edges = set(available_edges)  # hash it once for O(1) lookup
     for i, l in enumerate(loops):
         weighted_signed_loop = []
         l.append(l[0])  # add the closure loop
         for ii, ll in enumerate(l[:-1]):
             if l[ii+1] > ll:
                 edge = Edge(ll, l[ii+1])
-                assert repr(edge) in available_edges
+                assert edge in available_edges
                 signed_edge = SignedEdge(edge, 1)  # opposite direction of ifg
             else:
                 edge = Edge(l[ii+1], ll)
-                assert repr(edge) in available_edges
+                assert edge in available_edges
                 signed_edge = SignedEdge(edge, -1)  # in direction of ifg
             weighted_signed_edge = SignedWeightedEdge(
                 signed_edge,
