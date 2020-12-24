@@ -1,6 +1,7 @@
 from typing import List
 import numpy as np
 from pyrate.core.phase_closure.mst_closure import WeightedLoop
+from pyrate.core.logger import pyratelogger as log
 
 # norm = mpl.colors.Normalize(vmin=-PI/2, vmax=PI/2)
 
@@ -12,7 +13,10 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], thr: float):
         from mpl_toolkits.axes_grid1 import make_axes_locatable
         cmap = mpl.cm.Spectral
     except ImportError as e:
-        raise ImportError(e)
+        log.warn(ImportError(e))
+        log.warn("Required plotting packages are not found in environment. "
+                 "Sum closure plots will not be generated!!!")
+        return
 
     nrows, ncols, n_loops = closure.shape
 
