@@ -1,12 +1,14 @@
+from pathlib import Path
 from typing import List
 import numpy as np
 from pyrate.core.phase_closure.mst_closure import WeightedLoop
 from pyrate.core.logger import pyratelogger as log
+from pyrate.core import config as cf
 
 # norm = mpl.colors.Normalize(vmin=-PI/2, vmax=PI/2)
 
 
-def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], thr: float):
+def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], params, thr: float):
     try:
         import matplotlib.pyplot as plt
         import matplotlib as mpl
@@ -33,8 +35,7 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], thr: float):
             ax = fig.add_subplot(plt_rows, plt_cols, tot_plots)
             data = closure[:, :, plt_cols * p_r + p_c]
             loop = loops[plt_cols * p_r + p_c]
-            leg = ',\n'.join([swe.first.isoformat() + '-' + swe.second.isoformat()
-                              for swe in loop.loop])
+            leg = ',\n'.join([repr(l) for l in loop.loop])
             im = ax.imshow(data, vmin=-thr, vmax=thr, cmap=cmap)
             text = ax.text(20, 20, leg, bbox={'facecolor': 'white', 'pad': 5})
             text.set_fontsize(min(20, int(n_loops/5)))
@@ -49,4 +50,6 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], thr: float):
     # ax = fig.add_subplot(plt_rows, plt_cols, tot_plots+1)
     # fig.colorbar(mpl.cm.ScalarMappable(cmap=cmap), cax=ax, orientation='horizontal', label='radians')
 
-    plt.savefig(f'Closure-{len(loops)}.png')
+    closure_plot_file = Path(params[cf.OUT_DIR]).joinpath(f'Closure-{len(loops)}.png')
+    plt.savefig(closure_plot_file)
+    log.info(f'Sum clousre plotted in {closure_plot_file}')

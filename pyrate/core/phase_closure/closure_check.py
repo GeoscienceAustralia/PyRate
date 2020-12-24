@@ -92,7 +92,7 @@ def filter_to_closure_checked_ifgs(params, interactive_plot=True):
     while True:  # iterate till ifgs/loops are stable
         new_ifg_files, closure, loops = wrap_closure_check(ifg_files)
         if interactive_plot:
-            plot_closure(closure=closure, loops=loops, thr=LARGE_DEVIATION_THRESHOLD_FOR_PIXEL)
+            plot_closure(closure=closure, loops=loops, params=params, thr=LARGE_DEVIATION_THRESHOLD_FOR_PIXEL)
         if len(ifg_files) == len(new_ifg_files):
             break
         else:
