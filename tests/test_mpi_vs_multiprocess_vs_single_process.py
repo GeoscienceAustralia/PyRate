@@ -246,7 +246,7 @@ def modified_config_short(tempdir, local_crop, get_lks, coh_mask, ref_pixel):
         params["savenpy"] = 1
         params["notiles"] = params["rows"] * params["cols"]  # number of tiles
 
-        print(params)
+        # print(params)
         # write new temp config
         output_conf = tdir.joinpath(output_conf_file)
         pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
