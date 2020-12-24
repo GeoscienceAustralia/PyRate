@@ -96,7 +96,7 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     gamma_conf = gamma_or_mexicoa_conf
     if np.random.rand() > 0.1:  # skip 90% of tests randomly
         pytest.skip("Randomly skipping as part of 85 percent")
-        if gamma_conf == gamma_or_mexicoa_conf:  # skip cropA conf 95% time
+        if gamma_conf == MEXICO_CROPA_CONF:  # skip cropA conf 95% time
             if np.random.rand() > 0.5:
                 pytest.skip('skipped in mexicoA')
 

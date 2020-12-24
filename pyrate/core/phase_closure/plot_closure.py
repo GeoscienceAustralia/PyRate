@@ -50,6 +50,6 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], params, thr: fl
     # ax = fig.add_subplot(plt_rows, plt_cols, tot_plots+1)
     # fig.colorbar(mpl.cm.ScalarMappable(cmap=cmap), cax=ax, orientation='horizontal', label='radians')
 
-    closure_plot_file = Path(params[cf.OUT_DIR]).joinpath(f'Closure-{len(loops)}.png')
+    closure_plot_file = Path(params[cf.OUT_DIR]).joinpath(f'sum_closure.png')
     plt.savefig(closure_plot_file)
     log.info(f'Sum clousre plotted in {closure_plot_file}')
