@@ -47,7 +47,6 @@ def create_merge_output(tempdir, gamma_conf):
     _merge_linrate(params)
     return params
 
-
 @pytest.mark.slow
 def test_file_creation(create_merge_output):
     params = create_merge_output

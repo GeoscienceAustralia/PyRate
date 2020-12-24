@@ -376,7 +376,7 @@ def write_config_file(params, output_conf_file):
         for k, v in params.items():
             if v is not None:
                 if k == 'correct':
-                    f.write(''.join([k, ':\t', '', '\n']))
+                    f.write(''.join(['[', k, ']' ':\t', '', '\n']))
                     f.write(''.join(['steps = ', '\n']))
                     for vv in v:
                         f.write(''.join(['\t' + str(vv), '\n']))
