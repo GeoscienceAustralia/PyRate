@@ -29,7 +29,7 @@ from tests.common import (
     assert_same_files_produced,
     assert_two_dirs_equal,
     manipulate_test_conf,
-    TRAVIS,
+    GITHUB_ACTIONS,
     PYTHON3P6,
     PYTHON3P7,
     PYTHON3P8,
@@ -114,7 +114,7 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
         check_call(f"mpirun -n 3 pyrate stack -f {mpi_conf}", shell=True)
     except CalledProcessError as c:
         print(c)
-        if TRAVIS:
+        if GITHUB_ACTIONS:
             pytest.skip("Skipping as part of correction error")
     check_call(f"mpirun -n 3 pyrate merge -f {mpi_conf}", shell=True)
 
@@ -272,8 +272,8 @@ def create_mpi_files():
             check_call(f"mpirun -n 3 pyrate stack -f {mpi_conf}", shell=True)
         except CalledProcessError as c:
             print(c)
-            if TRAVIS:
-                pytest.skip("Skipping as we encountered a process error")
+            if GITHUB_ACTIONS:
+                pytest.skip("Skipping as we encountered a process error during CI")
         check_call(f"mpirun -n 3 pyrate merge -f {mpi_conf}", shell=True)
         return params
 
