@@ -114,12 +114,24 @@ def wrap_closure_check(ifg_files, params):
     sorted_signed_loops = sort_loops_based_on_weights_and_date(signed_loops)
     retained_loops_meeting_max_loop_criretia = [sl for sl in sorted_signed_loops
                                                 if len(sl) <= params[cf.MAX_LOOP_LENGTH]]
-    log.info(f"After applying MAX_LOOP_LENGTH={params[cf.MAX_LOOP_LENGTH]} criteria, "
-             f"{len(retained_loops_meeting_max_loop_criretia)} are retained")
+    msg = f"After applying MAX_LOOP_LENGTH={params[cf.MAX_LOOP_LENGTH]} criteria, " \
+          f"{len(retained_loops_meeting_max_loop_criretia)} loops are retained"
+
+    if len(retained_loops_meeting_max_loop_criretia) < 1:
+        raise PhaseClosureError(msg)
+    else:
+        log.info(msg)
+
     retained_loops = discard_loops_containing_max_ifg_count(retained_loops_meeting_max_loop_criretia, params)
     ifgs_with_loops = drop_ifgs_if_not_part_of_any_loop(ifg_files, retained_loops)
-    log.info(f"After applying MAX_LOOP_COUNT_FOR_EACH_IFGS={params[cf.MAX_LOOP_COUNT_FOR_EACH_IFGS]} criteria, "
-             f"{len(retained_loops)} loops are retained")
+
+    msg = f"After applying MAX_LOOP_COUNT_FOR_EACH_IFGS={params[cf.MAX_LOOP_COUNT_FOR_EACH_IFGS]} criteria, " \
+             f"{len(retained_loops)} loops are retained"
+    if len(retained_loops) < 1:
+        raise PhaseClosureError(msg)
+    else:
+        log.info(msg)
+
     closure, check_ps, num_occurences_each_ifg = sum_phase_values_for_each_loop(
         ifgs_with_loops, retained_loops, params[cf.LARGE_DEV_THR],
         params[cf.SUBTRACT_MEDIAN_IN_CLOSURE_CHECK]
@@ -127,3 +139,7 @@ def wrap_closure_check(ifg_files, params):
     # ps_unwrap_error = detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg)
     selcted_ifg_files = drop_ifgs_exceeding_threshold(ifgs_with_loops, check_ps, num_occurences_each_ifg, params)
     return selcted_ifg_files, closure, retained_loops
+
+
+class PhaseClosureError(Exception):
+    """generic phase closure error"""
