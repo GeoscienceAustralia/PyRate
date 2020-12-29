@@ -381,6 +381,71 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
+    "phase_closure": {
+        "DataType": int,
+        "DefaultValue": 1,
+        "MinValue": None,
+        "MaxValue": None,
+        "PossibleValues": [0, 1],
+        "Required": False
+    },
+    "large_dev_thr": {
+        "DataType": float,
+        "DefaultValue": 1.5708,
+        "MinValue": 0.01,
+        "MaxValue": 3.2,
+        "PossibleValues": None,
+        "Required": False
+    },
+    "threshold_to_remove_ifg": {
+        "DataType": float,
+        "DefaultValue": 0.05,
+        "MinValue": 0.01,
+        "MaxValue": 0.5,
+        "PossibleValues": None,
+        "Required": False
+    },
+    "loop_count_for_threshold_to_remove_ifg": {
+        "DataType": int,
+        "DefaultValue": 2,
+        "MinValue": 1,
+        "MaxValue": 20,
+        "PossibleValues": None,
+        "Required": False
+    },
+    "phase_unwrap_error_threshold": {
+        "DataType": int,
+        "DefaultValue": 5,
+        "MinValue": 1,
+        "MaxValue": 20,
+        "PossibleValues": None,
+        "Required": False
+    },
+    "max_loop_length": {
+        "DataType": int,
+        "DefaultValue": 4,
+        "MinValue": 1,
+        "MaxValue": 20,
+        "PossibleValues": None,
+        "Required": False
+    },
+    "subtract_median_in_closure_check": {
+        "DataType": int,
+        "DefaultValue": 1,
+        "MinValue": None,
+        "MaxValue": None,
+        "PossibleValues": [0, 1],
+        "Required": False
+    },
+    "max_loop_count_for_each_ifgs": {
+        "DataType": int,
+        "DefaultValue": 2,
+        "MinValue": 1,
+        "MaxValue": 20,
+        "PossibleValues": None,
+        "Required": False
+    },
+
     "demerror": {
         "DataType": int,
         "DefaultValue": 0,

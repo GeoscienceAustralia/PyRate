@@ -141,6 +141,17 @@ APS_INCIDENCE_EXT = 'APS_INCIDENCE_EXT'
 APS_ELEVATION_MAP = 'elevationmap'
 APS_ELEVATION_EXT = 'APS_ELEVATION_EXT'
 
+
+# phase closure
+PHASE_CLOSURE = 'phase_closure'
+LARGE_DEV_THR = 'large_dev_thr'
+THRESHOLD_TO_REMOVE_IFG = 'threshold_to_remove_ifg'
+LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG = 'loop_count_for_threshold_to_remove_ifg'
+PHASE_UNWRAP_ERROR_THRESHOLD = 'phase_unwrap_error_threshold'
+MAX_LOOP_LENGTH = 'max_loop_length'
+SUBTRACT_MEDIAN_IN_CLOSURE_CHECK = 'subtract_median_in_closure_check'
+MAX_LOOP_COUNT_FOR_EACH_IFGS = 'max_loop_count_for_each_ifgs'
+
 # orbital error correction/parameters
 #: BOOL (1/0); Perform orbital error correction (1: yes, 0: no)
 ORBITAL_FIT = 'orbfit'

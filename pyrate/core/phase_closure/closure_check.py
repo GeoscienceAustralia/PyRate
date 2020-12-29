@@ -1,24 +1,13 @@
-from collections import namedtuple, defaultdict
-from pathlib import Path
-from typing import List, Dict
+from collections import defaultdict
+from typing import List
 import numpy as np
-from pyrate.core.shared import Ifg, dem_or_ifg
+from pyrate.core.shared import dem_or_ifg
 from pyrate.core import config as cf
-from pyrate.core.shared import InputTypes
 from pyrate.core.phase_closure.mst_closure import find_signed_closed_loops, sort_loops_based_on_weights_and_date, \
     WeightedLoop, Edge
 from pyrate.core.phase_closure.sum_closure import sum_phase_values_for_each_loop
 from pyrate.core.phase_closure.plot_closure import plot_closure
-from pyrate.configuration import MultiplePaths
 from pyrate.core.logger import pyratelogger as log
-
-LARGE_DEVIATION_THRESHOLD_FOR_PIXEL = np.pi/2  # pi
-THRESHOLD_TO_REMOVE_IFG = 0.07  # ifgs with more than this fraction of pixels with error will be dropped
-LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG = 2  # pixel with phase unwrap error in at least this many loops
-PHASE_UNWRAP_ERROR_THRESHOLD = 5  # pixel with phase unwrap error in more than this many ifgs will be flagged
-MAX_LOOP_LENGTH = 4  # loops upto this many edges are considered for closure checks
-SUBTRACT_MEDIAN_IN_CLOSURE_CHECK = True
-MAX_LOOP_COUNT_FOR_EACH_IFGS = 2
 
 
 def detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg):
@@ -57,7 +46,7 @@ def drop_ifgs_if_not_part_of_any_loop(ifg_files: List[str], loops: List[Weighted
     return selected_ifg_files
 
 
-def drop_ifgs_exceeding_threshold(orig_ifg_files, check_ps, num_occurences_each_ifg):
+def drop_ifgs_exceeding_threshold(orig_ifg_files, check_ps, num_occurences_each_ifg, params):
     """
     We demand two thresholds breaches for an ifg to be dropped.
     1. The first one is the basic ifg loop participation count check.
@@ -72,11 +61,13 @@ def drop_ifgs_exceeding_threshold(orig_ifg_files, check_ps, num_occurences_each_
     for i, ifg_file in enumerate(orig_ifg_files):
         loop_count_of_this_ifg = num_occurences_each_ifg[i]
         if loop_count_of_this_ifg:  # if the ifg participated in at least one loop
-            ifg_remove_threshold_breached = np.sum(check_ps[:, :, i])/loop_count_of_this_ifg/nrows/ncols > THRESHOLD_TO_REMOVE_IFG
+            ifg_remove_threshold_breached = \
+                np.sum(check_ps[:, :, i])/loop_count_of_this_ifg/nrows/ncols > params[cf.THRESHOLD_TO_REMOVE_IFG]
             if not (
-                    (num_occurences_each_ifg[i] > LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG)  # min loops count # check 1
-                    and
-                    ifg_remove_threshold_breached  # and breached threshold
+                # min loops count # check 1
+                (num_occurences_each_ifg[i] > params[cf.LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG])
+                and
+                ifg_remove_threshold_breached  # and breached threshold
             ):
                 selected_ifg_files.append(ifg_file)
         else:
@@ -90,9 +81,9 @@ def filter_to_closure_checked_ifgs(params, interactive_plot=True):
     log.info(f"Performing closure check on original set of {len(ifg_files)} ifgs")
 
     while True:  # iterate till ifgs/loops are stable
-        new_ifg_files, closure, loops = wrap_closure_check(ifg_files)
+        new_ifg_files, closure, loops = wrap_closure_check(ifg_files, params)
         if interactive_plot:
-            plot_closure(closure=closure, loops=loops, params=params, thr=LARGE_DEVIATION_THRESHOLD_FOR_PIXEL)
+            plot_closure(closure=closure, loops=loops, params=params, thr=params[cf.LARGE_DEV_THR])
         if len(ifg_files) == len(new_ifg_files):
             break
         else:
@@ -102,35 +93,37 @@ def filter_to_closure_checked_ifgs(params, interactive_plot=True):
     return ifg_files
 
 
-def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop]) -> List[WeightedLoop]:
+def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) -> List[WeightedLoop]:
     # available_edges = setup_edges(ifg_files)
     selected_loops = []
     ifg_counter = defaultdict(int)
     for l in loops:
         edge_apperances = np.array([ifg_counter[e] for e in l.edges])
-        if not np.all(edge_apperances > MAX_LOOP_COUNT_FOR_EACH_IFGS):
+        if not np.all(edge_apperances > params[cf.MAX_LOOP_COUNT_FOR_EACH_IFGS]):
             selected_loops.append(l)
             for e in l.edges:
                 ifg_counter[e] += 1
         else:
             log.debug(f"Loop {l.loop} is ignored due to all it's ifgs already seen "
-                     f"{MAX_LOOP_COUNT_FOR_EACH_IFGS} times or more")
+                     f"{params[cf.MAX_LOOP_COUNT_FOR_EACH_IFGS]} times or more")
     return selected_loops
 
 
-def wrap_closure_check(ifg_files):
+def wrap_closure_check(ifg_files, params):
     signed_loops = find_signed_closed_loops(ifg_files=ifg_files)
     sorted_signed_loops = sort_loops_based_on_weights_and_date(signed_loops)
-    retained_loops_meeting_max_loop_criretia = [sl for sl in sorted_signed_loops if len(sl) <= MAX_LOOP_LENGTH]
-    log.info(f"After applying MAX_LOOP_LENGTH={MAX_LOOP_LENGTH} criteria, "
+    retained_loops_meeting_max_loop_criretia = [sl for sl in sorted_signed_loops
+                                                if len(sl) <= params[cf.MAX_LOOP_LENGTH]]
+    log.info(f"After applying MAX_LOOP_LENGTH={params[cf.MAX_LOOP_LENGTH]} criteria, "
              f"{len(retained_loops_meeting_max_loop_criretia)} are retained")
-    retained_loops = discard_loops_containing_max_ifg_count(retained_loops_meeting_max_loop_criretia)
+    retained_loops = discard_loops_containing_max_ifg_count(retained_loops_meeting_max_loop_criretia, params)
     ifgs_with_loops = drop_ifgs_if_not_part_of_any_loop(ifg_files, retained_loops)
-    log.info(f"After applying MAX_LOOP_COUNT_FOR_EACH_IFGS={MAX_LOOP_COUNT_FOR_EACH_IFGS} criteria, "
+    log.info(f"After applying MAX_LOOP_COUNT_FOR_EACH_IFGS={params[cf.MAX_LOOP_COUNT_FOR_EACH_IFGS]} criteria, "
              f"{len(retained_loops)} loops are retained")
     closure, check_ps, num_occurences_each_ifg = sum_phase_values_for_each_loop(
-        ifgs_with_loops, retained_loops, LARGE_DEVIATION_THRESHOLD_FOR_PIXEL, SUBTRACT_MEDIAN_IN_CLOSURE_CHECK
+        ifgs_with_loops, retained_loops, params[cf.LARGE_DEV_THR],
+        params[cf.SUBTRACT_MEDIAN_IN_CLOSURE_CHECK]
     )
     # ps_unwrap_error = detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg)
-    selcted_ifg_files = drop_ifgs_exceeding_threshold(ifgs_with_loops, check_ps, num_occurences_each_ifg)
+    selcted_ifg_files = drop_ifgs_exceeding_threshold(ifgs_with_loops, check_ps, num_occurences_each_ifg, params)
     return selcted_ifg_files, closure, retained_loops
