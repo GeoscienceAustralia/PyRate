@@ -94,11 +94,11 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     Tests proving single/multiprocess/mpi produce same output
     """
     gamma_conf = gamma_or_mexicoa_conf
-    if np.random.rand() > 0.1:  # skip 90% of tests randomly
-        pytest.skip("Randomly skipping as part of 85 percent")
-        if gamma_conf == MEXICO_CROPA_CONF:  # skip cropA conf 95% time
-            if np.random.rand() > 0.5:
-                pytest.skip('skipped in mexicoA')
+    # if np.random.rand() > 0.1:  # skip 90% of tests randomly
+    #     pytest.skip("Randomly skipping as part of 85 percent")
+    #     if gamma_conf == MEXICO_CROPA_CONF:  # skip cropA conf 95% time
+    #         if np.random.rand() > 0.5:
+    #             pytest.skip('skipped in mexicoA')
 
     print("\n\n")
     print("===x==="*10)
@@ -201,9 +201,10 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.kml", 3)
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.png", 3)
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.npy", 5)
-    
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tscuml*.tif", 12)
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tsincr*.tif", 12)
+
+    if not params[cf.PHASE_CLOSURE]:
+        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tscuml*.tif", 12)
+        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tsincr*.tif", 12)
 
     print("==========================xxx===========================")
 

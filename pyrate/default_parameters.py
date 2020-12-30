@@ -383,7 +383,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
     },
     "phase_closure": {
         "DataType": int,
-        "DefaultValue": 1,
+        "DefaultValue": 0,
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": [0, 1],
