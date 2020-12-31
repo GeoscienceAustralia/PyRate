@@ -81,7 +81,10 @@ def filter_to_closure_checked_ifgs(params, interactive_plot=True):
     log.info(f"Performing closure check on original set of {len(ifg_files)} ifgs")
 
     while True:  # iterate till ifgs/loops are stable
-        new_ifg_files, closure, loops = wrap_closure_check(ifg_files, params)
+        rets = wrap_closure_check(ifg_files, params)
+        if rets is None:
+            return
+        new_ifg_files, closure, loops = rets
         if interactive_plot:
             plot_closure(closure=closure, loops=loops, params=params, thr=params[cf.LARGE_DEV_THR])
         if len(ifg_files) == len(new_ifg_files):
@@ -118,7 +121,7 @@ def wrap_closure_check(ifg_files, params):
           f"{len(retained_loops_meeting_max_loop_criretia)} loops are retained"
 
     if len(retained_loops_meeting_max_loop_criretia) < 1:
-        raise PhaseClosureError(msg)
+        return None
     else:
         log.info(msg)
 
@@ -128,7 +131,7 @@ def wrap_closure_check(ifg_files, params):
     msg = f"After applying MAX_LOOP_COUNT_FOR_EACH_IFGS={params[cf.MAX_LOOP_COUNT_FOR_EACH_IFGS]} criteria, " \
              f"{len(retained_loops)} loops are retained"
     if len(retained_loops) < 1:
-        raise PhaseClosureError(msg)
+        return None
     else:
         log.info(msg)
 
@@ -140,6 +143,3 @@ def wrap_closure_check(ifg_files, params):
     selcted_ifg_files = drop_ifgs_exceeding_threshold(ifgs_with_loops, check_ps, num_occurences_each_ifg, params)
     return selcted_ifg_files, closure, retained_loops
 
-
-class PhaseClosureError(Exception):
-    """generic phase closure error"""

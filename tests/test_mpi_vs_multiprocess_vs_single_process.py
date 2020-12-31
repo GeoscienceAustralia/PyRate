@@ -20,11 +20,12 @@ parallel and MPI PyRate runs.
 import shutil
 import pytest
 from pathlib import Path
-from subprocess import check_call, CalledProcessError
+from subprocess import check_call, CalledProcessError, run
 import numpy as np
 
 import pyrate.configuration
 from pyrate.core import config as cf
+
 from tests.common import (
     assert_same_files_produced,
     assert_two_dirs_equal,
@@ -88,17 +89,17 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(GDAL3P0P4 or PYTHON3P6 or PYTHON3P8, reason="Only run in REGRESSION2 and Python3.8 env")
+@pytest.mark.skipif(GDAL3P0P4 or PYTHON3P6 or PYTHON3P8, reason="Only run in GDAL3.0.2 and Python3.7 env")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     """
     Tests proving single/multiprocess/mpi produce same output
     """
     gamma_conf = gamma_or_mexicoa_conf
-    # if np.random.rand() > 0.1:  # skip 90% of tests randomly
-    #     pytest.skip("Randomly skipping as part of 85 percent")
-    #     if gamma_conf == MEXICO_CROPA_CONF:  # skip cropA conf 95% time
-    #         if np.random.rand() > 0.5:
-    #             pytest.skip('skipped in mexicoA')
+    if np.random.rand() > 0.1:  # skip 90% of tests randomly
+        pytest.skip("Randomly skipping as part of 85 percent")
+        if gamma_conf == MEXICO_CROPA_CONF:  # skip cropA conf 95% time
+            if np.random.rand() > 0.5:
+                pytest.skip('skipped in mexicoA')
 
     print("\n\n")
     print("===x==="*10)
@@ -109,13 +110,13 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
 
     try:
-        check_call(f"mpirun -n 3 pyrate correct -f {mpi_conf}", shell=True)
-        check_call(f"mpirun -n 3 pyrate timeseries -f {mpi_conf}", shell=True)
-        check_call(f"mpirun -n 3 pyrate stack -f {mpi_conf}", shell=True)
-    except CalledProcessError as c:
-        print(c)
-        if GITHUB_ACTIONS:
-            pytest.skip("Skipping as part of correction error")
+        run(f"mpirun -n 3 pyrate correct -f {mpi_conf}", shell=True, check=True)
+        run(f"mpirun -n 3 pyrate timeseries -f {mpi_conf}", shell=True, check=True)
+        run(f"mpirun -n 3 pyrate stack -f {mpi_conf}", shell=True, check=True)
+    except CalledProcessError as e:
+        print(e)
+        pytest.skip("Skipping as part of correction error")
+
     check_call(f"mpirun -n 3 pyrate merge -f {mpi_conf}", shell=True)
 
     mr_conf, params_m = modified_config(gamma_conf, 1, 'multiprocess_conf.conf')
@@ -273,8 +274,7 @@ def create_mpi_files():
             check_call(f"mpirun -n 3 pyrate stack -f {mpi_conf}", shell=True)
         except CalledProcessError as c:
             print(c)
-            if GITHUB_ACTIONS:
-                pytest.skip("Skipping as we encountered a process error during CI")
+            pytest.skip("Skipping as we encountered a process error during CI")
         check_call(f"mpirun -n 3 pyrate merge -f {mpi_conf}", shell=True)
         return params
 
@@ -282,7 +282,7 @@ def create_mpi_files():
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(PYTHON3P6 or PYTHON3P8 or GDAL3P0P2, reason="Only run in REGRESSION env")
+@pytest.mark.skipif(PYTHON3P6 or PYTHON3P8 or GDAL3P0P2, reason="Only run in GDAL3.0.4 and python3.7 env")
 def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_conf, create_mpi_files, parallel):
     """
     Checks performed:

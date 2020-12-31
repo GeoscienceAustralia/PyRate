@@ -144,6 +144,10 @@ def _update_params_with_tiles(params: dict) -> None:
 
 def update_params_with_closure_checked_ifg_list(params: dict, config: Configuration):
     ifg_files = mpiops.run_once(filter_to_closure_checked_ifgs, params)
+    if ifg_files is None:
+        import sys
+        sys.exit("Zero loops are returned after phase clouser calcs!!! \n"
+                 "Check your phase closure configuration!")
 
     def _filter_to_closure_checked_multiple_paths(multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
         filtered_multi_paths = []
@@ -161,6 +165,10 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
             f.writelines(lines)
 
     return params
+
+
+class PhaseClosureError(Exception):
+    """generic phase closure error"""
 
 
 correct_steps = {
