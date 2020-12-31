@@ -565,7 +565,6 @@ def assert_two_dirs_equal(dir1, dir2, ext, num_files=None):
 
 
 def assert_same_files_produced(dir1, dir2, dir3, ext, num_files=None):
-    print(dir1, dir2, ext, num_files)
     assert_two_dirs_equal(dir1, dir2, ext, num_files)
     assert_two_dirs_equal(dir1, dir3, ext, num_files)
 
