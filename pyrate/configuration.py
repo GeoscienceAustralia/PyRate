@@ -261,6 +261,7 @@ class Configuration:
         self.mst_dir.mkdir(parents=True, exist_ok=True)
 
         self.phase_closure_dir = Path(self.outdir).joinpath(cf.PHASE_CLOSURE_DIR)
+        self.phase_closure_dir.mkdir(parents=True, exist_ok=True)
 
         # create temp multilooked files dir
         self.temp_mlooked_dir = Path(self.outdir).joinpath(TEMP_MLOOKED_DIR)
@@ -354,6 +355,18 @@ class Configuration:
         val = self.__getattribute__(attr)
         files = parse_namelist(val)
         return [MultiplePaths(p, self.__dict__, input_type=input_type) for p in files]
+
+    def closure(self):
+        closure_d = self.phase_closure_dir
+
+        class Closure:
+            def __init__(self, outdir):
+                self.closure = Path(outdir).joinpath('closure.npy')
+                self.check_ps = Path(outdir).joinpath('check_ps.npy')
+                self.num_occurences_each_ifg = Path(outdir).joinpath('num_occurences_each_ifg.npy')
+
+        return Closure(closure_d)
+
 
 
 def write_config_parser_file(conf: ConfigParser, output_conf_file: Union[str, Path]):

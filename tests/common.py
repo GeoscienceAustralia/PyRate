@@ -28,7 +28,7 @@ from decimal import Decimal
 import pytest
 from typing import Iterable
 from os.path import join
-from subprocess import check_output
+from subprocess import check_output, run
 from pathlib import Path
 
 import numpy as np
@@ -653,3 +653,7 @@ def min_params(out_dir):
     params[cf.ORBITAL_FIT_LOOKS_X] = 1
     params[cf.ORBITAL_FIT_LOOKS_Y] = 1
     return params
+
+
+def sub_process_run(cmd, *args):
+    return run(cmd, shell=True, check=True, *args)

@@ -167,10 +167,6 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
     return params
 
 
-class PhaseClosureError(Exception):
-    """generic phase closure error"""
-
-
 correct_steps = {
     'orbfit': orb_fit_calc_wrapper,
     'refphase': ref_phase_est_wrapper,

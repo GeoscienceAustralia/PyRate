@@ -1,5 +1,6 @@
 from collections import defaultdict
 from typing import List
+from pathlib import Path
 import numpy as np
 from pyrate.core.shared import dem_or_ifg
 from pyrate.core import config as cf
@@ -62,12 +63,12 @@ def drop_ifgs_exceeding_threshold(orig_ifg_files, check_ps, num_occurences_each_
         loop_count_of_this_ifg = num_occurences_each_ifg[i]
         if loop_count_of_this_ifg:  # if the ifg participated in at least one loop
             ifg_remove_threshold_breached = \
-                np.sum(check_ps[:, :, i])/loop_count_of_this_ifg/nrows/ncols > params[cf.THRESHOLD_TO_REMOVE_IFG]
+                np.sum(check_ps[:, :, i]) / loop_count_of_this_ifg / nrows / ncols > params[cf.THRESHOLD_TO_REMOVE_IFG]
             if not (
-                # min loops count # check 1
-                (num_occurences_each_ifg[i] > params[cf.LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG])
-                and
-                ifg_remove_threshold_breached  # and breached threshold
+                    # min loops count # check 1
+                    (num_occurences_each_ifg[i] > params[cf.LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG])
+                    and
+                    ifg_remove_threshold_breached  # and breached threshold
             ):
                 selected_ifg_files.append(ifg_file)
         else:
@@ -108,7 +109,7 @@ def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) ->
                 ifg_counter[e] += 1
         else:
             log.debug(f"Loop {l.loop} is ignored due to all it's ifgs already seen "
-                     f"{params[cf.MAX_LOOP_COUNT_FOR_EACH_IFGS]} times or more")
+                      f"{params[cf.MAX_LOOP_COUNT_FOR_EACH_IFGS]} times or more")
     return selected_loops
 
 
@@ -129,17 +130,19 @@ def wrap_closure_check(ifg_files, params):
     ifgs_with_loops = drop_ifgs_if_not_part_of_any_loop(ifg_files, retained_loops)
 
     msg = f"After applying MAX_LOOP_COUNT_FOR_EACH_IFGS={params[cf.MAX_LOOP_COUNT_FOR_EACH_IFGS]} criteria, " \
-             f"{len(retained_loops)} loops are retained"
+          f"{len(retained_loops)} loops are retained"
     if len(retained_loops) < 1:
         return None
     else:
         log.info(msg)
 
-    closure, check_ps, num_occurences_each_ifg = sum_phase_values_for_each_loop(
-        ifgs_with_loops, retained_loops, params[cf.LARGE_DEV_THR],
-        params[cf.SUBTRACT_MEDIAN_IN_CLOSURE_CHECK]
-    )
+    closure, check_ps, num_occurences_each_ifg = sum_phase_values_for_each_loop(ifgs_with_loops, retained_loops, params)
+
+    np.save(Path(params[cf.PHASE_CLOSURE_DIR]).joinpath('closure.npy'), closure)
+    np.save(Path(params[cf.PHASE_CLOSURE_DIR]).joinpath('check_ps.npy'), check_ps)
+    np.save(Path(params[cf.PHASE_CLOSURE_DIR]).joinpath('num_occurences_each_ifg.npy'), num_occurences_each_ifg)
+
     # ps_unwrap_error = detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg)
     selcted_ifg_files = drop_ifgs_exceeding_threshold(ifgs_with_loops, check_ps, num_occurences_each_ifg, params)
-    return selcted_ifg_files, closure, retained_loops
 
+    return selcted_ifg_files, closure, retained_loops
