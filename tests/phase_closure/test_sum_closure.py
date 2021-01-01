@@ -1,7 +1,5 @@
-import shutil
 import pytest
 from pathlib import Path
-from subprocess import check_call, CalledProcessError, run
 import numpy as np
 
 from pyrate.configuration import Configuration, write_config_file
@@ -9,7 +7,7 @@ from pyrate.core import config as cf
 from tests.common import MEXICO_CROPA_CONF, manipulate_test_conf, PYTHON3P8, sub_process_run
 
 
-@pytest.fixture()
+@pytest.fixture
 def modified_config(tempdir, get_lks=1, get_crop=1, orbfit_lks=2, orbfit_method=1, orbfit_degrees=1, ref_est_method=1):
     def modify_params(conf_file, parallel_vs_serial, output_conf_file):
         tdir = Path(tempdir())
@@ -30,11 +28,11 @@ def modified_config(tempdir, get_lks=1, get_crop=1, orbfit_lks=2, orbfit_method=
         params[cf.ORBITAL_FIT_METHOD] = orbfit_method
         params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
         params[cf.REF_EST_METHOD] = ref_est_method
+        params[cf.MAX_LOOP_LENGTH] = 3
         params["rows"], params["cols"] = 3, 2
         params["savenpy"] = 1
         params["notiles"] = params["rows"] * params["cols"]  # number of tiles
 
-        print(params)
         # write new temp config
         output_conf = tdir.joinpath(output_conf_file)
         write_config_file(params=params, output_conf_file=output_conf)
@@ -64,19 +62,9 @@ def test_mpi_vs_single_process(modified_config):
     s_loops = np.load(s_config.closure().loops, allow_pickle=True)
     m_weights = [m.weight for m in m_loops]
     s_weights = [m.weight for m in s_loops]
-    print(m_weights)
-    print(s_weights)
+    np.testing.assert_array_equal(m_weights, s_weights)
 
     for i, (m, s) in enumerate(zip(m_loops, s_loops)):
-        print(f'========================={i}=================')
-        assert m.weight == s.weight
-        print(m.weight, m.edges)
-        print(s.weight, s.edges)
-        for m_e, s_e in zip(m.edges, s.edges):
-            print('-'*10)
-            print(m_e)
-            print(s_e)
-            assert m_e == s_e
+        assert all(m_e == s_e for m_e, s_e in zip(m.edges, s.edges))
 
-    import IPython; IPython.embed(); import sys; sys.exit()
-    np.testing.assert_array_almost_equal(m_closure, s_closure)
+    np.testing.assert_array_almost_equal(np.abs(m_closure), np.abs(s_closure))

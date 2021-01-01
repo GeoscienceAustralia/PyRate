@@ -110,7 +110,7 @@ def test_find_signed_closed_loops(geotiffs):
     compare_loops(loops1, loops2)
 
 
-def test_sort_loops_based_on_weights_and_date_2(geotiffs, run_number):
+def test_sort_loops_based_on_weights_and_date_2(geotiffs):
     loops1 = find_signed_closed_loops(geotiffs)
     loops2 = find_signed_closed_loops(geotiffs)
     sorted_loops1 = sort_loops_based_on_weights_and_date(loops1)

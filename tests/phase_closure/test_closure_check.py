@@ -1,5 +1,6 @@
 from datetime import date
 from pathlib import Path
+import random
 import numpy as np
 import pytest
 from pyrate.constants import PYRATEPATH
@@ -14,7 +15,6 @@ from pyrate.core.phase_closure.closure_check import (
     drop_ifgs_if_not_part_of_any_loop
 )
 
-
 GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
 
 
@@ -25,7 +25,7 @@ def geotiffs():
     return tifs
 
 
-def test_discard_loops_containing_max_ifg_count(geotiffs, run_number):
+def test_discard_loops_containing_max_ifg_count(geotiffs):
     loops1 = retain_loops(geotiffs)
     loops2 = retain_loops(geotiffs)
     m_weights = [m.weight for m in loops1]
@@ -34,22 +34,25 @@ def test_discard_loops_containing_max_ifg_count(geotiffs, run_number):
 
 
 def retain_loops(tifs):
-    loops1 = find_signed_closed_loops(tifs)
-    sorted_loops1 = sort_loops_based_on_weights_and_date(loops1)
+    loops = find_signed_closed_loops(tifs)
+    sorted_loops = sort_loops_based_on_weights_and_date(loops)
     params = {
         cf.MAX_LOOP_COUNT_FOR_EACH_IFGS: 2,
-        cf.MAX_LOOP_LENGTH: 4
+        cf.MAX_LOOP_LENGTH: 3
     }
-    retained_loops_meeting_max_loop_criretia1 = [sl for sl in sorted_loops1
-                                                 if len(sl) <= params[cf.MAX_LOOP_LENGTH]]
+    retained_loops_meeting_max_loop_criretia = [sl for sl in sorted_loops
+                                                if len(sl) <= params[cf.MAX_LOOP_LENGTH]]
     msg = f"After applying MAX_LOOP_LENGTH={params[cf.MAX_LOOP_LENGTH]} criteria, " \
-          f"{len(retained_loops_meeting_max_loop_criretia1)} loops are retained"
+          f"{len(retained_loops_meeting_max_loop_criretia)} loops are retained"
     print(msg)
-    retained_loops1 = discard_loops_containing_max_ifg_count(retained_loops_meeting_max_loop_criretia1, params)
-    return retained_loops1
+    retained_loops = discard_loops_containing_max_ifg_count(retained_loops_meeting_max_loop_criretia, params)
+    msg = f"After applying MAX_LOOP_COUNT_FOR_EACH_IFGS={params[cf.MAX_LOOP_COUNT_FOR_EACH_IFGS]} criteria, " \
+          f"{len(retained_loops)} loops are retained"
+    print(msg)
+    return retained_loops
 
 
-def test_drop_ifgs_if_not_part_of_any_loop(geotiffs, run_number):
+def test_drop_ifgs_if_not_part_of_any_loop(geotiffs):
     loops1 = retain_loops(geotiffs)
     selected_tifs1 = drop_ifgs_if_not_part_of_any_loop(geotiffs, loops1)
 
