@@ -117,6 +117,7 @@ def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) ->
 
 def wrap_closure_check(ifg_files, config: Configuration):
     params = config.__dict__
+    ifg_files.sort()
     signed_loops = find_signed_closed_loops(ifg_files=ifg_files)
     sorted_signed_loops = sort_loops_based_on_weights_and_date(signed_loops)
     retained_loops_meeting_max_loop_criretia = [sl for sl in sorted_signed_loops

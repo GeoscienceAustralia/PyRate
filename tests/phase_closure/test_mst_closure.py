@@ -110,11 +110,6 @@ def test_find_signed_closed_loops(geotiffs):
     compare_loops(loops1, loops2)
 
 
-@pytest.fixture(params=range(10))
-def run_number(request):
-    return request.param
-
-
 def test_sort_loops_based_on_weights_and_date_2(geotiffs, run_number):
     loops1 = find_signed_closed_loops(geotiffs)
     loops2 = find_signed_closed_loops(geotiffs)

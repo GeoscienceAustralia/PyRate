@@ -1,0 +1,58 @@
+from datetime import date
+from pathlib import Path
+import numpy as np
+import pytest
+from pyrate.constants import PYRATEPATH
+from pyrate.core import config as cf
+from pyrate.core.phase_closure.mst_closure import (
+    find_closed_loops, Edge, SignedWeightedEdge, SignedEdge, setup_edges,
+    add_signs_and_weights_to_loops, sort_loops_based_on_weights_and_date, WeightedLoop,
+    find_signed_closed_loops
+)
+from pyrate.core.phase_closure.closure_check import (
+    discard_loops_containing_max_ifg_count,
+    drop_ifgs_if_not_part_of_any_loop
+)
+
+
+GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
+
+
+@pytest.fixture
+def geotiffs():
+    tifs = [u.as_posix() for u in GEOTIFF.glob('*_unw.tif')]
+    tifs.sort()
+    return tifs
+
+
+def test_discard_loops_containing_max_ifg_count(geotiffs, run_number):
+    loops1 = retain_loops(geotiffs)
+    loops2 = retain_loops(geotiffs)
+    m_weights = [m.weight for m in loops1]
+    s_weights = [m.weight for m in loops2]
+    np.testing.assert_array_equal(m_weights, s_weights)
+
+
+def retain_loops(tifs):
+    loops1 = find_signed_closed_loops(tifs)
+    sorted_loops1 = sort_loops_based_on_weights_and_date(loops1)
+    params = {
+        cf.MAX_LOOP_COUNT_FOR_EACH_IFGS: 2,
+        cf.MAX_LOOP_LENGTH: 4
+    }
+    retained_loops_meeting_max_loop_criretia1 = [sl for sl in sorted_loops1
+                                                 if len(sl) <= params[cf.MAX_LOOP_LENGTH]]
+    msg = f"After applying MAX_LOOP_LENGTH={params[cf.MAX_LOOP_LENGTH]} criteria, " \
+          f"{len(retained_loops_meeting_max_loop_criretia1)} loops are retained"
+    print(msg)
+    retained_loops1 = discard_loops_containing_max_ifg_count(retained_loops_meeting_max_loop_criretia1, params)
+    return retained_loops1
+
+
+def test_drop_ifgs_if_not_part_of_any_loop(geotiffs, run_number):
+    loops1 = retain_loops(geotiffs)
+    selected_tifs1 = drop_ifgs_if_not_part_of_any_loop(geotiffs, loops1)
+
+    loops2 = retain_loops(geotiffs)
+    selected_tifs2 = drop_ifgs_if_not_part_of_any_loop(geotiffs, loops2)
+    assert all([a == b for a, b in zip(selected_tifs1, selected_tifs2)])

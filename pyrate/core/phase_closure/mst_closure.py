@@ -113,7 +113,7 @@ def add_signs_and_weights_to_loops(loops: List[List[date]], available_edges: Lis
             weighted_signed_loop.append(weighted_signed_edge)
 
         # sort the loops by first the weight, and then minimum start date
-        weighted_signed_loop.sort(key=lambda x: (x.weight, x.first, x.second, x.sign))
+        weighted_signed_loop.sort(key=lambda x: (x.first, x.second, x.sign))
         weighted_loop = WeightedLoop(weighted_signed_loop)
         weighted_signed_loops.append(weighted_loop)
 

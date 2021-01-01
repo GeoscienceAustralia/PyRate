@@ -164,3 +164,8 @@ def gamma_or_mexicoa_conf(request):
     params = Configuration(request.param).__dict__
     yield request.param
     shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
+
+
+@pytest.fixture(params=range(5))
+def run_number(request):
+    return request.param
