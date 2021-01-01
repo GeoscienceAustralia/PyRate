@@ -75,6 +75,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
         params[cf.ORBITAL_FIT_METHOD] = orbfit_method
         params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
         params[cf.REF_EST_METHOD] = ref_est_method
+        params[cf.MAX_LOOP_LENGTH] = 3
         params["rows"], params["cols"] = 3, 2
         params["savenpy"] = 1
         params["notiles"] = params["rows"] * params["cols"]  # number of tiles
@@ -204,35 +205,8 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.npy", 5)
 
     if params[cf.PHASE_CLOSURE]:
-        m_config = Configuration(mpi_conf)
-        s_config = Configuration(sr_conf)
-        m_close = m_config.closure()
-        s_close = s_config.closure()
-        m_closure = np.load(m_close.closure)
-        s_closure = np.load(s_close.closure)
-
-        # loops
-        m_loops = np.load(m_close.loops, allow_pickle=True)
-        s_loops = np.load(s_close.loops, allow_pickle=True)
-        m_weights = [m.weight for m in m_loops]
-        s_weights = [m.weight for m in s_loops]
-        np.testing.assert_array_equal(m_weights, s_weights)
-
-        for i, (m, s) in enumerate(zip(m_loops, s_loops)):
-            assert all(m_e == s_e for m_e, s_e in zip(m.edges, s.edges))
-
-        # closure
-        np.testing.assert_array_almost_equal(np.abs(m_closure), np.abs(s_closure))
-
-        # num_occurences_each_ifg
-        m_num_occurences_each_ifg = np.load(m_close.num_occurences_each_ifg, allow_pickle=True)
-        s_num_occurences_each_ifg = np.load(s_close.num_occurences_each_ifg, allow_pickle=True)
-        np.testing.assert_array_equal(m_num_occurences_each_ifg, s_num_occurences_each_ifg)
-
-        # check ps
-        m_check_ps = np.load(m_close.check_ps)
-        s_check_ps = np.load(s_close.check_ps)
-        np.testing.assert_array_equal(m_check_ps, s_check_ps)
+        __check_equality_of_phase_closure_outputs(mpi_conf, sr_conf)
+        __check_equality_of_phase_closure_outputs(mpi_conf, mr_conf)
     else:
         assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tscuml*.tif", 12)
         assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tsincr*.tif", 12)
@@ -242,6 +216,33 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     shutil.rmtree(params[cf.OBS_DIR])
     shutil.rmtree(params_m[cf.OBS_DIR])
     shutil.rmtree(params_s[cf.OBS_DIR])
+
+
+def __check_equality_of_phase_closure_outputs(mpi_conf, sr_conf):
+    m_config = Configuration(mpi_conf)
+    s_config = Configuration(sr_conf)
+    m_close = m_config.closure()
+    s_close = s_config.closure()
+    m_closure = np.load(m_close.closure)
+    s_closure = np.load(s_close.closure)
+    # loops
+    m_loops = np.load(m_close.loops, allow_pickle=True)
+    s_loops = np.load(s_close.loops, allow_pickle=True)
+    m_weights = [m.weight for m in m_loops]
+    s_weights = [m.weight for m in s_loops]
+    np.testing.assert_array_equal(m_weights, s_weights)
+    for i, (m, s) in enumerate(zip(m_loops, s_loops)):
+        assert all(m_e == s_e for m_e, s_e in zip(m.edges, s.edges))
+    # closure
+    np.testing.assert_array_almost_equal(np.abs(m_closure), np.abs(s_closure))
+    # num_occurences_each_ifg
+    m_num_occurences_each_ifg = np.load(m_close.num_occurences_each_ifg, allow_pickle=True)
+    s_num_occurences_each_ifg = np.load(s_close.num_occurences_each_ifg, allow_pickle=True)
+    np.testing.assert_array_equal(m_num_occurences_each_ifg, s_num_occurences_each_ifg)
+    # check ps
+    m_check_ps = np.load(m_close.check_ps)
+    s_check_ps = np.load(s_close.check_ps)
+    np.testing.assert_array_equal(m_check_ps, s_check_ps)
 
 
 @pytest.fixture(params=[0, 1])
