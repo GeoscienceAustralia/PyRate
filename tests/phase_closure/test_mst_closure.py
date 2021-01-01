@@ -5,7 +5,8 @@ import pytest
 from pyrate.constants import PYRATEPATH
 from pyrate.core.phase_closure.mst_closure import (
     find_closed_loops, Edge, SignedWeightedEdge, SignedEdge, setup_edges,
-    add_signs_and_weights_to_loops, sort_loops_based_on_weights_and_date, WeightedLoop
+    add_signs_and_weights_to_loops, sort_loops_based_on_weights_and_date, WeightedLoop,
+    find_signed_closed_loops
 )
 
 GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
@@ -13,7 +14,9 @@ GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
 
 @pytest.fixture
 def geotiffs():
-    return [u.as_posix() for u in GEOTIFF.glob('*_unw.tif')]
+    tifs = [u.as_posix() for u in GEOTIFF.glob('*_unw.tif')]
+    tifs.sort()
+    return tifs
 
 
 @pytest.fixture
@@ -74,3 +77,47 @@ def test_sort_loops_based_on_weights_and_date(signed_loops):
         if len(sub_list) > 1:
             tds = np.array([td.days for td in np.diff(sub_list)])
             assert np.all(tds >= 0)  # assert all dates are increasing for same weights
+
+
+def test_add_signs_and_weights_to_loops(geotiffs):
+    """also tests find_signed_closed_loops"""
+    all_edges = setup_edges(geotiffs)
+    all_loops = find_closed_loops(all_edges)
+    loops1 = add_signs_and_weights_to_loops(all_loops, all_edges)
+
+    all_edges = setup_edges(geotiffs)
+    all_loops = find_closed_loops(all_edges)
+    loops2 = add_signs_and_weights_to_loops(all_loops, all_edges)
+
+    compare_loops(loops1, loops2)
+
+
+def compare_loops(loops1, loops2):
+    for i, (l1, l2) in enumerate(zip(loops1, loops2)):
+        assert l1.weight == l2.weight
+        for ll1, ll2 in zip(l1.loop, l2.loop):
+            assert ll1.weight == ll2.weight
+            assert ll1.first == ll2.first
+            assert ll1.second == ll2.second
+            assert ll1.sign == ll2.sign
+    assert i == len(loops1) - 1
+    assert i == 540
+
+
+def test_find_signed_closed_loops(geotiffs):
+    loops1 = find_signed_closed_loops(geotiffs)
+    loops2 = find_signed_closed_loops(geotiffs)
+    compare_loops(loops1, loops2)
+
+
+@pytest.fixture(params=range(10))
+def run_number(request):
+    return request.param
+
+
+def test_sort_loops_based_on_weights_and_date_2(geotiffs, run_number):
+    loops1 = find_signed_closed_loops(geotiffs)
+    loops2 = find_signed_closed_loops(geotiffs)
+    sorted_loops1 = sort_loops_based_on_weights_and_date(loops1)
+    sorted_loops2 = sort_loops_based_on_weights_and_date(loops2)
+    compare_loops(sorted_loops1, sorted_loops2)
