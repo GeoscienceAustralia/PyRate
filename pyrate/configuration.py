@@ -360,10 +360,11 @@ class Configuration:
         closure_d = self.phase_closure_dir
 
         class Closure:
-            def __init__(self, outdir):
-                self.closure = Path(outdir).joinpath('closure.npy')
-                self.check_ps = Path(outdir).joinpath('check_ps.npy')
-                self.num_occurences_each_ifg = Path(outdir).joinpath('num_occurences_each_ifg.npy')
+            def __init__(self, closure_d):
+                self.closure = Path(closure_d).joinpath('closure.npy')
+                self.check_ps = Path(closure_d).joinpath('check_ps.npy')
+                self.num_occurences_each_ifg = Path(closure_d).joinpath('num_occurences_each_ifg.npy')
+                self.loops = Path(closure_d).joinpath('loops.npy')
 
         return Closure(closure_d)
 

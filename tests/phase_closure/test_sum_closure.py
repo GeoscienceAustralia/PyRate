@@ -60,4 +60,23 @@ def test_mpi_vs_single_process(modified_config):
     s_config = Configuration(serial_conf)
     m_closure = np.load(m_config.closure().closure)
     s_closure = np.load(s_config.closure().closure)
+    m_loops = np.load(m_config.closure().loops, allow_pickle=True)
+    s_loops = np.load(s_config.closure().loops, allow_pickle=True)
+    m_weights = [m.weight for m in m_loops]
+    s_weights = [m.weight for m in s_loops]
+    print(m_weights)
+    print(s_weights)
+
+    for i, (m, s) in enumerate(zip(m_loops, s_loops)):
+        print(f'========================={i}=================')
+        assert m.weight == s.weight
+        print(m.weight, m.edges)
+        print(s.weight, s.edges)
+        for m_e, s_e in zip(m.edges, s.edges):
+            print('-'*10)
+            print(m_e)
+            print(s_e)
+            assert m_e == s_e
+
+    import IPython; IPython.embed(); import sys; sys.exit()
     np.testing.assert_array_almost_equal(m_closure, s_closure)

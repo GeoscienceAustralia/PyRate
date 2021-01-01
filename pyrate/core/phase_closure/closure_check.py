@@ -6,6 +6,7 @@ from pyrate.core.shared import dem_or_ifg
 from pyrate.core import config as cf
 from pyrate.core.phase_closure.mst_closure import find_signed_closed_loops, sort_loops_based_on_weights_and_date, \
     WeightedLoop, Edge
+from pyrate.configuration import Configuration
 from pyrate.core.phase_closure.sum_closure import sum_phase_values_for_each_loop
 from pyrate.core.phase_closure.plot_closure import plot_closure
 from pyrate.core.logger import pyratelogger as log
@@ -77,12 +78,13 @@ def drop_ifgs_exceeding_threshold(orig_ifg_files, check_ps, num_occurences_each_
     return selected_ifg_files
 
 
-def filter_to_closure_checked_ifgs(params, interactive_plot=True):
+def filter_to_closure_checked_ifgs(config, interactive_plot=True):
+    params = config.__dict__
     ifg_files = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     log.info(f"Performing closure check on original set of {len(ifg_files)} ifgs")
 
     while True:  # iterate till ifgs/loops are stable
-        rets = wrap_closure_check(ifg_files, params)
+        rets = wrap_closure_check(ifg_files, config)
         if rets is None:
             return
         new_ifg_files, closure, loops = rets
@@ -113,7 +115,8 @@ def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) ->
     return selected_loops
 
 
-def wrap_closure_check(ifg_files, params):
+def wrap_closure_check(ifg_files, config: Configuration):
+    params = config.__dict__
     signed_loops = find_signed_closed_loops(ifg_files=ifg_files)
     sorted_signed_loops = sort_loops_based_on_weights_and_date(signed_loops)
     retained_loops_meeting_max_loop_criretia = [sl for sl in sorted_signed_loops
@@ -138,9 +141,11 @@ def wrap_closure_check(ifg_files, params):
 
     closure, check_ps, num_occurences_each_ifg = sum_phase_values_for_each_loop(ifgs_with_loops, retained_loops, params)
 
-    np.save(Path(params[cf.PHASE_CLOSURE_DIR]).joinpath('closure.npy'), closure)
-    np.save(Path(params[cf.PHASE_CLOSURE_DIR]).joinpath('check_ps.npy'), check_ps)
-    np.save(Path(params[cf.PHASE_CLOSURE_DIR]).joinpath('num_occurences_each_ifg.npy'), num_occurences_each_ifg)
+    closure_ins = config.closure()
+    np.save(closure_ins.closure, closure)
+    np.save(closure_ins.check_ps, check_ps)
+    np.save(closure_ins.num_occurences_each_ifg, num_occurences_each_ifg)
+    np.save(closure_ins.loops, retained_loops, allow_pickle=True)
 
     # ps_unwrap_error = detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg)
     selcted_ifg_files = drop_ifgs_exceeding_threshold(ifgs_with_loops, check_ps, num_occurences_each_ifg, params)
