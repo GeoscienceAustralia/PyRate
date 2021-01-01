@@ -28,7 +28,7 @@ def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[WeightedLoo
     closure = np.zeros(shape=(ifgs[0].phase_data.shape + (n_loops,)), dtype=np.float32)
     num_occurences_each_ifg = np.zeros(shape=n_ifgs, dtype=np.int16)
     # initiate variable for check of unwrapping issues at the same pixels in all loops
-    check_ps = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)))
+    check_ps = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)), dtype=np.int16)
 
     for k, weighted_loop in enumerate(loops):
         for signed_edge in weighted_loop.loop:
