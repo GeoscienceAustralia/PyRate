@@ -23,7 +23,7 @@ from pathlib import Path
 from subprocess import check_call, CalledProcessError, run
 import numpy as np
 
-import pyrate.configuration
+from pyrate.configuration import Configuration, write_config_file
 from pyrate.core import config as cf
 
 from tests.common import (
@@ -82,7 +82,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
         print(params)
         # write new temp config
         output_conf = tdir.joinpath(output_conf_file)
-        pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
+        write_config_file(params=params, output_conf_file=output_conf)
 
         return output_conf, params
     return modify_params
@@ -203,7 +203,37 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.png", 3)
     assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.npy", 5)
 
-    if not params[cf.PHASE_CLOSURE]:
+    if params[cf.PHASE_CLOSURE]:
+        m_config = Configuration(mpi_conf)
+        s_config = Configuration(sr_conf)
+        m_close = m_config.closure()
+        s_close = s_config.closure()
+        m_closure = np.load(m_close.closure)
+        s_closure = np.load(s_close.closure)
+
+        # loops
+        m_loops = np.load(m_close.loops, allow_pickle=True)
+        s_loops = np.load(s_close.loops, allow_pickle=True)
+        m_weights = [m.weight for m in m_loops]
+        s_weights = [m.weight for m in s_loops]
+        np.testing.assert_array_equal(m_weights, s_weights)
+
+        for i, (m, s) in enumerate(zip(m_loops, s_loops)):
+            assert all(m_e == s_e for m_e, s_e in zip(m.edges, s.edges))
+
+        # closure
+        np.testing.assert_array_almost_equal(np.abs(m_closure), np.abs(s_closure))
+
+        # num_occurences_each_ifg
+        m_num_occurences_each_ifg = np.load(m_close.num_occurences_each_ifg, allow_pickle=True)
+        s_num_occurences_each_ifg = np.load(s_close.num_occurences_each_ifg, allow_pickle=True)
+        np.testing.assert_array_equal(m_num_occurences_each_ifg, s_num_occurences_each_ifg)
+
+        # check ps
+        m_check_ps = np.load(m_close.check_ps)
+        s_check_ps = np.load(s_close.check_ps)
+        np.testing.assert_array_equal(m_check_ps, s_check_ps)
+    else:
         assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tscuml*.tif", 12)
         assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tsincr*.tif", 12)
 
@@ -251,7 +281,7 @@ def modified_config_short(tempdir, local_crop, get_lks, coh_mask, ref_pixel):
         # print(params)
         # write new temp config
         output_conf = tdir.joinpath(output_conf_file)
-        pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
+        write_config_file(params=params, output_conf_file=output_conf)
 
         return output_conf, params
 

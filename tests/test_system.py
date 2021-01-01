@@ -48,7 +48,6 @@ def test_workflow(system_conf):
     shutil.rmtree(params[cf.OUT_DIR])
 
 
-@pytest.mark.slow
 def test_single_workflow(gamma_or_mexicoa_conf):
 
     check_call(f"mpirun -n 4 pyrate workflow -f {gamma_or_mexicoa_conf}", shell=True)
