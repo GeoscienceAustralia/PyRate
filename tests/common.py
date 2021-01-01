@@ -47,6 +47,7 @@ PYTHON_VERSION = check_output(["python", "--version"]).decode(encoding="utf-8").
 PYTHON3P6 = True if PYTHON_VERSION == '3.6' else False
 PYTHON3P7 = True if PYTHON_VERSION == '3.7' else False
 PYTHON3P8 = True if PYTHON_VERSION == '3.8' else False
+PYTHON3P9 = True if PYTHON_VERSION == '3.9' else False
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
 GITHUB_ACTIONS = True if ('GITHUB_ACTIONS' in os.environ) else False
 

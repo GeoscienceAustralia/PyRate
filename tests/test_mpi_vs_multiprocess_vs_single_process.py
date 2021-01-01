@@ -34,6 +34,7 @@ from tests.common import (
     PYTHON3P6,
     PYTHON3P7,
     PYTHON3P8,
+    PYTHON3P9,
     GDAL_VERSION,
     MEXICO_CROPA_CONF
 )
@@ -49,7 +50,7 @@ def parallel(request):
     return request.param
 
 
-@pytest.fixture(params=[1, 2, 4])
+@pytest.fixture(params=[1, 4])
 def local_crop(request):
     return request.param
 
@@ -90,7 +91,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(GDAL3P0P4 or PYTHON3P6 or PYTHON3P8, reason="Only run in GDAL3.0.2 and Python3.7 env")
+@pytest.mark.skipif(PYTHON3P9 or GDAL3P0P4 or PYTHON3P6 or PYTHON3P8, reason="Only run in GDAL3.0.2 and Python3.7 env")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     """
     Tests proving single/multiprocess/mpi produce same output
@@ -251,11 +252,12 @@ def coh_mask(request):
 
 
 @pytest.fixture()
-def modified_config_short(tempdir, local_crop, get_lks, coh_mask, ref_pixel):
+def modified_config_short(tempdir, local_crop, get_lks, coh_mask):
     orbfit_lks = 1
     orbfit_method = 1
     orbfit_degrees = 1
     ref_est_method = 1
+    ref_pixel = (150.941666654, -34.218333314)
 
     def modify_params(conf_file, parallel, output_conf_file, largetifs):
         tdir = Path(tempdir())
@@ -313,7 +315,7 @@ def create_mpi_files():
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(PYTHON3P6 or PYTHON3P8 or GDAL3P0P2, reason="Only run in GDAL3.0.4 and python3.7 env")
+@pytest.mark.skipif(PYTHON3P9 or PYTHON3P6 or PYTHON3P8 or GDAL3P0P2, reason="Only run in GDAL3.0.4 and python3.7 env")
 def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_conf, create_mpi_files, parallel):
     """
     Checks performed:

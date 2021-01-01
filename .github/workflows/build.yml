@@ -14,16 +14,20 @@ jobs:
 #            python-version: "3.6"
 #            GDALVERSION: "3.0.2"
 #            PROJVERSION: "6.1.1"
-          - build: 2
-            python-version: "3.7"
-            GDALVERSION: "3.0.2"
-            PROJVERSION: "6.2.1"
-          - build: 3
-            python-version: "3.7"
-            GDALVERSION: "3.0.4"
-            PROJVERSION: "6.1.1"
-          - build: 4
-            python-version: "3.8"
+#          - build: 2
+#            python-version: "3.7"
+#            GDALVERSION: "3.0.2"
+#            PROJVERSION: "6.2.1"
+#          - build: 3
+#            python-version: "3.7"
+#            GDALVERSION: "3.0.4"
+#            PROJVERSION: "6.1.1"
+#          - build: 4
+#            python-version: "3.8"
+#            GDALVERSION: "3.0.4"
+#            PROJVERSION: "6.1.1"
+          - build: 5
+            python-version: "3.9"
             GDALVERSION: "3.0.4"
             PROJVERSION: "6.1.1"
 

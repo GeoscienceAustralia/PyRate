@@ -3,6 +3,6 @@ joblib==0.14.1
 mpi4py==3.0.3
 networkx==2.4
 numpy==1.18.3
-pyproj==2.6.0
+pyproj
 scipy==1.4.1
 numexpr==2.7.1
