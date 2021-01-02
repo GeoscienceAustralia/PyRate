@@ -4,5 +4,5 @@ mpi4py==3.0.3
 networkx==2.5
 numpy==1.19.4
 pyproj==3.0.0
-scipy==1.6.0
+scipy
 numexpr==2.7.2
