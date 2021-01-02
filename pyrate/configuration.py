@@ -369,7 +369,6 @@ class Configuration:
         return Closure()
 
 
-
 def write_config_parser_file(conf: ConfigParser, output_conf_file: Union[str, Path]):
     """replacement function for write_config_file which uses dict instead of a ConfigParser instance"""
     with open(output_conf_file, 'w') as configfile:
