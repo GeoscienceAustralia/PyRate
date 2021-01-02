@@ -143,7 +143,7 @@ def _update_params_with_tiles(params: dict) -> None:
 
 
 def update_params_with_closure_checked_ifg_list(params: dict, config: Configuration):
-    ifg_files = mpiops.run_once(filter_to_closure_checked_ifgs, config)
+    ifg_files = filter_to_closure_checked_ifgs(config)
     if ifg_files is None:
         import sys
         sys.exit("Zero loops are returned after phase clouser calcs!!! \n"

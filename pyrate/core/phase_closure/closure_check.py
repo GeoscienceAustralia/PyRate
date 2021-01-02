@@ -3,7 +3,7 @@ from typing import List
 from pathlib import Path
 import numpy as np
 from pyrate.core.shared import dem_or_ifg
-from pyrate.core import config as cf
+from pyrate.core import config as cf, mpiops
 from pyrate.core.phase_closure.mst_closure import find_signed_closed_loops, sort_loops_based_on_weights_and_date, \
     WeightedLoop, Edge
 from pyrate.configuration import Configuration
@@ -89,7 +89,8 @@ def filter_to_closure_checked_ifgs(config, interactive_plot=True):
             return
         new_ifg_files, closure, loops = rets
         if interactive_plot:
-            plot_closure(closure=closure, loops=loops, params=params, thr=params[cf.LARGE_DEV_THR])
+            if mpiops.rank == 0:
+                plot_closure(closure=closure, loops=loops, params=params, thr=params[cf.LARGE_DEV_THR])
         if len(ifg_files) == len(new_ifg_files):
             break
         else:
@@ -118,8 +119,8 @@ def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) ->
 def wrap_closure_check(ifg_files, config: Configuration):
     params = config.__dict__
     ifg_files.sort()
-    signed_loops = find_signed_closed_loops(ifg_files=ifg_files)
-    sorted_signed_loops = sort_loops_based_on_weights_and_date(signed_loops)
+    signed_loops = mpiops.run_once(find_signed_closed_loops, ifg_files)
+    sorted_signed_loops = mpiops.run_once(sort_loops_based_on_weights_and_date, signed_loops)
     retained_loops_meeting_max_loop_criretia = [sl for sl in sorted_signed_loops
                                                 if len(sl) <= params[cf.MAX_LOOP_LENGTH]]
     msg = f"After applying MAX_LOOP_LENGTH={params[cf.MAX_LOOP_LENGTH]} criteria, " \
@@ -130,8 +131,9 @@ def wrap_closure_check(ifg_files, config: Configuration):
     else:
         log.info(msg)
 
-    retained_loops = discard_loops_containing_max_ifg_count(retained_loops_meeting_max_loop_criretia, params)
-    ifgs_with_loops = drop_ifgs_if_not_part_of_any_loop(ifg_files, retained_loops)
+    retained_loops = mpiops.run_once(discard_loops_containing_max_ifg_count,
+                                     retained_loops_meeting_max_loop_criretia, params)
+    ifgs_with_loops = mpiops.run_once(drop_ifgs_if_not_part_of_any_loop, ifg_files, retained_loops)
 
     msg = f"After applying MAX_LOOP_COUNT_FOR_EACH_IFGS={params[cf.MAX_LOOP_COUNT_FOR_EACH_IFGS]} criteria, " \
           f"{len(retained_loops)} loops are retained"
@@ -142,13 +144,15 @@ def wrap_closure_check(ifg_files, config: Configuration):
 
     closure, check_ps, num_occurences_each_ifg = sum_phase_values_for_each_loop(ifgs_with_loops, retained_loops, params)
 
-    closure_ins = config.closure()
-    np.save(closure_ins.closure, closure)
-    np.save(closure_ins.check_ps, check_ps)
-    np.save(closure_ins.num_occurences_each_ifg, num_occurences_each_ifg)
-    np.save(closure_ins.loops, retained_loops, allow_pickle=True)
+    if mpiops.rank == 0:
+        closure_ins = config.closure()
+        np.save(closure_ins.closure, closure)
+        np.save(closure_ins.check_ps, check_ps)
+        np.save(closure_ins.num_occurences_each_ifg, num_occurences_each_ifg)
+        np.save(closure_ins.loops, retained_loops, allow_pickle=True)
 
     # ps_unwrap_error = detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg)
-    selcted_ifg_files = drop_ifgs_exceeding_threshold(ifgs_with_loops, check_ps, num_occurences_each_ifg, params)
+    selcted_ifg_files = mpiops.run_once(drop_ifgs_exceeding_threshold, ifgs_with_loops, check_ps,
+                                        num_occurences_each_ifg, params)
 
     return selcted_ifg_files, closure, retained_loops
