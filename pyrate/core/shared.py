@@ -1400,6 +1400,7 @@ def tiles_split(func, params: dict, *args, **kwargs) -> np.ndarray:
     Function to pass tiles of a full array to an array processing function call.
     :param func: Name of function to pass tiles to.
     :param params: Dictionary of PyRate configuration parameters.
+        params must contain a 'tiles' list
     """
     tiles = params[cf.TILES]
     process_tiles = mpiops.array_split(tiles)

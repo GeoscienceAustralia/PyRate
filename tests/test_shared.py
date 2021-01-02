@@ -19,6 +19,8 @@ This Python module contains tests for the shared.py PyRate module.
 import os
 import shutil
 import sys
+import random
+import string
 import tempfile
 import pytest
 from pathlib import Path
@@ -38,7 +40,7 @@ from pyrate.core.shared import dem_or_ifg
 from pyrate import prepifg, conv2tif
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.core.shared import Ifg, DEM, RasterException
-from pyrate.core.shared import cell_size, _utm_zone
+from pyrate.core.shared import cell_size, _utm_zone, tiles_split
 
 from tests import common
 
@@ -502,10 +504,28 @@ def parallel(request):
     return request.param
 
 
-def test_tiles_split(parallel):
-    from pyrate.core.shared import tiles_split
+def get_random_string(length):
+    letters = string.ascii_lowercase
+    result_str = ''.join(random.choice(letters) for _ in range(length))
+    print("Random string of length", length, "is:", result_str)
+    return result_str
+
+
+data_types = {
+    'str': [get_random_string(8) for _ in range(20)],
+    'int': np.arange(20),
+    'ndarray': [np.random.randint(low=0, high=10, size=(2, 3), dtype=np.uint8) for _ in range(20)]
+}
+
+
+@pytest.fixture(params=list(data_types.keys()))
+def data_type(request):
+    return request.param
+
+
+def test_tiles_split(parallel, data_type):
     params = {
-        cf.TILES: range(20),
+        cf.TILES: data_types[data_type],
         cf.PARALLEL: parallel,
         cf.LOG_LEVEL: 'INFO',
         'multiplier': 2,
@@ -517,4 +537,4 @@ def test_tiles_split(parallel):
 
     ret = tiles_split(func, params)
 
-    np.testing.assert_array_equal(ret, np.arange(0, 20)*2)
+    np.testing.assert_array_equal(ret, [item*params['multiplier'] for item in data_types[data_type]])
