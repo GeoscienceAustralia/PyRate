@@ -495,3 +495,26 @@ class TestGeodesy:
                 assert s > 0, "size=%s" % s
                 assert s > exp_low, "size=%s" % s
                 assert s < exp_high, "size=%s" % s
+
+
+@pytest.fixture(params=[0])
+def parallel(request):
+    return request.param
+
+
+def test_tiles_split(parallel):
+    from pyrate.core.shared import tiles_split
+    params = {
+        cf.TILES: range(20),
+        cf.PARALLEL: parallel,
+        cf.LOG_LEVEL: 'INFO',
+        'multiplier': 2,
+        cf.PROCESSES: 4
+    }
+
+    def func(tile, params):
+        return tile * params['multiplier']
+
+    ret = tiles_split(func, params)
+
+    np.testing.assert_array_equal(ret, np.arange(0, 20)*2)

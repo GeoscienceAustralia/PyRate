@@ -1407,9 +1407,13 @@ def tiles_split(func, params: dict, *args, **kwargs) -> None:
         Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(func)(t, params, *args, **kwargs) for t in process_tiles)
     else:
-        for t in process_tiles:
-            func(t, params, *args, **kwargs)
+        ret_for_tile = {}
+        for i, t in enumerate(process_tiles):
+            ret_for_tile[i] = func(t, params, *args, **kwargs)
+        ret_combined = join_dicts(mpiops.comm.allgather(ret_for_tile))
+        ret = np.array([v[1] for v in ret_combined.items()])
     mpiops.comm.barrier()
+    return ret
 
 
 def output_tiff_filename(inpath: str, outpath: str) -> str:
