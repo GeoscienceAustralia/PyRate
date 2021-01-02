@@ -234,10 +234,10 @@ def ref_phase_est_wrapper(params):
 
     if mpiops.rank == MAIN_PROCESS:
         collected_ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
-        process_indices = mpiops.array_split(range(len(ifg_paths)))
+        process_indices = mpiops.array_split(range(len(ifg_paths))).astype(np.uint16)
         collected_ref_phs[process_indices] = ref_phs
         for r in range(1, mpiops.size):
-            process_indices = mpiops.array_split(range(len(ifg_paths)), r)
+            process_indices = mpiops.array_split(range(len(ifg_paths)), r).astype(np.uint16)
             this_process_ref_phs = np.zeros(shape=len(process_indices),
                                             dtype=np.float64)
             mpiops.comm.Recv(this_process_ref_phs, source=r, tag=r)
