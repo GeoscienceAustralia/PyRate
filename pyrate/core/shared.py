@@ -20,7 +20,7 @@ all other PyRate modules
 """
 # pylint: disable=too-many-lines
 import re
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Iterable, Callable
 
 import errno
 import math
@@ -1395,20 +1395,13 @@ def join_dicts(dicts: List[dict]) -> dict:
     return assembled_dict
 
 
-def tiles_split(func, params: dict, *args, **kwargs) -> np.ndarray:
-    """
-    Function to pass tiles of a full array to an array processing function call.
-    :param func: Name of function to pass tiles to.
-    :param params: Dictionary of PyRate configuration parameters.
-        params must contain a 'tiles' list
-    """
-    tiles = params[cf.TILES]
-    tiles_with_index = list(enumerate(tiles))
-    process_tiles = mpiops.array_split(tiles_with_index)
+def iterable_split(func: Callable, iterable: Iterable, params: dict, *args, **kwargs) -> np.ndarray:
+    iterable_with_index = list(enumerate(iterable))
+    process_tiles = mpiops.array_split(iterable_with_index)
     if params[cf.PARALLEL]:
         ret_combined = {}
         rets = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(func)(t, params, *args, **kwargs) for t in tiles)
+            delayed(func)(t, params, *args, **kwargs) for t in iterable)
         for i, r in enumerate(rets):
             ret_combined[i] = r
     else:
@@ -1419,6 +1412,17 @@ def tiles_split(func, params: dict, *args, **kwargs) -> np.ndarray:
     ret = np.array([v[1] for v in ret_combined.items()], dtype=object)
     mpiops.comm.barrier()
     return ret
+
+
+def tiles_split(func: Callable, params: dict, *args, **kwargs) -> np.ndarray:
+    """
+    Function to pass tiles of a full array to an array processing function call.
+    :param func: Name of function to pass tiles to.
+    :param params: Dictionary of PyRate configuration parameters.
+        params must contain a 'tiles' list
+    """
+    tiles = params[cf.TILES]
+    return iterable_split(func, tiles, params, *args, **kwargs)
 
 
 def output_tiff_filename(inpath: str, outpath: str) -> str:
