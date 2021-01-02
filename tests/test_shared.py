@@ -37,6 +37,7 @@ from osgeo.gdal import Open, Dataset, UseExceptions
 from tests.common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
 from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, gamma
 from pyrate.core.shared import dem_or_ifg
+from pyrate.core import mpiops
 from pyrate import prepifg, conv2tif
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.core.shared import Ifg, DEM, RasterException
@@ -507,15 +508,18 @@ def parallel(request):
 def get_random_string(length):
     letters = string.ascii_lowercase
     result_str = ''.join(random.choice(letters) for _ in range(length))
-    print("Random string of length", length, "is:", result_str)
     return result_str
 
 
-data_types = {
-    'str': [get_random_string(8) for _ in range(20)],
-    'int': np.arange(20),
-    'ndarray': [np.random.randint(low=0, high=10, size=(2, 3), dtype=np.uint8) for _ in range(20)]
-}
+def _data_types():
+    return {
+        'str': [get_random_string(np.random.randint(2, 10)) for _ in range(20)],
+        'int': np.arange(20),
+        'ndarray': [np.random.randint(low=0, high=10, size=(2, 3), dtype=np.uint8) for _ in range(20)]
+        }
+
+
+data_types = mpiops.run_once(_data_types)
 
 
 @pytest.fixture(params=list(data_types.keys()))
@@ -537,4 +541,5 @@ def test_tiles_split(parallel, data_type):
 
     ret = tiles_split(func, params)
 
-    np.testing.assert_array_equal(ret, [item*params['multiplier'] for item in data_types[data_type]])
+    expected_ret = np.array([item*params['multiplier'] for item in data_types[data_type]], dtype=object)
+    np.testing.assert_array_equal(ret, expected_ret)

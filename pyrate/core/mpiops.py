@@ -71,7 +71,7 @@ def array_split(arr: Iterable, process: int = None) -> Iterable:
     :rtype: list
     """
     r = process if process else rank
-    return np.array_split(arr, size)[r]
+    return np.array_split(np.array(arr, dtype=object), size)[r]
 
 
 def sum_axis_0(x, y, dtype):

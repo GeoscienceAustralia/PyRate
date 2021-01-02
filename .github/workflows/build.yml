@@ -79,4 +79,5 @@ jobs:
       - name: Test PyRate
         run: |
           pytest tests/ -m "slow"
+          mpirun -n 3 pytest tests/test_shared.py -k test_tiles_split -s
           pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/ -m "not slow"

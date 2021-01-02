@@ -1403,19 +1403,20 @@ def tiles_split(func, params: dict, *args, **kwargs) -> np.ndarray:
         params must contain a 'tiles' list
     """
     tiles = params[cf.TILES]
-    process_tiles = mpiops.array_split(tiles)
+    tiles_with_index = list(enumerate(tiles))
+    process_tiles = mpiops.array_split(tiles_with_index)
     if params[cf.PARALLEL]:
         ret_combined = {}
         rets = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(func)(t, params, *args, **kwargs) for t in process_tiles)
+            delayed(func)(t, params, *args, **kwargs) for t in tiles)
         for i, r in enumerate(rets):
             ret_combined[i] = r
     else:
         ret_for_tile = {}
-        for i, t in enumerate(process_tiles):
+        for i, t in process_tiles:
             ret_for_tile[i] = func(t, params, *args, **kwargs)
         ret_combined = join_dicts(mpiops.comm.allgather(ret_for_tile))
-    ret = np.array([v[1] for v in ret_combined.items()])
+    ret = np.array([v[1] for v in ret_combined.items()], dtype=object)
     mpiops.comm.barrier()
     return ret
 
