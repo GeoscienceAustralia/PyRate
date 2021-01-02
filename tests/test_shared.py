@@ -497,7 +497,7 @@ class TestGeodesy:
                 assert s < exp_high, "size=%s" % s
 
 
-@pytest.fixture(params=[0])
+@pytest.fixture(params=[0, 1])
 def parallel(request):
     return request.param
 

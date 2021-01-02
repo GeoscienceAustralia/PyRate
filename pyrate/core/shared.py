@@ -1395,7 +1395,7 @@ def join_dicts(dicts: List[dict]) -> dict:
     return assembled_dict
 
 
-def tiles_split(func, params: dict, *args, **kwargs) -> None:
+def tiles_split(func, params: dict, *args, **kwargs) -> np.ndarray:
     """
     Function to pass tiles of a full array to an array processing function call.
     :param func: Name of function to pass tiles to.
@@ -1404,14 +1404,17 @@ def tiles_split(func, params: dict, *args, **kwargs) -> None:
     tiles = params[cf.TILES]
     process_tiles = mpiops.array_split(tiles)
     if params[cf.PARALLEL]:
-        Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+        ret_combined = {}
+        rets = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
             delayed(func)(t, params, *args, **kwargs) for t in process_tiles)
+        for i, r in enumerate(rets):
+            ret_combined[i] = r
     else:
         ret_for_tile = {}
         for i, t in enumerate(process_tiles):
             ret_for_tile[i] = func(t, params, *args, **kwargs)
         ret_combined = join_dicts(mpiops.comm.allgather(ret_for_tile))
-        ret = np.array([v[1] for v in ret_combined.items()])
+    ret = np.array([v[1] for v in ret_combined.items()])
     mpiops.comm.barrier()
     return ret
 
