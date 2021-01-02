@@ -656,5 +656,5 @@ def min_params(out_dir):
     return params
 
 
-def sub_process_run(cmd, *args):
-    return run(cmd, shell=True, check=True, *args)
+def sub_process_run(cmd, *args, **kwargs):
+    return run(cmd, *args, shell=True, check=True, **kwargs)

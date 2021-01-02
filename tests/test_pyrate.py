@@ -224,9 +224,8 @@ class TestParallelPyRate:
         config = Configuration(output_conf)
         params = config.__dict__
 
-        from subprocess import check_call
-        check_call(f"pyrate conv2tif -f {output_conf}", shell=True)
-        check_call(f"pyrate prepifg -f {output_conf}", shell=True)
+        common.sub_process_run(f"pyrate conv2tif -f {output_conf}")
+        common.sub_process_run(f"pyrate prepifg -f {output_conf}")
 
         cls.sampled_paths = [p.tmp_sampled_path for p in params[cf.INTERFEROGRAM_FILES]]
 
@@ -259,8 +258,8 @@ class TestParallelPyRate:
         config = Configuration(output_conf)
         params = config.__dict__
 
-        check_call(f"pyrate conv2tif -f {output_conf}", shell=True)
-        check_call(f"pyrate prepifg -f {output_conf}", shell=True)
+        common.sub_process_run(f"pyrate conv2tif -f {output_conf}")
+        common.sub_process_run(f"pyrate prepifg -f {output_conf}")
 
         correct._copy_mlooked(params)
         correct.correct_ifgs(config)
