@@ -25,7 +25,6 @@ def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[WeightedLoo
     n_ifgs = len(ifgs)
     ifg0 = ifgs[0]
 
-    num_occurences_each_ifg = mpiops.run_once(_find_num_occurences_each_ifg, loops, edge_to_indexed_ifgs, n_ifgs)
     closure_dict = {}
     check_ps_dict = {}
     if params[cf.PARALLEL]:
@@ -47,10 +46,14 @@ def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[WeightedLoo
             closure_dict[k], check_ps_dict[k] = __compute_check_ps(
                 ifg0, n_ifgs, weighted_loop, edge_to_indexed_ifgs, params
             )
-        closure_dict = join_dicts(mpiops.comm.allgather(closure_dict))
-        check_ps_dict = join_dicts(mpiops.comm.allgather(check_ps_dict))
-    closure = np.dstack(tuple(closure_dict.values()))
-    check_ps = np.sum(np.stack(tuple(check_ps_dict.values()), axis=3), axis=3)
+        closure_dict = join_dicts(mpiops.comm.gather(closure_dict, root=0))
+        check_ps_dict = join_dicts(mpiops.comm.gather(check_ps_dict, root=0))
+    if mpiops.rank == 0:
+        num_occurences_each_ifg = _find_num_occurences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs)
+        closure = np.dstack(tuple(closure_dict.values()))
+        check_ps = np.sum(np.stack(tuple(check_ps_dict.values()), axis=3), axis=3)
+    else:
+        closure, check_ps, num_occurences_each_ifg = None, None, None
 
     return closure, check_ps, num_occurences_each_ifg
 
