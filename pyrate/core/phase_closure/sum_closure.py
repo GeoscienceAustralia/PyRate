@@ -29,12 +29,17 @@ def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[WeightedLoo
     closure_dict = {}
     check_ps_dict = {}
     if params[cf.PARALLEL]:
-        rets = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(__compute_check_ps)(ifg0, n_ifgs, weighted_loop, edge_to_indexed_ifgs, params)
-            for weighted_loop in loops
-        )
-        for k, r in enumerate(rets):
-            closure_dict[k], check_ps_dict[k] = r
+        # rets = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+        #     delayed(__compute_check_ps)(ifg0, n_ifgs, weighted_loop, edge_to_indexed_ifgs, params)
+        #     for weighted_loop in loops
+        # )
+        # for k, r in enumerate(rets):
+        #     closure_dict[k], check_ps_dict[k] = r
+        # TODO: enable multiprocessing - needs pickle error fix
+        for k, weighted_loop in enumerate(loops):
+            closure_dict[k], check_ps_dict[k] = __compute_check_ps(
+                ifg0, n_ifgs, weighted_loop, edge_to_indexed_ifgs, params
+            )
     else:
         loops_with_index = list(enumerate(loops))
         process_loops = mpiops.array_split(loops_with_index)

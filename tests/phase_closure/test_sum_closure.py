@@ -54,17 +54,27 @@ def test_mpi_vs_single_process(modified_config):
     sub_process_run(f"pyrate prepifg -f {serial_conf}")
     sub_process_run(f"pyrate correct -f {serial_conf}")
 
+    parallel_conf, p_params = modified_config(MEXICO_CROPA_CONF, 1, 'parallel_conf.conf')
+    sub_process_run(f"pyrate conv2tif -f {parallel_conf}")
+    sub_process_run(f"pyrate prepifg -f {parallel_conf}")
+    sub_process_run(f"pyrate correct -f {parallel_conf}")
+
     m_config = Configuration(mpi_conf)
     s_config = Configuration(serial_conf)
+    p_config = Configuration(parallel_conf)
     m_closure = np.load(m_config.closure().closure)
     s_closure = np.load(s_config.closure().closure)
+    p_closure = np.load(p_config.closure().closure)
 
     # loops
     m_loops = np.load(m_config.closure().loops, allow_pickle=True)
     s_loops = np.load(s_config.closure().loops, allow_pickle=True)
+    p_loops = np.load(p_config.closure().loops, allow_pickle=True)
     m_weights = [m.weight for m in m_loops]
     s_weights = [m.weight for m in s_loops]
+    p_weights = [m.weight for m in p_loops]
     np.testing.assert_array_equal(m_weights, s_weights)
+    np.testing.assert_array_equal(m_weights, p_weights)
 
     for i, (m, s) in enumerate(zip(m_loops, s_loops)):
         assert all(m_e == s_e for m_e, s_e in zip(m.edges, s.edges))
