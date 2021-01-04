@@ -1,8 +1,9 @@
 from collections import namedtuple
 from typing import List, Dict, Tuple
+from joblib import Parallel, delayed
 import numpy as np
 from pyrate.core import config as cf, mpiops
-from pyrate.core.shared import Ifg, dem_or_ifg
+from pyrate.core.shared import Ifg, dem_or_ifg, join_dicts, joblib_log_level
 from pyrate.core.phase_closure.mst_closure import Edge, SignedEdge, WeightedLoop
 IndexedIfg = namedtuple('IndexedIfg', ['index', 'Ifg'])
 
@@ -22,17 +23,29 @@ def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[WeightedLoo
 
     ifgs = [v.Ifg for v in edge_to_indexed_ifgs.values()]
     n_ifgs = len(ifgs)
-    n_loops = len(loops)
+    ifg0 = ifgs[0]
 
-    closure = np.zeros(shape=(ifgs[0].phase_data.shape + (n_loops,)), dtype=np.float32)
-
-    # initiate variable for check of unwrapping issues at the same pixels in all loops
-    check_ps = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)), dtype=np.uint16)
-
-    num_occurences_each_ifg = _find_num_occurences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs)
-
-    for k, weighted_loop in enumerate(loops):
-        __compute_for_loop(k, weighted_loop, edge_to_indexed_ifgs, params, closure, check_ps)
+    num_occurences_each_ifg = mpiops.run_once(_find_num_occurences_each_ifg, loops, edge_to_indexed_ifgs, n_ifgs)
+    closure_dict = {}
+    check_ps_dict = {}
+    if params[cf.PARALLEL]:
+        rets = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+            delayed(__compute_check_ps)(ifg0, n_ifgs, weighted_loop, edge_to_indexed_ifgs, params)
+            for weighted_loop in loops
+        )
+        for k, r in enumerate(rets):
+            closure_dict[k], check_ps_dict[k] = r
+    else:
+        loops_with_index = list(enumerate(loops))
+        process_loops = mpiops.array_split(loops_with_index)
+        for k, weighted_loop in process_loops:
+            closure_dict[k], check_ps_dict[k] = __compute_check_ps(
+                ifg0, n_ifgs, weighted_loop, edge_to_indexed_ifgs, params
+            )
+        closure_dict = join_dicts(mpiops.comm.allgather(closure_dict))
+        check_ps_dict = join_dicts(mpiops.comm.allgather(check_ps_dict))
+    closure = np.dstack(tuple(closure_dict.values()))
+    check_ps = np.sum(np.stack(tuple(check_ps_dict.values()), axis=3), axis=3)
 
     return closure, check_ps, num_occurences_each_ifg
 
@@ -47,21 +60,24 @@ def _find_num_occurences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs):
     return num_occurences_each_ifg
 
 
-def __compute_for_loop(k, weighted_loop, edge_to_indexed_ifgs, params, closure, check_ps):
+def __compute_check_ps(ifg: Ifg, n_ifgs, weighted_loop, edge_to_indexed_ifgs, params):
     large_dev_thr = params[cf.LARGE_DEV_THR],
     use_median = params[cf.SUBTRACT_MEDIAN_IN_CLOSURE_CHECK]
+    closure = np.zeros(shape=ifg.phase_data.shape, dtype=np.float32)
+    # initiate variable for check of unwrapping issues at the same pixels in all loops
+    check_ps = np.zeros(shape=(ifg.phase_data.shape + (n_ifgs,)), dtype=np.uint16)
 
     for signed_edge in weighted_loop.loop:
         indexed_ifg = edge_to_indexed_ifgs[signed_edge.edge]
         ifg = indexed_ifg.Ifg
-        closure[:, :, k] += signed_edge.sign * ifg.phase_data
+        closure += signed_edge.sign * ifg.phase_data
     if use_median:
-        closure[:, :, k] -= np.nanmedian(closure[:, :, k])  # may be able to drop median
+        closure -= np.nanmedian(closure)  # may be able to drop median
     # handle nans elegantly
-    nan_indices = np.isnan(closure[:, :, k])
-    closure[:, :, k][nan_indices] = 0  # values with nans can't be large_dev_thr checked
-    indices_breaching_threshold = np.absolute(closure[:, :, k]) > large_dev_thr
-    closure[:, :, k][nan_indices] = np.nan  # set them to nan again  - this is useful when we plot
+    nan_indices = np.isnan(closure)
+    closure[nan_indices] = 0  # values with nans can't be large_dev_thr checked
+    indices_breaching_threshold = np.absolute(closure) > large_dev_thr
+    closure[nan_indices] = np.nan  # set them to nan again  - this is useful when we plot
     for signed_edge in weighted_loop.loop:
         ifg_index = edge_to_indexed_ifgs[signed_edge.edge].index
         #  the variable check_ps is increased by 1 for that pixel
@@ -69,3 +85,5 @@ def __compute_for_loop(k, weighted_loop, edge_to_indexed_ifgs, params, closure, 
         # as we don't know the PS of these pixels and also they were converted to zero before large_dev_thr check
         # Therefore, we leave them out of check_ps, i.e., we don't increment their check_ps values
         check_ps[np.logical_and(indices_breaching_threshold, ~nan_indices), ifg_index] += 1
+    return closure, check_ps
+

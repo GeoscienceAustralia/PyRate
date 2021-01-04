@@ -1396,8 +1396,6 @@ def join_dicts(dicts: List[dict]) -> dict:
 
 
 def iterable_split(func: Callable, iterable: Iterable, params: dict, *args, **kwargs) -> np.ndarray:
-    iterable_with_index = list(enumerate(iterable))
-    process_tiles = mpiops.array_split(iterable_with_index)
     if params[cf.PARALLEL]:
         ret_combined = {}
         rets = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
@@ -1405,10 +1403,12 @@ def iterable_split(func: Callable, iterable: Iterable, params: dict, *args, **kw
         for i, r in enumerate(rets):
             ret_combined[i] = r
     else:
-        ret_for_tile = {}
+        iterable_with_index = list(enumerate(iterable))
+        process_tiles = mpiops.array_split(iterable_with_index)
+        ret_combined = {}
         for i, t in process_tiles:
-            ret_for_tile[i] = func(t, params, *args, **kwargs)
-        ret_combined = join_dicts(mpiops.comm.allgather(ret_for_tile))
+            ret_combined[i] = func(t, params, *args, **kwargs)
+        ret_combined = join_dicts(mpiops.comm.allgather(ret_combined))
     ret = np.array([v[1] for v in ret_combined.items()], dtype=object)
     mpiops.comm.barrier()
     return ret
