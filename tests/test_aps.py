@@ -26,6 +26,7 @@ import pyrate.core.config as cf
 from pyrate.core.aps import wrap_spatio_temporal_filter, _interpolate_nans
 from pyrate.core import shared
 from tests import common
+from tests.common import GDAL3P0P4
 
 
 @pytest.fixture(params=["linear", "nearest", "cubic"])
@@ -98,6 +99,8 @@ def slpforder(request):
     return request.param
 
 
+@pytest.mark.slow
+@pytest.mark.skipif(not GDAL3P0P4, reason="Only run in GDAL3.0.4 and Python3.7 env")
 class TestAPSErrorCorrectionsOnDiscReused:
 
     @classmethod
@@ -123,7 +126,6 @@ class TestAPSErrorCorrectionsOnDiscReused:
     def teardown_method(cls):
         shutil.rmtree(cls.params[cf.OUT_DIR])
 
-    @pytest.mark.slow
     def test_aps_error_files_on_disc(self, slpfmethod, slpfcutoff, slpforder):
         self.params[cf.SLPF_METHOD] = slpfmethod
         self.params[cf.SLPF_CUTOFF] = slpfcutoff

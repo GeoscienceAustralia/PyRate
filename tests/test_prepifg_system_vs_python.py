@@ -29,8 +29,6 @@ from tests.common import (
     assert_two_dirs_equal,
     manipulate_test_conf,
     GITHUB_ACTIONS,
-    PYTHON3P6,
-    PYTHON3P7,
     PYTHON3P9
 )
 
@@ -130,7 +128,7 @@ def modified_config_largetifs(tempdir, local_crop, get_lks, coh_mask):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(PYTHON3P6 or PYTHON3P7 or PYTHON3P9, reason="Only run in python 3.8")
+@pytest.mark.skipif(not PYTHON3P9, reason="Only run in python 3.8")
 def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, create_mpi_files):
 
     print("\n\n")

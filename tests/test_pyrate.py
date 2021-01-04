@@ -33,6 +33,7 @@ from pyrate.core.shared import dem_or_ifg
 from pyrate import correct, prepifg, conv2tif
 from pyrate.configuration import MultiplePaths, Configuration
 from tests import common
+from tests.common import PYTHON3P8
 
 # taken from
 # http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
@@ -193,6 +194,7 @@ class TestPyRate:
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(not PYTHON3P8, reason="Only run in GDAL3.0.4 and Python3.7 env")
 class TestParallelPyRate:
     """
     parallel vs serial pyrate tests verifying results from all steps equal
@@ -276,7 +278,6 @@ class TestParallelPyRate:
     def teardown_class(cls):
         shutil.rmtree(cls.params[cf.OUT_DIR])
 
-    @pytest.mark.slow
     def test_orbital_correction(self):
         key = 'ORBITAL_ERROR'
         value = 'REMOVED'
@@ -292,7 +293,6 @@ class TestParallelPyRate:
         assert key in md, 'Missing %s in %s' % (key, ifg.data_path)
         assert md[key] == value
 
-    @pytest.mark.slow
     def test_phase_conversion(self):
         # ensure phase has been converted from radians to millimetres
         key = 'DATA_UNITS'
@@ -304,7 +304,6 @@ class TestParallelPyRate:
             i.nodata_value = 0
             self.key_check(i, key, value)
 
-    @pytest.mark.slow
     def test_mst_equal(self):
         np.testing.assert_array_equal(self.mst, self.mst_p)
 
@@ -323,6 +322,8 @@ class TestParallelPyRate:
         np.testing.assert_array_almost_equal(self.samples, self.samples_p, decimal=4)
 
 
+@pytest.mark.slow
+@pytest.mark.skipif(not PYTHON3P8, reason="Only run in python 3.8")
 class TestPrePrepareIfgs:
 
     @classmethod
@@ -368,7 +369,6 @@ class TestPrePrepareIfgs:
         shutil.rmtree(cls.tmp_dir2)
         shutil.rmtree(cls.tmp_dir)
 
-    @pytest.mark.slow
     def test_small_data_prep_phase_equality(self):
         for i, j in zip(self.ifgs, self.ifg_ret):
             np.testing.assert_array_almost_equal(i.phase_data, j.phase_data)
@@ -377,7 +377,6 @@ class TestPrePrepareIfgs:
             i.phase_data[4, 2] = 0
             assert (i.phase_data == 0).any()
 
-    @pytest.mark.slow
     def test_small_data_prep_metadata_equality(self):
         for i, j in zip(self.ifgs, self.ifg_ret):
             assert i.meta_data == j.meta_data
