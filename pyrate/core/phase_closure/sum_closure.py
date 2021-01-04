@@ -8,7 +8,7 @@ from pyrate.core.phase_closure.mst_closure import Edge, SignedEdge, WeightedLoop
 IndexedIfg = namedtuple('IndexedIfg', ['index', 'Ifg'])
 
 
-def create_ifg_edge_dict(ifg_files) -> Dict[Edge, IndexedIfg]:
+def create_ifg_edge_dict(ifg_files: List[str]) -> Dict[Edge, IndexedIfg]:
     ifg_files.sort()
     ifgs = [dem_or_ifg(i) for i in ifg_files]
     for i in ifgs:
@@ -18,7 +18,8 @@ def create_ifg_edge_dict(ifg_files) -> Dict[Edge, IndexedIfg]:
     return {Edge(ifg.first, ifg.second): IndexedIfg(index, ifg) for index, ifg in enumerate(ifgs)}
 
 
-def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[WeightedLoop], params: dict):
+def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[WeightedLoop], params: dict) -> \
+        Tuple[np.ndarray, np.ndarray, np.ndarray]:
     edge_to_indexed_ifgs = create_ifg_edge_dict(ifg_files)
 
     ifgs = [v.Ifg for v in edge_to_indexed_ifgs.values()]
@@ -59,6 +60,7 @@ def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[WeightedLoo
 
 
 def _find_num_occurences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs):
+    """find how many times each ifg appears in total in all loops"""
     num_occurences_each_ifg = np.zeros(shape=n_ifgs, dtype=np.uint16)
     for weighted_loop in loops:
         for signed_edge in weighted_loop.loop:
@@ -68,7 +70,12 @@ def _find_num_occurences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs):
     return num_occurences_each_ifg
 
 
-def __compute_check_ps(ifg: Ifg, n_ifgs, weighted_loop, edge_to_indexed_ifgs, params):
+def __compute_check_ps(ifg: Ifg, n_ifgs: int, weighted_loop: WeightedLoop,
+                       edge_to_indexed_ifgs: Dict[Edge, IndexedIfg], params: dict) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    find sum `closure` of each loop, and compute `check_ps` for each pixel.
+    PS: Persistent Scatterer
+    """
     large_dev_thr = params[cf.LARGE_DEV_THR],
     use_median = params[cf.SUBTRACT_MEDIAN_IN_CLOSURE_CHECK]
     closure = np.zeros(shape=ifg.phase_data.shape, dtype=np.float32)
