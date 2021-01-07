@@ -76,7 +76,7 @@ def __compute_check_ps(ifg: Ifg, n_ifgs: int, weighted_loop: WeightedLoop,
     find sum `closure` of each loop, and compute `check_ps` for each pixel.
     PS: Persistent Scatterer
     """
-    large_dev_thr = params[cf.LARGE_DEV_THR],
+    large_dev_thr = params[cf.LARGE_DEV_THR] * cf
     use_median = params[cf.SUBTRACT_MEDIAN_IN_CLOSURE_CHECK]
     closure = np.zeros(shape=ifg.phase_data.shape, dtype=np.float32)
     # initiate variable for check of unwrapping issues at the same pixels in all loops
