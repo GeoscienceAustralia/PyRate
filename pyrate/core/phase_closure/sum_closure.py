@@ -1,8 +1,9 @@
+import math
 from collections import namedtuple
 from typing import List, Dict, Tuple
 from joblib import Parallel, delayed
 import numpy as np
-from pyrate.core import config as cf, mpiops
+from pyrate.core import config as cf, mpiops, ifgconstants as ifc
 from pyrate.core.shared import Ifg, dem_or_ifg, join_dicts, joblib_log_level
 from pyrate.core.phase_closure.mst_closure import Edge, SignedEdge, WeightedLoop
 IndexedIfg = namedtuple('IndexedIfg', ['index', 'Ifg'])
@@ -76,7 +77,9 @@ def __compute_check_ps(ifg: Ifg, n_ifgs: int, weighted_loop: WeightedLoop,
     find sum `closure` of each loop, and compute `check_ps` for each pixel.
     PS: Persistent Scatterer
     """
-    large_dev_thr = params[cf.LARGE_DEV_THR] * cf
+    md = ifg.dataset.GetMetadata()
+    wavelength = float(md[ifc.PYRATE_WAVELENGTH_METRES])
+    large_dev_thr = params[cf.LARGE_DEV_THR] * ifc.MM_PER_METRE * (wavelength / (4 * math.pi))
     use_median = params[cf.SUBTRACT_MEDIAN_IN_CLOSURE_CHECK]
     closure = np.zeros(shape=ifg.phase_data.shape, dtype=np.float32)
     # initiate variable for check of unwrapping issues at the same pixels in all loops
