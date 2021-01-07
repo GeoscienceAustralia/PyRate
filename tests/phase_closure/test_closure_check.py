@@ -12,7 +12,6 @@ from pyrate.core.phase_closure.mst_closure import (
 )
 from pyrate.core.phase_closure.closure_check import (
     discard_loops_containing_max_ifg_count,
-    drop_ifgs_if_not_part_of_any_loop
 )
 
 GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
@@ -52,10 +51,10 @@ def retain_loops(tifs):
     return retained_loops
 
 
-def test_drop_ifgs_if_not_part_of_any_loop(geotiffs):
-    loops1 = retain_loops(geotiffs)
-    selected_tifs1 = drop_ifgs_if_not_part_of_any_loop(geotiffs, loops1)
-
-    loops2 = retain_loops(geotiffs)
-    selected_tifs2 = drop_ifgs_if_not_part_of_any_loop(geotiffs, loops2)
-    assert all([a == b for a, b in zip(selected_tifs1, selected_tifs2)])
+# def test_drop_ifgs_if_not_part_of_any_loop(geotiffs):
+#     loops1 = retain_loops(geotiffs)
+#     selected_tifs1 = drop_ifgs_if_not_part_of_any_loop(geotiffs, loops1)
+#
+#     loops2 = retain_loops(geotiffs)
+#     selected_tifs2 = drop_ifgs_if_not_part_of_any_loop(geotiffs, loops2)
+#     assert all([a == b for a, b in zip(selected_tifs1, selected_tifs2)])

@@ -1,17 +1,17 @@
 import math
 from collections import namedtuple
 from typing import List, Dict, Tuple
-from joblib import Parallel, delayed
 import numpy as np
 from pyrate.core import config as cf, mpiops, ifgconstants as ifc
-from pyrate.core.shared import Ifg, dem_or_ifg, join_dicts, joblib_log_level
-from pyrate.core.phase_closure.mst_closure import Edge, SignedEdge, WeightedLoop
+from pyrate.core.shared import Ifg, join_dicts
+from pyrate.core.phase_closure.mst_closure import Edge, WeightedLoop
+
 IndexedIfg = namedtuple('IndexedIfg', ['index', 'Ifg'])
 
 
 def create_ifg_edge_dict(ifg_files: List[str]) -> Dict[Edge, IndexedIfg]:
     ifg_files.sort()
-    ifgs = [dem_or_ifg(i) for i in ifg_files]
+    ifgs = [Ifg(i) for i in ifg_files]
     for i in ifgs:
         i.open()
         i.nodata_value = 0
@@ -19,8 +19,8 @@ def create_ifg_edge_dict(ifg_files: List[str]) -> Dict[Edge, IndexedIfg]:
     return {Edge(ifg.first, ifg.second): IndexedIfg(index, ifg) for index, ifg in enumerate(ifgs)}
 
 
-def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[WeightedLoop], params: dict) -> \
-        Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: dict) -> \
+        Tuple[np.ndarray, np.ndarray, np.ndarray, Dict[Edge, IndexedIfg]]:
     edge_to_indexed_ifgs = create_ifg_edge_dict(ifg_files)
 
     ifgs = [v.Ifg for v in edge_to_indexed_ifgs.values()]
@@ -50,14 +50,17 @@ def sum_phase_values_for_each_loop(ifg_files: List[str], loops: List[WeightedLoo
             )
         closure_dict = join_dicts(mpiops.comm.gather(closure_dict, root=0))
         check_ps_dict = join_dicts(mpiops.comm.gather(check_ps_dict, root=0))
+
+    closure, check_ps, num_occurences_each_ifg = None, None, None
     if mpiops.rank == 0:
         num_occurences_each_ifg = _find_num_occurences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs)
-        closure = np.dstack(tuple(closure_dict.values()))
-        check_ps = np.sum(np.stack(tuple(check_ps_dict.values()), axis=3), axis=3)
-    else:
-        closure, check_ps, num_occurences_each_ifg = None, None, None
+        closure = np.dstack([v for k, v in sorted(closure_dict.items(), key=lambda x: x[0])])
+        check_ps = np.sum(np.stack([v for k, v in sorted(check_ps_dict.items(), key=lambda x: x[0])], axis=3), axis=3)
 
-    return closure, check_ps, num_occurences_each_ifg
+    for k in edge_to_indexed_ifgs:
+        edge_to_indexed_ifgs[k].Ifg.close()
+
+    return closure, check_ps, num_occurences_each_ifg, edge_to_indexed_ifgs
 
 
 def _find_num_occurences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs):
@@ -77,6 +80,7 @@ def __compute_check_ps(ifg: Ifg, n_ifgs: int, weighted_loop: WeightedLoop,
     find sum `closure` of each loop, and compute `check_ps` for each pixel.
     PS: Persistent Scatterer
     """
+    # TODO: change to reading wavelength for each ifg
     md = ifg.dataset.GetMetadata()
     wavelength = float(md[ifc.PYRATE_WAVELENGTH_METRES])
     large_dev_thr = params[cf.LARGE_DEV_THR] * ifc.MM_PER_METRE * (wavelength / (4 * math.pi))
@@ -104,4 +108,3 @@ def __compute_check_ps(ifg: Ifg, n_ifgs: int, weighted_loop: WeightedLoop,
         # Therefore, we leave them out of check_ps, i.e., we don't increment their check_ps values
         check_ps[np.logical_and(indices_breaching_threshold, ~nan_indices), ifg_index] += 1
     return closure, check_ps
-
