@@ -20,7 +20,7 @@ def create_ifg_edge_dict(ifg_files: List[str]) -> Dict[Edge, IndexedIfg]:
 
 
 def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: dict) -> \
-        Tuple[np.ndarray, np.ndarray, np.ndarray, Dict[Edge, IndexedIfg]]:
+        Tuple[np.ndarray, np.ndarray, np.ndarray]:
     edge_to_indexed_ifgs = create_ifg_edge_dict(ifg_files)
 
     ifgs = [v.Ifg for v in edge_to_indexed_ifgs.values()]
@@ -60,7 +60,7 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
     for k in edge_to_indexed_ifgs:
         edge_to_indexed_ifgs[k].Ifg.close()
 
-    return closure, check_ps, num_occurences_each_ifg, edge_to_indexed_ifgs
+    return closure, check_ps, num_occurences_each_ifg
 
 
 def _find_num_occurences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs):

@@ -52,4 +52,4 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], params, thr: fl
 
     closure_plot_file = Path(params[cf.OUT_DIR]).joinpath(f'sum_closure.png')
     plt.savefig(closure_plot_file)
-    log.info(f'Sum clousre plotted in {closure_plot_file}')
+    log.info(f'Sum closure plotted in {closure_plot_file}')

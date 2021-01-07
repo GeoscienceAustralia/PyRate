@@ -8,10 +8,11 @@ from pyrate.core.phase_closure.mst_closure import find_signed_closed_loops, sort
 from pyrate.configuration import Configuration
 from pyrate.core.phase_closure.sum_closure import sum_phase_closures, IndexedIfg
 from pyrate.core.phase_closure.plot_closure import plot_closure
+from pyrate.core.shared import Ifg
 from pyrate.core.logger import pyratelogger as log
 
 
-def detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg):
+def detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg, params):
     nrows, ncols, n_ifgs = check_ps.shape
     ps_unwrap_error = np.zeros(shape=(nrows, ncols), dtype=np.int16)
     for i in range(n_ifgs):
@@ -20,7 +21,20 @@ def detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg):
     # PS pixels with unwrapping errors in one or more SBAS IFGs will be marked.
     # mark_ix = ps_unwrap_error > 0  # don't need to output this
 
-    # keep_ix = ~ (ps_unwrap_error >= PHASE_UNWRAP_ERROR_THRESHOLD)
+    nan_index = ps_unwrap_error >= params[cf.PHASE_UNWRAP_ERROR_THRESHOLD]
+
+    log.info("Updating phase data of retained ifgs")
+
+    for i, m_p in enumerate(params[cf.INTERFEROGRAM_FILES]):
+        ifg = Ifg(m_p.tmp_sampled_path)
+        ifg.open()
+        ifg.nodata_value = params[cf.NO_DATA_VALUE]
+        ifg.convert_to_nans()
+        ifg.phase_data[nan_index] = np.nan
+        ifg.write_modified_phase()
+
+    log.info(f"Updated phase data of {i+1} retained ifgs after phase closure")
+
     # log.info(f'Of {nrows * ncols} pixels, {np.sum(~keep_ix)} '
     #          f'have phase unwrapping error in {PHASE_UNWRAP_ERROR_THRESHOLD} or more pixels')
     # can move mark_ix an keep_ix in wrapper if at all required
@@ -87,7 +101,7 @@ def filter_to_closure_checked_ifgs(config, interactive_plot=True):
         rets = wrap_closure_check(ifg_files, config)
         if rets is None:
             return
-        new_ifg_files, closure, check_ps, num_occurences_each_ifg, loops, edge_to_indexed_ifgs = rets
+        new_ifg_files, closure, check_ps, num_occurences_each_ifg, loops = rets
         if interactive_plot:
             if mpiops.rank == 0:
                 plot_closure(closure=closure, loops=loops, params=params, thr=params[cf.LARGE_DEV_THR])
@@ -97,10 +111,9 @@ def filter_to_closure_checked_ifgs(config, interactive_plot=True):
             ifg_files = new_ifg_files  # exit condition could be some other check like number_of_loops
 
     mpiops.comm.barrier()
-    # ps_unwrap_error = detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg)
 
     log.info(f"After closure check {len(ifg_files)} ifgs are retained")
-    return ifg_files
+    return ifg_files, check_ps, num_occurences_each_ifg
 
 
 def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) -> List[WeightedLoop]:
@@ -144,8 +157,7 @@ def wrap_closure_check(ifg_files: List[str],  config: Configuration):
     else:
         log.info(msg)
 
-    closure, check_ps, num_occurences_each_ifg, edge_to_indexed_ifgs = \
-        sum_phase_closures(ifg_files, retained_loops, params)
+    closure, check_ps, num_occurences_each_ifg = sum_phase_closures(ifg_files, retained_loops, params)
 
     if mpiops.rank == 0:
         closure_ins = config.closure()
@@ -156,4 +168,4 @@ def wrap_closure_check(ifg_files: List[str],  config: Configuration):
 
     selcted_ifg_files = mpiops.run_once(drop_ifgs_exceeding_threshold,
                                         ifg_files, check_ps, num_occurences_each_ifg, params)
-    return selcted_ifg_files, closure, check_ps, num_occurences_each_ifg, retained_loops,edge_to_indexed_ifgs
+    return selcted_ifg_files, closure, check_ps, num_occurences_each_ifg, retained_loops
