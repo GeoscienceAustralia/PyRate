@@ -49,9 +49,10 @@ def retain_loops(tifs):
 
 
 def test_drop_ifgs_if_not_part_of_any_loop(geotiffs):
+    params = {cf.NO_DATA_VALUE: 0.0}
     loops1 = retain_loops(geotiffs)
-    selected_tifs1 = drop_ifgs_if_not_part_of_any_loop(geotiffs, loops1)
+    selected_tifs1 = drop_ifgs_if_not_part_of_any_loop(geotiffs, loops1, params)
 
     loops2 = retain_loops(geotiffs)
-    selected_tifs2 = drop_ifgs_if_not_part_of_any_loop(geotiffs, loops2)
+    selected_tifs2 = drop_ifgs_if_not_part_of_any_loop(geotiffs, loops2, params)
     assert all([a == b for a, b in zip(selected_tifs1, selected_tifs2)])
