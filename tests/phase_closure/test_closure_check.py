@@ -1,17 +1,14 @@
-from datetime import date
-from pathlib import Path
-import random
 import numpy as np
 import pytest
 from pyrate.constants import PYRATEPATH
 from pyrate.core import config as cf
 from pyrate.core.phase_closure.mst_closure import (
-    find_closed_loops, Edge, SignedWeightedEdge, SignedEdge, setup_edges,
-    add_signs_and_weights_to_loops, sort_loops_based_on_weights_and_date, WeightedLoop,
+    sort_loops_based_on_weights_and_date,
     find_signed_closed_loops
 )
 from pyrate.core.phase_closure.closure_check import (
     discard_loops_containing_max_ifg_count,
+    drop_ifgs_if_not_part_of_any_loop
 )
 
 GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
@@ -51,10 +48,10 @@ def retain_loops(tifs):
     return retained_loops
 
 
-# def test_drop_ifgs_if_not_part_of_any_loop(geotiffs):
-#     loops1 = retain_loops(geotiffs)
-#     selected_tifs1 = drop_ifgs_if_not_part_of_any_loop(geotiffs, loops1)
-#
-#     loops2 = retain_loops(geotiffs)
-#     selected_tifs2 = drop_ifgs_if_not_part_of_any_loop(geotiffs, loops2)
-#     assert all([a == b for a, b in zip(selected_tifs1, selected_tifs2)])
+def test_drop_ifgs_if_not_part_of_any_loop(geotiffs):
+    loops1 = retain_loops(geotiffs)
+    selected_tifs1 = drop_ifgs_if_not_part_of_any_loop(geotiffs, loops1)
+
+    loops2 = retain_loops(geotiffs)
+    selected_tifs2 = drop_ifgs_if_not_part_of_any_loop(geotiffs, loops2)
+    assert all([a == b for a, b in zip(selected_tifs1, selected_tifs2)])

@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 from pyrate.core import config as cf, mpiops
 from pyrate.core.phase_closure.mst_closure import find_signed_closed_loops, sort_loops_based_on_weights_and_date, \
-    WeightedLoop
+    WeightedLoop, Edge
 from pyrate.configuration import Configuration
 from pyrate.core.phase_closure.sum_closure import sum_phase_closures, IndexedIfg
 from pyrate.core.phase_closure.plot_closure import plot_closure
@@ -41,24 +41,24 @@ def detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg, params):
     return ps_unwrap_error
 
 
-# def drop_ifgs_if_not_part_of_any_loop(ifg_files: List[str], loops: List[WeightedLoop]) -> List[str]:
-#     loop_ifgs = set()
-#     for weighted_loop in loops:
-#         for edge in weighted_loop.loop:
-#             loop_ifgs.add(Edge(edge.first, edge.second))
-#
-#     ifgs = [dem_or_ifg(i) for i in ifg_files]
-#     for i in ifgs:
-#         i.open()
-#         i.nodata_value = 0
-#     selected_ifg_files = []
-#     for i, f in zip(ifgs, ifg_files):
-#         if Edge(i.first, i.second) in loop_ifgs:
-#             selected_ifg_files.append(f)
-#     if len(ifg_files) != len(selected_ifg_files):
-#         log.info(f'Only {len(selected_ifg_files)} of the original {len(ifg_files)} '
-#                  f'participate in one or more loops, and selected for further pyrate analysis')
-#     return selected_ifg_files
+def drop_ifgs_if_not_part_of_any_loop(ifg_files: List[str], loops: List[WeightedLoop], params: dict) -> List[str]:
+    loop_ifgs = set()
+    for weighted_loop in loops:
+        for edge in weighted_loop.loop:
+            loop_ifgs.add(Edge(edge.first, edge.second))
+
+    ifgs = [Ifg(i) for i in ifg_files]
+    for i in ifgs:
+        i.open()
+        i.nodata_value = params[cf.NO_DATA_VALUE]
+    selected_ifg_files = []
+    for i, f in zip(ifgs, ifg_files):
+        if Edge(i.first, i.second) in loop_ifgs:
+            selected_ifg_files.append(f)
+    if len(ifg_files) != len(selected_ifg_files):
+        log.info(f'Only {len(selected_ifg_files)} of the original {len(ifg_files)} '
+                 f'participate in one or more loops, and selected for further pyrate analysis')
+    return selected_ifg_files
 
 
 def drop_ifgs_exceeding_threshold(orig_ifg_files: List[str], check_ps, num_occurences_each_ifg, params):
@@ -70,7 +70,6 @@ def drop_ifgs_exceeding_threshold(orig_ifg_files: List[str], check_ps, num_occur
         (b) sum(check_ps[:, :, i]) is pixel total count with unwrapping error for i-th ifg over all loops
         (c) divide by loop_count_of_this_ifg and num of cells (nrows x ncols) for a weighted measure of threshold
 
-    This function will also drop ifgs that are not part of any loop as a by product
     """
     orig_ifg_files.sort()
     nrows, ncols, n_ifgs = check_ps.shape
@@ -148,7 +147,7 @@ def wrap_closure_check(ifg_files: List[str],  config: Configuration):
 
     retained_loops = mpiops.run_once(discard_loops_containing_max_ifg_count,
                                      retained_loops_meeting_max_loop_criretia, params)
-    # ifgs_with_loops = mpiops.run_once(drop_ifgs_if_not_part_of_any_loop, ifg_files, retained_loops)
+    ifgs_with_loops = mpiops.run_once(drop_ifgs_if_not_part_of_any_loop, ifg_files, retained_loops, params)
 
     msg = f"After applying MAX_LOOP_COUNT_FOR_EACH_IFGS={params[cf.MAX_LOOP_COUNT_FOR_EACH_IFGS]} criteria, " \
           f"{len(retained_loops)} loops are retained"
@@ -157,7 +156,7 @@ def wrap_closure_check(ifg_files: List[str],  config: Configuration):
     else:
         log.info(msg)
 
-    closure, check_ps, num_occurences_each_ifg = sum_phase_closures(ifg_files, retained_loops, params)
+    closure, check_ps, num_occurences_each_ifg = sum_phase_closures(ifgs_with_loops, retained_loops, params)
 
     if mpiops.rank == 0:
         closure_ins = config.closure()
@@ -167,5 +166,5 @@ def wrap_closure_check(ifg_files: List[str],  config: Configuration):
         np.save(closure_ins.loops, retained_loops, allow_pickle=True)
 
     selcted_ifg_files = mpiops.run_once(drop_ifgs_exceeding_threshold,
-                                        ifg_files, check_ps, num_occurences_each_ifg, params)
+                                        ifgs_with_loops, check_ps, num_occurences_each_ifg, params)
     return selcted_ifg_files, closure, check_ps, num_occurences_each_ifg, retained_loops
