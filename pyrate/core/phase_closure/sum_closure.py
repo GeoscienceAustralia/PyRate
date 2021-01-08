@@ -16,6 +16,7 @@ def __create_ifg_edge_dict(ifg_files: List[str]) -> Dict[Edge, IndexedIfg]:
         i.open()
         i.nodata_value = 0
         i.convert_to_nans()
+        i.convert_to_radians()
     return {Edge(ifg.first, ifg.second): IndexedIfg(index, ifg) for index, ifg in enumerate(ifgs)}
 
 
@@ -79,10 +80,8 @@ def __compute_check_ps(ifg: Ifg, n_ifgs: int, weighted_loop: WeightedLoop,
     find sum `closure` of each loop, and compute `check_ps` for each pixel.
     PS: Persistent Scatterer
     """
-    # TODO: change to reading wavelength for each ifg
-    md = ifg.dataset.GetMetadata()
-    wavelength = float(md[ifc.PYRATE_WAVELENGTH_METRES])
-    large_dev_thr = params[cf.LARGE_DEV_THR] * ifc.MM_PER_METRE * (wavelength / (4 * math.pi))
+    large_dev_thr = params[cf.LARGE_DEV_THR]
+
     use_median = params[cf.SUBTRACT_MEDIAN_IN_CLOSURE_CHECK]
     closure = np.zeros(shape=ifg.phase_data.shape, dtype=np.float32)
     # initiate variable for check of unwrapping issues at the same pixels in all loops

@@ -407,8 +407,7 @@ class Ifg(RasterBase):
             self.phase_data = self.phase_data
             return
         elif self.dataset.GetMetadataItem(ifc.DATA_UNITS) == RADIANS:
-            self.phase_data = convert_radians_to_mm(self.phase_data,
-                                                    self.wavelength)
+            self.phase_data = convert_radians_to_mm(self.phase_data, self.wavelength)
             self.meta_data[ifc.DATA_UNITS] = MILLIMETRES
             # self.write_modified_phase()
             # otherwise NaN's don't write to bytecode properly
@@ -420,7 +419,23 @@ class Ifg(RasterBase):
             msg = 'Phase units are not millimetres or radians'
             raise IfgException(msg)
 
-        # self.write_modified_phase(self.phase_data)
+    def convert_to_radians(self):
+        """
+        return mm converted phase data into radians
+        In memory convert but don't write on disc
+        """
+        if self.dataset.GetMetadataItem(ifc.DATA_UNITS) == MILLIMETRES:
+            msg = '{}: ignored as previous phase unit conversion ' \
+                  'already applied'.format(self.data_path)
+            log.debug(msg)
+            self.phase_data = convert_mm_to_radians(self.phase_data, wavelength=self.wavelength)
+            self.meta_data[ifc.DATA_UNITS] = RADIANS
+            return
+        elif self.dataset.GetMetadataItem(ifc.DATA_UNITS) == RADIANS:
+            return self.phase_data
+        else:  # pragma: no cover
+            msg = 'Phase units are not millimetres or radians'
+            raise IfgException(msg)
 
     @phase_data.setter
     def phase_data(self, data):
@@ -744,6 +759,19 @@ def convert_radians_to_mm(data, wavelength):
     :rtype: ndarray
     """
     return data * ifc.MM_PER_METRE * (wavelength / (4 * math.pi))
+
+
+def convert_mm_to_radians(data, wavelength):
+    """
+    Function to translates phase in units of radians to units in millimetres.
+
+    :param ndarray data: Interferogram phase data array
+    :param float wavelength: Radar wavelength in metres
+
+    :return: data: converted phase data
+    :rtype: ndarray
+    """
+    return data / ifc.MM_PER_METRE * ((4 * math.pi) / wavelength)
 
 
 def nanmedian(x):
