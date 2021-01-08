@@ -28,6 +28,9 @@ class SignedWeightedEdge(SignedEdge):
 
 
 class WeightedLoop:
+    """
+    Loop with weight equal to the sum of the edge weights, where edge weights are the epochs of the ifgs
+    """
 
     def __init__(self, loop: List[SignedWeightedEdge]):
         self.loop = loop
@@ -62,7 +65,7 @@ class WeightedLoop:
         return [Edge(swe.first, swe.edge.second) for swe in self.loop]
 
 
-def discard_cycles_with_same_members(simple_cycles):
+def __discard_cycles_with_same_members(simple_cycles: List[List[date]]) -> List[List[date]]:
     seen_sc_sets = set()
     filtered_sc = []
     for sc in simple_cycles:
@@ -84,7 +87,7 @@ def find_closed_loops(edges: List[Edge]) -> List[List[date]]:
     simple_cycles = [scc for scc in simple_cycles if len(scc) > 2]  # discard edges
 
     # also discard loops when the loop members are the same
-    return discard_cycles_with_same_members(simple_cycles)
+    return __discard_cycles_with_same_members(simple_cycles)
 
 
 def add_signs_and_weights_to_loops(loops: List[List[date]], available_edges: List[Edge]) -> List[WeightedLoop]:

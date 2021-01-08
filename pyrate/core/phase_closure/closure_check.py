@@ -94,7 +94,6 @@ def filter_to_closure_checked_ifgs(config, interactive_plot=True):
     params = config.__dict__
     ifg_files = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     log.info(f"Performing closure check on original set of {len(ifg_files)} ifgs")
-    # edge_to_indexed_ifgs = create_ifg_edge_dict(ifg_files)
 
     while True:  # iterate till ifgs/loops are stable
         rets = wrap_closure_check(ifg_files, config)

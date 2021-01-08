@@ -9,7 +9,7 @@ from pyrate.core.phase_closure.mst_closure import Edge, WeightedLoop
 IndexedIfg = namedtuple('IndexedIfg', ['index', 'Ifg'])
 
 
-def create_ifg_edge_dict(ifg_files: List[str]) -> Dict[Edge, IndexedIfg]:
+def __create_ifg_edge_dict(ifg_files: List[str]) -> Dict[Edge, IndexedIfg]:
     ifg_files.sort()
     ifgs = [Ifg(i) for i in ifg_files]
     for i in ifgs:
@@ -21,7 +21,7 @@ def create_ifg_edge_dict(ifg_files: List[str]) -> Dict[Edge, IndexedIfg]:
 
 def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: dict) -> \
         Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    edge_to_indexed_ifgs = create_ifg_edge_dict(ifg_files)
+    edge_to_indexed_ifgs = __create_ifg_edge_dict(ifg_files)
 
     ifgs = [v.Ifg for v in edge_to_indexed_ifgs.values()]
     n_ifgs = len(ifgs)
