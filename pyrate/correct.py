@@ -29,7 +29,7 @@ from pyrate.core.covariance import maxvar_vcm_calc_wrapper
 from pyrate.core.mst import mst_calc_wrapper
 from pyrate.core.orbital import orb_fit_calc_wrapper
 from pyrate.core.dem_error import dem_error_calc_wrapper
-from pyrate.core.phase_closure.closure_check import filter_to_closure_checked_ifgs
+from pyrate.core.phase_closure.closure_check import filter_to_closure_checked_ifgs, detect_ps_with_unwrapping_errors
 from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.shared import PrereadIfg, get_tiles, mpi_vs_multiprocess_logging, join_dicts
@@ -143,7 +143,7 @@ def _update_params_with_tiles(params: dict) -> None:
 
 
 def update_params_with_closure_checked_ifg_list(params: dict, config: Configuration):
-    ifg_files = filter_to_closure_checked_ifgs(config)
+    ifg_files, check_ps, num_occurences_each_ifg = filter_to_closure_checked_ifgs(config)
     if ifg_files is None:
         import sys
         sys.exit("Zero loops are returned after phase clouser calcs!!! \n"
@@ -156,13 +156,19 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
                 filtered_multi_paths.append(m_p)
         return filtered_multi_paths
 
-    params[cf.INTERFEROGRAM_FILES] = mpiops.run_once(_filter_to_closure_checked_multiple_paths, params[cf.INTERFEROGRAM_FILES])
-    _create_ifg_dict(params)
+    params[cf.INTERFEROGRAM_FILES] = \
+        mpiops.run_once(_filter_to_closure_checked_multiple_paths, params[cf.INTERFEROGRAM_FILES])
 
     if mpiops.rank == 0:
         with open(config.phase_closure_filtered_ifgs_list(params), 'w') as f:
             lines = [p.converted_path + '\n' for p in params[cf.INTERFEROGRAM_FILES]]
             f.writelines(lines)
+
+    # insert nans where phase unwrap threshold is breached
+    if mpiops.rank == 0:
+        detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg, params)
+
+    _create_ifg_dict(params)
 
     return params
 

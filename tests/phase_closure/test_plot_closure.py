@@ -21,6 +21,7 @@ except ImportError as e:
 steps = ['orbfit',  'refphase',  'phase_closure']
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(not PLOT, reason='skipped as plotting packages are missing')
 def test_plot_closure(mexico_cropa_params):
     config = Configuration(MEXICO_CROPA_CONF)
