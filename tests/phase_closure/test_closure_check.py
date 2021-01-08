@@ -1,6 +1,4 @@
 import numpy as np
-import pytest
-from pyrate.constants import PYRATEPATH
 from pyrate.core import config as cf
 from pyrate.core.phase_closure.mst_closure import (
     sort_loops_based_on_weights_and_date,
@@ -10,15 +8,6 @@ from pyrate.core.phase_closure.closure_check import (
     discard_loops_containing_max_ifg_count,
     drop_ifgs_if_not_part_of_any_loop
 )
-
-GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
-
-
-@pytest.fixture
-def geotiffs():
-    tifs = [u.as_posix() for u in GEOTIFF.glob('*_unw.tif')]
-    tifs.sort()
-    return tifs
 
 
 def test_discard_loops_containing_max_ifg_count(geotiffs):

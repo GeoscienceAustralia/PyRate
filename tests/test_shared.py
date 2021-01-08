@@ -519,7 +519,7 @@ def _data_types():
         }
 
 
-data_types = mpiops.run_once(_data_types)
+data_types = mpiops.run_once(_data_types)  # required otherwise differnt arrays are generated in each mpi process
 
 
 @pytest.fixture(params=list(data_types.keys()))
@@ -543,3 +543,16 @@ def test_tiles_split(parallel, data_type):
 
     expected_ret = np.array([item*params['multiplier'] for item in data_types[data_type]], dtype=object)
     np.testing.assert_array_equal(ret, expected_ret)
+
+
+def test_convert_to_radians():
+    import math
+    data = np.random.randint(1, 10, (4, 5))
+    wavelength = 10.5
+    ret = shared.convert_mm_to_radians(data, wavelength)
+    expected = data * (4 * math.pi) /wavelength /ifc.MM_PER_METRE
+    np.testing.assert_array_almost_equal(ret, expected)
+
+
+def test_convert_to_radians_ifg(ten_geotiffs):
+    pass

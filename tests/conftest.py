@@ -21,6 +21,8 @@ import random
 import string
 import tempfile
 import pytest
+
+from pyrate.constants import PYRATEPATH
 from pyrate.core import mpiops, config as cf, shared
 from pyrate.configuration import Configuration
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA, SML_TEST_DEM_TIF, MEXICO_CROPA_CONF
@@ -169,3 +171,20 @@ def gamma_or_mexicoa_conf(request):
 @pytest.fixture(params=range(5))
 def run_number(request):
     return request.param
+
+
+GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
+
+
+@pytest.fixture
+def geotiffs():
+    tifs = [u.as_posix() for u in GEOTIFF.glob('*_unw.tif')]
+    tifs.sort()
+    return tifs
+
+
+@pytest.fixture
+def ten_geotiffs():
+    tifs = [u.as_posix() for u in GEOTIFF.glob('*_unw.tif')]
+    tifs.sort()
+    return tifs[:10]
