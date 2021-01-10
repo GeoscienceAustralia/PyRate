@@ -1433,9 +1433,9 @@ def iterable_split(func: Callable, iterable: Iterable, params: dict, *args, **kw
             ret_combined[i] = r
     else:
         iterable_with_index = list(enumerate(iterable))
-        process_tiles = mpiops.array_split(iterable_with_index)
+        process_iterables = mpiops.array_split(iterable_with_index)
         ret_combined = {}
-        for i, t in process_tiles:
+        for i, t in process_iterables:
             ret_combined[i] = func(t, params, *args, **kwargs)
         ret_combined = join_dicts(mpiops.comm.allgather(ret_combined))
     ret = np.array([v[1] for v in ret_combined.items()], dtype=object)
