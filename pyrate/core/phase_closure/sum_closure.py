@@ -3,27 +3,46 @@ from collections import namedtuple
 from typing import List, Dict, Tuple
 import numpy as np
 from pyrate.core import config as cf, mpiops, ifgconstants as ifc
-from pyrate.core.shared import Ifg, join_dicts
+from pyrate.core.shared import Ifg, join_dicts, iterable_split
 from pyrate.core.phase_closure.mst_closure import Edge, WeightedLoop
 
-IndexedIfg = namedtuple('IndexedIfg', ['index', 'Ifg'])
+IndexedIfg = namedtuple('IndexedIfg', ['index', 'IfgPhase'])
 
 
-def __create_ifg_edge_dict(ifg_files: List[str]) -> Dict[Edge, IndexedIfg]:
+class IfgPhase:
+    """
+    workaround class to only hold phase data for mpi SwigPyObject pickle error
+    """
+    def __init__(self, phase_data):
+        self.phase_data = phase_data
+
+
+def __create_ifg_edge_dict(ifg_files: List[str], params: dict) -> Dict[Edge, IndexedIfg]:
     ifg_files.sort()
     ifgs = [Ifg(i) for i in ifg_files]
-    for i in ifgs:
-        i.open()
-        i.nodata_value = 0
-        i.convert_to_nans()
-        i.convert_to_radians()
-    return {Edge(ifg.first, ifg.second): IndexedIfg(index, ifg) for index, ifg in enumerate(ifgs)}
+
+    def _func(ifg, index):
+        ifg.open()
+        ifg.nodata_value = params[cf.NO_DATA_VALUE]
+        ifg.convert_to_nans()
+        ifg.convert_to_radians()
+        idx_ifg = IndexedIfg(index, IfgPhase(ifg.phase_data))
+        return idx_ifg
+
+    process_ifgs = mpiops.array_split(list(enumerate(ifgs)))
+    ret_combined = {}
+    for idx, _ifg in process_ifgs:
+        ret_combined[Edge(_ifg.first, _ifg.second)] = _func(_ifg, idx)
+        _ifg.close()
+
+    ret_combined = join_dicts(mpiops.comm.allgather(ret_combined))
+    return ret_combined
 
 
 def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: dict) -> \
         Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    edge_to_indexed_ifgs = __create_ifg_edge_dict(ifg_files)
-    ifgs = [v.Ifg for v in edge_to_indexed_ifgs.values()]
+    edge_to_indexed_ifgs = __create_ifg_edge_dict(ifg_files, params)
+    ifgs = [v.IfgPhase for v in edge_to_indexed_ifgs.values()]
     n_ifgs = len(ifgs)
     ifg0 = ifgs[0]
 
@@ -57,9 +76,6 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
         closure = np.dstack([v for k, v in sorted(closure_dict.items(), key=lambda x: x[0])])
         check_ps = np.sum(np.stack([v for k, v in sorted(check_ps_dict.items(), key=lambda x: x[0])], axis=3), axis=3)
 
-    for k in edge_to_indexed_ifgs:
-        edge_to_indexed_ifgs[k].Ifg.close()
-
     return closure, check_ps, num_occurences_each_ifg
 
 
@@ -89,7 +105,7 @@ def __compute_check_ps(ifg: Ifg, n_ifgs: int, weighted_loop: WeightedLoop,
 
     for signed_edge in weighted_loop.loop:
         indexed_ifg = edge_to_indexed_ifgs[signed_edge.edge]
-        ifg = indexed_ifg.Ifg
+        ifg = indexed_ifg.IfgPhase
         closure += signed_edge.sign * ifg.phase_data
     if use_median:
         closure -= np.nanmedian(closure)  # may be able to drop median
