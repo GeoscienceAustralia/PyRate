@@ -550,9 +550,21 @@ def test_convert_to_radians():
     data = np.random.randint(1, 10, (4, 5))
     wavelength = 10.5
     ret = shared.convert_mm_to_radians(data, wavelength)
-    expected = data * (4 * math.pi) /wavelength /ifc.MM_PER_METRE
+    expected = data * (4 * math.pi) / wavelength /ifc.MM_PER_METRE
     np.testing.assert_array_almost_equal(ret, expected)
 
 
 def test_convert_to_radians_ifg(ten_geotiffs):
-    pass
+    for g in ten_geotiffs[:2]:
+        ifg = Ifg(g)
+        ifg.open()
+        md = ifg.dataset.GetMetadata()
+        assert ifc.DATA_TYPE in md
+        assert md[ifc.DATA_TYPE] == ifc.ORIG
+        assert md[ifc.DATA_UNITS] == shared.RADIANS
+        rad_data = ifg.phase_data
+        ifg.convert_to_mm()
+        assert ifg.meta_data[ifc.DATA_UNITS] == shared.MILLIMETRES
+        ifg.convert_to_radians()
+        assert md[ifc.DATA_UNITS] == shared.RADIANS
+        np.testing.assert_array_almost_equal(rad_data, ifg.phase_data, decimal=4)

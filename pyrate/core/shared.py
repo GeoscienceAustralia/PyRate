@@ -422,17 +422,18 @@ class Ifg(RasterBase):
     def convert_to_radians(self):
         """
         return mm converted phase data into radians
-        In memory convert but don't write on disc
+        In memory conversion but don't write on disc
         """
-        if self.dataset.GetMetadataItem(ifc.DATA_UNITS) == MILLIMETRES:
+        if self.meta_data[ifc.DATA_UNITS] == MILLIMETRES:
             msg = '{}: ignored as previous phase unit conversion ' \
                   'already applied'.format(self.data_path)
             log.debug(msg)
             self.phase_data = convert_mm_to_radians(self.phase_data, wavelength=self.wavelength)
             self.meta_data[ifc.DATA_UNITS] = RADIANS
+            self.mm_converted = False
             return
-        elif self.dataset.GetMetadataItem(ifc.DATA_UNITS) == RADIANS:
-            return self.phase_data
+        elif self.meta_data[ifc.DATA_UNITS] == RADIANS:
+            return
         else:  # pragma: no cover
             msg = 'Phase units are not millimetres or radians'
             raise IfgException(msg)
@@ -1479,4 +1480,3 @@ def remove_file_if_exists(filename: str) -> None:
         os.remove(filename)
     except OSError:
         pass
-
