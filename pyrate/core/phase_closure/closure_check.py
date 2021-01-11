@@ -1,6 +1,21 @@
+#   This Python module is part of the PyRate software package.
+#
+#   Copyright 2021 Geoscience Australia
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
 from collections import defaultdict
-from typing import List, Dict
-from pathlib import Path
+from typing import List, Dict, Tuple
 import numpy as np
 from pyrate.core import config as cf, mpiops
 from pyrate.core.phase_closure.mst_closure import find_signed_closed_loops, sort_loops_based_on_weights_and_date, \
@@ -12,12 +27,17 @@ from pyrate.core.shared import Ifg
 from pyrate.core.logger import pyratelogger as log
 
 
-def detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg, params):
+def detect_ps_with_unwrapping_errors(check_ps: np.ndarray, num_occurences_each_ifg: np.ndarray, params: dict) \
+        -> np.ndarray:
+    """
+    find where in the phase data exceed the PHASE_UNWRAP_ERROR_THRESHOLD, and assign nans to those pixels in all ifgs
+    """
     nrows, ncols, n_ifgs = check_ps.shape
     ps_unwrap_error = np.zeros(shape=(nrows, ncols), dtype=np.int16)
     for i in range(n_ifgs):
         ps_idx = check_ps[:, :, i] == num_occurences_each_ifg[i]
         ps_unwrap_error[ps_idx] += 1  # number of IFGs with unwrapping errors per PS
+
     # PS pixels with unwrapping errors in one or more SBAS IFGs will be marked.
     # mark_ix = ps_unwrap_error > 0  # don't need to output this
 
@@ -42,6 +62,10 @@ def detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg, params):
 
 
 def drop_ifgs_if_not_part_of_any_loop(ifg_files: List[str], loops: List[WeightedLoop], params: dict) -> List[str]:
+    """
+    Check if an ifg is part of any of the loops, otherwise drop it from the list of interferograms for further pyrate
+    processing.
+    """
     loop_ifgs = set()
     for weighted_loop in loops:
         for edge in weighted_loop.loop:
@@ -90,7 +114,10 @@ def drop_ifgs_exceeding_threshold(orig_ifg_files: List[str], check_ps, num_occur
     return selected_ifg_files
 
 
-def filter_to_closure_checked_ifgs(config, interactive_plot=True):
+def filter_to_closure_checked_ifgs(config, interactive_plot=True) -> Tuple[List[str], np.ndarray, np.ndarray]:
+    """
+    This function iterates to a stable list of interferogram files!
+    """
     params = config.__dict__
     ifg_files = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
     log.info(f"Performing closure check on original set of {len(ifg_files)} ifgs")
@@ -115,6 +142,9 @@ def filter_to_closure_checked_ifgs(config, interactive_plot=True):
 
 
 def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) -> List[WeightedLoop]:
+    """
+    This function will discard loops when each ifg participating in a loop has met the max loop count criteria.
+    """
     selected_loops = []
     ifg_counter = defaultdict(int)
     for loop in loops:
@@ -129,7 +159,11 @@ def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) ->
     return selected_loops
 
 
-def wrap_closure_check(ifg_files: List[str],  config: Configuration):
+def wrap_closure_check(ifg_files: List[str],  config: Configuration) -> \
+        Tuple[List[str], np.ndarray, np.ndarray, np.ndarray, List[WeightedLoop]]:
+    """
+    This wrapper function returning the closure check outputs of a single run of closure check.
+    """
     params = config.__dict__
     ifg_files.sort()
     signed_loops = mpiops.run_once(find_signed_closed_loops, ifg_files)
@@ -164,6 +198,6 @@ def wrap_closure_check(ifg_files: List[str],  config: Configuration):
         np.save(closure_ins.num_occurences_each_ifg, num_occurences_each_ifg)
         np.save(closure_ins.loops, retained_loops, allow_pickle=True)
 
-    selcted_ifg_files = mpiops.run_once(drop_ifgs_exceeding_threshold,
-                                        ifgs_with_loops, check_ps, num_occurences_each_ifg, params)
-    return selcted_ifg_files, closure, check_ps, num_occurences_each_ifg, retained_loops
+    selected_ifg_files = mpiops.run_once(drop_ifgs_exceeding_threshold,
+                                         ifgs_with_loops, check_ps, num_occurences_each_ifg, params)
+    return selected_ifg_files, closure, check_ps, num_occurences_each_ifg, retained_loops
