@@ -19,7 +19,7 @@ from collections import namedtuple
 from typing import List, Dict, Tuple
 import numpy as np
 from pyrate.core import config as cf, mpiops, ifgconstants as ifc
-from pyrate.core.shared import Ifg, join_dicts
+from pyrate.core.shared import Ifg, join_dicts, iterable_split
 from pyrate.core.phase_closure.mst_closure import Edge, WeightedLoop
 
 IndexedIfg = namedtuple('IndexedIfg', ['index', 'IfgPhase'])
