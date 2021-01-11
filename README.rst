@@ -4,8 +4,8 @@
 Python tool for InSAR Rate and Time-series Estimation
 =====================================================
 
-.. image:: https://travis-ci.org/GeoscienceAustralia/PyRate.svg?branch=master
-   :target: https://travis-ci.org/GeoscienceAustralia/PyRate
+.. image:: https://github.com/GeoscienceAustralia/PyRate/workflows/PyRate%20CI/badge.svg
+   :target: https://github.com/GeoscienceAustralia/PyRate/actions
 .. image:: https://codecov.io/gh/GeoscienceAustralia/PyRate/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/GeoscienceAustralia/PyRate
 .. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
