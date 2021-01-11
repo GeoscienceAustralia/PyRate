@@ -1,6 +1,14 @@
 name: PyRate CI
 
-on: [push, pull_request]
+
+on:
+  pull_request:
+    branches:
+      - 'master'
+      - 'develop'
+  push:
+    branches:
+      - '**'
 
 jobs:
   build:
