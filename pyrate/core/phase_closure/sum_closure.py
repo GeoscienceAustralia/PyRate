@@ -60,10 +60,8 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
     edge_to_indexed_ifgs = __create_ifg_edge_dict(ifg_files, params)
     ifgs = [v.IfgPhase for v in edge_to_indexed_ifgs.values()]
     n_ifgs = len(ifgs)
-    ifg0 = ifgs[0]
-
     closure_dict = {}
-    check_ps_dict = {}
+
     if params[cf.PARALLEL]:
         # rets = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
         #     delayed(__compute_check_ps)(ifg0, n_ifgs, weighted_loop, edge_to_indexed_ifgs, params)
@@ -72,25 +70,26 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
         # for k, r in enumerate(rets):
         #     closure_dict[k], check_ps_dict[k] = r
         # TODO: enable multiprocessing - needs pickle error fix
+        check_ps_arr = []
         for k, weighted_loop in enumerate(loops):
-            closure_dict[k], check_ps_dict[k] = __compute_check_ps(
-                ifg0, n_ifgs, weighted_loop, edge_to_indexed_ifgs, params
-            )
+            closure_dict[k], check_ps_l = __compute_check_ps(weighted_loop, edge_to_indexed_ifgs, params)
+            check_ps_arr.append(check_ps_l)
+        check_ps = np.sum(np.stack(check_ps_arr), axis=0)
     else:
         loops_with_index = list(enumerate(loops))
         process_loops = mpiops.array_split(loops_with_index)
-        for k, weighted_loop in process_loops:
-            closure_dict[k], check_ps_dict[k] = __compute_check_ps(
-                ifg0, n_ifgs, weighted_loop, edge_to_indexed_ifgs, params
-            )
+        check_ps_arr = []
+        for i, (k, weighted_loop) in enumerate(process_loops):
+            closure_dict[k], check_ps_l = __compute_check_ps(weighted_loop, edge_to_indexed_ifgs, params)
+            check_ps_arr.append(check_ps_l)
         closure_dict = join_dicts(mpiops.comm.gather(closure_dict, root=0))
-        check_ps_dict = join_dicts(mpiops.comm.gather(check_ps_dict, root=0))
+        check_ps_process = np.sum(np.stack(check_ps_arr), axis=0)
+        check_ps = mpiops.comm.reduce(check_ps_process, op=mpiops.sum0_op, root=0)
 
-    closure, check_ps, num_occurences_each_ifg = None, None, None
+    closure, num_occurences_each_ifg = None, None
     if mpiops.rank == 0:
         num_occurences_each_ifg = _find_num_occurences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs)
         closure = np.dstack([v for k, v in sorted(closure_dict.items(), key=lambda x: x[0])])
-        check_ps = np.sum(np.stack([v for k, v in sorted(check_ps_dict.items(), key=lambda x: x[0])], axis=3), axis=3)
 
     return closure, check_ps, num_occurences_each_ifg
 
@@ -106,15 +105,18 @@ def _find_num_occurences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs):
     return num_occurences_each_ifg
 
 
-def __compute_check_ps(ifg: Ifg, n_ifgs: int, weighted_loop: WeightedLoop,
+def __compute_check_ps(weighted_loop: WeightedLoop,
                        edge_to_indexed_ifgs: Dict[Edge, IndexedIfg], params: dict) -> Tuple[np.ndarray, np.ndarray]:
     """
     find sum `closure` of each loop, and compute `check_ps` for each pixel.
     PS: Persistent Scatterer
     """
+    n_ifgs = len(edge_to_indexed_ifgs)
+    indexed_ifg = list(edge_to_indexed_ifgs.values())[0]
+    ifg = indexed_ifg.IfgPhase
     large_dev_thr = params[cf.LARGE_DEV_THR]
-
     use_median = params[cf.SUBTRACT_MEDIAN_IN_CLOSURE_CHECK]
+
     closure = np.zeros(shape=ifg.phase_data.shape, dtype=np.float32)
     # initiate variable for check of unwrapping issues at the same pixels in all loops
     check_ps = np.zeros(shape=(ifg.phase_data.shape + (n_ifgs,)), dtype=np.uint16)

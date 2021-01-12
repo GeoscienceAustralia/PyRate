@@ -74,8 +74,15 @@ def array_split(arr: Iterable, process: int = None) -> Iterable:
     return np.array_split(np.array(arr, dtype=object), size)[r]
 
 
-def sum_axis_0(x, y, dtype):
+def sum_vars(x, y, dtype):
     s = np.sum([x, y], axis=0)
     return s
 
+
+def sum_axis_0(x, y, dtype):
+    s = np.sum(np.stack((x, y)), axis=0)
+    return s
+
+
+sum_op = MPI.Op.Create(sum_vars, commute=True)
 sum0_op = MPI.Op.Create(sum_axis_0, commute=True)
