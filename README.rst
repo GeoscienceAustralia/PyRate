@@ -24,7 +24,7 @@ Dependencies
 
 The following system dependencies are required by PyRate:
 
-- `Python <https://www.python.org/downloads/>`_, versions 3.6, 3.7 or 3.8.
+- `Python <https://www.python.org/downloads/>`_, versions 3.6, 3.7, 3.8 or 3.9.
 - `GDAL <https://gdal.org/download.html>`_, versions 3.0.2 or 3.0.4
 - `Open MPI <https://www.open-mpi.org/software/ompi/v4.0/>`_, versions 2.1.6, 3.0.4, 3.1.4 or 4.0.2
 
