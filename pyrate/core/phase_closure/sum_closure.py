@@ -79,7 +79,7 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
         loops_with_index = list(enumerate(loops))
         process_loops = mpiops.array_split(loops_with_index)
         check_ps_arr = []
-        for i, (k, weighted_loop) in enumerate(process_loops):
+        for k, weighted_loop in process_loops:
             closure_dict[k], check_ps_l = __compute_check_ps(weighted_loop, edge_to_indexed_ifgs, params)
             check_ps_arr.append(check_ps_l)
         closure_dict = join_dicts(mpiops.comm.gather(closure_dict, root=0))
@@ -114,7 +114,7 @@ def __compute_check_ps(weighted_loop: WeightedLoop,
     n_ifgs = len(edge_to_indexed_ifgs)
     indexed_ifg = list(edge_to_indexed_ifgs.values())[0]
     ifg = indexed_ifg.IfgPhase
-    large_dev_thr = params[cf.LARGE_DEV_THR]
+    large_dev_thr = params[cf.LARGE_DEV_THR] * np.pi
     use_median = params[cf.SUBTRACT_MEDIAN_IN_CLOSURE_CHECK]
 
     closure = np.zeros(shape=ifg.phase_data.shape, dtype=np.float32)

@@ -26,6 +26,7 @@ from pyrate.core import config as cf
 
 
 def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], params, thr: float):
+    thr = thr * np.pi
     try:
         import matplotlib.pyplot as plt
         import matplotlib as mpl

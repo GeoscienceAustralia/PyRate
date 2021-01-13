@@ -391,9 +391,9 @@ PYRATE_DEFAULT_CONFIGURATION = {
     },
     "large_dev_thr": {
         "DataType": float,
-        "DefaultValue": 1.5708,
+        "DefaultValue": 0.5,
         "MinValue": 0.01,
-        "MaxValue": 3.2,
+        "MaxValue": 1.1,
         "PossibleValues": None,
         "Required": False
     },
