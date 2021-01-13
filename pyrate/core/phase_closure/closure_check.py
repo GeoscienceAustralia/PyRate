@@ -30,7 +30,7 @@ from pyrate.core.logger import pyratelogger as log
 def detect_ps_with_unwrapping_errors(check_ps: np.ndarray, num_occurences_each_ifg: np.ndarray, params: dict) \
         -> np.ndarray:
     """
-    find where in the phase data exceed the PHASE_UNWRAP_ERROR_THRESHOLD, and assign nans to those pixels in all ifgs
+    find where in the phase data exceed the PHS_UNW_ERR_THR, and assign nans to those pixels in all ifgs
     """
     nrows, ncols, n_ifgs = check_ps.shape
     ps_unwrap_error = np.zeros(shape=(nrows, ncols), dtype=np.int16)
@@ -41,7 +41,7 @@ def detect_ps_with_unwrapping_errors(check_ps: np.ndarray, num_occurences_each_i
     # PS pixels with unwrapping errors in one or more SBAS IFGs will be marked.
     # mark_ix = ps_unwrap_error > 0  # don't need to output this
 
-    nan_index = ps_unwrap_error >= params[cf.PHASE_UNWRAP_ERROR_THRESHOLD]
+    nan_index = ps_unwrap_error >= params[cf.PHS_UNW_ERR_THR]
 
     log.info("Updating phase data of retained ifgs")
 
@@ -56,7 +56,7 @@ def detect_ps_with_unwrapping_errors(check_ps: np.ndarray, num_occurences_each_i
     log.info(f"Updated phase data of {i+1} retained ifgs after phase closure")
 
     # log.info(f'Of {nrows * ncols} pixels, {np.sum(~keep_ix)} '
-    #          f'have phase unwrapping error in {PHASE_UNWRAP_ERROR_THRESHOLD} or more pixels')
+    #          f'have phase unwrapping error in {PHS_UNW_ERR_THR} or more pixels')
     # can move mark_ix an keep_ix in wrapper if at all required
     return ps_unwrap_error
 
@@ -102,10 +102,10 @@ def drop_ifgs_exceeding_threshold(orig_ifg_files: List[str], check_ps, num_occur
         loop_count_of_this_ifg = num_occurences_each_ifg[i]
         if loop_count_of_this_ifg:  # if the ifg participated in at least one loop
             ifg_remove_threshold_breached = \
-                np.sum(check_ps[:, :, i]) / loop_count_of_this_ifg / nrows / ncols > params[cf.THRESHOLD_TO_REMOVE_IFG]
+                np.sum(check_ps[:, :, i]) / loop_count_of_this_ifg / nrows / ncols > params[cf.AVG_IFG_ERR_THR]
             if not (
                     # min loops count # check 1
-                    (num_occurences_each_ifg[i] > params[cf.LOOP_COUNT_FOR_THRESHOLD_TO_REMOVE_IFG])
+                    (num_occurences_each_ifg[i] > params[cf.LOOPS_THR_IFG])
                     and
                     ifg_remove_threshold_breached  # and breached threshold
             ):
@@ -149,13 +149,13 @@ def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) ->
     ifg_counter = defaultdict(int)
     for loop in loops:
         edge_appearances = np.array([ifg_counter[e] for e in loop.edges])
-        if not np.all(edge_appearances > params[cf.MAX_LOOP_COUNT_FOR_EACH_IFGS]):
+        if not np.all(edge_appearances > params[cf.MAX_LOOPS_IN_IFG]):
             selected_loops.append(loop)
             for e in loop.edges:
                 ifg_counter[e] += 1
         else:
             log.debug(f"Loop {loop.loop} is ignored due to all it's ifgs already seen "
-                      f"{params[cf.MAX_LOOP_COUNT_FOR_EACH_IFGS]} times or more")
+                      f"{params[cf.MAX_LOOPS_IN_IFG]} times or more")
     return selected_loops
 
 
@@ -182,7 +182,7 @@ def wrap_closure_check(ifg_files: List[str],  config: Configuration) -> \
                                      retained_loops_meeting_max_loop_criretia, params)
     ifgs_with_loops = mpiops.run_once(drop_ifgs_if_not_part_of_any_loop, ifg_files, retained_loops, params)
 
-    msg = f"After applying MAX_LOOP_COUNT_FOR_EACH_IFGS={params[cf.MAX_LOOP_COUNT_FOR_EACH_IFGS]} criteria, " \
+    msg = f"After applying MAX_LOOPS_IN_IFG={params[cf.MAX_LOOPS_IN_IFG]} criteria, " \
           f"{len(retained_loops)} loops are retained"
     if len(retained_loops) < 1:
         return None

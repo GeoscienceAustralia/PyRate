@@ -39,7 +39,7 @@ def retain_loops(tifs):
     loops = find_signed_closed_loops(tifs)
     sorted_loops = sort_loops_based_on_weights_and_date(loops)
     params = {
-        cf.MAX_LOOP_COUNT_FOR_EACH_IFGS: 2,
+        cf.MAX_LOOPS_IN_IFG: 2,
         cf.MAX_LOOP_LENGTH: 3
     }
     retained_loops_meeting_max_loop_criretia = [sl for sl in sorted_loops
@@ -48,7 +48,7 @@ def retain_loops(tifs):
           f"{len(retained_loops_meeting_max_loop_criretia)} loops are retained"
     print(msg)
     retained_loops = discard_loops_containing_max_ifg_count(retained_loops_meeting_max_loop_criretia, params)
-    msg = f"After applying MAX_LOOP_COUNT_FOR_EACH_IFGS={params[cf.MAX_LOOP_COUNT_FOR_EACH_IFGS]} criteria, " \
+    msg = f"After applying MAX_LOOPS_IN_IFG={params[cf.MAX_LOOPS_IN_IFG]} criteria, " \
           f"{len(retained_loops)} loops are retained"
     print(msg)
     return retained_loops

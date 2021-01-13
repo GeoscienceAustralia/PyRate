@@ -115,7 +115,7 @@ def __compute_check_ps(weighted_loop: WeightedLoop,
     indexed_ifg = list(edge_to_indexed_ifgs.values())[0]
     ifg = indexed_ifg.IfgPhase
     large_dev_thr = params[cf.LARGE_DEV_THR] * np.pi
-    use_median = params[cf.SUBTRACT_MEDIAN_IN_CLOSURE_CHECK]
+    use_median = params[cf.SUBTRACT_MEDIAN]
 
     closure = np.zeros(shape=ifg.phase_data.shape, dtype=np.float32)
     # initiate variable for check of unwrapping issues at the same pixels in all loops

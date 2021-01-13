@@ -397,7 +397,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
-    "threshold_to_remove_ifg": {
+    "avg_ifg_err_thr": {
         "DataType": float,
         "DefaultValue": 0.05,
         "MinValue": 0.01,
@@ -405,7 +405,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
-    "loop_count_for_threshold_to_remove_ifg": {
+    "loops_thr_ifg": {
         "DataType": int,
         "DefaultValue": 2,
         "MinValue": 1,
@@ -413,7 +413,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
-    "phase_unwrap_error_threshold": {
+    "phs_unw_err_thr": {
         "DataType": int,
         "DefaultValue": 5,
         "MinValue": 1,
@@ -429,7 +429,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
-    "subtract_median_in_closure_check": {
+    "subtract_median": {
         "DataType": int,
         "DefaultValue": 1,
         "MinValue": None,
@@ -437,7 +437,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": [0, 1],
         "Required": False
     },
-    "max_loop_count_for_each_ifgs": {
+    "max_loops_in_ifg": {
         "DataType": int,
         "DefaultValue": 2,
         "MinValue": 1,
