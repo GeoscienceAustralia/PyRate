@@ -143,6 +143,10 @@ def _update_params_with_tiles(params: dict) -> None:
 
 
 def update_params_with_closure_checked_ifg_list(params: dict, config: Configuration):
+    if not params[cf.PHASE_CLOSURE]:
+        log.info("Phase closure correction is not required!")
+        return
+
     ifg_files, check_ps, num_occurences_each_ifg = filter_to_closure_checked_ifgs(config)
     if ifg_files is None:
         import sys
