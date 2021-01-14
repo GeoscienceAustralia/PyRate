@@ -21,9 +21,9 @@ import numpy as np
 import pytest
 from pyrate.constants import PYRATEPATH
 from pyrate.core.phase_closure.mst_closure import (
-    find_closed_loops, Edge, SignedWeightedEdge, SignedEdge, setup_edges,
-    add_signs_and_weights_to_loops, sort_loops_based_on_weights_and_date, WeightedLoop,
-    find_signed_closed_loops
+    __find_closed_loops, Edge, SignedWeightedEdge, SignedEdge, __setup_edges,
+    __add_signs_and_weights_to_loops, sort_loops_based_on_weights_and_date, WeightedLoop,
+    __find_signed_closed_loops
 )
 
 GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
@@ -38,21 +38,21 @@ def geotiffs():
 
 @pytest.fixture
 def all_loops(geotiffs):
-    edges = setup_edges(geotiffs)
-    loops = find_closed_loops(edges)
+    edges = __setup_edges(geotiffs)
+    loops = __find_closed_loops(edges)
     assert len(loops) == 541
     return loops
 
 
 @pytest.fixture
 def edges(geotiffs):
-    all_edges = setup_edges(geotiffs)
+    all_edges = __setup_edges(geotiffs)
     return all_edges
 
 
 @pytest.fixture
 def signed_loops(all_loops, edges):
-    loops = add_signs_and_weights_to_loops(all_loops, edges)
+    loops = __add_signs_and_weights_to_loops(all_loops, edges)
     return loops
 
 
@@ -62,7 +62,7 @@ def weight(request):
 
 
 def test_setup_edges(geotiffs):
-    edges = setup_edges(geotiffs)
+    edges = __setup_edges(geotiffs)
     assert len(edges) == len(geotiffs) == 30
     assert isinstance(edges[0], Edge)
 
@@ -79,8 +79,8 @@ def test_associate_ifgs_with_loops(signed_loops, geotiffs):
     assert isinstance(swe.second, date)
 
 
-def test_sort_loops_based_on_weights_and_date(signed_loops):
-    weighted_loops = sort_loops_based_on_weights_and_date(signed_loops)
+def test_sort_loops_based_on_weights_and_date(geotiffs):
+    weighted_loops = sort_loops_based_on_weights_and_date(geotiffs)
     assert len(weighted_loops) == 541
     # order
     weights = [w.weight for w in weighted_loops]
@@ -98,13 +98,13 @@ def test_sort_loops_based_on_weights_and_date(signed_loops):
 
 def test_add_signs_and_weights_to_loops(geotiffs):
     """also tests find_signed_closed_loops"""
-    all_edges = setup_edges(geotiffs)
-    all_loops = find_closed_loops(all_edges)
-    loops1 = add_signs_and_weights_to_loops(all_loops, all_edges)
+    all_edges = __setup_edges(geotiffs)
+    all_loops = __find_closed_loops(all_edges)
+    loops1 = __add_signs_and_weights_to_loops(all_loops, all_edges)
 
-    all_edges = setup_edges(geotiffs)
-    all_loops = find_closed_loops(all_edges)
-    loops2 = add_signs_and_weights_to_loops(all_loops, all_edges)
+    all_edges = __setup_edges(geotiffs)
+    all_loops = __find_closed_loops(all_edges)
+    loops2 = __add_signs_and_weights_to_loops(all_loops, all_edges)
 
     compare_loops(loops1, loops2)
 
@@ -122,14 +122,12 @@ def compare_loops(loops1, loops2):
 
 
 def test_find_signed_closed_loops(geotiffs):
-    loops1 = find_signed_closed_loops(geotiffs)
-    loops2 = find_signed_closed_loops(geotiffs)
+    loops1 = __find_signed_closed_loops(geotiffs)
+    loops2 = __find_signed_closed_loops(geotiffs)
     compare_loops(loops1, loops2)
 
 
 def test_sort_loops_based_on_weights_and_date_2(geotiffs):
-    loops1 = find_signed_closed_loops(geotiffs)
-    loops2 = find_signed_closed_loops(geotiffs)
-    sorted_loops1 = sort_loops_based_on_weights_and_date(loops1)
-    sorted_loops2 = sort_loops_based_on_weights_and_date(loops2)
+    sorted_loops1 = sort_loops_based_on_weights_and_date(geotiffs)
+    sorted_loops2 = sort_loops_based_on_weights_and_date(geotiffs)
     compare_loops(sorted_loops1, sorted_loops2)

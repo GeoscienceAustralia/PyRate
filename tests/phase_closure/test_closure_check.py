@@ -19,7 +19,7 @@ import numpy as np
 from pyrate.core import config as cf
 from pyrate.core.phase_closure.mst_closure import (
     sort_loops_based_on_weights_and_date,
-    find_signed_closed_loops
+    __find_signed_closed_loops
 )
 from pyrate.core.phase_closure.closure_check import (
     discard_loops_containing_max_ifg_count,
@@ -36,8 +36,7 @@ def test_discard_loops_containing_max_ifg_count(geotiffs):
 
 
 def retain_loops(tifs):
-    loops = find_signed_closed_loops(tifs)
-    sorted_loops = sort_loops_based_on_weights_and_date(loops)
+    sorted_loops = sort_loops_based_on_weights_and_date(tifs)
     params = {
         cf.MAX_LOOPS_IN_IFG: 2,
         cf.MAX_LOOP_LENGTH: 3

@@ -95,7 +95,7 @@ def __discard_cycles_with_same_members(simple_cycles: List[List[date]]) -> List[
     return filtered_sc
 
 
-def find_closed_loops(edges: List[Edge]) -> List[List[date]]:
+def __find_closed_loops(edges: List[Edge]) -> List[List[date]]:
     g = nx.Graph()
     edges = [(we.first, we.second) for we in edges]
     g.add_edges_from(edges)
@@ -107,7 +107,7 @@ def find_closed_loops(edges: List[Edge]) -> List[List[date]]:
     return __discard_cycles_with_same_members(simple_cycles)
 
 
-def add_signs_and_weights_to_loops(loops: List[List[date]], available_edges: List[Edge]) -> List[WeightedLoop]:
+def __add_signs_and_weights_to_loops(loops: List[List[date]], available_edges: List[Edge]) -> List[WeightedLoop]:
     """
     add signs and weights to loops.
     Additionally, sort the loops (change order of ifgs appearing in loop) by weight and date
@@ -140,7 +140,7 @@ def add_signs_and_weights_to_loops(loops: List[List[date]], available_edges: Lis
     return weighted_signed_loops
 
 
-def setup_edges(ifg_files: List[str]) -> List[Edge]:
+def __setup_edges(ifg_files: List[str]) -> List[Edge]:
     ifg_files.sort()
     ifgs = [dem_or_ifg(i) for i in ifg_files]
     for i in ifgs:
@@ -149,14 +149,19 @@ def setup_edges(ifg_files: List[str]) -> List[Edge]:
     return [Edge(i.first, i.second) for i in ifgs]
 
 
-def find_signed_closed_loops(ifg_files: List[str]) -> List[WeightedLoop]:
-    available_edges = setup_edges(ifg_files)
-    all_loops = find_closed_loops(available_edges)  # find loops with weights
-    signed_weighted_loops = add_signs_and_weights_to_loops(all_loops, available_edges)
+def __find_signed_closed_loops(ifg_files: List[str]) -> List[WeightedLoop]:
+    available_edges = __setup_edges(ifg_files)
+    all_loops = __find_closed_loops(available_edges)  # find loops with weights
+    signed_weighted_loops = __add_signs_and_weights_to_loops(all_loops, available_edges)
     return signed_weighted_loops
 
 
-def sort_loops_based_on_weights_and_date(signed_weighted_loops: List[WeightedLoop]) -> List[WeightedLoop]:
+def sort_loops_based_on_weights_and_date(ifg_files: List[str]) -> List[WeightedLoop]:
+    """
+    :param ifg_files: list of ifg files
+    :return: list of sorted, signed, and weighted loops
+    """
+    signed_weighted_loops = __find_signed_closed_loops(ifg_files)
     # sort based on weights and dates
     signed_weighted_loops.sort(key=lambda x: [x.weight, x.primary_dates, x.secondary_dates])
     return signed_weighted_loops

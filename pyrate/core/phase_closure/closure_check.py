@@ -18,8 +18,7 @@ from collections import defaultdict
 from typing import List, Dict, Tuple
 import numpy as np
 from pyrate.core import config as cf, mpiops
-from pyrate.core.phase_closure.mst_closure import find_signed_closed_loops, sort_loops_based_on_weights_and_date, \
-    WeightedLoop, Edge
+from pyrate.core.phase_closure.mst_closure import sort_loops_based_on_weights_and_date, WeightedLoop, Edge
 from pyrate.configuration import Configuration
 from pyrate.core.phase_closure.sum_closure import sum_phase_closures
 from pyrate.core.phase_closure.plot_closure import plot_closure
@@ -181,8 +180,7 @@ def wrap_closure_check(ifg_files: List[str],  config: Configuration) -> \
     """
     params = config.__dict__
     ifg_files.sort()
-    signed_loops = mpiops.run_once(find_signed_closed_loops, ifg_files)
-    sorted_signed_loops = mpiops.run_once(sort_loops_based_on_weights_and_date, signed_loops)
+    sorted_signed_loops = mpiops.run_once(sort_loops_based_on_weights_and_date, ifg_files)
     retained_loops_meeting_max_loop_criretia = [sl for sl in sorted_signed_loops
                                                 if len(sl) <= params[cf.MAX_LOOP_LENGTH]]
     msg = f"After applying MAX_LOOP_LENGTH={params[cf.MAX_LOOP_LENGTH]} criteria, " \
