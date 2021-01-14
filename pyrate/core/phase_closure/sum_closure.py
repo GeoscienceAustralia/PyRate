@@ -64,7 +64,7 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
     :return: Tuple of closure, check_ps, number of occurrences in each ifg
         closure: closure of values of each loop
         check_ps: unwrapping issues at pixels in all loops
-        num_occurences_each_ifg: frequency of ifgs appearing in all loops
+        num_occurrences_each_ifg: frequency of ifgs appearing in all loops
     """
     edge_to_indexed_ifgs = __create_ifg_edge_dict(ifg_files, params)
     ifgs = [v.IfgPhase for v in edge_to_indexed_ifgs.values()]
@@ -95,23 +95,23 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
         check_ps_process = np.sum(np.stack(check_ps_arr), axis=0)
         check_ps = mpiops.comm.reduce(check_ps_process, op=mpiops.sum0_op, root=0)
 
-    closure, num_occurences_each_ifg = None, None
+    closure, num_occurrences_each_ifg = None, None
     if mpiops.rank == 0:
-        num_occurences_each_ifg = _find_num_occurences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs)
+        num_occurrences_each_ifg = _find_num_occurrences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs)
         closure = np.dstack([v for k, v in sorted(closure_dict.items(), key=lambda x: x[0])])
 
-    return closure, check_ps, num_occurences_each_ifg
+    return closure, check_ps, num_occurrences_each_ifg
 
 
-def _find_num_occurences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs):
+def _find_num_occurrences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs):
     """find how many times each ifg appears in total in all loops"""
-    num_occurences_each_ifg = np.zeros(shape=n_ifgs, dtype=np.uint16)
+    num_occurrences_each_ifg = np.zeros(shape=n_ifgs, dtype=np.uint16)
     for weighted_loop in loops:
         for signed_edge in weighted_loop.loop:
             indexed_ifg = edge_to_indexed_ifgs[signed_edge.edge]
             ifg_index = indexed_ifg.index
-            num_occurences_each_ifg[ifg_index] += 1
-    return num_occurences_each_ifg
+            num_occurrences_each_ifg[ifg_index] += 1
+    return num_occurrences_each_ifg
 
 
 def __compute_check_ps(weighted_loop: WeightedLoop,
