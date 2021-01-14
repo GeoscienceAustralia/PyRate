@@ -57,6 +57,15 @@ def __create_ifg_edge_dict(ifg_files: List[str], params: dict) -> Dict[Edge, Ind
 
 def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: dict) -> \
         Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    :param ifg_files: list of ifg files
+    :param loops: list of loops
+    :param params: params dict
+    :return: Tuple of closure, check_ps, number of occurrences in each ifg
+        closure: closure of values of each loop
+        check_ps: unwrapping issues at pixels in all loops
+        num_occurences_each_ifg: frequency of ifgs appearing in all loops
+    """
     edge_to_indexed_ifgs = __create_ifg_edge_dict(ifg_files, params)
     ifgs = [v.IfgPhase for v in edge_to_indexed_ifgs.values()]
     n_ifgs = len(ifgs)
@@ -108,8 +117,8 @@ def _find_num_occurences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs):
 def __compute_check_ps(weighted_loop: WeightedLoop,
                        edge_to_indexed_ifgs: Dict[Edge, IndexedIfg], params: dict) -> Tuple[np.ndarray, np.ndarray]:
     """
-    find sum `closure` of each loop, and compute `check_ps` for each pixel.
-    PS: Persistent Scatterer
+    compute sum `closure` of each loop, and compute `check_ps` for each pixel.
+
     """
     n_ifgs = len(edge_to_indexed_ifgs)
     indexed_ifg = list(edge_to_indexed_ifgs.values())[0]
@@ -127,16 +136,15 @@ def __compute_check_ps(weighted_loop: WeightedLoop,
         closure += signed_edge.sign * ifg.phase_data
     if use_median:
         closure -= np.nanmedian(closure)  # may be able to drop median
-    # handle nans elegantly
-    nan_indices = np.isnan(closure)
-    closure[nan_indices] = 0  # values with nans can't be large_dev_thr checked
+
+    # this will deal with nans in `closure`, i.e., nans are not selected in indices_breaching_threshold
     indices_breaching_threshold = np.absolute(closure) > large_dev_thr
-    closure[nan_indices] = np.nan  # set them to nan again  - this is useful when we plot
+
     for signed_edge in weighted_loop.loop:
         ifg_index = edge_to_indexed_ifgs[signed_edge.edge].index
         #  the variable check_ps is increased by 1 for that pixel
         # make sure we are not incrementing the nan positions in the closure
         # as we don't know the PS of these pixels and also they were converted to zero before large_dev_thr check
         # Therefore, we leave them out of check_ps, i.e., we don't increment their check_ps values
-        check_ps[np.logical_and(indices_breaching_threshold, ~nan_indices), ifg_index] += 1
+        check_ps[indices_breaching_threshold, ifg_index] += 1
     return closure, check_ps
