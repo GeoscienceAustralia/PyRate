@@ -26,19 +26,19 @@ from pyrate.core.shared import Ifg
 from pyrate.core.logger import pyratelogger as log
 
 
-def detect_ps_with_unwrapping_errors(check_ps: np.ndarray, num_occurences_each_ifg: np.ndarray, params: dict) \
+def detect_ps_with_unwrapping_errors(check_ps: np.ndarray, num_occurrences_each_ifg: np.ndarray, params: dict) \
         -> np.ndarray:
     """
     find where in the phase data exceed the PHS_UNW_ERR_THR, and assign nans to those pixels in all ifgs
     :param check_ps: unwrapping issues at pixels in all loops
-    :param num_occurences_each_ifg:  frequency of ifgs appearing in all loops
+    :param num_occurrences_each_ifg:  frequency of ifgs appearing in all loops
     :param params: params dict
     :return: ps_unwrap_error: number of ifgs with unwrapping errors at each pixel
     """
     nrows, ncols, n_ifgs = check_ps.shape
     ps_unwrap_error = np.zeros(shape=(nrows, ncols), dtype=np.int16)
     for i in range(n_ifgs):
-        ps_idx = check_ps[:, :, i] == num_occurences_each_ifg[i]
+        ps_idx = check_ps[:, :, i] == num_occurrences_each_ifg[i]
         ps_unwrap_error[ps_idx] += 1  # number of IFGs with unwrapping errors per PS
 
     # PS pixels with unwrapping errors in one or more SBAS IFGs will be marked.
@@ -93,7 +93,7 @@ def __drop_ifgs_exceeding_threshold(orig_ifg_files: List[str], check_ps, num_occ
     We demand two thresholds breaches for an ifg to be dropped.
     1. The first one is the basic ifg loop participation count check.
     2. The second threshold check is a weighted average check of pixels breached taking all loops into account.
-        (a) check_ps contains unwrapping error count for each pixel for each ifg seen in any loop
+        (a) check_ps contains unwrapping error count for each pixel for each ifg seen in all loops
         (b) sum(check_ps[:, :, i]) is pixel total count with unwrapping error for i-th ifg over all loops
         (c) divide by loop_count_of_this_ifg and num of cells (nrows x ncols) for a weighted measure of threshold
 

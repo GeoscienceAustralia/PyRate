@@ -98,10 +98,10 @@ def test_mpi_vs_single_process(modified_config):
     # closure
     np.testing.assert_array_almost_equal(np.abs(m_closure), np.abs(s_closure))
 
-    # num_occurences_each_ifg
-    m_num_occurences_each_ifg = np.load(m_config.closure().num_occurences_each_ifg, allow_pickle=True)
-    s_num_occurences_each_ifg = np.load(s_config.closure().num_occurences_each_ifg, allow_pickle=True)
-    np.testing.assert_array_equal(m_num_occurences_each_ifg, s_num_occurences_each_ifg)
+    # num_occurrences_each_ifg
+    m_num_occurrences_each_ifg = np.load(m_config.closure().num_occurences_each_ifg, allow_pickle=True)
+    s_num_occurrences_each_ifg = np.load(s_config.closure().num_occurences_each_ifg, allow_pickle=True)
+    np.testing.assert_array_equal(m_num_occurrences_each_ifg, s_num_occurrences_each_ifg)
 
     # check ps
     m_check_ps = np.load(m_config.closure().check_ps)

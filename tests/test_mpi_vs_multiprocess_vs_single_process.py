@@ -232,7 +232,7 @@ def __check_equality_of_phase_closure_outputs(mpi_conf, sr_conf):
         assert all(m_e == s_e for m_e, s_e in zip(m.edges, s.edges))
     # closure
     np.testing.assert_array_almost_equal(np.abs(m_closure), np.abs(s_closure))
-    # num_occurences_each_ifg
+    # num_occurrences_each_ifg
     m_num_occurences_each_ifg = np.load(m_close.num_occurences_each_ifg, allow_pickle=True)
     s_num_occurences_each_ifg = np.load(s_close.num_occurences_each_ifg, allow_pickle=True)
     np.testing.assert_array_equal(m_num_occurences_each_ifg, s_num_occurences_each_ifg)

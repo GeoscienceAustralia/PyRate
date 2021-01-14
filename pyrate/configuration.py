@@ -363,7 +363,7 @@ class Configuration:
             def __init__(self):
                 self.closure = Path(closure_d).joinpath('closure.npy')
                 self.check_ps = Path(closure_d).joinpath('check_ps.npy')
-                self.num_occurences_each_ifg = Path(closure_d).joinpath('num_occurences_each_ifg.npy')
+                self.num_occurences_each_ifg = Path(closure_d).joinpath('num_occurrences_each_ifg.npy')
                 self.loops = Path(closure_d).joinpath('loops.npy')
 
         return Closure()

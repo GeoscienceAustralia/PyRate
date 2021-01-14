@@ -63,7 +63,8 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
     :param params: params dict
     :return: Tuple of closure, check_ps, number of occurrences in each ifg
         closure: closure of values of each loop
-        check_ps: unwrapping issues at pixels in all loops
+        check_ps: shape=(ifg.shape, n_ifgs) number of times a pixel in an ifg fails the closure
+        check, i.e., has unwrapping error in all loops under investigation.
         num_occurrences_each_ifg: frequency of ifgs appearing in all loops
     """
     edge_to_indexed_ifgs = __create_ifg_edge_dict(ifg_files, params)
@@ -118,7 +119,8 @@ def __compute_check_ps(weighted_loop: WeightedLoop,
                        edge_to_indexed_ifgs: Dict[Edge, IndexedIfg], params: dict) -> Tuple[np.ndarray, np.ndarray]:
     """
     compute sum `closure` of each loop, and compute `check_ps` for each pixel.
-
+    check_ps: number of times a pixel in an ifg fails the closure check, i.e., has unwrapping
+        error
     """
     n_ifgs = len(edge_to_indexed_ifgs)
     indexed_ifg = list(edge_to_indexed_ifgs.values())[0]
