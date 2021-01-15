@@ -54,6 +54,7 @@ def modified_config(tempdir, get_lks=1, get_crop=1, orbfit_lks=2, orbfit_method=
         write_config_file(params=params, output_conf_file=output_conf)
 
         return output_conf, params
+
     return modify_params
 
 
@@ -104,6 +105,6 @@ def test_mpi_vs_single_process(modified_config):
     np.testing.assert_array_equal(m_num_occurrences_each_ifg, s_num_occurrences_each_ifg)
 
     # check ps
-    m_check_ps = np.load(m_config.closure().check_ps)
-    s_check_ps = np.load(s_config.closure().check_ps)
-    np.testing.assert_array_equal(m_check_ps, s_check_ps)
+    m_ifgs_breach_count = np.load(m_config.closure().ifgs_breach_count)
+    s_ifgs_breach_count = np.load(s_config.closure().ifgs_breach_count)
+    np.testing.assert_array_equal(m_ifgs_breach_count, s_ifgs_breach_count)

@@ -237,9 +237,9 @@ def __check_equality_of_phase_closure_outputs(mpi_conf, sr_conf):
     s_num_occurences_each_ifg = np.load(s_close.num_occurences_each_ifg, allow_pickle=True)
     np.testing.assert_array_equal(m_num_occurences_each_ifg, s_num_occurences_each_ifg)
     # check ps
-    m_check_ps = np.load(m_close.check_ps)
-    s_check_ps = np.load(s_close.check_ps)
-    np.testing.assert_array_equal(m_check_ps, s_check_ps)
+    m_ifgs_breach_count = np.load(m_close.ifgs_breach_count)
+    s_ifgs_breach_count = np.load(s_close.ifgs_breach_count)
+    np.testing.assert_array_equal(m_ifgs_breach_count, s_ifgs_breach_count)
 
 
 @pytest.fixture(params=[0, 1])

@@ -60,8 +60,8 @@ _Phase closure_ correction has the following main functionalities:
     1. Find pixels breaching _large_dev_thr_. Note _large_dev_thr_ is specified in radians. Therefore, at this stage 
        we need to convert phase data (in millimeters) into radians (check functions _shared.convert_to_radian_ and 
        it's use in the _Ifg_ class). 
-    2. In order to find _Persistent Scatter_, compute the _check_ps_ for each pixel for each ifg.
-    3. See use of _subtract_median_ in function _sum_closure_.__compute_check_ps_.
+    2. In order to find _Persistent Scatter_, compute the _ifgs_breach_count_ for each pixel for each ifg.
+    3. See use of _subtract_median_ in function _sum_closure_.__compute_ifgs_breach_count_.
 
 3. _closure_check.py_ is used for orchestration of the functionalities above. After stage 2, we drop 
    ifgs exceeding _avg_ifg_err_thr_ and _loop_count_for_avg_ifg_err_thr_. See docstring in function 

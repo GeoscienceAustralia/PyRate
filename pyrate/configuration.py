@@ -50,17 +50,20 @@ def validate_parameter_value(input_name, input_value, min_value=None, max_value=
         if min_value is not None:
             if input_value < min_value:  # pragma: no cover
                 raise ValueError(
-                    "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Provide a value greater than or equal to " + str(min_value) + ".")
+                    "Invalid value for " + str(input_name) + " supplied: " + str(
+                        input_value) + ". Provide a value greater than or equal to " + str(min_value) + ".")
     if input_value is not None:
         if max_value is not None:
             if input_value > max_value:  # pragma: no cover
                 raise ValueError(
-                    "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Provide a value less than or equal to " + str(max_value) + ".")
+                    "Invalid value for " + str(input_name) + " supplied: " + str(
+                        input_value) + ". Provide a value less than or equal to " + str(max_value) + ".")
 
     if possible_values is not None:
         if input_value not in possible_values:  # pragma: no cover
             raise ValueError(
-                "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Provide a value from: " + str(possible_values) + ".")
+                "Invalid value for " + str(input_name) + " supplied: " + str(
+                    input_value) + ". Provide a value from: " + str(possible_values) + ".")
     return True
 
 
@@ -144,8 +147,8 @@ class MultiplePaths:
                         params[cf.TLPF_METHOD],
                         params[cf.TLPF_CUTOFF],
                         params[cf.TLPF_PTHR]
-                        ]
-                    ]) + '_aps_error.npy')
+                    ]
+                              ]) + '_aps_error.npy')
 
     def __str__(self):  # pragma: no cover
         st = ""
@@ -154,9 +157,9 @@ class MultiplePaths:
         else:
             st += """\nunwrapped_path = None"""
         st += """
-            converted_path = """ + self.converted_path+""" 
-            sampled_path = """ + self.sampled_path+"""    
-            tmp_sampled_path = """ + self.tmp_sampled_path+"""
+            converted_path = """ + self.converted_path + """ 
+            sampled_path = """ + self.sampled_path + """    
+            tmp_sampled_path = """ + self.tmp_sampled_path + """
             """
         return st
 
@@ -204,11 +207,12 @@ class Configuration:
             param_value = self.__dict__[parameter_name] if parameter_name in required or \
                                                            parameter_name in self.__dict__ else ''
 
-            self.__dict__[parameter_name] = set_parameter_value(PYRATE_DEFAULT_CONFIGURATION[parameter_name]["DataType"],
-                                                                param_value,
-                                                                PYRATE_DEFAULT_CONFIGURATION[parameter_name]["DefaultValue"],
-                                                                PYRATE_DEFAULT_CONFIGURATION[parameter_name]["Required"],
-                                                                parameter_name)
+            self.__dict__[parameter_name] = set_parameter_value(
+                PYRATE_DEFAULT_CONFIGURATION[parameter_name]["DataType"],
+                param_value,
+                PYRATE_DEFAULT_CONFIGURATION[parameter_name]["DefaultValue"],
+                PYRATE_DEFAULT_CONFIGURATION[parameter_name]["Required"],
+                parameter_name)
             validate_parameter_value(parameter_name, self.__dict__[parameter_name],
                                      PYRATE_DEFAULT_CONFIGURATION[parameter_name]["MinValue"],
                                      PYRATE_DEFAULT_CONFIGURATION[parameter_name]["MaxValue"],
@@ -225,12 +229,12 @@ class Configuration:
         if hasattr(self, 'rows') and hasattr(self, 'cols'):
             self.rows, self.cols = int(self.rows), int(self.cols)
         else:
-            if NO_OF_PARALLEL_PROCESSES > 1: # i.e. mpirun
+            if NO_OF_PARALLEL_PROCESSES > 1:  # i.e. mpirun
                 self.rows, self.cols = [int(num) for num in factorise_integer(NO_OF_PARALLEL_PROCESSES)]
             else:
-                if self.parallel: # i.e. joblib parallelism
+                if self.parallel:  # i.e. joblib parallelism
                     self.rows, self.cols = [int(num) for num in factorise_integer(self.processes)]
-                else: # i.e. serial
+                else:  # i.e. serial
                     self.rows, self.cols = 1, 1
 
         # force offset = 1 for both method options. This adds the required intercept term to the design matrix
@@ -309,8 +313,8 @@ class Configuration:
                 [str(x) for x in [
                     'ref_pixel', params[cf.REFX], params[cf.REFY], params[cf.REFNX], params[cf.REFNY],
                     params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC], '.npy'
-                    ]
                 ]
+                 ]
             )
         )
 
@@ -362,7 +366,7 @@ class Configuration:
         class Closure:
             def __init__(self):
                 self.closure = Path(closure_d).joinpath('closure.npy')
-                self.check_ps = Path(closure_d).joinpath('check_ps.npy')
+                self.ifgs_breach_count = Path(closure_d).joinpath('ifgs_breach_count.npy')
                 self.num_occurences_each_ifg = Path(closure_d).joinpath('num_occurrences_each_ifg.npy')
                 self.loops = Path(closure_d).joinpath('loops.npy')
 

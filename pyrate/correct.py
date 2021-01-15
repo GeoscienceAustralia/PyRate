@@ -147,7 +147,7 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
         log.info("Phase closure correction is not required!")
         return
 
-    ifg_files, check_ps, num_occurences_each_ifg = filter_to_closure_checked_ifgs(config)
+    ifg_files, ifgs_breach_count, num_occurences_each_ifg = filter_to_closure_checked_ifgs(config)
     if ifg_files is None:
         import sys
         sys.exit("Zero loops are returned after phase clouser calcs!!! \n"
@@ -170,7 +170,7 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
 
     # insert nans where phase unwrap threshold is breached
     if mpiops.rank == 0:
-        detect_ps_with_unwrapping_errors(check_ps, num_occurences_each_ifg, params)
+        detect_ps_with_unwrapping_errors(ifgs_breach_count, num_occurences_each_ifg, params)
 
     _create_ifg_dict(params)
 

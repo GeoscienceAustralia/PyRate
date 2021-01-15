@@ -16,7 +16,8 @@
 
 
 from collections import namedtuple
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Any
+from nptyping import NDArray, Float32, UInt16
 import numpy as np
 from pyrate.core import config as cf, mpiops, ifgconstants as ifc
 from pyrate.core.shared import Ifg, join_dicts, iterable_split
@@ -29,6 +30,7 @@ class IfgPhase:
     """
     workaround class to only hold phase data for mpi SwigPyObject pickle error
     """
+
     def __init__(self, phase_data):
         self.phase_data = phase_data
 
@@ -61,9 +63,9 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
     :param ifg_files: list of ifg files
     :param loops: list of loops
     :param params: params dict
-    :return: Tuple of closure, check_ps, number of occurrences in each ifg
+    :return: Tuple of closure, ifgs_breach_count, number of occurrences in each ifg
         closure: closure of values of each loop
-        check_ps: shape=(ifg.shape, n_ifgs) number of times a pixel in an ifg fails the closure
+        ifgs_breach_count: shape=(ifg.shape, n_ifgs) number of times a pixel in an ifg fails the closure
         check, i.e., has unwrapping error in all loops under investigation.
         num_occurrences_each_ifg: frequency of ifgs appearing in all loops
     """
@@ -74,34 +76,36 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
 
     if params[cf.PARALLEL]:
         # rets = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-        #     delayed(__compute_check_ps)(ifg0, n_ifgs, weighted_loop, edge_to_indexed_ifgs, params)
+        #     delayed(__compute_ifgs_breach_count)(ifg0, n_ifgs, weighted_loop, edge_to_indexed_ifgs, params)
         #     for weighted_loop in loops
         # )
         # for k, r in enumerate(rets):
-        #     closure_dict[k], check_ps_dict[k] = r
+        #     closure_dict[k], ifgs_breach_count_dict[k] = r
         # TODO: enable multiprocessing - needs pickle error fix
-        check_ps_arr = []
+        ifgs_breach_count_arr = []
         for k, weighted_loop in enumerate(loops):
-            closure_dict[k], check_ps_l = __compute_check_ps(weighted_loop, edge_to_indexed_ifgs, params)
-            check_ps_arr.append(check_ps_l)
-        check_ps = np.sum(np.stack(check_ps_arr), axis=0)
+            closure_dict[k], ifgs_breach_count_l = __compute_ifgs_breach_count(weighted_loop, edge_to_indexed_ifgs,
+                                                                               params)
+            ifgs_breach_count_arr.append(ifgs_breach_count_l)
+        ifgs_breach_count = np.sum(np.stack(ifgs_breach_count_arr), axis=0)
     else:
         loops_with_index = list(enumerate(loops))
         process_loops = mpiops.array_split(loops_with_index)
-        check_ps_arr = []
+        ifgs_breach_count_arr = []
         for k, weighted_loop in process_loops:
-            closure_dict[k], check_ps_l = __compute_check_ps(weighted_loop, edge_to_indexed_ifgs, params)
-            check_ps_arr.append(check_ps_l)
+            closure_dict[k], ifgs_breach_count_l = __compute_ifgs_breach_count(weighted_loop, edge_to_indexed_ifgs,
+                                                                               params)
+            ifgs_breach_count_arr.append(ifgs_breach_count_l)
         closure_dict = join_dicts(mpiops.comm.gather(closure_dict, root=0))
-        check_ps_process = np.sum(np.stack(check_ps_arr), axis=0)
-        check_ps = mpiops.comm.reduce(check_ps_process, op=mpiops.sum0_op, root=0)
+        ifgs_breach_count_process = np.sum(np.stack(ifgs_breach_count_arr), axis=0)
+        ifgs_breach_count = mpiops.comm.reduce(ifgs_breach_count_process, op=mpiops.sum0_op, root=0)
 
     closure, num_occurrences_each_ifg = None, None
     if mpiops.rank == 0:
         num_occurrences_each_ifg = _find_num_occurrences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs)
         closure = np.dstack([v for k, v in sorted(closure_dict.items(), key=lambda x: x[0])])
 
-    return closure, check_ps, num_occurrences_each_ifg
+    return closure, ifgs_breach_count, num_occurrences_each_ifg
 
 
 def _find_num_occurrences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs):
@@ -115,11 +119,12 @@ def _find_num_occurrences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs):
     return num_occurrences_each_ifg
 
 
-def __compute_check_ps(weighted_loop: WeightedLoop,
-                       edge_to_indexed_ifgs: Dict[Edge, IndexedIfg], params: dict) -> Tuple[np.ndarray, np.ndarray]:
+def __compute_ifgs_breach_count(weighted_loop: WeightedLoop,
+                                edge_to_indexed_ifgs: Dict[Edge, IndexedIfg], params: dict) \
+        -> Tuple[NDArray[(Any, Any), Float32], NDArray[(Any, Any, Any), UInt16]]:
     """
-    compute sum `closure` of each loop, and compute `check_ps` for each pixel.
-    check_ps: number of times a pixel in an ifg fails the closure check, i.e., has unwrapping
+    compute sum `closure` of each loop, and compute `ifgs_breach_count` for each pixel.
+    ifgs_breach_count: number of times a pixel in an ifg fails the closure check, i.e., has unwrapping
         error
     """
     n_ifgs = len(edge_to_indexed_ifgs)
@@ -130,7 +135,7 @@ def __compute_check_ps(weighted_loop: WeightedLoop,
 
     closure = np.zeros(shape=ifg.phase_data.shape, dtype=np.float32)
     # initiate variable for check of unwrapping issues at the same pixels in all loops
-    check_ps = np.zeros(shape=(ifg.phase_data.shape + (n_ifgs,)), dtype=np.uint16)
+    ifgs_breach_count = np.zeros(shape=(ifg.phase_data.shape + (n_ifgs,)), dtype=np.uint16)
 
     for signed_edge in weighted_loop.loop:
         indexed_ifg = edge_to_indexed_ifgs[signed_edge.edge]
@@ -144,9 +149,9 @@ def __compute_check_ps(weighted_loop: WeightedLoop,
 
     for signed_edge in weighted_loop.loop:
         ifg_index = edge_to_indexed_ifgs[signed_edge.edge].index
-        #  the variable check_ps is increased by 1 for that pixel
+        #  the variable ifgs_breach_count is increased by 1 for that pixel
         # make sure we are not incrementing the nan positions in the closure
         # as we don't know the PS of these pixels and also they were converted to zero before large_dev_thr check
-        # Therefore, we leave them out of check_ps, i.e., we don't increment their check_ps values
-        check_ps[indices_breaching_threshold, ifg_index] += 1
-    return closure, check_ps
+        # Therefore, we leave them out of ifgs_breach_count, i.e., we don't increment their ifgs_breach_count values
+        ifgs_breach_count[indices_breaching_threshold, ifg_index] += 1
+    return closure, ifgs_breach_count
