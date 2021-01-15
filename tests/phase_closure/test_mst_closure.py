@@ -18,7 +18,7 @@
 from datetime import date
 import numpy as np
 import pytest
-from pyrate.constants import PYRATEPATH
+
 from pyrate.core.phase_closure.mst_closure import (
     __find_closed_loops, Edge, SignedWeightedEdge, SignedEdge, __setup_edges,
     __add_signs_and_weights_to_loops, sort_loops_based_on_weights_and_date, WeightedLoop,
@@ -26,15 +26,6 @@ from pyrate.core.phase_closure.mst_closure import (
 )
 import pyrate.constants as C
 from tests.phase_closure.common import IfgDummy
-
-GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
-
-
-@pytest.fixture
-def geotiffs():
-    tifs = [u.as_posix() for u in GEOTIFF.glob('*_unw.tif')]
-    tifs.sort()
-    return tifs
 
 
 @pytest.fixture

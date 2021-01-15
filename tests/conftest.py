@@ -26,8 +26,12 @@ import pyrate.constants as C
 from pyrate.constants import PYRATEPATH
 from pyrate.core import mpiops, shared
 from pyrate.configuration import Configuration
+from pyrate.constants import PYRATEPATH
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA, SML_TEST_DEM_TIF, MEXICO_CROPA_CONF
 from tests.common import ROIPAC_SYSTEM_CONF, GAMMA_SYSTEM_CONF, GEOTIF_SYSTEM_CONF, SML_TEST_COH_LIST
+
+
+GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
 
 
 @pytest.fixture
@@ -171,9 +175,6 @@ def gamma_or_mexicoa_conf(request):
 @pytest.fixture(params=range(5))
 def run_number(request):
     return request.param
-
-
-GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
 
 
 @pytest.fixture
