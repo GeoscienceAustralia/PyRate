@@ -24,6 +24,8 @@ import pyrate.constants as C
 from pyrate.core import mpiops
 from pyrate.core.shared import Ifg, join_dicts
 from pyrate.core.phase_closure.mst_closure import Edge, WeightedLoop
+from pyrate.core.phase_closure.correct_phase import recover_pixels
+from pyrate.core.logger import pyratelogger as log
 
 IndexedIfg = namedtuple('IndexedIfg', ['index', 'IfgPhase'])
 
@@ -81,7 +83,7 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
     closure_dict = {}
 
     if params[C.PARALLEL]:
-        # rets = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+        # rets = Parallel(n_jobs=params[C.PROCESSES], verbose=joblib_log_level(C.LOG_LEVEL))(
         #     delayed(__compute_ifgs_breach_count)(ifg0, n_ifgs, weighted_loop, edge_to_indexed_ifgs, params)
         #     for weighted_loop in loops
         # )
@@ -99,6 +101,7 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
         process_loops = mpiops.array_split(loops_with_index)
         ifgs_breach_count_arr = []
         for k, weighted_loop in process_loops:
+            log.debug(f"Computing phase closure of loop {k}")
             closure_dict[k], ifgs_breach_count_l = __compute_ifgs_breach_count(weighted_loop, edge_to_indexed_ifgs,
                                                                                params)
             ifgs_breach_count_arr.append(ifgs_breach_count_l)
@@ -148,8 +151,7 @@ def __compute_ifgs_breach_count(weighted_loop: WeightedLoop,
     if use_median:
         closure -= np.nanmedian(closure)  # may be able to drop median
 
-    # this will deal with nans in `closure`, i.e., nans are not selected in indices_breaching_threshold
-    indices_breaching_threshold = np.absolute(closure) > large_dev_thr
+    indices_breaching_threshold = recover_pixels(closure, params)
 
     for signed_edge in weighted_loop.loop:
         ifg_index = edge_to_indexed_ifgs[signed_edge.edge].index

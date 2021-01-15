@@ -186,6 +186,7 @@ LOOPS_THR_IFG = 'loops_thr_ifg'
 MAX_LOOP_LENGTH = 'max_loop_length'
 SUBTRACT_MEDIAN = 'subtract_median'
 MAX_LOOPS_PER_IFG = 'max_loops_per_ifg'
+CORR_PHASE = 'corr_phs'
 
 # orbital error correction/parameters
 #: BOOL (1/0); Perform orbital error correction (1: yes, 0: no)
