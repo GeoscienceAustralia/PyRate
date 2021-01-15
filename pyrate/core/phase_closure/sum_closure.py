@@ -58,7 +58,7 @@ def __create_ifg_edge_dict(ifg_files: List[str], params: dict) -> Dict[Edge, Ind
 
 
 def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: dict) -> \
-        Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        Tuple[NDArray[(Any, Any, Any), Float32], NDArray[(Any, Any, Any), UInt16], NDArray[(Any, ), UInt16]]:
     """
     :param ifg_files: list of ifg files
     :param loops: list of loops
@@ -108,7 +108,9 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
     return closure, ifgs_breach_count, num_occurrences_each_ifg
 
 
-def _find_num_occurrences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs):
+def _find_num_occurrences_each_ifg(loops: List[WeightedLoop],
+                                   edge_to_indexed_ifgs: Dict[Edge, IndexedIfg],
+                                   n_ifgs: int) -> NDArray[(Any, ), UInt16]:
     """find how many times each ifg appears in total in all loops"""
     num_occurrences_each_ifg = np.zeros(shape=n_ifgs, dtype=np.uint16)
     for weighted_loop in loops:
