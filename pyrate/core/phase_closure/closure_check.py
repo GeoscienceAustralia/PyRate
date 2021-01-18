@@ -48,7 +48,7 @@ def detect_pix_with_unwrapping_errors(ifgs_breach_count: NDArray[(Any, Any, Any)
 
     nan_index = pix_unwrap_error >= params[cf.PHS_UNW_ERR_THR]
 
-    log.info("Updating phase data of retained ifgs")
+    log.debug("Updating phase data of retained ifgs")
 
     for i, m_p in enumerate(params[cf.INTERFEROGRAM_FILES]):
         ifg = Ifg(m_p.tmp_sampled_path)
@@ -68,7 +68,7 @@ def detect_pix_with_unwrapping_errors(ifgs_breach_count: NDArray[(Any, Any, Any)
 
 def __drop_ifgs_if_not_part_of_any_loop(ifg_files: List[str], loops: List[WeightedLoop], params: dict) -> List[str]:
     """
-    Check if an ifg is part of any of the loops, otherwise drop it from the list of interferograms for further pyrate
+    Check if an ifg is part of any of the loops, otherwise drop it from the list of interferograms for further PyRate
     processing.
     """
     loop_ifgs = set()
@@ -85,8 +85,8 @@ def __drop_ifgs_if_not_part_of_any_loop(ifg_files: List[str], loops: List[Weight
         if Edge(i.first, i.second) in loop_ifgs:
             selected_ifg_files.append(f)
     if len(ifg_files) != len(selected_ifg_files):
-        log.info(f'Only {len(selected_ifg_files)} of the original {len(ifg_files)} '
-                 f'participate in one or more loops, and selected for further pyrate analysis')
+        log.info(f'Only {len(selected_ifg_files)} (out of {len(ifg_files)}) ifgs participate in '
+                 f'one or more closure loops, and are selected for further PyRate analysis')
     return selected_ifg_files
 
 
@@ -190,21 +190,22 @@ def wrap_closure_check(ifg_files: List[str], config: Configuration) -> \
     params = config.__dict__
     ifg_files.sort()
     sorted_signed_loops = mpiops.run_once(sort_loops_based_on_weights_and_date, ifg_files)
-    retained_loops_meeting_max_loop_criretia = [sl for sl in sorted_signed_loops
+    log.info(f"Total number of possible closure loops is {len(sorted_signed_loops)}")
+    retained_loops_meeting_max_loop_criteria = [sl for sl in sorted_signed_loops
                                                 if len(sl) <= params[cf.MAX_LOOP_LENGTH]]
-    msg = f"After applying MAX_LOOP_LENGTH={params[cf.MAX_LOOP_LENGTH]} criteria, " \
-          f"{len(retained_loops_meeting_max_loop_criretia)} loops are retained"
+    msg = f"After applying MAX_LOOP_LENGTH = {params[cf.MAX_LOOP_LENGTH]} criteria, " \
+          f"{len(retained_loops_meeting_max_loop_criteria)} loops are retained"
 
-    if len(retained_loops_meeting_max_loop_criretia) < 1:
+    if len(retained_loops_meeting_max_loop_criteria) < 1:
         return None
     else:
         log.info(msg)
 
     retained_loops = mpiops.run_once(discard_loops_containing_max_ifg_count,
-                                     retained_loops_meeting_max_loop_criretia, params)
+                                     retained_loops_meeting_max_loop_criteria, params)
     ifgs_with_loops = mpiops.run_once(__drop_ifgs_if_not_part_of_any_loop, ifg_files, retained_loops, params)
 
-    msg = f"After applying MAX_LOOPS_IN_IFG={params[cf.MAX_LOOPS_IN_IFG]} criteria, " \
+    msg = f"After applying MAX_LOOPS_IN_IFG = {params[cf.MAX_LOOPS_IN_IFG]} criteria, " \
           f"{len(retained_loops)} loops are retained"
     if len(retained_loops) < 1:
         return None
