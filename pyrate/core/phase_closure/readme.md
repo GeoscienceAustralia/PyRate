@@ -60,7 +60,7 @@ _Phase closure_ correction has the following main functionalities:
     1. Find pixels breaching _large_dev_thr_. Note _large_dev_thr_ is specified in radians. Therefore, at this stage 
        we need to convert phase data (in millimeters) into radians (check functions _shared.convert_to_radian_ and 
        it's use in the _Ifg_ class). 
-    2. In order to find _Persistent Scatter_, compute the _ifgs_breach_count_ for each pixel for each ifg.
+    2. Compute the _ifgs_breach_count_ for each pixel for each ifg.
     3. See use of _subtract_median_ in function _sum_closure_.__compute_ifgs_breach_count_.
 
 3. _closure_check.py_ is used for orchestration of the functionalities above. After stage 2, we drop 
@@ -73,7 +73,7 @@ _Phase closure_ correction has the following main functionalities:
 5. Once a stable list of interferograms is found, in _correct.py_, write a new ifglist in the working directory, 
    update params, and use the updated ifglist for further pyrate processing.
    
-6. Also in _correct.py_, we detect persistent scatterers (pixels) breaching _phs_unw_err_thr_.
+6. Also in _correct.py_, we detect the pixels breaching _phs_unw_err_thr_.
 
 7. Finally, we write the ifg phase data after assigning nulls to pixels breaching _phs_unw_err_thr_. 
    _Phase closure_ correction is done at this stage.

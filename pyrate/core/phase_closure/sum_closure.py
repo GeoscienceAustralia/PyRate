@@ -36,6 +36,7 @@ class IfgPhase:
 
 
 def __create_ifg_edge_dict(ifg_files: List[str], params: dict) -> Dict[Edge, IndexedIfg]:
+    """Returns a dictionary of indexed ifg 'edges'"""
     ifg_files.sort()
     ifgs = [Ifg(i) for i in ifg_files]
 
@@ -60,14 +61,17 @@ def __create_ifg_edge_dict(ifg_files: List[str], params: dict) -> Dict[Edge, Ind
 def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: dict) -> \
         Tuple[NDArray[(Any, Any, Any), Float32], NDArray[(Any, Any, Any), UInt16], NDArray[(Any, ), UInt16]]:
     """
+    Compute the closure sum for each pixel in each loop, and count the number of times a pixel
+    contributes to a failed closure loop (where the summed closure is above/below the 
+    LARGE_DEV_THR threshold).
     :param ifg_files: list of ifg files
     :param loops: list of loops
     :param params: params dict
-    :return: Tuple of closure, ifgs_breach_count, number of occurrences in each ifg
-        closure: closure of values of each loop
+    :return: Tuple of closure, ifgs_breach_count, num_occurrences_each_ifg
+        closure: summed closure for each loop.
         ifgs_breach_count: shape=(ifg.shape, n_ifgs) number of times a pixel in an ifg fails the closure
-        check, i.e., has unwrapping error in all loops under investigation.
-        num_occurrences_each_ifg: frequency of ifgs appearing in all loops
+            check (i.e., has unwrapping error) in all loops under investigation.
+        num_occurrences_each_ifg: frequency of ifg appearance in all loops.
     """
     edge_to_indexed_ifgs = __create_ifg_edge_dict(ifg_files, params)
     ifgs = [v.IfgPhase for v in edge_to_indexed_ifgs.values()]
@@ -124,11 +128,7 @@ def _find_num_occurrences_each_ifg(loops: List[WeightedLoop],
 def __compute_ifgs_breach_count(weighted_loop: WeightedLoop,
                                 edge_to_indexed_ifgs: Dict[Edge, IndexedIfg], params: dict) \
         -> Tuple[NDArray[(Any, Any), Float32], NDArray[(Any, Any, Any), UInt16]]:
-    """
-    compute sum `closure` of each loop, and compute `ifgs_breach_count` for each pixel.
-    ifgs_breach_count: number of times a pixel in an ifg fails the closure check, i.e., has unwrapping
-        error
-    """
+    """Compute summed `closure` of each loop, and compute `ifgs_breach_count` for each pixel."""
     n_ifgs = len(edge_to_indexed_ifgs)
     indexed_ifg = list(edge_to_indexed_ifgs.values())[0]
     ifg = indexed_ifg.IfgPhase
@@ -151,9 +151,9 @@ def __compute_ifgs_breach_count(weighted_loop: WeightedLoop,
 
     for signed_edge in weighted_loop.loop:
         ifg_index = edge_to_indexed_ifgs[signed_edge.edge].index
-        #  the variable ifgs_breach_count is increased by 1 for that pixel
+        # the variable 'ifgs_breach_count' is increased by 1 for that pixel
         # make sure we are not incrementing the nan positions in the closure
-        # as we don't know the PS of these pixels and also they were converted to zero before large_dev_thr check
+        # as we don't know the phase of these pixels and also they were converted to zero before large_dev_thr check
         # Therefore, we leave them out of ifgs_breach_count, i.e., we don't increment their ifgs_breach_count values
         ifgs_breach_count[indices_breaching_threshold, ifg_index] += 1
     return closure, ifgs_breach_count
