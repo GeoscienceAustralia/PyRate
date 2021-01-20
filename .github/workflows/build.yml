@@ -6,6 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-16.04
     name: Python ${{ matrix.python }}
+    if: "!(contains(github.event.head_commit.message, '[skip ci]') || contains(github.event.pull_request.head_commit.message, '[ci skip]'))"
     strategy:
       matrix:
         include:
