@@ -56,8 +56,8 @@ def test_small_data_coherence(gamma_params):
         ifg.open()
         converted_coh_file_path = cf.coherence_paths_for(p, gamma_params, tif=True)
         gdal_python.coherence_masking(ifg.dataset,
-                                      coherence_file_path=converted_coh_file_path,
-                                      coherence_thresh=gamma_params[cf.COH_THRESH]
+                                      coh_file_path=converted_coh_file_path,
+                                      coh_thr=gamma_params[cf.COH_THRESH]
                                       )
         nans = np.isnan(ifg.phase_data)
         coherence_path = cf.coherence_paths_for(p, gamma_params, tif=True)

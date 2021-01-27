@@ -17,7 +17,6 @@
 #   either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-YEARS_PER_DAY = 1 / 365.25
 
 PYRATE_DEFAULT_CONFIGURATION = {
     "ifgfilelist": {
@@ -317,33 +316,17 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": [0, 1],
         "Required": False
     },
-    "slpfmethod": {
-        "DataType": int,
-        "DefaultValue": 1,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": [1, 2],
-        "Required": False
-    },
     "slpfcutoff": {
         "DataType": float,
         "DefaultValue": 1.0,
-        "MinValue": 0.001,
+        "MinValue": 0,
         "MaxValue": None,
         "PossibleValues": None,
         "Required": False
     },
-    "slpforder": {
-        "DataType": int,
-        "DefaultValue": 1,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": [1, 2, 3],
-        "Required": False
-    },
     "slpnanfill": {
         "DataType": int,
-        "DefaultValue": 0,
+        "DefaultValue": 1,
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": [0, 1],
@@ -351,24 +334,16 @@ PYRATE_DEFAULT_CONFIGURATION = {
     },
     "slpnanfill_method": {
         "DataType": str,
-        "DefaultValue": "cubic",
+        "DefaultValue": "nearest",
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": ["linear", "nearest", "cubic"],
         "Required": False
     },
-    "tlpfmethod": {
-        "DataType": int,
-        "DefaultValue": 1,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": [1, 2, 3],
-        "Required": False
-    },
     "tlpfcutoff": {
-        "DataType": float,
-        "DefaultValue": 1.0,
-        "MinValue": YEARS_PER_DAY,
+        "DataType": int,
+        "DefaultValue": 30,
+        "MinValue": 1,
         "MaxValue": None,
         "PossibleValues": None,
         "Required": False

@@ -28,7 +28,6 @@ import os
 from os.path import splitext, split
 import re
 
-from pyrate.core.ifgconstants import YEARS_PER_DAY
 from pyrate.constants import sixteen_digits_pattern
 from pyrate.core.logger import pyratelogger as _logger
 
@@ -172,19 +171,13 @@ LR_MAXSIG = 'maxsig'
 #: BOOL (0/1) Perform APS correction (1: yes, 0: no)
 APSEST = 'apsest'
 # temporal low-pass filter parameters
-#: INT (1/2/3); Method for temporal filtering (1: Gaussian, 2: Triangular, 3: Mean filter)
-TLPF_METHOD = 'tlpfmethod'
-#: FLOAT; Cutoff time for gaussian filter in years;
+#: FLOAT; Cutoff time for gaussian filter in days;
 TLPF_CUTOFF = 'tlpfcutoff'
 #: INT; Number of required input observations per pixel for temporal filtering
 TLPF_PTHR = 'tlpfpthr'
 # spatially correlated noise low-pass filter parameters
-#: INT (1/2); Method for spatial filtering(1: butterworth; 2: gaussian)
-SLPF_METHOD = 'slpfmethod'
 #: FLOAT; Cutoff  value for both butterworth and gaussian filters in km
 SLPF_CUTOFF = 'slpfcutoff'
-#: INT; Order of butterworth filter (default 1)
-SLPF_ORDER = 'slpforder'
 #: INT (1/0); Do spatial interpolation at NaN locations (1 for interpolation, 0 for zero fill)
 SLPF_NANFILL = 'slpnanfill'
 #: #: STR; Method for spatial interpolation (one of: linear, nearest, cubic), only used when slpnanfill=1
@@ -270,13 +263,10 @@ PARAM_CONVERSION = {
     # ATM_FIT_METHOD: (int, 2),
 
     APSEST: (int, 0),
-    TLPF_METHOD: (int, 1),
-    TLPF_CUTOFF: (float, 1.0),
+    TLPF_CUTOFF: (int, 12),
     TLPF_PTHR: (int, 1),
 
-    SLPF_METHOD: (int, 1),
     SLPF_CUTOFF: (float, 1.0),
-    SLPF_ORDER: (int, 1),
     SLPF_NANFILL: (int, 0),
 
     DEMERROR: (int, 0),
@@ -736,29 +726,17 @@ _ORBITAL_FIT_VALIDATION = {
 """dict: basic validation fucntions for orbital error correction parameters."""
 
 _APSEST_VALIDATION = {
-    TLPF_METHOD: (
-        lambda a: a in (1, 2, 3),
-        f"'{TLPF_METHOD}': must select option 1, 2 or 3."
-    ),
     TLPF_CUTOFF: (
-        lambda a: a >= YEARS_PER_DAY,  # 1 day in years
-        f"'{TLPF_CUTOFF}': must be >= {YEARS_PER_DAY}."
+        lambda a: a >= 1,
+        f"'{TLPF_CUTOFF}': must be >= 1."
     ),
     TLPF_PTHR: (
         lambda a: a >= 1,
         f"'{TLPF_PTHR}': must be >= 1."
     ),
-    SLPF_METHOD: (
-        lambda a: a in (1, 2),
-        f"'{SLPF_METHOD}': must select option 1 or 2."
-    ),
     SLPF_CUTOFF: (
         lambda a: a >= 0.001,
         f"'{SLPF_CUTOFF}': must be >= 0.001."
-    ),
-    SLPF_ORDER: (
-        lambda a: 1 <= a <= 3,
-        f"'{SLPF_ORDER}': must be between 1 and 3 (inclusive)."
     ),
     SLPF_NANFILL: (
         lambda a: a in (0, 1),

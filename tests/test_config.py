@@ -67,12 +67,9 @@ from pyrate.core.config import (
     LR_MAXSIG,
     LR_PTHRESH,
     APSEST,
-    TLPF_METHOD,
     TLPF_CUTOFF,
     TLPF_PTHR,
-    SLPF_METHOD,
     SLPF_CUTOFF,
-    SLPF_ORDER,
     SLPF_NANFILL,
     TIME_SERIES_PTHRESH,
     TIME_SERIES_SM_FACTOR,
@@ -256,27 +253,16 @@ class TestConfigValidation(UnitTestAdaptation):
         def validate(key, value):
             return _APSEST_VALIDATION[key][0](value)
 
-        for i in range(1, 4):
-            self.assertTrue(validate(TLPF_METHOD, i))
-        self.assertFalse(validate(TLPF_METHOD, 0))
-        self.assertFalse(validate(TLPF_METHOD, 4))
-
         self.assertFalse(validate(TLPF_CUTOFF, 0.0026))
-        self.assertTrue(validate(TLPF_CUTOFF, 0.0028))
+        self.assertFalse(validate(TLPF_CUTOFF, 0.0028))
+        self.assertFalse(validate(TLPF_CUTOFF, 0))
+        self.assertTrue(validate(TLPF_CUTOFF, 1))
 
         self.assertFalse(validate(TLPF_PTHR, 0))
         self.assertTrue(validate(TLPF_PTHR, 1))
 
-        self.assertTrue(validate(SLPF_METHOD, 1))
-        self.assertTrue(validate(SLPF_METHOD, 2))
-
         self.assertTrue(validate(SLPF_CUTOFF, 0.001))
         self.assertFalse(validate(SLPF_CUTOFF, 0.0))
-
-        for i in range(1, 4):
-            self.assertTrue(validate(SLPF_ORDER, i))
-        self.assertFalse(validate(SLPF_ORDER, 0))
-        self.assertFalse(validate(SLPF_ORDER, 4))
 
         self.assertTrue(validate(SLPF_NANFILL, 0))
         self.assertTrue(validate(SLPF_NANFILL, 1))
