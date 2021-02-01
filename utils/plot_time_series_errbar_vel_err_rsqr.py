@@ -44,7 +44,7 @@ else:
     path = sys.argv[1]
     print(f"Looking for PyRate products in: {path}")
 
-
+# path = "/g/data/dg9/INSAR_ANALYSIS/EROMANGA/S1/PYRATE/out_15mlk/result_cc06_quadfit_indep_orbit_15mlk_without_DEMerr/"
 ###############################
 def readtif(tifname: str):
     """
@@ -460,12 +460,12 @@ def printcoords(event):
                 lines1[model], = axts.plot(xdates, yvalues, 'r-', label=label2, visible=vis, alpha=0.6, zorder=3)
                 axts.legend()
             else:
-                lines1[model], = axts.plot(xdates, yvalues, 'g-', visible=vis, alpha=0.6, zorder=3)
+                lines1[model], = axts.plot(xdates, yvalues, 'r-', visible=vis, alpha=0.6, zorder=3)
 
     # axts.scatter(imt, dph, label=label1, c='b', alpha=0.6, zorder=5)
-    axts.errorbar(imdates_dt, dph, yerr=err, fmt='.', color='black', ecolor='blue', elinewidth=0.5, capsize=2)
+    axts.errorbar(imdates_dt, dph, yerr=err, label=label1, fmt='.', color='black', ecolor='blue', elinewidth=0.5, capsize=2)
     axts.set_title('Velocity = {:.1f} +/- {:.1f} [mm/yr] @({}, {})'.format(vel1p, errp, ii, jj), fontsize=10)
-    axts.set_ylim(-100,100)
+    # axts.set_ylim(-100,100)
 
     ### Y axis
     if ylen:
