@@ -22,8 +22,7 @@ else:
     path = sys.argv[1]
     print(f"Looking for PyRate products in: {path}")
 
-#path = "/home/547/co9432/EROMANGA_output/result_dflt_refpix_cc07_cc_filt_slp1km_indpt_orbit_quadfit/"
-
+# path = "/g/data/dg9/INSAR_ANALYSIS/EROMANGA/S1/PYRATE/out_15mlk/result_cc06_quadfit_indep_orbit_15mlk_without_DEMerr/"
 
 
 # ----- Reading linear velocity file --------------------------------
@@ -67,19 +66,29 @@ def vel_profile(line):
     zi = vel_test[y.astype(int), x.astype(int)]
     return x, y, zi
 
+# vmin = -50; vmax = 50
+refx1 = int(len(x_coord2)/ 2)
+refx2 = int(len(x_coord2)/ 2) + 1
+refy1 = int(len(y_coord2)/ 2)
+refy2 = int(len(y_coord2)/ 2) + 1
 
-vmin = -50; vmax = 50
+auto_crange: float = 99.8
+refvalue_vel = np.nanmean(vel[0, refy1:refy2 + 1, refx1:refx2 + 1])
+vmin_auto = np.nanpercentile(vel[0, :, :], 100 - auto_crange)
+vmax_auto = np.nanpercentile(vel[0, :, :], auto_crange)
+vmin = vmin_auto - refvalue_vel
+vmax = vmax_auto - refvalue_vel
+
 cmap = matplotlib.cm.bwr_r
 cmap.set_bad('grey',1.)
-fig, axes = plt.subplots(nrows=2)
+fig, axes = plt.subplots(2, 1, gridspec_kw={'height_ratios': [2, 1]}, figsize=(7,10))
 cax = axes[0].imshow(vel_test, clim=[vmin, vmax], cmap = cmap)
 cbr = fig.colorbar(cax,ax=axes[0], orientation='vertical')
-cbr.set_label('mm/yr')
+cbr.set_label('Velocity [mm/yr]')
 
-
+print("Please click any two points")
 ig = 1
 while ig!=2:
-    print("Please click two points")
     pts = ginput(2) # it will wait for two clicks
     [x,y,zi] = vel_profile(pts)
     if axes[0].lines:
@@ -93,10 +102,7 @@ while ig!=2:
     axes[1].set_xlabel('x-axis')
     axes[1].grid(zorder=0)
     plt.pause(0.1)
+    fig.canvas.draw()
+    fig.canvas.flush_events()
 
-    ct = input('would you like to continue? (y/n) ')
-    if ct == 'n':
-        ig = 2
-        print('Plotting done!')
-        break
 plt.show()
