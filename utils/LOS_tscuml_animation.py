@@ -21,7 +21,7 @@ if len(sys.argv) != 2:
 else:
     path = sys.argv[1]
     print(f"Looking for PyRate products in: {path}")
-
+# path = "/g/data/dg9/INSAR_ANALYSIS/EROMANGA/S1/PYRATE/out_15mlk/result_cc06_quadfit_indep_orbit_15mlk_without_DEMerr/"
 #################################
 
 # Reading velocity data
@@ -67,6 +67,19 @@ ds = xr.Dataset()
 ds['tscuml'] = dac
 n_im, length, width = tscuml.shape
 
+# Add max and min displacement range
+refx1 = int(len(x_coord2)/ 2)
+refx2 = int(len(x_coord2)/ 2) + 1
+refy1 = int(len(y_coord2)/ 2)
+refy2 = int(len(y_coord2)/ 2) + 1
+
+auto_crange: float = 99.8
+refvalue_lastepoch = np.nanmean(tscuml[-1, refy1:refy2, refx1:refx2]) # reference values
+dmin_auto = np.nanpercentile((tscuml[-1, :, :]), 100 - auto_crange)
+dmax_auto = np.nanpercentile((tscuml[-1, :, :]), auto_crange)
+dmin = dmin_auto - refvalue_lastepoch
+dmax = dmax_auto - refvalue_lastepoch
+
 # choose final time slice
 time_slice = len(imdates_dt)-1
 
@@ -77,13 +90,14 @@ cmap = matplotlib.cm.bwr_r #
 cmap.set_bad('grey',1.) # filled grey color to nan value
 ims = []
 for ii in range(1,time_slice+1):
-    print(ii)
-    im = faxv.imshow(ds.tscuml[ii], cmap=cmap, alpha=1, origin='upper',extent=[ds.coords['lon'].min(), ds.coords['lon'].max(), ds.coords['lat'].min(), ds.coords['lat'].max()], clim=(-50, 50)) #for displacement
-    title = fig.text(0.55, 0.90, "Date: {}".format(imdates_dt[ii].date()), fontsize=8, va='bottom' )
+    # print(ii)
+    im = faxv.imshow(ds.tscuml[ii], cmap=cmap, alpha=1, origin='upper',extent=[ds.coords['lon'].min(), ds.coords['lon'].max(), ds.coords['lat'].min(), ds.coords['lat'].max()], clim=[dmin, dmax]) #for displacement
+    # im = faxv.imshow(ds.tscuml[ii], cmap=cmap, alpha=1, origin='upper',extent=[ds.coords['lon'].min(), ds.coords['lon'].max(), ds.coords['lat'].min(), ds.coords['lat'].max()], clim=(-50, 50)) #for displacement
+    title = fig.text(0.40, 0.90, "Date: {}".format(imdates_dt[ii].date()), fontsize=8, va='bottom' )
     ims.append([im, title])
 fcbr = fig.colorbar(im, orientation='horizontal')
 fcbr.set_label('LOS Displacement [mm]')
-ani = animation.ArtistAnimation(fig, ims, interval=2, blit=False)
+ani = animation.ArtistAnimation(fig, ims, interval=500, blit=False)
 plt.show()
 ani.save(path + 'Animation.gif', writer='imagemagick', fps=10, dpi=100)
 print('Animation Done!')
