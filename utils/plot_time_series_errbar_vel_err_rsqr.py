@@ -127,9 +127,13 @@ def get_range(arr, refarea):
 
 # range from last tscuml epoch
 dmin, dmax = get_range(tscuml[-1, :, :], refarea)
+dmax = abs(max([dmin,dmax], key=abs))
+dmin = -dmax
 
 # range from velocity
 vmin, vmax = get_range(vel[0, :, :], refarea)
+vmax = abs(max([vmin,vmax], key=abs))
+vmin = -vmax
 
 # Plot figure of Velocity and Cumulative displacement
 figsize = (7,7)
@@ -204,6 +208,8 @@ def line_select_callback(eclick, erelease):
     ### Change clim
     if climauto:  ## auto
         dmin, dmax = get_range(tscuml[-1, :, :], refarea)
+        dmax = abs(max([dmin, dmax], key=abs))
+        dmin = -dmax
 
     ### Update draw
     if not tscuml_disp_flag:  ## vel or noise indice # Chandra
@@ -300,8 +306,8 @@ axts = pts.add_axes([0.12, 0.14, 0.7, 0.8])
 axts.scatter(imdates_dt, np.zeros(len(imdates_dt)), c='b', alpha=0.6)
 axts.grid()
 
-axts.set_xlabel('Time [Year]')
-axts.set_ylabel('Displacement [mm]')
+# axts.set_xlabel('Time [Year]')
+# axts.set_ylabel('Displacement [mm]')
 
 loc_ts = axts.xaxis.set_major_locator(mdates.AutoDateLocator())
 try:  # Only support from Matplotlib 3.1
