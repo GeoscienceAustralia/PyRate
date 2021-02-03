@@ -14,6 +14,7 @@ import os, sys, re
 import xarray as xr
 from datetime import datetime as dt
 import matplotlib.animation as animation
+from matplotlib.colors import TwoSlopeNorm
 
 if len(sys.argv) != 2:
     print('Exiting: Provide abs path to <outdir> as command line argument')
@@ -79,6 +80,7 @@ dmin_auto = np.nanpercentile((tscuml[-1, :, :]), 100 - auto_crange)
 dmax_auto = np.nanpercentile((tscuml[-1, :, :]), auto_crange)
 dmin = dmin_auto - refvalue_lastepoch
 dmax = dmax_auto - refvalue_lastepoch
+norm = TwoSlopeNorm(vmin=dmin, vcenter=0, vmax=dmax)
 
 # choose final time slice
 time_slice = len(imdates_dt)-1
@@ -91,8 +93,8 @@ cmap.set_bad('grey',1.) # filled grey color to nan value
 ims = []
 for ii in range(1,time_slice+1):
     # print(ii)
-    im = faxv.imshow(ds.tscuml[ii], cmap=cmap, alpha=1, origin='upper',extent=[ds.coords['lon'].min(), ds.coords['lon'].max(), ds.coords['lat'].min(), ds.coords['lat'].max()], clim=[dmin, dmax]) #for displacement
-    # im = faxv.imshow(ds.tscuml[ii], cmap=cmap, alpha=1, origin='upper',extent=[ds.coords['lon'].min(), ds.coords['lon'].max(), ds.coords['lat'].min(), ds.coords['lat'].max()], clim=(-50, 50)) #for displacement
+    im = faxv.imshow(ds.tscuml[ii], cmap=cmap, alpha=1, origin='upper',extent=[ds.coords['lon'].min(), ds.coords['lon'].max(), ds.coords['lat'].min(), ds.coords['lat'].max()], norm=norm) #for displacement
+    # im = faxv.imshow(ds.tscuml[ii], cmap=cmap, alpha=1, origin='upper',extent=[ds.coords['lon'].min(), ds.coords['lon'].max(), ds.coords['lat'].min(), ds.coords['lat'].max()], clim=[dmin, dmax]) #for displacement
     title = fig.text(0.40, 0.90, "Date: {}".format(imdates_dt[ii].date()), fontsize=8, va='bottom' )
     ims.append([im, title])
 fcbr = fig.colorbar(im, orientation='horizontal')
