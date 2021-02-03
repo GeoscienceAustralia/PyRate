@@ -14,6 +14,7 @@ import os, sys, re
 import xarray as xr
 from datetime import datetime as dt
 from pylab import plot, ginput, show, axis # for velocity profile
+from matplotlib.colors import TwoSlopeNorm
 
 if len(sys.argv) != 2:
     print('Exiting: Provide abs path to <outdir> as command line argument')
@@ -81,8 +82,10 @@ vmax = vmax_auto - refvalue_vel
 
 cmap = matplotlib.cm.bwr_r
 cmap.set_bad('grey',1.)
+norm = TwoSlopeNorm(vmin=vmin, vcenter=0, vmax=vmax)
 fig, axes = plt.subplots(2, 1, gridspec_kw={'height_ratios': [2, 1]}, figsize=(7,10))
-cax = axes[0].imshow(vel_test, clim=[vmin, vmax], cmap = cmap)
+cax = axes[0].imshow(vel_test, norm=norm, cmap = cmap)
+# cax = axes[0].imshow(vel_test, clim=[vmin, vmax], cmap = cmap)
 cbr = fig.colorbar(cax,ax=axes[0], orientation='vertical')
 cbr.set_label('Velocity [mm/yr]')
 
