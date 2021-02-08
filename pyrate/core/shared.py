@@ -1416,7 +1416,7 @@ def dem_or_ifg(data_path: str) -> Union[Ifg, DEM]:
 
 def join_dicts(dicts: List[dict]) -> dict:
     """
-    Function to concatenate a list of dictionaries.
+    Function to concatenate a list of dictionaries of distinct keys.
     """
     if dicts is None:  # pragma: no cover
         return {}

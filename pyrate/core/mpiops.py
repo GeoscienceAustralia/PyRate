@@ -42,6 +42,8 @@ try:
     rank = comm.Get_rank()
 except ImportError:
     MPI_INSTALLED = False
+    size = 1
+    rank = 0
 
     class comm:
 
@@ -56,6 +58,22 @@ except ImportError:
         @staticmethod
         def Get_size():
             return 1
+
+        @staticmethod
+        def allgather(* args):
+            return args
+
+        @staticmethod
+        def gather(* args, **kwargs):
+            return args
+
+        # @staticmethod
+        # def allreduce(arr, op):
+        #     return op(arr)
+
+        @staticmethod
+        def Bcast(arr, root=0):
+            return
 
 
 class MPIException(Exception):
