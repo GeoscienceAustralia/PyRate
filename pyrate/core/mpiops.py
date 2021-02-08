@@ -53,6 +53,10 @@ except ImportError:
         def reduce(arr, op, root=0):
             return op(arr)
 
+        @staticmethod
+        def Get_size():
+            return 1
+
 
 class MPIException(Exception):
     pass

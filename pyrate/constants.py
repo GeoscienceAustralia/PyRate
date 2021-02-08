@@ -20,8 +20,9 @@ PyRate workflow:
 Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for 
 more details.
 """
-from mpi4py import MPI
-comm = MPI.COMM_WORLD
+
+from pyrate.core.mpiops import comm
+
 NO_OF_PARALLEL_PROCESSES = comm.Get_size()
 
 CONV2TIF = 'conv2tif'
