@@ -155,11 +155,7 @@ def est_ref_phase_ifg_median(ifg_paths, params):
         return ref_phs
 
     process_ifg_paths = mpiops.array_split(ifg_paths)
-    if mpiops.MPI_INSTALLED:
-        ifg_phase_data_sum = mpiops.comm.allreduce(_process_phase_sum(process_ifg_paths), mpiops.sum_op)
-    else:
-        ifg_phase_data_sum = _process_phase_sum(process_ifg_paths)
-
+    ifg_phase_data_sum = mpiops.comm.allreduce(_process_phase_sum(process_ifg_paths), mpiops.sum_op)
     ref_phs = _inner(process_ifg_paths, ifg_phase_data_sum)
 
     return ref_phs
