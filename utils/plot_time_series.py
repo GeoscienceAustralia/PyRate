@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2020 Geoscience Australia
+#   Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -43,7 +43,6 @@ if len(sys.argv) != 2:
 else:
     path = sys.argv[1]
     print(f"Looking for PyRate products in: {path}")
-
 
 ###############################
 def readtif(tifname: str):
@@ -127,9 +126,13 @@ def get_range(arr, refarea):
 
 # range from last tscuml epoch
 dmin, dmax = get_range(tscuml[-1, :, :], refarea)
+dmax = abs(max([dmin,dmax], key=abs))
+dmin = -dmax
 
 # range from velocity
 vmin, vmax = get_range(vel[0, :, :], refarea)
+vmax = abs(max([vmin,vmax], key=abs))
+vmin = -vmax
 
 # Plot figure of Velocity and Cumulative displacement
 figsize = (7,7)
@@ -151,9 +154,24 @@ cbr.set_label('mm/yr')
 # Radio buttom for velocity selection
 mapdict_data = {}
 mapdict_unit = {}
-mapdict_vel = {'Vel': vel}
-mapdict_unit.update([('Vel', 'mm/yr')])
-mapdict_data = mapdict_vel
+
+names = ['Velocity', 'Error', 'R squared']
+units = ['mm/yr', 'mm/yr', '']
+
+velfile = os.path.join(path, 'linear_rate.tif')
+Errfile = os.path.join(path, 'linear_error.tif')
+Rsqrfile = os.path.join(path, 'linear_rsquared.tif')
+files = [velfile, Errfile, Rsqrfile]
+
+for i, name in enumerate(names):
+    try:
+        pp = rasterio.open(files[i])
+        data = pp.read()
+        mapdict_data[name] = data[0, :, :]
+        mapdict_unit[name] = units[i]
+        print('Reading {}'.format(os.path.basename(files[i])))
+    except:
+        print('No {} found, not use.'.format(files[i]))
 
 axrad_vel = pv.add_axes([0.01, 0.3, 0.13, len(mapdict_data)*0.025+0.04])
 # Radio buttons
@@ -189,6 +207,8 @@ def line_select_callback(eclick, erelease):
     ### Change clim
     if climauto:  ## auto
         dmin, dmax = get_range(tscuml[-1, :, :], refarea)
+        dmax = abs(max([dmin, dmax], key=abs))
+        dmin = -dmax
 
     ### Update draw
     if not tscuml_disp_flag:  ## vel or noise indice # Chandra
@@ -206,20 +226,29 @@ RS = RectangleSelector(axv, line_select_callback, drawtype='box', useblit=True, 
 
 plt.connect('key_press_event', RS)
 
-
+# auto_crange: float = 99.8
 vlimauto = True
 def show_vel(val_ind):
     global vmin, vmax, tscuml_disp_flag
     tscuml_disp_flag = False
 
-    if 'Vel' in val_ind:  ## Velocity
+    if 'Velocity' in val_ind:  ## Velocity
         data = mapdict_data[val_ind]
-        if vlimauto:  ## auto
-            vmin = np.nanpercentile(data, 100 - auto_crange)
-            vmax = np.nanpercentile(data, auto_crange)
+        # if vlimauto:  ## auto
+        #     vmin = np.nanpercentile(data, 100 - auto_crange)
+        #     vmax = np.nanpercentile(data, auto_crange)
         cax.set_cmap(cmap)
         cax.set_clim(vmin, vmax)
         cbr.set_label('mm/yr')
+    else:
+        data = mapdict_data[val_ind]
+        cmap2 = matplotlib.cm.Reds # cmap2 = 'Reds'
+        cmap2.set_bad('grey', 1.)  # filled grey color to nan value
+        if val_ind == 'Error':
+            cax.set_clim(0, 10)
+        elif val_ind == 'R squared':
+            cax.set_clim(0, 1)
+        cax.set_cmap(cmap2)
 
     cbr.set_label(mapdict_unit[val_ind])
     cax.set_data(data)
@@ -276,8 +305,8 @@ axts = pts.add_axes([0.12, 0.14, 0.7, 0.8])
 axts.scatter(imdates_dt, np.zeros(len(imdates_dt)), c='b', alpha=0.6)
 axts.grid()
 
-axts.set_xlabel('Time [Year]')
-axts.set_ylabel('Displacement [mm]')
+# axts.set_xlabel('Time [Year]')
+# axts.set_ylabel('Displacement [mm]')
 
 loc_ts = axts.xaxis.set_major_locator(mdates.AutoDateLocator())
 try:  # Only support from Matplotlib 3.1
@@ -390,10 +419,10 @@ def printcoords(event):
     noisetxt = ''
     for key in mapdict_data:
         # val_temp = mapdict_data[key]
-        val = mapdict_data[key][0, ii, jj]
+        val = mapdict_data[key][ii, jj]
         # val = val_temp[0,ii,jj]
         unit = mapdict_unit[key]
-        if key.startswith('Vel'):
+        if key.startswith('Velocity'):
             continue
         elif key.startswith('n_') or key == 'mask':
             noisetxt = noisetxt + '{}: {:d} {}\n'.format(key, int(val), unit)
@@ -413,6 +442,8 @@ def printcoords(event):
     vel1p = vel[0, ii, jj]
     intercept1p = intercept[0,ii,jj]
     dph = tscuml[:,ii,jj]
+    err = np.ones(dph.shape) * np.std(dph) # using constant err value
+    errp = mapdict_data['Error'][ii,jj] # for error reading
 
     ## fit function
     lines1 = [0, 0, 0, 0]
@@ -434,10 +465,12 @@ def printcoords(event):
                 lines1[model], = axts.plot(xdates, yvalues, 'r-', label=label2, visible=vis, alpha=0.6, zorder=3)
                 axts.legend()
             else:
-                lines1[model], = axts.plot(xdates, yvalues, 'g-', visible=vis, alpha=0.6, zorder=3)
+                lines1[model], = axts.plot(xdates, yvalues, 'r-', visible=vis, alpha=0.6, zorder=3)
 
-    axts.scatter(imt, dph, label=label1, c='b', alpha=0.6, zorder=5)
-    axts.set_title('Velocity = {:.1f} mm/yr @({}, {})'.format(vel1p, jj, ii), fontsize=10)
+    # axts.scatter(imt, dph, label=label1, c='b', alpha=0.6, zorder=5)
+    axts.errorbar(imdates_dt, dph, yerr=err, label=label1, fmt='.', color='black', ecolor='blue', elinewidth=0.5, capsize=2)
+    axts.set_title('Velocity = {:.1f} +/- {:.1f} [mm/yr] @({}, {})'.format(vel1p, errp, ii, jj), fontsize=10)
+    # axts.set_ylim(-100,100)
 
     ### Y axis
     if ylen:
