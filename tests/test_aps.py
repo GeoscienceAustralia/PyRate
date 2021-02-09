@@ -26,20 +26,24 @@ from numpy.testing import assert_array_almost_equal
 from pyrate import conv2tif, prepifg, correct
 from pyrate.configuration import Configuration, MultiplePaths
 import pyrate.core.config as cf
+from pyrate.core import shared
 from pyrate.core.aps import wrap_spatio_temporal_filter, _interpolate_nans_2d, _kernel
 from pyrate.core.aps import gaussian_temporal_filter as tlpfilter, gaussian_spatial_filter as slpfilter
-from pyrate.core.shared import Ifg, save_numpy_phase
+from pyrate.core.shared import Ifg
 from pyrate.core.ifgconstants import DAYS_PER_YEAR
-from tests.common import TEST_CONF_GAMMA, MEXICO_CROPA_DIR, BASE_TEST 
+from tests import common
+from tests.common import BASE_TEST, GDAL3P0P4
 
 
 @pytest.fixture(params=["linear", "nearest", "cubic"])
 def slpnanfill_method(request):
     return request.param
 
+
 @pytest.fixture(params=[0.1, 0.5, 1, 5])
 def slpfcutoff_method(request):
     return request.param
+
 
 @pytest.fixture(params=[0.001, 0.01])
 def slpfcutoff(request):
@@ -58,6 +62,7 @@ class TestSpatialFilter:
     """
     Test the implementation of Gaussian spatial filter
     """
+
     def setup_method(self):
         ifg_path = join(str(BASE_TEST), 'cropB', '20180106-20180130_ifg.tif')
         ifg = Ifg(ifg_path)
@@ -69,10 +74,9 @@ class TestSpatialFilter:
         p[p == 0] = np.nan
         self.phase = p
 
-
     def test_gaussian_filter(self, slpfcutoff_method):
         """
-        Compare against scipy.ndimage.gaussian_filter, 
+        Compare against scipy.ndimage.gaussian_filter,
         that operates in the spatial domain on data with equal resolution in x and y
         """
         e = gaussian_filter(self.phase, sigma=slpfcutoff_method)
@@ -88,7 +92,7 @@ def test_gaussian_kernel():
     """
     Test the Gaussian smoothing kernel
     """
-    x = np.arange(1,10,2)
+    x = np.arange(1, 10, 2)
     res = _kernel(x, 3)
     exp = np.array([0.94595947, 0.60653066, 0.24935221, 0.06572853, 0.011109])
     np.testing.assert_array_almost_equal(res, exp, decimal=6)
@@ -106,18 +110,19 @@ class TestTemporalFilter:
     """
     Tests for the temporal filter with synthetic data for a single pixel
     """
+
     def setup_method(self):
-        self.thr = 1 # no nans in these test cases, threshold = 1
+        self.thr = 1  # no nans in these test cases, threshold = 1
         # instance of normally distributed noise
-        n = np.array([-0.36427456,  0.69539061,  0.42181139, -2.56306134,
-                      0.55844095, -0.65562626,  0.65607911,  1.19431637,
+        n = np.array([-0.36427456, 0.69539061, 0.42181139, -2.56306134,
+                      0.55844095, -0.65562626, 0.65607911, 1.19431637,
                       -1.43837395, -0.91656358])
         # synthetic incremental displacement
-        d = np.array([1. , 1. , 0.7, 0.3, 0. , 0.1, 0.2, 0.6, 1. , 1. ])
+        d = np.array([1., 1., 0.7, 0.3, 0., 0.1, 0.2, 0.6, 1., 1.])
         # incremental displacement + noise
-        self.tsincr = d*2 + n
+        self.tsincr = d * 2 + n
         # regular time series, every 12 days
-        self.interval = 12 / DAYS_PER_YEAR # 0.03285 years
+        self.interval = 12 / DAYS_PER_YEAR  # 0.03285 years
         intv = np.ones(d.shape, dtype=np.float32) * self.interval
         self.span = np.cumsum(intv)
 
@@ -129,7 +134,7 @@ class TestTemporalFilter:
         res = tlpfilter(self.tsincr, self.interval, self.span, self.thr)
         exp = np.array([1.9936507, 1.9208364, 1.0252733, -0.07402889,
                         -0.1842336, 0.24325351, 0.94737214, 1.3890865,
-                        1.1903466 ,  1.0036403])
+                        1.1903466, 1.0036403])
         np.testing.assert_array_almost_equal(res, exp, decimal=6)
 
     def test_tlpfilter_scipy_sig1(self):
@@ -146,7 +151,7 @@ class TestTemporalFilter:
         TEST 3: compare tlpfilter to scipy.ndimage.gaussian_filter1d. Works for
         regularly sampled data. Cutoff equal to twice the sampling interval (sigma=2)
         """
-        res = tlpfilter(self.tsincr, self.interval*2, self.span, self.thr)
+        res = tlpfilter(self.tsincr, self.interval * 2, self.span, self.thr)
         exp = gaussian_filter1d(self.tsincr, sigma=2)
         np.testing.assert_array_almost_equal(res, exp, decimal=1)
 
@@ -155,7 +160,7 @@ class TestTemporalFilter:
         TEST 4: compare tlpfilter to scipy.ndimage.gaussian_filter1d. Works for
         regularly sampled data. Cutoff equal to half the sampling interval (sigma=0.5)
         """
-        res = tlpfilter(self.tsincr, self.interval*0.5, self.span, self.thr)
+        res = tlpfilter(self.tsincr, self.interval * 0.5, self.span, self.thr)
         exp = gaussian_filter1d(self.tsincr, sigma=0.5)
         np.testing.assert_array_almost_equal(res, exp, decimal=2)
 
@@ -166,7 +171,7 @@ class TestAPSErrorCorrectionsOnDiscReused:
 
     @classmethod
     def setup_method(cls):
-        cls.conf = TEST_CONF_GAMMA
+        cls.conf = common.TEST_CONF_GAMMA
         params = Configuration(cls.conf).__dict__
         conv2tif.main(params)
         params = Configuration(cls.conf).__dict__
@@ -177,19 +182,20 @@ class TestAPSErrorCorrectionsOnDiscReused:
         correct._create_ifg_dict(cls.params)
         multi_paths = cls.params[cf.INTERFEROGRAM_FILES]
         cls.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
-        cls.ifgs = [Ifg(i) for i in cls.ifg_paths]
+        cls.ifgs = [shared.Ifg(i) for i in cls.ifg_paths]
         for i in cls.ifgs:
             i.open()
-        save_numpy_phase(cls.ifg_paths, cls.params)
+        shared.save_numpy_phase(cls.ifg_paths, cls.params)
         correct.mst_calc_wrapper(cls.params)
 
     @classmethod
     def teardown_method(cls):
         shutil.rmtree(cls.params[cf.OUT_DIR])
 
-    @pytest.mark.slow
-    def test_aps_error_files_on_disc(self, slpfcutoff):
+    def test_aps_error_files_on_disc(self, slpfmethod, slpfcutoff, slpforder):
+        self.params[cf.SLPF_METHOD] = slpfmethod
         self.params[cf.SLPF_CUTOFF] = slpfcutoff
+        self.params[cf.SLPF_ORDER] = slpforder
         wrap_spatio_temporal_filter(self.params)
 
         # test_orb_errors_written
