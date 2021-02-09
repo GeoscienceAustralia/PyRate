@@ -67,9 +67,9 @@ except ImportError:
         def gather(* args, **kwargs):
             return args
 
-        # @staticmethod
-        # def allreduce(arr, op):
-        #     return op(arr)
+        @staticmethod
+        def allreduce(arr, op):
+            return op(arr)
 
         @staticmethod
         def Bcast(arr, root=0):
@@ -140,5 +140,5 @@ if MPI_INSTALLED:
     sum_op = MPI.Op.Create(sum_vars, commute=True)
     sum0_op = MPI.Op.Create(sum_axis_0, commute=True)
 else:
-    sum_op = lambda arr: np.sum(arr, axis=0)
-    sum0_op = lambda arr: np.sum(np.stack(arr), axis=0)
+    sum_op = lambda arr: np.sum(np.expand_dims(arr, 0), axis=0)
+    sum0_op = lambda arr: np.sum(np.stack(np.expand_dims(arr, 0), axis=0), axis=0)
