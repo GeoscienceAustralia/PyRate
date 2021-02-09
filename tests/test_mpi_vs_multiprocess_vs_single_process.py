@@ -86,6 +86,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
     return modify_params
 
 
+@pytest.mark.mpi
 @pytest.mark.slow
 @pytest.mark.skipif(not GDAL3P0P2, reason="Only run in GDAL3.0.2 and Python3.7 env")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
@@ -310,6 +311,7 @@ def create_mpi_files():
     return _create
 
 
+@pytest.mark.mpi
 @pytest.mark.slow
 @pytest.mark.skipif(not GDAL3P0P4, reason="Only run in GDAL3.0.4 and python3.7 env")
 def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_conf, create_mpi_files, parallel):

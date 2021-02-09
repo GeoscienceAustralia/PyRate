@@ -22,6 +22,7 @@ import shutil
 import numpy as np
 import os
 from pathlib import Path
+import pytest
 
 import pyrate.configuration
 import pyrate.core.covariance
@@ -35,6 +36,7 @@ from tests.common import SML_TEST_DIR
 from tests.test_covariance import legacy_maxvar
 
 
+@pytest.mark.mpi
 def test_vcm_legacy_vs_mpi(mpisync, tempdir, roipac_or_gamma_conf):
 
     params = configuration.Configuration(roipac_or_gamma_conf).__dict__

@@ -58,6 +58,7 @@ def modified_config(tempdir, get_lks=1, get_crop=1, orbfit_lks=2, orbfit_method=
     return modify_params
 
 
+@pytest.mark.mpi
 @pytest.mark.slow
 @pytest.mark.skipif(not PYTHON3P8, reason="Only run Python3.8 env")
 def test_mpi_vs_single_process(modified_config):
