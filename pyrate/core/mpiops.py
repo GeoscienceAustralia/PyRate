@@ -75,6 +75,10 @@ except ImportError:
         def Bcast(arr, root=0):
             return
 
+        @staticmethod
+        def bcast(arr, root=0):
+            return arr
+
 
 class MPIException(Exception):
     pass
