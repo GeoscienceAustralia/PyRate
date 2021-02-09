@@ -192,10 +192,9 @@ class TestAPSErrorCorrectionsOnDiscReused:
     def teardown_method(cls):
         shutil.rmtree(cls.params[cf.OUT_DIR])
 
-    def test_aps_error_files_on_disc(self, slpfmethod, slpfcutoff, slpforder):
-        self.params[cf.SLPF_METHOD] = slpfmethod
+    def test_aps_error_files_on_disc(self, slpnanfill_method, slpfcutoff):
+        self.params[cf.SLPF_NANFILL_METHOD] = slpnanfill_method
         self.params[cf.SLPF_CUTOFF] = slpfcutoff
-        self.params[cf.SLPF_ORDER] = slpforder
         wrap_spatio_temporal_filter(self.params)
 
         # test_orb_errors_written
