@@ -29,6 +29,7 @@ from pyrate.configuration import Configuration
 from tests.common import MEXICO_CROPA_CONF, PYTHON3P6
 
 
+@pytest.mark.mpi
 @pytest.mark.slow
 @pytest.mark.skipif(not PYTHON3P6, reason="Only run in python 3.8")
 def test_workflow(system_conf):
@@ -49,6 +50,7 @@ def test_workflow(system_conf):
     shutil.rmtree(params[cf.OUT_DIR])
 
 
+@pytest.mark.mpi
 def test_single_workflow(gamma_or_mexicoa_conf):
 
     check_call(f"mpirun -n 4 pyrate workflow -f {gamma_or_mexicoa_conf}", shell=True)
