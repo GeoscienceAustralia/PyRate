@@ -46,6 +46,9 @@ except ImportError:
     rank = 0
 
     class comm:
+        """
+        the mpi simulators that are used in a non-mpi environment
+        """
 
         @staticmethod
         def barrier():

@@ -26,12 +26,12 @@ import pytest
 import numpy as np
 from pyrate.core import config as cf
 from pyrate.configuration import Configuration
-from tests.common import MEXICO_CROPA_CONF, PYTHON3P6
+from tests.common import MEXICO_CROPA_CONF, PYTHON3P7, PYTHON3P9
 
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(not PYTHON3P6, reason="Only run in python 3.8")
+@pytest.mark.skipif(not (PYTHON3P7 or PYTHON3P9), reason="Only run in python 3.8")
 def test_workflow(system_conf):
     """check the handlers are working as expected"""
     check_call(f"mpirun -n 3 pyrate conv2tif -f {system_conf}", shell=True)

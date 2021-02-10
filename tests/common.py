@@ -44,7 +44,6 @@ from pyrate.configuration import Configuration
 
 PYTHON_VERSION = check_output(["python", "--version"]).decode(encoding="utf-8").strip().split(" ")[1][:3]
 
-PYTHON3P6 = True if PYTHON_VERSION == '3.6' else False
 PYTHON3P7 = True if PYTHON_VERSION == '3.7' else False
 PYTHON3P8 = True if PYTHON_VERSION == '3.8' else False
 PYTHON3P9 = True if PYTHON_VERSION == '3.9' else False
