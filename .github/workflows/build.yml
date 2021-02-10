@@ -72,7 +72,7 @@ jobs:
           source ./scripts/ci_gdal_install.sh
           echo "GDAL_DATA=$GDALINST/gdal-$GDALVERSION/share/gdal" >> $GITHUB_ENV
           echo "PROJ_LIB=$GDALINST/gdal-$GDALVERSION/share/proj" >> $GITHUB_ENV
-      - name: ${{ matrix.python-version }} "with MPI"
+      - name: ${{ matrix.python-version }} with MPI
         if: env.PYTHONVERSION != '3.9'
         run: |
           sed -i '/^GDAL/d' requirements.txt
@@ -82,7 +82,7 @@ jobs:
           rm -rf Py_Rate.egg-info  # remove the local egg
           echo "PYTHONPATH=$PYRATEPATH:$PYTHONPATH" >> $GITHUB_ENV
           chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif  # makes the file readonly, used in a test
-      - name: ${{ matrix.python-version }} "without MPI"
+      - name: ${{ matrix.python-version }} without MPI
         if: env.PYTHONVERSION == '3.9'
         run: |
           sed -i '/^GDAL/d' requirements.txt
@@ -93,13 +93,13 @@ jobs:
           rm -rf Py_Rate.egg-info  # remove the local egg
           echo "PYTHONPATH=$PYRATEPATH:$PYTHONPATH" >> $GITHUB_ENV
           chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif  # makes the file readonly, used in a test
-      - name: Test Pyrate in ${{ matrix.python-version }} "with MPI"
+      - name: Test Pyrate in ${{ matrix.python-version }} with MPI
         if: env.PYTHONVERSION != '3.9'
         run: |
           pytest tests/ -m "slow"
           mpirun -n 3 pytest tests/test_shared.py -k test_tiles_split -s
           pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/ -m "not slow"
-      - name: Test Pyrate in ${{ matrix.python-version }} "without MPI"
+      - name: Test Pyrate in ${{ matrix.python-version }} without MPI
         if: env.PYTHONVERSION == '3.9'
         run: |
           pytest tests/ -m "not mpi and slow"

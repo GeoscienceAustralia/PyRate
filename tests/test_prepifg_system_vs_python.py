@@ -29,7 +29,7 @@ from tests.common import (
     assert_two_dirs_equal,
     manipulate_test_conf,
     GITHUB_ACTIONS,
-    PYTHON3P9
+    PY37GDAL302
 )
 
 @pytest.fixture(params=[1, 2, 3, 4])
@@ -127,8 +127,9 @@ def modified_config_largetifs(tempdir, local_crop, get_lks, coh_mask):
     return modify_params
 
 
+@pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(not PYTHON3P9, reason="Only run in python 3.8")
+@pytest.mark.skipif(not PY37GDAL302, reason="Only run in python 3.8")
 def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, create_mpi_files):
 
     print("\n\n")

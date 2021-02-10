@@ -26,12 +26,12 @@ import pytest
 import numpy as np
 from pyrate.core import config as cf
 from pyrate.configuration import Configuration
-from tests.common import MEXICO_CROPA_CONF, PYTHON3P7, PYTHON3P9
+from tests.common import MEXICO_CROPA_CONF, PY37GDAL302, PYTHON3P9
 
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(not (PYTHON3P7 or PYTHON3P9), reason="Only run in python 3.8")
+@pytest.mark.skipif(not PY37GDAL302, reason="Only run in python 3.8")
 def test_workflow(system_conf):
     """check the handlers are working as expected"""
     check_call(f"mpirun -n 3 pyrate conv2tif -f {system_conf}", shell=True)
@@ -50,10 +50,11 @@ def test_workflow(system_conf):
     shutil.rmtree(params[cf.OUT_DIR])
 
 
-@pytest.mark.mpi
 def test_single_workflow(gamma_or_mexicoa_conf):
-
-    check_call(f"mpirun -n 4 pyrate workflow -f {gamma_or_mexicoa_conf}", shell=True)
+    if PYTHON3P9:
+        check_call(f"pyrate workflow -f {gamma_or_mexicoa_conf}", shell=True)
+    else:
+        check_call(f"mpirun -n 4 pyrate workflow -f {gamma_or_mexicoa_conf}", shell=True)
 
     params = Configuration(gamma_or_mexicoa_conf).__dict__
 

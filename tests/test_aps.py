@@ -32,7 +32,7 @@ from pyrate.core.aps import gaussian_temporal_filter as tlpfilter, gaussian_spat
 from pyrate.core.shared import Ifg
 from pyrate.core.ifgconstants import DAYS_PER_YEAR
 from tests import common
-from tests.common import BASE_TEST, GDAL3P0P4
+from tests.common import BASE_TEST, PY37GDAL304
 
 
 @pytest.fixture(params=["linear", "nearest", "cubic"])
@@ -166,7 +166,7 @@ class TestTemporalFilter:
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(not GDAL3P0P4, reason="Only run in GDAL3.0.4 and Python3.7 env")
+@pytest.mark.skipif(not PY37GDAL304, reason="Only run in GDAL3.0.4 and Python3.7 env")
 class TestAPSErrorCorrectionsOnDiscReused:
 
     @classmethod

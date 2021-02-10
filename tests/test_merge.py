@@ -26,7 +26,7 @@ from pyrate.merge import create_png_and_kml_from_tif
 from pyrate.core import config as cf
 from pyrate.merge import _merge_stack, _merge_linrate
 from pyrate.configuration import Configuration, write_config_file
-from tests.common import manipulate_test_conf, GDAL3P0P4
+from tests.common import manipulate_test_conf, PY37GDAL304
 
 
 @pytest.fixture
@@ -49,7 +49,7 @@ def create_merge_output(tempdir, gamma_conf):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(not GDAL3P0P4, reason="Only run in GDAL3.0.4 and Python3.7 env")
+@pytest.mark.skipif(not PY37GDAL304, reason="Only run in GDAL3.0.4 and Python3.7 env")
 def test_file_creation(create_merge_output):
     params = create_merge_output
 
