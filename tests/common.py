@@ -46,15 +46,16 @@ PYTHON_VERSION = check_output(["python", "--version"]).decode(encoding="utf-8").
 
 PYTHON3P7 = True if PYTHON_VERSION == '3.7' else False
 PYTHON3P8 = True if PYTHON_VERSION == '3.8' else False
-# PYTHON3P9 = True if PYTHON_VERSION == '3.9' else False
-PYTHON3P9 = PYTHON3P8   # temp hack
+PYTHON3P9 = True if PYTHON_VERSION == '3.9' else False
+
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
 GITHUB_ACTIONS = True if ('GITHUB_ACTIONS' in os.environ) else False
 
+PY37GDAL302 = PYTHON3P7 and (GDAL_VERSION == '3.0.2')
 # python3.7 and gdal3.0.4
-GDAL3P0P4 = PYTHON3P7 and (GDAL_VERSION == '3.0.4')
-# python3.7 and gdal3.0.2
-GDAL3P0P2 = PYTHON3P7 and (GDAL_VERSION == '3.0.2')
+PY37GDAL304 = PYTHON3P7 and (GDAL_VERSION == '3.0.4')
+# python3.8 and gdal3.0.4
+PY38GDAL304 = PYTHON3P8 and (GDAL_VERSION == '3.0.4')
 
 
 TEMPDIR = tempfile.gettempdir()

@@ -36,7 +36,7 @@ from pyrate import correct, conv2tif, prepifg
 from pyrate.configuration import Configuration
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA, SML_TEST_DEM_TIF
 from tests.common import small_data_setup, MockIfg, copy_small_ifg_file_list, \
-    copy_and_setup_small_data, manipulate_test_conf, assert_two_dirs_equal, PYTHON3P9, GDAL3P0P4
+    copy_and_setup_small_data, manipulate_test_conf, assert_two_dirs_equal, PY37GDAL304
 
 
 # TODO: figure out how  editing  resource.setrlimit fixes the error
@@ -382,7 +382,7 @@ class TestLegacyEqualityTestMultiprocessParallel:
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(not GDAL3P0P4, reason="Only run in python 3.8")
+@pytest.mark.skipif(not PY37GDAL304, reason="Only run in python 3.8")
 def test_error_msg_refpixel_out_of_bounds(tempdir, gamma_conf):
     "check correct latitude/longitude refpixel error is raised when specified refpixel is out of bounds"
     for x, (refx, refy) in zip(['longitude', 'latitude', 'longitude and latitude'],
@@ -393,7 +393,7 @@ def test_error_msg_refpixel_out_of_bounds(tempdir, gamma_conf):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(not GDAL3P0P4, reason="Only run in python 3.8")
+@pytest.mark.skipif(not PY37GDAL304, reason="Only run in python 3.8")
 def test_gamma_ref_pixel_search_vs_lat_lon(tempdir, gamma_conf):
     params_1, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=-1, refy=-1)
     params_2, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=150.941666654, refy=-34.218333314)
@@ -416,7 +416,7 @@ def _get_mlooked_files(gamma_conf, tdir, refx, refy):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(not GDAL3P0P4, reason="Only run in GDAL3.0.4 and Python3.7 env")
+@pytest.mark.skipif(not PY37GDAL304, reason="Only run in GDAL3.0.4 and Python3.7 env")
 class TestRefPixelReuseLoadsSameFileAndPixels:
 
     @classmethod
