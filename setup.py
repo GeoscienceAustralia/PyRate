@@ -15,7 +15,7 @@
 #   limitations under the License.
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
-from subprocess import check_output
+from subprocess import check_output, run
 import platform
 import setuptools
 __version__ = "0.5.0"
@@ -38,6 +38,10 @@ requirements = [r + '=={GDAL_VERSION}'.format(GDAL_VERSION=GDAL_VERSION)
                 if r == 'GDAL' else r for r in requirements]
 
 setup_requirements = [r for r in requirements if "numpy==" in r]
+
+if run(args=['which', 'mpirun']).returncode == 0:
+    requirements.append('mpi4py==3.0.3')
+
 
 class PyTest(TestCommand, object):
 
