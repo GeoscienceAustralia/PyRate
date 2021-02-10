@@ -36,7 +36,7 @@ from pyrate import correct, conv2tif, prepifg
 from pyrate.configuration import Configuration
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA, SML_TEST_DEM_TIF
 from tests.common import small_data_setup, MockIfg, copy_small_ifg_file_list, \
-    copy_and_setup_small_data, manipulate_test_conf, assert_two_dirs_equal, PYTHON3P6, GDAL3P0P4
+    copy_and_setup_small_data, manipulate_test_conf, assert_two_dirs_equal, PYTHON3P9, GDAL3P0P4
 
 
 # TODO: figure out how  editing  resource.setrlimit fixes the error
@@ -490,7 +490,6 @@ def dem_transform():
     return transform
 
 
-@pytest.mark.skipif(PYTHON3P6, reason='Skipped in python3p6')
 def test_convert_geographic_coordinate_to_pixel_value(x_y_pixel):
     transform = dem_transform()
     for x, y in x_y_pixel:

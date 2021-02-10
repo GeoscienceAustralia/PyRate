@@ -30,11 +30,6 @@ from tests.common import (
     assert_same_files_produced,
     assert_two_dirs_equal,
     manipulate_test_conf,
-    GITHUB_ACTIONS,
-    PYTHON3P6,
-    PYTHON3P7,
-    PYTHON3P8,
-    PYTHON3P9,
     MEXICO_CROPA_CONF,
     GDAL3P0P4,
     GDAL3P0P2

@@ -18,10 +18,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - build: 1
-            python-version: "3.6"
-            GDALVERSION: "3.0.2"
-            PROJVERSION: "6.1.1"
           - build: 2
             python-version: "3.7"
             GDALVERSION: "3.0.2"
