@@ -1,5 +1,6 @@
 GDAL
 joblib==1.0.0
+mpi4py==3.0.3
 networkx==2.5
 numpy==1.19.4
 pyproj==3.0.0

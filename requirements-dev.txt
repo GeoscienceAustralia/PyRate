@@ -4,7 +4,6 @@ sphinx_rtd_theme==0.4.3
 sphinxcontrib-programoutput==0.16
 recommonmark==0.6.0
 matplotlib
-mpi4py==3.0.3
 ipython
 setuptools
 twine
