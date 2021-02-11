@@ -40,7 +40,7 @@ from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info
                                 write_output_geotiff, dem_or_ifg)
 from pyrate.core import roipac
 from pyrate.constants import PYRATEPATH
-from pyrate.configuration import Configuration
+from pyrate.configuration import Configuration, parse_namelist
 
 PYTHON_VERSION = check_output(["python", "--version"]).decode(encoding="utf-8").strip().split(" ")[1][:3]
 
@@ -665,3 +665,18 @@ def min_params(out_dir):
 
 def sub_process_run(cmd, *args, **kwargs):
     return run(cmd, *args, shell=True, check=True, **kwargs)
+
+
+def original_ifg_paths(ifglist_path, obs_dir):
+    """
+    Returns sequence of paths to files in given ifglist file.
+
+    Args:
+        ifglist_path: Absolute path to interferogram file list.
+        obs_dir: Absolute path to observations directory.
+
+    Returns:
+        list: List of full paths to interferogram files.
+    """
+    ifglist = parse_namelist(ifglist_path)
+    return [os.path.join(obs_dir, p) for p in ifglist]

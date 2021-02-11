@@ -26,6 +26,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 import pyrate.core.orbital
+import pyrate.core.prepifg_helper
 import pyrate.core.ref_phs_est
 import pyrate.core.refpixel
 import tests.common as common
@@ -118,7 +119,7 @@ class TestLegacyTimeSeriesEquality:
 
         params[cf.REF_EST_METHOD] = 2
 
-        xlks, _, crop = cf.transform_params(params)
+        xlks, _, crop = pyrate.core.prepifg_helper.transform_params(params)
 
         dest_paths, headers = common.repair_params_for_correct_tests(params[cf.OUT_DIR], params)
         correct._copy_mlooked(params)
@@ -218,7 +219,7 @@ class TestLegacyTimeSeriesEqualityMethod2Interp0:
 
         params[cf.REF_EST_METHOD] = 2
 
-        xlks, _, crop = cf.transform_params(params)
+        xlks, _, crop = pyrate.core.prepifg_helper.transform_params(params)
 
         dest_paths, headers = common.repair_params_for_correct_tests(params[cf.OUT_DIR], params)
         correct._copy_mlooked(params)

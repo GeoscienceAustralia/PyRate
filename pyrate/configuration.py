@@ -25,7 +25,7 @@ from pyrate.constants import NO_OF_PARALLEL_PROCESSES, sixteen_digits_pattern, t
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
 from pyrate.core.shared import extract_epochs_from_filename, InputTypes, get_tiles
-from pyrate.core.config import parse_namelist, ConfigException, ORB_ERROR_DIR, DEM_ERROR_DIR, TEMP_MLOOKED_DIR
+from pyrate.core.config import ConfigException, ORB_ERROR_DIR, DEM_ERROR_DIR, TEMP_MLOOKED_DIR
 from pyrate.core import config as cf, mpiops
 
 
@@ -407,3 +407,17 @@ def write_config_file(params, output_conf_file):
                     f.write(''.join([k, ':\t', str(vv), '\n']))
             else:
                 f.write(''.join([k, ':\t', '', '\n']))
+
+
+def parse_namelist(nml):
+    """
+    Parses name list file into array of paths
+
+    :param str nml: interferogram file list
+
+    :return: list of interferogram file names
+    :rtype: list
+    """
+    with open(nml) as f_in:
+        lines = [line.rstrip() for line in f_in]
+    return filter(None, lines)

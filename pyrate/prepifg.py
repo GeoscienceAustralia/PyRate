@@ -25,8 +25,9 @@ from pathlib import Path
 from joblib import Parallel, delayed
 import numpy as np
 from osgeo import gdal
+
 from pyrate.core import shared, geometry, mpiops, config as cf, prepifg_helper, gamma, roipac, ifgconstants as ifc, gdal_python
-from pyrate.core.prepifg_helper import PreprocessError
+from pyrate.core.prepifg_helper import PreprocessError, coherence_paths_for, transform_params
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import MultiplePaths
 from pyrate.core.shared import Ifg, DEM
@@ -66,7 +67,7 @@ def main(params):
     shared.mkdir_p(params[cf.OUT_DIR])  # create output dir
 
     user_exts = (params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
-    xlooks, ylooks, crop = cf.transform_params(params)
+    xlooks, ylooks, crop = transform_params(params)
     ifgs = [prepifg_helper.dem_or_ifg(p.converted_path) for p in ifg_paths]
     exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks, user_exts=user_exts)
 
@@ -233,14 +234,14 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, fl
     thresh = params[cf.NO_DATA_AVERAGING_THRESHOLD]
     hdr = find_header(m_path, params)
     hdr[ifc.INPUT_TYPE] = m_path.input_type
-    xlooks, ylooks, crop = cf.transform_params(params)
+    xlooks, ylooks, crop = transform_params(params)
     hdr[ifc.IFG_LKSX] = xlooks
     hdr[ifc.IFG_LKSY] = ylooks
     hdr[ifc.IFG_CROP] = crop
 
     # If we're performing coherence masking, find the coherence file for this IFG.
     if params[cf.COH_MASK] and shared._is_interferogram(hdr):
-        coherence_path = cf.coherence_paths_for(m_path.converted_path, params, tif=True)
+        coherence_path = coherence_paths_for(m_path.converted_path, params, tif=True)
         coherence_thresh = params[cf.COH_THRESH]
     else:
         coherence_path = None

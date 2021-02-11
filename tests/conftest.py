@@ -109,8 +109,8 @@ def get_crop(request):
 @pytest.fixture()
 def get_config():
     def params(conf_file):
-        params = cf.get_config_params(conf_file)
-        return params
+        params_ = Configuration(conf_file).__dict__
+        return params_
     return params
 
 

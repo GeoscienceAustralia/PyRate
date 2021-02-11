@@ -25,14 +25,9 @@ in configuration files.
 # pylint: disable=trailing-whitespace
 from typing import Dict
 import os
-from os.path import splitext, split
-import re
-
-from pyrate.constants import sixteen_digits_pattern
 from pyrate.core.logger import pyratelogger as _logger
 
 # general constants
-MINIMUM_NUMBER_EPOCHS = 3
 NO_MULTILOOKING = 1
 ROIPAC = 0
 GAMMA = 1
@@ -449,115 +444,6 @@ def _parse_pars(pars) -> Dict:
             pars[p] = pars[OBS_DIR]
 
     return pars
-
-
-# CONFIG UTILS - TO BE MOVED?
-def parse_namelist(nml):
-    """
-    Parses name list file into array of paths
-
-    :param str nml: interferogram file list
-
-    :return: list of interferogram file names
-    :rtype: list
-    """
-    with open(nml) as f_in:
-        lines = [line.rstrip() for line in f_in]
-    return filter(None, lines)
-
-
-def transform_params(params):
-    """
-    Returns subset of all parameters for cropping and multilooking.
-
-    :param dict params: Parameter dictionary
-
-    :return: xlooks, ylooks, crop
-    :rtype: int
-    """
-
-    t_params = [IFG_LKSX, IFG_LKSY, IFG_CROP_OPT]
-    xlooks, ylooks, crop = [params[k] for k in t_params]
-    return xlooks, ylooks, crop
-
-
-def original_ifg_paths(ifglist_path, obs_dir):
-    """
-    Returns sequence of paths to files in given ifglist file.
-
-    Args:
-        ifglist_path: Absolute path to interferogram file list.
-        obs_dir: Absolute path to observations directory.
-
-    Returns:
-        list: List of full paths to interferogram files.
-    """
-    ifglist = parse_namelist(ifglist_path)
-    return [os.path.join(obs_dir, p) for p in ifglist]
-
-
-def coherence_paths_for(path: str, params: dict, tif=False) -> str:
-    """
-    Returns path to coherence file for given interferogram. Pattern matches
-    based on epoch in filename.
-
-    Example:
-        '20151025-20160501_eqa_filt.cc'
-        Date pair is the epoch.
-
-    Args:
-        path: Path to intergerogram to find coherence file for.
-        params: Parameter dictionary.
-        tif: Find converted tif if True (_cc.tif), else find .cc file.
-
-    Returns:
-        Path to coherence file.
-    """
-    _, filename = split(path)
-    epoch = re.search(sixteen_digits_pattern, filename).group(0)
-    if tif:
-        coh_file_paths = [f.converted_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.converted_path]
-    else:
-        coh_file_paths = [f.unwrapped_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.unwrapped_path]
-
-    if len(coh_file_paths) > 1:
-        raise ConfigException(f"'{COH_FILE_DIR}': found more than one coherence "
-                              f"file for '{path}'. There must be only one "
-                              f"coherence file per interferogram. Found {coh_file_paths}.")
-    return coh_file_paths[0]
-
-
-def baseline_paths_for(path: str, params: dict) -> str:
-    """
-    Returns path to baseline file for given interferogram. Pattern matches
-    based on epoch in filename.
-
-    Example:
-        '20151025-20160501_base.par'
-        Date pair is the epoch.
-
-    Args:
-        path: Path to intergerogram to find baseline file for.
-        params: Parameter dictionary.
-        tif: Find converted tif if True (_cc.tif), else find .cc file.
-
-    Returns:
-        Path to baseline file.
-    """
-
-    _, filename = split(path)
-    try:
-        epoch = re.search(sixteen_digits_pattern, filename).group(0)
-    except: # catch cases where filename does not have two epochs, e.g. DEM file
-        return None
-
-    base_file_paths = [f.unwrapped_path for f in params[BASELINE_FILE_PATHS] if epoch in f.unwrapped_path]
-
-    if len(base_file_paths) > 1:
-        raise ConfigException(f"'{BASE_FILE_DIR}': found more than one baseline "
-                              f"file for '{path}'. There must be only one "
-                              f"baseline file per interferogram. Found {base_file_paths}.")
-    return base_file_paths[0]
 
 
 # ==== PARAMETER VALIDATION ==== #

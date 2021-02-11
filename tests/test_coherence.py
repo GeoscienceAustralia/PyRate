@@ -25,6 +25,7 @@ from osgeo import gdal
 from pathlib import Path
 from copy import copy
 
+import pyrate.core.prepifg_helper
 import pyrate.core.shared
 from pyrate.core.shared import Ifg
 from pyrate.core import gdal_python
@@ -54,13 +55,13 @@ def test_small_data_coherence(gamma_params):
         # now do coherence masking and compare
         ifg = pyrate.core.shared.dem_or_ifg(data_path=p.as_posix())
         ifg.open()
-        converted_coh_file_path = cf.coherence_paths_for(p, gamma_params, tif=True)
+        converted_coh_file_path = pyrate.core.prepifg_helper.coherence_paths_for(p, gamma_params, tif=True)
         gdal_python.coherence_masking(ifg.dataset,
                                       coh_file_path=converted_coh_file_path,
                                       coh_thr=gamma_params[cf.COH_THRESH]
                                       )
         nans = np.isnan(ifg.phase_data)
-        coherence_path = cf.coherence_paths_for(p, gamma_params, tif=True)
+        coherence_path = pyrate.core.prepifg_helper.coherence_paths_for(p, gamma_params, tif=True)
         cifg = Ifg(coherence_path)
         cifg.open()
         cifg_below_thrhold = cifg.phase_data < gamma_params[cf.COH_THRESH]

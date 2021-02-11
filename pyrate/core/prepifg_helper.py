@@ -20,13 +20,18 @@ multilooking/downsampling and cropping operations to reduce the size of
 the computational problem.
 """
 # pylint: disable=too-many-arguments,invalid-name
+import re
 from collections import namedtuple
+from os.path import split
+
 from math import modf
 from numbers import Number
 from decimal import Decimal
 from typing import List, Tuple, Union
 from numpy import array, nan, isnan, nanmean, float32, zeros, sum as nsum
 
+from pyrate.constants import sixteen_digits_pattern
+from pyrate.core.config import IFG_LKSX, IFG_LKSY, IFG_CROP_OPT, COHERENCE_FILE_PATHS, ConfigException, COH_FILE_DIR
 from pyrate.core.gdal_python import crop_resample_average
 from pyrate.core.shared import dem_or_ifg, Ifg, DEM
 from pyrate.core.logger import pyratelogger as log
@@ -370,3 +375,49 @@ class PreprocessError(Exception):
     """
     Preprocess exception
     """
+
+
+def transform_params(params):
+    """
+    Returns subset of all parameters for cropping and multilooking.
+
+    :param dict params: Parameter dictionary
+
+    :return: xlooks, ylooks, crop
+    :rtype: int
+    """
+
+    t_params = [IFG_LKSX, IFG_LKSY, IFG_CROP_OPT]
+    xlooks, ylooks, crop = [params[k] for k in t_params]
+    return xlooks, ylooks, crop
+
+
+def coherence_paths_for(path: str, params: dict, tif=False) -> str:
+    """
+    Returns path to coherence file for given interferogram. Pattern matches
+    based on epoch in filename.
+
+    Example:
+        '20151025-20160501_eqa_filt.cc'
+        Date pair is the epoch.
+
+    Args:
+        path: Path to intergerogram to find coherence file for.
+        params: Parameter dictionary.
+        tif: Find converted tif if True (_cc.tif), else find .cc file.
+
+    Returns:
+        Path to coherence file.
+    """
+    _, filename = split(path)
+    epoch = re.search(sixteen_digits_pattern, filename).group(0)
+    if tif:
+        coh_file_paths = [f.converted_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.converted_path]
+    else:
+        coh_file_paths = [f.unwrapped_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.unwrapped_path]
+
+    if len(coh_file_paths) > 1:
+        raise ConfigException(f"'{COH_FILE_DIR}': found more than one coherence "
+                              f"file for '{path}'. There must be only one "
+                              f"coherence file per interferogram. Found {coh_file_paths}.")
+    return coh_file_paths[0]

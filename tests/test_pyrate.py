@@ -26,8 +26,10 @@ from pathlib import Path
 import numpy as np
 
 import pyrate.configuration
+import pyrate.core.prepifg_helper
 import pyrate.core.shared
 import pyrate.main
+import tests.common
 from pyrate.core import shared, config as cf, config, prepifg_helper, mst
 from pyrate.core.shared import dem_or_ifg
 from pyrate import correct, prepifg, conv2tif
@@ -56,7 +58,7 @@ CURRENT_DIR = os.getcwd()
 
 def test_transform_params():
     params = {config.IFG_LKSX: 3, config.IFG_LKSY: 2, config.IFG_CROP_OPT: 1}
-    assert cf.transform_params(params) == (3, 2, 1)
+    assert pyrate.core.prepifg_helper.transform_params(params) == (3, 2, 1)
 
 
 def test_warp_required():
@@ -73,7 +75,7 @@ def test_warp_required():
 def test_original_ifg_paths():
     ifgdir = common.SML_TEST_TIF
     ifglist_path = join(ifgdir, 'ifms_17')
-    paths = cf.original_ifg_paths(ifglist_path, ifgdir)
+    paths = tests.common.original_ifg_paths(ifglist_path, ifgdir)
     assert paths[0] == join(ifgdir, 'geo_060619-061002_unw.tif'), str(paths[0])
     assert paths[-1] == join(ifgdir, 'geo_070709-070813_unw.tif')
 

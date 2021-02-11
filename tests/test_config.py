@@ -322,7 +322,7 @@ class TestConfig(UnitTestAdaptation):
     @staticmethod
     def test_parse_namelist():
         nl = join(SML_TEST_TIF, 'ifms_17')
-        result = list(config.parse_namelist(nl))
+        result = list(pyrate.configuration.parse_namelist(nl))
         assert len(result) == 17
         files = ["geo_060619-061002_unw.tif", "geo_060828-061211_unw.tif",
                     "geo_061002-070430_unw.tif", "geo_070115-070917_unw.tif",
