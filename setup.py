@@ -34,13 +34,16 @@ if platform.system() in 'Windows':
 else:
     GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
 
-requirements = [r + '=={GDAL_VERSION}'.format(GDAL_VERSION=GDAL_VERSION)
-                if r == 'GDAL' else r for r in requirements]
+requirements = []
+for r in requirements:
+    if r == 'GDAL':
+        requirements.append(r + '=={GDAL_VERSION}'.format(GDAL_VERSION=GDAL_VERSION))
+    elif r.startswith('mpi4py') and (run(args=['which', 'mpirun']).returncode == 0):
+        requirements.append(r)
+    else:
+        requirements.append(r)
 
 setup_requirements = [r for r in requirements if "numpy==" in r]
-
-if run(args=['which', 'mpirun']).returncode == 0:
-    requirements.append('mpi4py==3.0.3')
 
 
 class PyTest(TestCommand, object):
