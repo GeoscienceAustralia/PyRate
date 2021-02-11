@@ -31,9 +31,8 @@ from scipy.stats import linregress
 from pyrate.core.shared import tiles_split
 from pyrate.core.algorithm import first_second_ids, get_epochs
 from pyrate.core import config as cf, mst as mst_module, shared
-from pyrate.core.config import ConfigException
 from pyrate.core.logger import pyratelogger as log
-from pyrate.configuration import Configuration
+from pyrate.configuration import Configuration, ConfigException
 
 
 def _time_series_setup(ifgs, params, mst=None):

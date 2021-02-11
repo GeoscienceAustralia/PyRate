@@ -330,7 +330,7 @@ class TestPrePrepareIfgs:
 
     @classmethod
     def setup_class(cls):
-        params = config.get_config_params(common.TEST_CONF_ROIPAC)
+        params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.tmp_dir = tempfile.mkdtemp()
         common.copytree(common.SML_TEST_TIF, cls.tmp_dir)
         tifs = glob.glob(os.path.join(cls.tmp_dir, "*.tif"))

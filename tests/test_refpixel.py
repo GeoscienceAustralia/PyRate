@@ -33,7 +33,7 @@ from pyrate.core.refpixel import ref_pixel, _step, RefPixelError, ref_pixel_calc
     convert_geographic_coordinate_to_pixel_value, convert_pixel_value_to_geographic_coordinate
 from pyrate.core import shared, ifgconstants as ifc
 from pyrate import correct, conv2tif, prepifg
-from pyrate.configuration import Configuration
+from pyrate.configuration import Configuration, ConfigException
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA, SML_TEST_DEM_TIF
 from tests.common import small_data_setup, MockIfg, copy_small_ifg_file_list, \
     copy_and_setup_small_data, manipulate_test_conf, assert_two_dirs_equal, PY37GDAL304
@@ -59,7 +59,7 @@ class TestReferencePixelInputTests:
     @classmethod
     def setup_method(cls):
         cls.ifgs = small_data_setup()
-        cls.params = cf.get_config_params(TEST_CONF_ROIPAC)
+        cls.params = Configuration(TEST_CONF_ROIPAC).__dict__
         cls.params[cf.REFNX] = REFNX
         cls.params[cf.REFNY] = REFNY
         cls.params[cf.REF_CHIP_SIZE] = CHIPSIZE
@@ -68,7 +68,7 @@ class TestReferencePixelInputTests:
 
     def test_missing_chipsize(self):
         self.params[cf.REF_CHIP_SIZE] = None
-        with pytest.raises(cf.ConfigException):
+        with pytest.raises(ConfigException):
             ref_pixel(self.ifgs, self.params)
 
     def test_chipsize_valid(self):
@@ -79,7 +79,7 @@ class TestReferencePixelInputTests:
 
     def test_minimum_fraction_missing(self):
         self.params[cf.REF_MIN_FRAC] = None
-        with pytest.raises(cf.ConfigException):
+        with pytest.raises(ConfigException):
             ref_pixel(self.ifgs, self.params)
 
     def test_minimum_fraction_threshold(self):
@@ -103,13 +103,13 @@ class TestReferencePixelInputTests:
 
     def test_missing_search_windows(self):
         self.params[cf.REFNX] = None
-        with pytest.raises(cf.ConfigException):
+        with pytest.raises(ConfigException):
             ref_pixel(self.ifgs, self.params)
 
         self.params[cf.REFNX] = REFNX
         self.params[cf.REFNY] = None
 
-        with pytest.raises(cf.ConfigException):
+        with pytest.raises(ConfigException):
             ref_pixel(self.ifgs, self.params)
 
 
@@ -120,7 +120,7 @@ class TestReferencePixelTests:
 
     @classmethod
     def setup_method(cls):
-        cls.params = cf.get_config_params(TEST_CONF_ROIPAC)
+        cls.params = Configuration(TEST_CONF_ROIPAC).__dict__
         cls.params[cf.OUT_DIR], cls.ifgs = copy_and_setup_small_data()
         cls.params[cf.REFNX] = REFNX
         cls.params[cf.REFNY] = REFNY
@@ -245,7 +245,7 @@ class TestLegacyEqualityTest:
 
     @classmethod
     def setup_method(cls):
-        cls.params = cf.get_config_params(TEST_CONF_ROIPAC)
+        cls.params = Configuration(TEST_CONF_ROIPAC).__dict__
         cls.params[cf.PARALLEL] = 0
         cls.params[cf.OUT_DIR], cls.ifg_paths = copy_small_ifg_file_list()
         conf_file = Path(cls.params[cf.OUT_DIR], 'conf_file.conf')
@@ -317,7 +317,7 @@ class TestLegacyEqualityTestMultiprocessParallel:
 
     @classmethod
     def setup_method(cls):
-        cls.params = cf.get_config_params(TEST_CONF_ROIPAC)
+        cls.params = Configuration(TEST_CONF_ROIPAC).__dict__
         cls.params[cf.PARALLEL] = 1
         cls.params[cf.OUT_DIR], cls.ifg_paths = copy_small_ifg_file_list()
         conf_file = Path(cls.params[cf.OUT_DIR], 'conf_file.conf')

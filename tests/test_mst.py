@@ -185,7 +185,7 @@ class TestIfgPart(UnitTestAdaptation):
 
     def setup_method(self):
         self.ifgs = small_data_setup()
-        self.params = cf.get_config_params(common.TEST_CONF_ROIPAC)
+        self.params = Configuration(common.TEST_CONF_ROIPAC).__dict__
 
     def test_ifg_part_shape_and_slice(self):
         r_start = 0

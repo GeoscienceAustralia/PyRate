@@ -25,7 +25,7 @@ from pyrate.constants import NO_OF_PARALLEL_PROCESSES, sixteen_digits_pattern, t
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
 from pyrate.core.shared import extract_epochs_from_filename, InputTypes, get_tiles
-from pyrate.core.config import ConfigException, ORB_ERROR_DIR, DEM_ERROR_DIR, TEMP_MLOOKED_DIR
+from pyrate.core.config import ORB_ERROR_DIR, DEM_ERROR_DIR, TEMP_MLOOKED_DIR
 from pyrate.core import config as cf, mpiops
 
 
@@ -421,3 +421,10 @@ def parse_namelist(nml):
     with open(nml) as f_in:
         lines = [line.rstrip() for line in f_in]
     return filter(None, lines)
+
+
+class ConfigException(Exception):
+    """
+    Default exception class for configuration errors.
+    """
+

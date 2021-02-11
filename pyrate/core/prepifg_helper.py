@@ -31,7 +31,8 @@ from typing import List, Tuple, Union
 from numpy import array, nan, isnan, nanmean, float32, zeros, sum as nsum
 
 from pyrate.constants import sixteen_digits_pattern
-from pyrate.core.config import IFG_LKSX, IFG_LKSY, IFG_CROP_OPT, COHERENCE_FILE_PATHS, ConfigException, COH_FILE_DIR
+from pyrate.configuration import ConfigException
+from pyrate.core.config import IFG_LKSX, IFG_LKSY, IFG_CROP_OPT, COHERENCE_FILE_PATHS, COH_FILE_DIR
 from pyrate.core.gdal_python import crop_resample_average
 from pyrate.core.shared import dem_or_ifg, Ifg, DEM
 from pyrate.core.logger import pyratelogger as log

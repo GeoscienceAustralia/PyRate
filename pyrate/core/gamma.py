@@ -24,11 +24,11 @@ from pathlib import Path
 from datetime import date, time, timedelta
 import numpy as np
 
-import pyrate.configuration
+from pyrate.configuration import ConfigException, parse_namelist
 import pyrate.core.ifgconstants as ifc
 from pyrate.constants import sixteen_digits_pattern
 from pyrate.core import config as cf
-from pyrate.core.config import BASELINE_FILE_PATHS, ConfigException, BASE_FILE_DIR
+from pyrate.core.config import BASELINE_FILE_PATHS, BASE_FILE_DIR
 from pyrate.core.shared import extract_epochs_from_filename, data_format
 from pyrate.core.logger import pyratelogger as log
 import struct
@@ -466,7 +466,7 @@ def get_header_paths(input_file, slc_file_list):
     """
     f = Path(input_file)
     epochs = extract_epochs_from_filename(f.name)
-    header_names = pyrate.configuration.parse_namelist(slc_file_list)
+    header_names = parse_namelist(slc_file_list)
     matches = [hdr for hdr in header_names if any(e in hdr for e in epochs)]
     return matches
 

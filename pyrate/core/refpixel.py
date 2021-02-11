@@ -33,7 +33,7 @@ from pyrate.core.shared import Ifg
 from pyrate.core.shared import joblib_log_level
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core import prepifg_helper
-from pyrate.configuration import Configuration
+from pyrate.configuration import Configuration, ConfigException
 
 MAIN_PROCESS = 0
 
@@ -350,7 +350,7 @@ def _validate_chipsize(chipsize, head):
     Sanity check min chipsize
     """
     if chipsize is None:
-        raise cf.ConfigException('Chipsize is None')
+        raise ConfigException('Chipsize is None')
 
     if chipsize < 3 or chipsize > head.ncols or (chipsize % 2 == 0):
         msg = "Chipsize setting must be >=3 and at least <= grid width"
@@ -363,7 +363,7 @@ def _validate_minimum_fraction(min_frac):
     Sanity check min fraction
     """
     if min_frac is None:
-        raise cf.ConfigException('Minimum fraction is None')
+        raise ConfigException('Minimum fraction is None')
 
     if min_frac < 0.0 or min_frac > 1.0:
         raise RefPixelError("Minimum fraction setting must be >= 0.0 and <= 1.0 ")
@@ -374,7 +374,7 @@ def _validate_search_win(refnx, refny, chipsize, head):
     Sanity check X|Y steps
     """
     if refnx is None:
-        raise cf.ConfigException('refnx is None')
+        raise ConfigException('refnx is None')
 
     max_width = (head.ncols - (chipsize-1))
     if refnx < 1 or refnx > max_width:
@@ -382,7 +382,7 @@ def _validate_search_win(refnx, refny, chipsize, head):
         raise RefPixelError(msg % max_width)
 
     if refny is None:
-        raise cf.ConfigException('refny is None')
+        raise ConfigException('refny is None')
 
     max_rows = (head.nrows - (chipsize-1))
     if refny < 1 or refny > max_rows:

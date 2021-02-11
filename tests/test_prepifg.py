@@ -816,7 +816,7 @@ class TestOneIncidenceOrElevationMap(UnitTestAdaptation):
 
     @classmethod
     def teardown_class(cls):
-        params = cf.get_config_params(cls.conf_file)
+        params = Configuration(cls.conf_file).__dict__
         shutil.rmtree(cls.base_dir)
         common.remove_tifs(params[cf.OBS_DIR])
 

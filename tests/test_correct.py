@@ -21,15 +21,14 @@ import shutil
 from pathlib import Path
 import pytest
 
-import pyrate.configuration
+from pyrate.configuration import ConfigException, Configuration, write_config_file
 from pyrate import correct, prepifg, conv2tif
 import pyrate.core.config as cf
-from pyrate.core.config import ConfigException
 from tests import common
 
 
 def test_unsupported_process_steps_raises(gamma_conf):
-    config = pyrate.configuration.Configuration(gamma_conf)
+    config = Configuration(gamma_conf)
     gamma_params = config.__dict__
     gamma_params['correct'] = ['orbfit2', 'something_other_step']
     with pytest.raises(ConfigException):
@@ -49,7 +48,7 @@ def test_process_treats_prepif_outputs_readonly(gamma_conf, tempdir, coh_mask):
     params[cf.COH_MASK] = coh_mask
     params[cf.PARALLEL] = 0
     output_conf = tdir.joinpath('conf.cfg')
-    pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
+    write_config_file(params=params, output_conf_file=output_conf)
     params = Configuration(output_conf).__dict__
     conv2tif.main(params)
     tifs = list(Path(params[cf.OUT_DIR]).glob('*_unw.tif'))

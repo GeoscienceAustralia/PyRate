@@ -23,7 +23,6 @@ from pathlib import Path
 import pickle as cp
 from typing import List
 from pyrate.core import (shared, algorithm, mpiops, config as cf)
-from pyrate.core.config import ConfigException
 from pyrate.core.aps import wrap_spatio_temporal_filter
 from pyrate.core.covariance import maxvar_vcm_calc_wrapper
 from pyrate.core.mst import mst_calc_wrapper
@@ -34,7 +33,7 @@ from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.shared import PrereadIfg, get_tiles, mpi_vs_multiprocess_logging, join_dicts
 from pyrate.core.logger import pyratelogger as log
-from pyrate.configuration import Configuration, MultiplePaths
+from pyrate.configuration import Configuration, MultiplePaths, ConfigException
 
 MAIN_PROCESS = 0
 
