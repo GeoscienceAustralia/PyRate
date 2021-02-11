@@ -60,6 +60,6 @@ def test_plot_closure(mexico_cropa_params):
         else:
             correct.correct_steps[step](params)
 
-    closure_plot_file = Path(params[cf.OUT_DIR]).joinpath(f'sum_closure.png')
+    closure_plot_file = Path(params[cf.OUT_DIR]).joinpath('closure_loops.png')
     assert closure_plot_file.exists()
     shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
