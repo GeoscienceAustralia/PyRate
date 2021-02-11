@@ -29,7 +29,7 @@ from pyrate.core.covariance import maxvar_vcm_calc_wrapper
 from pyrate.core.mst import mst_calc_wrapper
 from pyrate.core.orbital import orb_fit_calc_wrapper
 from pyrate.core.dem_error import dem_error_calc_wrapper
-from pyrate.core.phase_closure.closure_check import filter_to_closure_checked_ifgs, detect_ps_with_unwrapping_errors
+from pyrate.core.phase_closure.closure_check import filter_to_closure_checked_ifgs, detect_pix_with_unwrapping_errors
 from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.shared import PrereadIfg, get_tiles, mpi_vs_multiprocess_logging, join_dicts
@@ -170,7 +170,7 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
 
     # insert nans where phase unwrap threshold is breached
     if mpiops.rank == 0:
-        detect_ps_with_unwrapping_errors(ifgs_breach_count, num_occurences_each_ifg, params)
+        detect_pix_with_unwrapping_errors(ifgs_breach_count, num_occurences_each_ifg, params)
 
     _create_ifg_dict(params)
 

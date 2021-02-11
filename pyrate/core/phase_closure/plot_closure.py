@@ -35,7 +35,7 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], params, thr: fl
     except ImportError as e:
         log.warn(ImportError(e))
         log.warn("Required plotting packages are not found in environment. "
-                 "Sum closure plots will not be generated!!!")
+                 "Closure loop plot will not be generated!!!")
         return
 
     nrows, ncols, n_loops = closure.shape
@@ -53,10 +53,10 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], params, thr: fl
             ax = fig.add_subplot(plt_rows, plt_cols, tot_plots)
             data = closure[:, :, plt_cols * p_r + p_c]
             loop = loops[plt_cols * p_r + p_c]
-            leg = ',\n'.join([repr(l) for l in loop.loop])
+            title = ',\n'.join([repr(l) for l in loop.loop])
             im = ax.imshow(data, vmin=-thr, vmax=thr, cmap=cmap)
-            text = ax.text(20, 20, leg, bbox={'facecolor': 'white', 'pad': 5})
-            text.set_fontsize(min(20, int(n_loops/5)))
+            text = ax.set_title(title)
+            text.set_fontsize(min(20, int(n_loops/3)))
 
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="5%", pad=0.05)
@@ -68,6 +68,6 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], params, thr: fl
     # ax = fig.add_subplot(plt_rows, plt_cols, tot_plots+1)
     # fig.colorbar(mpl.cm.ScalarMappable(cmap=cmap), cax=ax, orientation='horizontal', label='radians')
 
-    closure_plot_file = Path(params[cf.OUT_DIR]).joinpath(f'sum_closure.png')
+    closure_plot_file = Path(params[cf.OUT_DIR]).joinpath(f'closure_loops.png')
     plt.savefig(closure_plot_file)
-    log.info(f'Sum closure plotted in {closure_plot_file}')
+    log.info(f'{n_loops} closure loops plotted in {closure_plot_file}')
