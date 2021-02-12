@@ -33,10 +33,10 @@ import pyrate.main
 import tests.common
 from pyrate.core import shared, prepifg_helper
 from pyrate.core.shared import dem_or_ifg
-from pyrate import correct, prepifg, conv2tif
+from pyrate import correct
 from pyrate.configuration import MultiplePaths, Configuration
 from tests import common
-from tests.common import PYTHON3P8
+from tests.common import PY37GDAL304
 
 # taken from
 # http://stackoverflow.com/questions/6260149/os-symlink-support-in-windows
@@ -197,7 +197,7 @@ class TestPyRate:
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(not PYTHON3P8, reason="Only run in GDAL3.0.4 and Python3.7 env")
+@pytest.mark.skipif(not PY37GDAL304, reason="Only run in GDAL3.0.4 and Python3.7 env")
 class TestParallelPyRate:
     """
     parallel vs serial pyrate tests verifying results from all steps equal
@@ -328,7 +328,7 @@ class TestParallelPyRate:
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(not PYTHON3P8, reason="Only run in python 3.8")
+@pytest.mark.skipif(not PY37GDAL304, reason="Only run in python 3.8")
 class TestPrePrepareIfgs:
 
     @classmethod

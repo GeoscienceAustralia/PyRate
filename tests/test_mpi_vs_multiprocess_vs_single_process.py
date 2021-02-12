@@ -32,7 +32,8 @@ from tests.common import (
     manipulate_test_conf,
     MEXICO_CROPA_CONF,
     PY37GDAL304,
-    PY38GDAL304
+    PY38GDAL304,
+    PYTHON3P7
 )
 
 
