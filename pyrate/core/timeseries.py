@@ -28,6 +28,8 @@ from numpy.linalg import matrix_rank, pinv, cholesky
 import numpy as np
 from scipy.linalg import qr
 from scipy.stats import linregress
+
+import pyrate.constants
 from pyrate.core.shared import tiles_split
 from pyrate.core.algorithm import first_second_ids, get_epochs
 from pyrate.core import config as cf, mst as mst_module, shared
@@ -47,7 +49,7 @@ def _time_series_setup(ifgs, params, mst=None):
     interp = 0 if mst_module.mst_from_ifgs(ifgs)[1] else 1
 
     # Time Series parameters
-    tsmethod = params[cf.TIME_SERIES_METHOD]
+    tsmethod = params[pyrate.constants.TIME_SERIES_METHOD]
 
     pthresh, smfactor, smorder = _validate_params(params, tsmethod)
 
@@ -86,19 +88,19 @@ def _validate_params(params, tsmethod):
     """
     Helper function to validate supplied time series parameters
     """
-    if tsmethod == 1 and params[cf.TIME_SERIES_SM_ORDER] is None:
-        _missing_option_error(cf.TIME_SERIES_SM_ORDER)
+    if tsmethod == 1 and params[pyrate.constants.TIME_SERIES_SM_ORDER] is None:
+        _missing_option_error(pyrate.constants.TIME_SERIES_SM_ORDER)
     else:
-        smorder = params[cf.TIME_SERIES_SM_ORDER]
-    if tsmethod == 1 and params[cf.TIME_SERIES_SM_FACTOR] is None:
-        _missing_option_error(cf.TIME_SERIES_SM_FACTOR)
+        smorder = params[pyrate.constants.TIME_SERIES_SM_ORDER]
+    if tsmethod == 1 and params[pyrate.constants.TIME_SERIES_SM_FACTOR] is None:
+        _missing_option_error(pyrate.constants.TIME_SERIES_SM_FACTOR)
     else:
-        smfactor = np.power(10, params[cf.TIME_SERIES_SM_FACTOR])
+        smfactor = np.power(10, params[pyrate.constants.TIME_SERIES_SM_FACTOR])
 
-    if params[cf.TIME_SERIES_PTHRESH] is None:
-        _missing_option_error(cf.TIME_SERIES_PTHRESH)
+    if params[pyrate.constants.TIME_SERIES_PTHRESH] is None:
+        _missing_option_error(pyrate.constants.TIME_SERIES_PTHRESH)
     else:
-        pthresh = params[cf.TIME_SERIES_PTHRESH]
+        pthresh = params[pyrate.constants.TIME_SERIES_PTHRESH]
         if pthresh < 0.0 or pthresh > 1000:
             raise TimeSeriesError(
                 "minimum number of coherent observations for a pixel"
@@ -395,15 +397,15 @@ def timeseries_calc_wrapper(params):
     """
     Wrapper for time series calculation on a set of tiles.
     """
-    if params[cf.TIME_SERIES_METHOD] == 1:
+    if params[pyrate.constants.TIME_SERIES_METHOD] == 1:
         log.info('Calculating time series using Laplacian Smoothing method')
-    elif params[cf.TIME_SERIES_METHOD] == 2:
+    elif params[pyrate.constants.TIME_SERIES_METHOD] == 2:
         log.info('Calculating time series using SVD method')
     if not Configuration.vcmt_path(params).exists():
         raise FileNotFoundError("VCMT is not found on disc. Have you run the 'correct' step?")
-    params[cf.PREREAD_IFGS] = cp.load(open(Configuration.preread_ifgs(params), 'rb'))
-    params[cf.VCMT] = np.load(Configuration.vcmt_path(params))
-    params[cf.TILES] = Configuration.get_tiles(params)
+    params[pyrate.constants.PREREAD_IFGS] = cp.load(open(Configuration.preread_ifgs(params), 'rb'))
+    params[pyrate.constants.VCMT] = np.load(Configuration.vcmt_path(params))
+    params[pyrate.constants.TILES] = Configuration.get_tiles(params)
     tiles_split(__calc_time_series_for_tile, params)
     log.debug("Finished timeseries calc!")
 
@@ -412,10 +414,10 @@ def __calc_time_series_for_tile(tile, params):
     """
     Wrapper for time series calculation on a single tile
     """
-    preread_ifgs = params[cf.PREREAD_IFGS]
-    vcmt = params[cf.VCMT]
-    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
-    output_dir = params[cf.TMPDIR]
+    preread_ifgs = params[pyrate.constants.PREREAD_IFGS]
+    vcmt = params[pyrate.constants.VCMT]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[pyrate.constants.INTERFEROGRAM_FILES]]
+    output_dir = params[pyrate.constants.TMPDIR]
     log.debug(f"Calculating time series for tile {tile.index}")
     ifg_parts = [shared.IfgPart(p, tile, preread_ifgs, params) for p in ifg_paths]
     mst_tile = np.load(Configuration.mst_path(params, tile.index))

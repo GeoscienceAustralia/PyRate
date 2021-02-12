@@ -18,6 +18,8 @@ from collections import defaultdict
 from typing import List, Dict, Tuple, Any
 from nptyping import NDArray, UInt16, Float32
 import numpy as np
+
+import pyrate.constants
 from pyrate.core import config as cf, mpiops
 from pyrate.core.phase_closure.mst_closure import sort_loops_based_on_weights_and_date, WeightedLoop, Edge
 from pyrate.configuration import Configuration
@@ -46,14 +48,14 @@ def detect_pix_with_unwrapping_errors(ifgs_breach_count: NDArray[(Any, Any, Any)
     # Pixels with unwrapping errors in one or more SBAS IFGs will be marked.
     # mark_ix = pix_unwrap_error > 0  # don't need to output this
 
-    nan_index = pix_unwrap_error >= params[cf.PHS_UNW_ERR_THR]
+    nan_index = pix_unwrap_error >= params[pyrate.constants.PHS_UNW_ERR_THR]
 
     log.debug("Updating phase data of retained ifgs")
 
-    for i, m_p in enumerate(params[cf.INTERFEROGRAM_FILES]):
+    for i, m_p in enumerate(params[pyrate.constants.INTERFEROGRAM_FILES]):
         ifg = Ifg(m_p.tmp_sampled_path)
         ifg.open()
-        ifg.nodata_value = params[cf.NO_DATA_VALUE]
+        ifg.nodata_value = params[pyrate.constants.NO_DATA_VALUE]
         ifg.convert_to_nans()
         ifg.phase_data[nan_index] = np.nan
         ifg.write_modified_phase()
@@ -79,7 +81,7 @@ def __drop_ifgs_if_not_part_of_any_loop(ifg_files: List[str], loops: List[Weight
     ifgs = [Ifg(i) for i in ifg_files]
     for i in ifgs:
         i.open()
-        i.nodata_value = params[cf.NO_DATA_VALUE]
+        i.nodata_value = params[pyrate.constants.NO_DATA_VALUE]
     selected_ifg_files = []
     for i, f in zip(ifgs, ifg_files):
         if Edge(i.first, i.second) in loop_ifgs:
@@ -107,10 +109,11 @@ def __drop_ifgs_exceeding_threshold(orig_ifg_files: List[str], ifgs_breach_count
         loop_count_of_this_ifg = num_occurences_each_ifg[i]
         if loop_count_of_this_ifg:  # if the ifg participated in at least one loop
             ifg_remove_threshold_breached = \
-                np.sum(ifgs_breach_count[:, :, i]) / loop_count_of_this_ifg / nrows / ncols > params[cf.AVG_IFG_ERR_THR]
+                np.sum(ifgs_breach_count[:, :, i]) / loop_count_of_this_ifg / nrows / ncols > params[
+                    pyrate.constants.AVG_IFG_ERR_THR]
             if not (
                     # min loops count # check 1
-                    (num_occurences_each_ifg[i] > params[cf.LOOPS_THR_IFG])
+                    (num_occurences_each_ifg[i] > params[pyrate.constants.LOOPS_THR_IFG])
                     and
                     ifg_remove_threshold_breached  # and breached threshold
             ):
@@ -128,7 +131,7 @@ def filter_to_closure_checked_ifgs(config, interactive_plot=True) -> \
     :return: stable list of ifg files, their ifgs_breach_count, and number of occurrences of ifgs in loops
     """
     params = config.__dict__
-    ifg_files = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    ifg_files = [ifg_path.tmp_sampled_path for ifg_path in params[pyrate.constants.INTERFEROGRAM_FILES]]
     log.info(f"Performing closure check on original set of {len(ifg_files)} ifgs")
 
     while True:  # iterate till ifgs/loops are stable
@@ -138,7 +141,7 @@ def filter_to_closure_checked_ifgs(config, interactive_plot=True) -> \
         new_ifg_files, closure, ifgs_breach_count, num_occurences_each_ifg, loops = rets
         if interactive_plot:
             if mpiops.rank == 0:
-                plot_closure(closure=closure, loops=loops, params=params, thr=params[cf.LARGE_DEV_THR])
+                plot_closure(closure=closure, loops=loops, params=params, thr=params[pyrate.constants.LARGE_DEV_THR])
         if len(ifg_files) == len(new_ifg_files):
             break
         else:
@@ -162,13 +165,13 @@ def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) ->
     ifg_counter = defaultdict(int)
     for loop in loops:
         edge_appearances = np.array([ifg_counter[e] for e in loop.edges])
-        if not np.all(edge_appearances > params[cf.MAX_LOOPS_IN_IFG]):
+        if not np.all(edge_appearances > params[pyrate.constants.MAX_LOOPS_IN_IFG]):
             selected_loops.append(loop)
             for e in loop.edges:
                 ifg_counter[e] += 1
         else:
             log.debug(f"Loop {loop.loop} is ignored due to all it's ifgs already seen "
-                      f"{params[cf.MAX_LOOPS_IN_IFG]} times or more")
+                      f"{params[pyrate.constants.MAX_LOOPS_IN_IFG]} times or more")
     return selected_loops
 
 
@@ -192,8 +195,8 @@ def wrap_closure_check(ifg_files: List[str], config: Configuration) -> \
     sorted_signed_loops = mpiops.run_once(sort_loops_based_on_weights_and_date, ifg_files)
     log.info(f"Total number of possible closure loops is {len(sorted_signed_loops)}")
     retained_loops_meeting_max_loop_criteria = [sl for sl in sorted_signed_loops
-                                                if len(sl) <= params[cf.MAX_LOOP_LENGTH]]
-    msg = f"After applying MAX_LOOP_LENGTH = {params[cf.MAX_LOOP_LENGTH]} criteria, " \
+                                                if len(sl) <= params[pyrate.constants.MAX_LOOP_LENGTH]]
+    msg = f"After applying MAX_LOOP_LENGTH = {params[pyrate.constants.MAX_LOOP_LENGTH]} criteria, " \
           f"{len(retained_loops_meeting_max_loop_criteria)} loops are retained"
 
     if len(retained_loops_meeting_max_loop_criteria) < 1:
@@ -205,7 +208,7 @@ def wrap_closure_check(ifg_files: List[str], config: Configuration) -> \
                                      retained_loops_meeting_max_loop_criteria, params)
     ifgs_with_loops = mpiops.run_once(__drop_ifgs_if_not_part_of_any_loop, ifg_files, retained_loops, params)
 
-    msg = f"After applying MAX_LOOPS_IN_IFG = {params[cf.MAX_LOOPS_IN_IFG]} criteria, " \
+    msg = f"After applying MAX_LOOPS_IN_IFG = {params[pyrate.constants.MAX_LOOPS_IN_IFG]} criteria, " \
           f"{len(retained_loops)} loops are retained"
     if len(retained_loops) < 1:
         return None

@@ -19,6 +19,8 @@ from collections import namedtuple
 from typing import List, Dict, Tuple, Any
 from nptyping import NDArray, Float32, UInt16
 import numpy as np
+
+import pyrate.constants
 from pyrate.core import config as cf, mpiops, ifgconstants as ifc
 from pyrate.core.shared import Ifg, join_dicts, iterable_split
 from pyrate.core.phase_closure.mst_closure import Edge, WeightedLoop
@@ -42,7 +44,7 @@ def __create_ifg_edge_dict(ifg_files: List[str], params: dict) -> Dict[Edge, Ind
 
     def _func(ifg, index):
         ifg.open()
-        ifg.nodata_value = params[cf.NO_DATA_VALUE]
+        ifg.nodata_value = params[pyrate.constants.NO_DATA_VALUE]
         ifg.convert_to_nans()
         ifg.convert_to_radians()
         idx_ifg = IndexedIfg(index, IfgPhase(ifg.phase_data))
@@ -78,7 +80,7 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
     n_ifgs = len(ifgs)
     closure_dict = {}
 
-    if params[cf.PARALLEL]:
+    if params[pyrate.constants.PARALLEL]:
         # rets = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
         #     delayed(__compute_ifgs_breach_count)(ifg0, n_ifgs, weighted_loop, edge_to_indexed_ifgs, params)
         #     for weighted_loop in loops
@@ -132,8 +134,8 @@ def __compute_ifgs_breach_count(weighted_loop: WeightedLoop,
     n_ifgs = len(edge_to_indexed_ifgs)
     indexed_ifg = list(edge_to_indexed_ifgs.values())[0]
     ifg = indexed_ifg.IfgPhase
-    large_dev_thr = params[cf.LARGE_DEV_THR] * np.pi
-    use_median = params[cf.SUBTRACT_MEDIAN]
+    large_dev_thr = params[pyrate.constants.LARGE_DEV_THR] * np.pi
+    use_median = params[pyrate.constants.SUBTRACT_MEDIAN]
 
     closure = np.zeros(shape=ifg.phase_data.shape, dtype=np.float32)
     # initiate variable for check of unwrapping issues at the same pixels in all loops

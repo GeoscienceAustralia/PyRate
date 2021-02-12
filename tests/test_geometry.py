@@ -3,6 +3,8 @@ from typing import Tuple
 import numpy as np
 from os.path import join
 import pytest
+
+import pyrate.constants
 from pyrate.core import ifgconstants as ifc, config as cf
 from pyrate.core.geometry import get_lonlat_coords, get_sat_positions, vincinv
 from pyrate.core.refpixel import convert_pixel_value_to_geographic_coordinate
@@ -63,7 +65,7 @@ class TestPyRateAngleFiles:
 
     @classmethod
     def teardown_class(cls):
-        shutil.rmtree(cls.params[cf.OUT_DIR], ignore_errors=True)
+        shutil.rmtree(cls.params[pyrate.constants.OUT_DIR], ignore_errors=True)
 
     # the xy position in the original GAMMA geometry (before cropping and further multi-looking is required for
     # comparison of PyRate with GAMMA angle values. To get this position for a particular coordinate, the following
@@ -101,7 +103,7 @@ class TestPyRateAngleFiles:
         # exp = -2.94684600830078
         # GAMMA azimuth is defined towards satellite in an anti-clockwise angle system, with East being zero
         # PyRate azimuth angle is defined towards the satellite in a clockwise angle system with North being zero
-        tif_file = join(self.params[cf.OUT_DIR], 'azimuth_angle.tif')
+        tif_file = join(self.params[pyrate.constants.OUT_DIR], 'azimuth_angle.tif')
         azimuth_angle_pyrate = self.get_pyrate_angle(x0, y0, tif_file)
         # convert PyRate azimuth into GAMMA azimuth
         res = -(azimuth_angle_pyrate - np.pi / 2)
@@ -119,7 +121,7 @@ class TestPyRateAngleFiles:
         # exp = 1.0111095905304
         # GAMMA angle is defined from the horizontal plane with the zenith direction being pi / 2 radians (i.e.90 deg)
         # PyRate angle is defined from the vertical axis with the zenith direction being zero
-        tif_file = join(self.params[cf.OUT_DIR], 'incidence_angle.tif')
+        tif_file = join(self.params[pyrate.constants.OUT_DIR], 'incidence_angle.tif')
         incidence_angle_pyrate = self.get_pyrate_angle(x0, y0, tif_file)
         # convert PyRate incidence into GAMMA incidence
         res = np.pi / 2 - incidence_angle_pyrate
@@ -133,7 +135,7 @@ class TestPyRateAngleFiles:
          Calculate local azimuth angle using a spherical model and compare to result using Vincenty's equations
         """
         # get first IFG in stack to calculate lon/lat values
-        multi_paths = self.params[cf.INTERFEROGRAM_FILES]
+        multi_paths = self.params[pyrate.constants.INTERFEROGRAM_FILES]
         tmp_paths = [ifg_path.tmp_sampled_path for ifg_path in multi_paths]
         # keep only ifg files in path list (i.e. remove coherence and dem files)
         ifg_paths = [item for item in tmp_paths if 'ifg.tif' in item]
@@ -144,10 +146,10 @@ class TestPyRateAngleFiles:
         lon, lat = get_lonlat_coords(ifg0)
 
         # read incidence and look angle files
-        tif_file = join(self.params[cf.OUT_DIR], 'incidence_angle.tif')
+        tif_file = join(self.params[pyrate.constants.OUT_DIR], 'incidence_angle.tif')
         geom = Geometry(tif_file)
         incidence_angle = geom.data
-        tif_file = join(self.params[cf.OUT_DIR], 'look_angle.tif')
+        tif_file = join(self.params[pyrate.constants.OUT_DIR], 'look_angle.tif')
         geom = Geometry(tif_file)
         look_angle = geom.data
         # get metadata

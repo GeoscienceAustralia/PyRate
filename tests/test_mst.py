@@ -23,6 +23,8 @@ from itertools import product
 from numpy import empty, array, nan, isnan, sum as nsum
 
 import numpy as np
+
+import pyrate.constants
 from tests.common import MockIfg, small5_mock_ifgs, small_data_setup
 
 from pyrate.core import algorithm, config as cf, mst
@@ -197,13 +199,13 @@ class TestIfgPart(UnitTestAdaptation):
             np.testing.assert_array_equal(ifg_part.phase_data, i.phase_data[r_start:r_end, :])
 
     def test_mst_multiprocessing_serial(self):
-        self.params[cf.PARALLEL] = False
+        self.params[pyrate.constants.PARALLEL] = False
         original_mst = mst.mst_boolean_array(self.ifgs)
         parallel_mst = mst.mst_parallel(self.ifgs, params=self.params)
         np.testing.assert_array_equal(original_mst, parallel_mst)
 
     def test_mst_multiprocessing(self):
-        self.params[cf.PARALLEL] = True
+        self.params[pyrate.constants.PARALLEL] = True
         original_mst = mst.mst_boolean_array(self.ifgs)
         parallel_mst = mst.mst_parallel(self.ifgs, params=self.params)
         np.testing.assert_array_equal(original_mst, parallel_mst)
@@ -219,12 +221,12 @@ class TestMSTFilesReusedFromDisc:
         cls.params = Configuration(cls.conf).__dict__
         prepifg.main(cls.params)
         cls.params = Configuration(cls.conf).__dict__
-        multi_paths = cls.params[cf.INTERFEROGRAM_FILES]
+        multi_paths = cls.params[pyrate.constants.INTERFEROGRAM_FILES]
         cls.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
 
     @classmethod
     def teardown_class(cls):
-        shutil.rmtree(cls.params[cf.OUT_DIR])
+        shutil.rmtree(cls.params[pyrate.constants.OUT_DIR])
 
     def test_mst_used_from_disc_on_rerun(self):
         correct._update_params_with_tiles(self.params)
@@ -234,7 +236,7 @@ class TestMSTFilesReusedFromDisc:
         np.testing.assert_array_equal(times_written_1, times_written)
 
     def __run_once(self):
-        tiles = self.params[cf.TILES]
+        tiles = self.params[pyrate.constants.TILES]
         mst_files = [Configuration.mst_path(self.params, t.index) for t in tiles]
         correct._copy_mlooked(self.params)
         correct._create_ifg_dict(self.params)

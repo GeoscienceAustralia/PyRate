@@ -18,6 +18,7 @@ import pytest
 from pathlib import Path
 import numpy as np
 
+import pyrate.constants
 from pyrate.configuration import Configuration, write_config_file
 from pyrate.core import config as cf
 from tests.common import MEXICO_CROPA_CONF, manipulate_test_conf, PYTHON3P8, sub_process_run
@@ -29,22 +30,23 @@ def modified_config(tempdir, get_lks=1, get_crop=1, orbfit_lks=2, orbfit_method=
         tdir = Path(tempdir())
         params = manipulate_test_conf(conf_file, tdir)
 
-        if params[cf.PROCESSOR] == 1:  # turn on coherence for gamma
-            params[cf.COH_MASK] = 1
+        if params[pyrate.constants.PROCESSOR] == 1:  # turn on coherence for gamma
+            params[pyrate.constants.COH_MASK] = 1
 
-        params[cf.PARALLEL] = parallel_vs_serial
-        params[cf.PROCESSES] = 4
-        params[cf.APSEST] = 1
-        params[cf.IFG_LKSX], params[cf.IFG_LKSY] = get_lks, get_lks
-        params[cf.REFNX], params[cf.REFNY] = 2, 2
+        params[pyrate.constants.PARALLEL] = parallel_vs_serial
+        params[pyrate.constants.PROCESSES] = 4
+        params[pyrate.constants.APSEST] = 1
+        params[pyrate.constants.IFG_LKSX], params[pyrate.constants.IFG_LKSY] = get_lks, get_lks
+        params[pyrate.constants.REFNX], params[pyrate.constants.REFNY] = 2, 2
 
-        params[cf.IFG_CROP_OPT] = get_crop
-        params[cf.ORBITAL_FIT_LOOKS_X], params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks, orbfit_lks
-        params[cf.ORBITAL_FIT] = 1
-        params[cf.ORBITAL_FIT_METHOD] = orbfit_method
-        params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
-        params[cf.REF_EST_METHOD] = ref_est_method
-        params[cf.MAX_LOOP_LENGTH] = 3
+        params[pyrate.constants.IFG_CROP_OPT] = get_crop
+        params[pyrate.constants.ORBITAL_FIT_LOOKS_X], params[
+            pyrate.constants.ORBITAL_FIT_LOOKS_Y] = orbfit_lks, orbfit_lks
+        params[pyrate.constants.ORBITAL_FIT] = 1
+        params[pyrate.constants.ORBITAL_FIT_METHOD] = orbfit_method
+        params[pyrate.constants.ORBITAL_FIT_DEGREE] = orbfit_degrees
+        params[pyrate.constants.REF_EST_METHOD] = ref_est_method
+        params[pyrate.constants.MAX_LOOP_LENGTH] = 3
         params["rows"], params["cols"] = 3, 2
         params["savenpy"] = 1
         params["notiles"] = params["rows"] * params["cols"]  # number of tiles

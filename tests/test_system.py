@@ -24,6 +24,8 @@ from subprocess import check_call
 from pathlib import Path
 import pytest
 import numpy as np
+
+import pyrate.constants
 from pyrate.core import config as cf
 from pyrate.configuration import Configuration
 from tests.common import MEXICO_CROPA_CONF, PY37GDAL302, PYTHON3P9
@@ -45,9 +47,9 @@ def test_workflow(system_conf):
     params = Configuration(system_conf).__dict__
     for stage in ['conv2tif', 'prepifg', 'correct', 'timeseries', 'stack', 'merge']:
         log_file_name = 'pyrate.log.' + stage
-        files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
+        files = list(Path(params[pyrate.constants.OUT_DIR]).glob(log_file_name + '.*'))
         assert len(files) == 1
-    shutil.rmtree(params[cf.OUT_DIR])
+    shutil.rmtree(params[pyrate.constants.OUT_DIR])
 
 
 def test_single_workflow(gamma_or_mexicoa_conf):
@@ -59,25 +61,25 @@ def test_single_workflow(gamma_or_mexicoa_conf):
     params = Configuration(gamma_or_mexicoa_conf).__dict__
 
     log_file_name = 'pyrate.log.' + 'workflow'
-    files = list(Path(params[cf.OUT_DIR]).glob(log_file_name + '.*'))
+    files = list(Path(params[pyrate.constants.OUT_DIR]).glob(log_file_name + '.*'))
     assert len(files) == 1
 
     # ref pixel file generated
-    ref_pixel_file = params[cf.REF_PIXEL_FILE]
+    ref_pixel_file = params[pyrate.constants.REF_PIXEL_FILE]
     assert Path(ref_pixel_file).exists()
     ref_pixel = np.load(ref_pixel_file)
     if gamma_or_mexicoa_conf == MEXICO_CROPA_CONF:
         np.testing.assert_array_equal(ref_pixel, [42, 2])
         for f in ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle', 'range_dist']:
-            assert Path(params[cf.OUT_DIR]).joinpath(f + '.tif').exists()
+            assert Path(params[pyrate.constants.OUT_DIR]).joinpath(f + '.tif').exists()
     else:
         np.testing.assert_array_equal(ref_pixel, [38, 58])
 
     # assert orbfit exists on disc
     from pyrate.core import shared
-    looked_files = [p.sampled_path for p in params[cf.INTERFEROGRAM_FILES]]
+    looked_files = [p.sampled_path for p in params[pyrate.constants.INTERFEROGRAM_FILES]]
     ifgs = [shared.Ifg(ifg) for ifg in looked_files]
-    orbfits_on_disc = [Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR, Path(ifg.data_path).stem + '_orbfit.npy')
+    orbfits_on_disc = [Path(params[pyrate.constants.OUT_DIR], pyrate.constants.ORB_ERROR_DIR, Path(ifg.data_path).stem + '_orbfit.npy')
                        for ifg in ifgs]
     assert all(orbfits_on_disc)
-    shutil.rmtree(params[cf.OUT_DIR])
+    shutil.rmtree(params[pyrate.constants.OUT_DIR])

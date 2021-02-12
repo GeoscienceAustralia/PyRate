@@ -37,6 +37,9 @@ import numpy as np
 from numpy import where, nan, isnan, sum as nsum, isclose
 import pyproj
 import pkg_resources
+
+import pyrate.constants
+
 try:
     from osgeo import osr, gdal
     from osgeo.gdalconst import GA_Update, GA_ReadOnly
@@ -560,7 +563,7 @@ class IfgPart(object):
             self.second = ifg.second
             self.time_span = ifg.time_span
             phase_file = 'phase_data_{}_{}.npy'.format(basename(ifg_or_path).split('.')[0], tile.index)
-            self.phase_data = np.load(join(params[cf.TMPDIR], phase_file))
+            self.phase_data = np.load(join(params[pyrate.constants.TMPDIR], phase_file))
         else:
             # check if Ifg was sent.
             if isinstance(ifg_or_path, Ifg):
@@ -1176,10 +1179,10 @@ def nan_and_mm_convert(ifg, params):
 
     :return: None, data modified internally
     """
-    nan_conversion = params[cf.NAN_CONVERSION]
+    nan_conversion = params[pyrate.constants.NAN_CONVERSION]
     if nan_conversion:  # nan conversion happens here in networkx mst
         # if not ifg.nan_converted:
-        ifg.nodata_value = params[cf.NO_DATA_VALUE]
+        ifg.nodata_value = params[pyrate.constants.NO_DATA_VALUE]
         ifg.convert_to_nans()
     if not ifg.mm_converted:
         ifg.convert_to_mm()
@@ -1273,7 +1276,7 @@ def save_numpy_phase(ifg_paths, params):
     :return: None, file saved to disk
     """
     tiles = params['tiles']
-    outdir = params[cf.TMPDIR]
+    outdir = params[pyrate.constants.TMPDIR]
     if not os.path.exists(outdir):
         mkdir_p(outdir)
     for ifg_path in mpiops.array_split(ifg_paths):
@@ -1389,10 +1392,10 @@ def mpi_vs_multiprocess_logging(step, params):
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
         log.info(f"Running '{step}' step with MPI using {mpiops.size} processes")
         log.warning("Disabling joblib parallel processing (setting parallel = 0)")
-        params[cf.PARALLEL] = 0
+        params[pyrate.constants.PARALLEL] = 0
     else:
-        if params[cf.PARALLEL] == 1:
-            log.info(f"Running '{step}' step in parallel using {params[cf.PROCESSES]} processes")
+        if params[pyrate.constants.PARALLEL] == 1:
+            log.info(f"Running '{step}' step in parallel using {params[pyrate.constants.PROCESSES]} processes")
         else:
             log.info(f"Running '{step}' step in serial")
 
@@ -1425,9 +1428,9 @@ def join_dicts(dicts: List[dict]) -> dict:
 
 
 def iterable_split(func: Callable, iterable: Iterable, params: dict, *args, **kwargs) -> np.ndarray:
-    if params[cf.PARALLEL]:
+    if params[pyrate.constants.PARALLEL]:
         ret_combined = {}
-        rets = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+        rets = Parallel(n_jobs=params[pyrate.constants.PROCESSES], verbose=joblib_log_level(pyrate.constants.LOG_LEVEL))(
             delayed(func)(t, params, *args, **kwargs) for t in iterable)
         for i, r in enumerate(rets):
             ret_combined[i] = r
@@ -1450,7 +1453,7 @@ def tiles_split(func: Callable, params: dict, *args, **kwargs) -> np.ndarray:
     :param params: Dictionary of PyRate configuration parameters.
         params must contain a 'tiles' list
     """
-    tiles = params[cf.TILES]
+    tiles = params[pyrate.constants.TILES]
     return iterable_split(func, tiles, params, *args, **kwargs)
 
 

@@ -27,6 +27,7 @@ import numpy as np
 from numpy import nan, mean, std, isnan
 
 import pyrate.configuration
+import pyrate.constants
 import pyrate.core.refpixel
 from pyrate.core import config as cf
 from pyrate.core.refpixel import ref_pixel, _step, RefPixelError, ref_pixel_calc_wrapper, \
@@ -60,54 +61,54 @@ class TestReferencePixelInputTests:
     def setup_method(cls):
         cls.ifgs = small_data_setup()
         cls.params = Configuration(TEST_CONF_ROIPAC).__dict__
-        cls.params[cf.REFNX] = REFNX
-        cls.params[cf.REFNY] = REFNY
-        cls.params[cf.REF_CHIP_SIZE] = CHIPSIZE
-        cls.params[cf.REF_MIN_FRAC] = MIN_FRAC
-        cls.params[cf.PARALLEL] = PARALLEL
+        cls.params[pyrate.constants.REFNX] = REFNX
+        cls.params[pyrate.constants.REFNY] = REFNY
+        cls.params[pyrate.constants.REF_CHIP_SIZE] = CHIPSIZE
+        cls.params[pyrate.constants.REF_MIN_FRAC] = MIN_FRAC
+        cls.params[pyrate.constants.PARALLEL] = PARALLEL
 
     def test_missing_chipsize(self):
-        self.params[cf.REF_CHIP_SIZE] = None
+        self.params[pyrate.constants.REF_CHIP_SIZE] = None
         with pytest.raises(ConfigException):
             ref_pixel(self.ifgs, self.params)
 
     def test_chipsize_valid(self):
         for illegal in [0, -1, -15, 1, 2, self.ifgs[0].ncols+1, 4, 6, 10, 20]:
-            self.params[cf.REF_CHIP_SIZE] = illegal
+            self.params[pyrate.constants.REF_CHIP_SIZE] = illegal
             with pytest.raises(RefPixelError):
                 ref_pixel(self.ifgs, self.params)
 
     def test_minimum_fraction_missing(self):
-        self.params[cf.REF_MIN_FRAC] = None
+        self.params[pyrate.constants.REF_MIN_FRAC] = None
         with pytest.raises(ConfigException):
             ref_pixel(self.ifgs, self.params)
 
     def test_minimum_fraction_threshold(self):
         for illegal in [-0.1, 1.1, 1.000001, -0.0000001]:
-            self.params[cf.REF_MIN_FRAC] = illegal
+            self.params[pyrate.constants.REF_MIN_FRAC] = illegal
             with pytest.raises(RefPixelError):
                 ref_pixel(self.ifgs, self.params)
 
     def test_search_windows(self):
         # 45 is max # cells a width 3 sliding window can iterate over
         for illegal in [-5, -1, 0, 46, 50, 100]:
-            self.params[cf.REFNX] = illegal
+            self.params[pyrate.constants.REFNX] = illegal
             with pytest.raises(RefPixelError):
                 ref_pixel(self.ifgs, self.params)
 
         # 40 is max # cells a width 3 sliding window can iterate over
         for illegal in [-5, -1, 0, 71, 85, 100]:
-            self.params[cf.REFNY] = illegal
+            self.params[pyrate.constants.REFNY] = illegal
             with pytest.raises(RefPixelError):
                 ref_pixel(self.ifgs, self.params)
 
     def test_missing_search_windows(self):
-        self.params[cf.REFNX] = None
+        self.params[pyrate.constants.REFNX] = None
         with pytest.raises(ConfigException):
             ref_pixel(self.ifgs, self.params)
 
-        self.params[cf.REFNX] = REFNX
-        self.params[cf.REFNY] = None
+        self.params[pyrate.constants.REFNX] = REFNX
+        self.params[pyrate.constants.REFNY] = None
 
         with pytest.raises(ConfigException):
             ref_pixel(self.ifgs, self.params)
@@ -121,12 +122,12 @@ class TestReferencePixelTests:
     @classmethod
     def setup_method(cls):
         cls.params = Configuration(TEST_CONF_ROIPAC).__dict__
-        cls.params[cf.OUT_DIR], cls.ifgs = copy_and_setup_small_data()
-        cls.params[cf.REFNX] = REFNX
-        cls.params[cf.REFNY] = REFNY
-        cls.params[cf.REF_CHIP_SIZE] = CHIPSIZE
-        cls.params[cf.REF_MIN_FRAC] = MIN_FRAC
-        cls.params[cf.PARALLEL] = PARALLEL
+        cls.params[pyrate.constants.OUT_DIR], cls.ifgs = copy_and_setup_small_data()
+        cls.params[pyrate.constants.REFNX] = REFNX
+        cls.params[pyrate.constants.REFNY] = REFNY
+        cls.params[pyrate.constants.REF_CHIP_SIZE] = CHIPSIZE
+        cls.params[pyrate.constants.REF_MIN_FRAC] = MIN_FRAC
+        cls.params[pyrate.constants.PARALLEL] = PARALLEL
 
     def test_all_below_threshold_exception(self):
         # test failure when no valid stacks in dataset
@@ -138,11 +139,11 @@ class TestReferencePixelTests:
             m.phase_data[1:5] = 0.1
             m.phase_data[5:] = nan
 
-        self.params[cf.REFNX] = 2
-        self.params[cf.REFNY] = 2
-        self.params[cf.REF_CHIP_SIZE] = CHIPSIZE
-        self.params[cf.REF_MIN_FRAC] = MIN_FRAC
-        self.params[cf.PARALLEL] = PARALLEL
+        self.params[pyrate.constants.REFNX] = 2
+        self.params[pyrate.constants.REFNY] = 2
+        self.params[pyrate.constants.REF_CHIP_SIZE] = CHIPSIZE
+        self.params[pyrate.constants.REF_MIN_FRAC] = MIN_FRAC
+        self.params[pyrate.constants.PARALLEL] = PARALLEL
         with pytest.raises(ValueError):
             ref_pixel(mock_ifgs, self.params)
 
@@ -154,11 +155,11 @@ class TestReferencePixelTests:
             m.phase_data[1:5] = 0.1
             m.phase_data[5:] = 0.3
         exp_refpx = (1, 1)
-        self.params[cf.REFNX] = 1
-        self.params[cf.REFNY] = 1
-        self.params[cf.REF_CHIP_SIZE] = CHIPSIZE
-        self.params[cf.REF_MIN_FRAC] = MIN_FRAC
-        self.params[cf.PARALLEL] = PARALLEL
+        self.params[pyrate.constants.REFNX] = 1
+        self.params[pyrate.constants.REFNY] = 1
+        self.params[pyrate.constants.REF_CHIP_SIZE] = CHIPSIZE
+        self.params[pyrate.constants.REF_MIN_FRAC] = MIN_FRAC
+        self.params[pyrate.constants.PARALLEL] = PARALLEL
         res = ref_pixel(mock_ifgs, self.params)
         assert exp_refpx == res
 
@@ -166,11 +167,11 @@ class TestReferencePixelTests:
         # 5x5 view over a 5x5 ifg with 1 window/ref pix search
         chps = 5
         mockifgs = [MockIfg(i, chps, chps) for i in self.ifgs]
-        self.params[cf.REFNX] = 1
-        self.params[cf.REFNY] = 1
-        self.params[cf.REF_CHIP_SIZE] = chps
-        self.params[cf.REF_MIN_FRAC] = MIN_FRAC
-        self.params[cf.PARALLEL] = PARALLEL
+        self.params[pyrate.constants.REFNX] = 1
+        self.params[pyrate.constants.REFNY] = 1
+        self.params[pyrate.constants.REF_CHIP_SIZE] = chps
+        self.params[pyrate.constants.REF_MIN_FRAC] = MIN_FRAC
+        self.params[pyrate.constants.PARALLEL] = PARALLEL
         res = ref_pixel(mockifgs, self.params)
         assert (2, 2) == res
 
@@ -204,11 +205,11 @@ class TestReferencePixelTests:
 
     def test_ref_pixel(self):
         exp_refpx = (2, 25)
-        self.params[cf.REFNX] = 2
-        self.params[cf.REFNY] = 2
-        self.params[cf.REF_CHIP_SIZE] = 5
-        self.params[cf.REF_MIN_FRAC] = MIN_FRAC
-        self.params[cf.PARALLEL] = PARALLEL
+        self.params[pyrate.constants.REFNX] = 2
+        self.params[pyrate.constants.REFNY] = 2
+        self.params[pyrate.constants.REF_CHIP_SIZE] = 5
+        self.params[pyrate.constants.REF_MIN_FRAC] = MIN_FRAC
+        self.params[pyrate.constants.PARALLEL] = PARALLEL
         res = ref_pixel(self.ifgs, self.params)
         assert res == exp_refpx
 
@@ -246,50 +247,50 @@ class TestLegacyEqualityTest:
     @classmethod
     def setup_method(cls):
         cls.params = Configuration(TEST_CONF_ROIPAC).__dict__
-        cls.params[cf.PARALLEL] = 0
-        cls.params[cf.OUT_DIR], cls.ifg_paths = copy_small_ifg_file_list()
-        conf_file = Path(cls.params[cf.OUT_DIR], 'conf_file.conf')
+        cls.params[pyrate.constants.PARALLEL] = 0
+        cls.params[pyrate.constants.OUT_DIR], cls.ifg_paths = copy_small_ifg_file_list()
+        conf_file = Path(cls.params[pyrate.constants.OUT_DIR], 'conf_file.conf')
         pyrate.configuration.write_config_file(params=cls.params, output_conf_file=conf_file)
         cls.params = Configuration(conf_file).__dict__
         cls.params_alt_ref_frac = copy.copy(cls.params)
-        cls.params_alt_ref_frac[cf.REF_MIN_FRAC] = 0.5
+        cls.params_alt_ref_frac[pyrate.constants.REF_MIN_FRAC] = 0.5
         cls.params_all_2s = copy.copy(cls.params)
-        cls.params_all_2s[cf.REFNX] = 2
-        cls.params_all_2s[cf.REFNY] = 2
+        cls.params_all_2s[pyrate.constants.REFNX] = 2
+        cls.params_all_2s[pyrate.constants.REFNY] = 2
         cls.params_chipsize_15 = copy.copy(cls.params_all_2s)
-        cls.params_chipsize_15[cf.REF_CHIP_SIZE] = 15
+        cls.params_chipsize_15[pyrate.constants.REF_CHIP_SIZE] = 15
         cls.params_all_1s = copy.copy(cls.params)
-        cls.params_all_1s[cf.REFNX] = 1
-        cls.params_all_1s[cf.REFNY] = 1
-        cls.params_all_1s[cf.REF_MIN_FRAC] = 0.7
+        cls.params_all_1s[pyrate.constants.REFNX] = 1
+        cls.params_all_1s[pyrate.constants.REFNY] = 1
+        cls.params_all_1s[pyrate.constants.REF_MIN_FRAC] = 0.7
 
-        for p, q in zip(cls.params[cf.INTERFEROGRAM_FILES], cls.ifg_paths):  # hack
+        for p, q in zip(cls.params[pyrate.constants.INTERFEROGRAM_FILES], cls.ifg_paths):  # hack
             p.sampled_path = q
             p.tmp_sampled_path = q
 
     @classmethod
     def teardown_method(cls):
-        shutil.rmtree(cls.params[cf.OUT_DIR])
+        shutil.rmtree(cls.params[pyrate.constants.OUT_DIR])
 
     def test_small_test_data_ref_pixel_lat_lon_provided(self):
-        self.params[cf.REFX], self.params[cf.REFY] = 150.941666654, -34.218333314
+        self.params[pyrate.constants.REFX], self.params[pyrate.constants.REFY] = 150.941666654, -34.218333314
         refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params)
         assert refx == 38
         assert refy == 58
-        assert 0.8 == pytest.approx(self.params[cf.REF_MIN_FRAC])
+        assert 0.8 == pytest.approx(self.params[pyrate.constants.REF_MIN_FRAC])
 
     def test_small_test_data_ref_pixel(self):
         refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params)
         assert refx == 38
         assert refy == 58
-        assert 0.8 == pytest.approx(self.params[cf.REF_MIN_FRAC])
+        assert 0.8 == pytest.approx(self.params[pyrate.constants.REF_MIN_FRAC])
 
     def test_small_test_data_ref_chipsize_15(self):
 
         refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params_chipsize_15)
         assert refx == 7
         assert refy == 7
-        assert 0.5 == pytest.approx(self.params_alt_ref_frac[cf.REF_MIN_FRAC])
+        assert 0.5 == pytest.approx(self.params_alt_ref_frac[pyrate.constants.REF_MIN_FRAC])
 
     def test_metadata(self):
         refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params_chipsize_15)
@@ -306,9 +307,9 @@ class TestLegacyEqualityTest:
 
     def test_small_test_data_ref_all_1(self):
         refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params_all_1s)
-        assert 0.7 == pytest.approx(self.params_all_1s[cf.REF_MIN_FRAC])
-        assert 1 == self.params_all_1s[cf.REFNX]
-        assert 1 == self.params_all_1s[cf.REFNY]
+        assert 0.7 == pytest.approx(self.params_all_1s[pyrate.constants.REF_MIN_FRAC])
+        assert 1 == self.params_all_1s[pyrate.constants.REFNX]
+        assert 1 == self.params_all_1s[pyrate.constants.REFNY]
         assert refx == 2
         assert refy == 2
 
@@ -318,65 +319,65 @@ class TestLegacyEqualityTestMultiprocessParallel:
     @classmethod
     def setup_method(cls):
         cls.params = Configuration(TEST_CONF_ROIPAC).__dict__
-        cls.params[cf.PARALLEL] = 1
-        cls.params[cf.OUT_DIR], cls.ifg_paths = copy_small_ifg_file_list()
-        conf_file = Path(cls.params[cf.OUT_DIR], 'conf_file.conf')
+        cls.params[pyrate.constants.PARALLEL] = 1
+        cls.params[pyrate.constants.OUT_DIR], cls.ifg_paths = copy_small_ifg_file_list()
+        conf_file = Path(cls.params[pyrate.constants.OUT_DIR], 'conf_file.conf')
         pyrate.configuration.write_config_file(params=cls.params, output_conf_file=conf_file)
         cls.params = Configuration(conf_file).__dict__
         cls.params_alt_ref_frac = copy.copy(cls.params)
-        cls.params_alt_ref_frac[cf.REF_MIN_FRAC] = 0.5
+        cls.params_alt_ref_frac[pyrate.constants.REF_MIN_FRAC] = 0.5
         cls.params_all_2s = copy.copy(cls.params)
-        cls.params_all_2s[cf.REFNX] = 2
-        cls.params_all_2s[cf.REFNY] = 2
+        cls.params_all_2s[pyrate.constants.REFNX] = 2
+        cls.params_all_2s[pyrate.constants.REFNY] = 2
         cls.params_chipsize_15 = copy.copy(cls.params_all_2s)
-        cls.params_chipsize_15[cf.REF_CHIP_SIZE] = 15
+        cls.params_chipsize_15[pyrate.constants.REF_CHIP_SIZE] = 15
         cls.params_all_1s = copy.copy(cls.params)
-        cls.params_all_1s[cf.REFNX] = 1
-        cls.params_all_1s[cf.REFNY] = 1
-        cls.params_all_1s[cf.REF_MIN_FRAC] = 0.7
+        cls.params_all_1s[pyrate.constants.REFNX] = 1
+        cls.params_all_1s[pyrate.constants.REFNY] = 1
+        cls.params_all_1s[pyrate.constants.REF_MIN_FRAC] = 0.7
 
-        for p, q in zip(cls.params[cf.INTERFEROGRAM_FILES], cls.ifg_paths):  # hack
+        for p, q in zip(cls.params[pyrate.constants.INTERFEROGRAM_FILES], cls.ifg_paths):  # hack
             p.sampled_path = q
             p.tmp_sampled_path = q
 
     @classmethod
     def teardown_method(cls):
-        shutil.rmtree(cls.params[cf.OUT_DIR])
+        shutil.rmtree(cls.params[pyrate.constants.OUT_DIR])
 
     def test_small_test_data_ref_pixel(self):
         refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params)
         assert refx == 38
         assert refy == 58
-        assert 0.8 == pytest.approx(self.params[cf.REF_MIN_FRAC])
+        assert 0.8 == pytest.approx(self.params[pyrate.constants.REF_MIN_FRAC])
 
     def test_more_small_test_data_ref_pixel(self):
 
         refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params_alt_ref_frac)
         assert refx == 38
         assert refy == 58
-        assert 0.5 == pytest.approx(self.params_alt_ref_frac[cf.REF_MIN_FRAC])
+        assert 0.5 == pytest.approx(self.params_alt_ref_frac[pyrate.constants.REF_MIN_FRAC])
 
     def test_small_test_data_ref_pixel_all_2(self):
 
         refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params_all_2s)
         assert refx == 25
         assert refy == 2
-        assert 0.5 == pytest.approx(self.params_alt_ref_frac[cf.REF_MIN_FRAC])
+        assert 0.5 == pytest.approx(self.params_alt_ref_frac[pyrate.constants.REF_MIN_FRAC])
 
     def test_small_test_data_ref_chipsize_15(self):
 
         refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params_chipsize_15)
         assert refx == 7
         assert refy == 7
-        assert 0.5 == pytest.approx(self.params_alt_ref_frac[cf.REF_MIN_FRAC])
+        assert 0.5 == pytest.approx(self.params_alt_ref_frac[pyrate.constants.REF_MIN_FRAC])
 
     def test_small_test_data_ref_all_1(self):
 
         refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(self.params_all_1s)
 
-        assert 0.7 == pytest.approx(self.params_all_1s[cf.REF_MIN_FRAC])
-        assert 1 == self.params_all_1s[cf.REFNX]
-        assert 1 == self.params_all_1s[cf.REFNY]
+        assert 0.7 == pytest.approx(self.params_all_1s[pyrate.constants.REF_MIN_FRAC])
+        assert 1 == self.params_all_1s[pyrate.constants.REFNX]
+        assert 1 == self.params_all_1s[pyrate.constants.REFNY]
         assert refx == 2
         assert refy == 2
 
@@ -397,13 +398,13 @@ def test_error_msg_refpixel_out_of_bounds(tempdir, gamma_conf):
 def test_gamma_ref_pixel_search_vs_lat_lon(tempdir, gamma_conf):
     params_1, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=-1, refy=-1)
     params_2, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=150.941666654, refy=-34.218333314)
-    assert_two_dirs_equal(params_1[cf.OUT_DIR], params_2[cf.OUT_DIR], ["*_ifg.tif", '*_coh.tif', 'dem.tif'], 35)
+    assert_two_dirs_equal(params_1[pyrate.constants.OUT_DIR], params_2[pyrate.constants.OUT_DIR], ["*_ifg.tif", '*_coh.tif', 'dem.tif'], 35)
 
 
 def _get_mlooked_files(gamma_conf, tdir, refx, refy):
     params = manipulate_test_conf(gamma_conf, tdir)
-    params[cf.REFX] = refx
-    params[cf.REFY] = refy
+    params[pyrate.constants.REFX] = refx
+    params[pyrate.constants.REFY] = refy
     output_conf_file = 'config.conf'
     output_conf = tdir.joinpath(output_conf_file)
     pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
@@ -432,33 +433,33 @@ class TestRefPixelReuseLoadsSameFileAndPixels:
 
     @classmethod
     def teardown_method(cls):
-        shutil.rmtree(cls.params[cf.OUT_DIR])
+        shutil.rmtree(cls.params[pyrate.constants.OUT_DIR])
 
     def test_ref_pixel_multiple_runs_reuse_from_disc(self, ref_pixel):
         params = self.params
-        params[cf.REFX], params[cf.REFY] = ref_pixel
-        params[cf.REF_PIXEL_FILE] = Configuration.ref_pixel_path(params)
+        params[pyrate.constants.REFX], params[pyrate.constants.REFY] = ref_pixel
+        params[pyrate.constants.REF_PIXEL_FILE] = Configuration.ref_pixel_path(params)
         ref_pixel_calc_wrapper(params)
 
-        ref_pixel_file = self.params[cf.REF_PIXEL_FILE]
+        ref_pixel_file = self.params[pyrate.constants.REF_PIXEL_FILE]
         time_written = os.stat(ref_pixel_file).st_mtime
-        assert self.params[cf.REFX_FOUND] == 38
-        assert self.params[cf.REFY_FOUND] == 58
+        assert self.params[pyrate.constants.REFX_FOUND] == 38
+        assert self.params[pyrate.constants.REFY_FOUND] == 58
         # run again
         ref_pixel_calc_wrapper(self.params)
-        ref_pixel_file = self.params[cf.REF_PIXEL_FILE]
+        ref_pixel_file = self.params[pyrate.constants.REF_PIXEL_FILE]
         time_written_1 = os.stat(ref_pixel_file).st_mtime
-        assert self.params[cf.REFX_FOUND] == 38
-        assert self.params[cf.REFY_FOUND] == 58
+        assert self.params[pyrate.constants.REFX_FOUND] == 38
+        assert self.params[pyrate.constants.REFY_FOUND] == 58
 
         # run a third time
         ref_pixel_calc_wrapper(self.params)
-        ref_pixel_file = self.params[cf.REF_PIXEL_FILE]
+        ref_pixel_file = self.params[pyrate.constants.REF_PIXEL_FILE]
         time_written_2 = os.stat(ref_pixel_file).st_mtime
         assert time_written == time_written_2 == time_written_1
-        assert self.params[cf.REFX], self.params[cf.REFY] == ref_pixel
-        assert self.params[cf.REFX_FOUND] == 38
-        assert self.params[cf.REFY_FOUND] == 58
+        assert self.params[pyrate.constants.REFX], self.params[pyrate.constants.REFY] == ref_pixel
+        assert self.params[pyrate.constants.REFX_FOUND] == 38
+        assert self.params[pyrate.constants.REFY_FOUND] == 58
 
 
 @pytest.fixture(scope='module')

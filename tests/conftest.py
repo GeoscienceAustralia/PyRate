@@ -22,6 +22,7 @@ import string
 import tempfile
 import pytest
 
+import pyrate.constants
 from pyrate.constants import PYRATEPATH
 from pyrate.core import mpiops, config as cf, shared
 from pyrate.configuration import Configuration
@@ -43,7 +44,7 @@ def tempdir():
 def system_conf(request):
     params = Configuration(request.param).__dict__
     yield request.param
-    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
+    shutil.rmtree(params[pyrate.constants.OUT_DIR], ignore_errors=True)
 
 
 @pytest.fixture
@@ -86,12 +87,12 @@ def orbfit_lks(request):
     return request.param
 
 
-@pytest.fixture(params=cf.ORB_METHOD_NAMES.keys())
+@pytest.fixture(params=pyrate.constants.ORB_METHOD_NAMES.keys())
 def orbfit_method(request):
     return request.param
 
 
-@pytest.fixture(params=cf.ORB_DEGREE_NAMES.keys())
+@pytest.fixture(params=pyrate.constants.ORB_DEGREE_NAMES.keys())
 def orbfit_degrees(request):
     return request.param
 
@@ -117,24 +118,24 @@ def get_config():
 @pytest.fixture
 def gamma_params():
     params = Configuration(TEST_CONF_GAMMA).__dict__
-    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
-    shared.mkdir_p(params[cf.OUT_DIR])
+    shutil.rmtree(params[pyrate.constants.OUT_DIR], ignore_errors=True)
+    shared.mkdir_p(params[pyrate.constants.OUT_DIR])
     yield params
-    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
+    shutil.rmtree(params[pyrate.constants.OUT_DIR], ignore_errors=True)
 
 
 @pytest.fixture
 def roipac_params():
     params = Configuration(TEST_CONF_ROIPAC).__dict__
     yield params
-    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
+    shutil.rmtree(params[pyrate.constants.OUT_DIR], ignore_errors=True)
 
 
 @pytest.fixture
 def mexico_cropa_params():
     params = Configuration(MEXICO_CROPA_CONF).__dict__
     yield params
-    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
+    shutil.rmtree(params[pyrate.constants.OUT_DIR], ignore_errors=True)
 
 
 @pytest.fixture(params=[TEST_CONF_GAMMA, TEST_CONF_ROIPAC])
@@ -146,7 +147,7 @@ def roipac_or_gamma_conf(request):
 def gamma_conf(request):
     params = Configuration(TEST_CONF_GAMMA).__dict__
     yield request.param
-    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
+    shutil.rmtree(params[pyrate.constants.OUT_DIR], ignore_errors=True)
 
 
 @pytest.fixture
@@ -165,7 +166,7 @@ def dem():
 def gamma_or_mexicoa_conf(request):
     params = Configuration(request.param).__dict__
     yield request.param
-    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
+    shutil.rmtree(params[pyrate.constants.OUT_DIR], ignore_errors=True)
 
 
 @pytest.fixture(params=range(5))

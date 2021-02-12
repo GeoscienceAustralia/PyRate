@@ -27,6 +27,7 @@ from networkx.classes.reportviews import EdgeView
 import networkx as nx
 from joblib import Parallel, delayed
 
+import pyrate.constants
 from pyrate.core.algorithm import ifg_date_lookup
 from pyrate.core.algorithm import ifg_date_index_lookup
 from pyrate.core import config as cf
@@ -82,7 +83,7 @@ def mst_parallel(ifgs, params):
     """
 
     log.info('Calculating MST in tiles')
-    ncpus = params[cf.PROCESSES]
+    ncpus = params[pyrate.constants.PROCESSES]
     no_ifgs = len(ifgs)
     no_y, no_x = ifgs[0].phase_data.shape
     tiles = create_tiles(ifgs[0].shape)
@@ -94,10 +95,10 @@ def mst_parallel(ifgs, params):
     ifg_paths = [i.data_path for i in ifgs]
     result = empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
 
-    if params[cf.PARALLEL]:
+    if params[pyrate.constants.PARALLEL]:
         log.info('Calculating MST using {} tiles in parallel using {} ' \
                  'processes'.format(no_tiles, ncpus))
-        t_msts = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+        t_msts = Parallel(n_jobs=params[pyrate.constants.PROCESSES], verbose=joblib_log_level(pyrate.constants.LOG_LEVEL))(
             delayed(mst_multiprocessing)(t, ifg_paths, params=params) for t in tiles
         )
         for k, tile in enumerate(tiles):
@@ -278,8 +279,8 @@ def mst_calc_wrapper(params):
         """
         Convenient inner loop for mst tile saving
         """
-        preread_ifgs = params[cf.PREREAD_IFGS]
-        dest_tifs = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+        preread_ifgs = params[pyrate.constants.PREREAD_IFGS]
+        dest_tifs = [ifg_path.tmp_sampled_path for ifg_path in params[pyrate.constants.INTERFEROGRAM_FILES]]
         mst_file_process_n = Configuration.mst_path(params, index=tile.index)
         if mst_file_process_n.exists():
             return

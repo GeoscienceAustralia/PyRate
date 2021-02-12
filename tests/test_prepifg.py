@@ -32,6 +32,7 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 from osgeo import gdal
 
 import pyrate.configuration
+import pyrate.constants
 from pyrate.core import config as cf
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core.shared import Ifg, DEM, dem_or_ifg
@@ -59,23 +60,23 @@ if not exists(PREP_TEST_TIF):
 def test_prepifg_treats_inputs_and_outputs_read_only(gamma_conf, tempdir, coh_mask):
     tdir = Path(tempdir())
     params = common.manipulate_test_conf(gamma_conf, tdir)
-    params[cf.COH_MASK] = coh_mask
+    params[pyrate.constants.COH_MASK] = coh_mask
     output_conf = tdir.joinpath('conf.cfg')
     pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
 
     params = Configuration(output_conf.as_posix()).__dict__
     conv2tif.main(params)
 
-    tifs = list(Path(params[cf.OUT_DIR]).glob('*_unw.tif'))
+    tifs = list(Path(params[pyrate.constants.OUT_DIR]).glob('*_unw.tif'))
     assert len(tifs) == 17
 
     params = Configuration(output_conf.as_posix()).__dict__
     prepifg.main(params)
-    cropped_ifgs = list(Path(params[cf.OUT_DIR]).glob('*_ifg.tif'))
-    cropped_cohs = list(Path(params[cf.OUT_DIR]).glob('*_coh.tif'))
-    cropped_dem = list(Path(params[cf.OUT_DIR]).glob('*_dem.tif'))
+    cropped_ifgs = list(Path(params[pyrate.constants.OUT_DIR]).glob('*_ifg.tif'))
+    cropped_cohs = list(Path(params[pyrate.constants.OUT_DIR]).glob('*_coh.tif'))
+    cropped_dem = list(Path(params[pyrate.constants.OUT_DIR]).glob('*_dem.tif'))
 
-    if params[cf.COH_FILE_LIST] is not None:  # 17 + 1 dem + 17 coh files
+    if params[pyrate.constants.COH_FILE_LIST] is not None:  # 17 + 1 dem + 17 coh files
         assert len(cropped_ifgs) + len(cropped_cohs) + len(cropped_dem) == 35
     else:  # 17 + 1 dem
         assert len(cropped_ifgs) + len(cropped_cohs) + len(cropped_dem) == 18
@@ -91,8 +92,8 @@ def test_prepifg_treats_inputs_and_outputs_read_only(gamma_conf, tempdir, coh_ma
 def test_prepifg_file_types(tempdir, gamma_conf, coh_mask):
     tdir = Path(tempdir())
     params = manipulate_test_conf(gamma_conf, tdir)
-    params[cf.COH_MASK] = coh_mask
-    params[cf.PARALLEL] = 0
+    params[pyrate.constants.COH_MASK] = coh_mask
+    params[pyrate.constants.PARALLEL] = 0
     output_conf_file = 'conf.conf'
     output_conf = tdir.joinpath(output_conf_file)
     pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
@@ -101,17 +102,17 @@ def test_prepifg_file_types(tempdir, gamma_conf, coh_mask):
     # reread params from config
     params_s = Configuration(output_conf).__dict__
     prepifg.main(params_s)
-    ifg_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_unw.tif'))
+    ifg_files = list(Path(tdir.joinpath(params_s[pyrate.constants.OUT_DIR])).glob('*_unw.tif'))
     assert len(ifg_files) == 17
-    mlooked_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_ifg.tif'))
+    mlooked_files = list(Path(tdir.joinpath(params_s[pyrate.constants.OUT_DIR])).glob('*_ifg.tif'))
     assert len(mlooked_files) == 17
-    coh_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_cc.tif'))
-    mlooked_coh_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_coh.tif'))
+    coh_files = list(Path(tdir.joinpath(params_s[pyrate.constants.OUT_DIR])).glob('*_cc.tif'))
+    mlooked_coh_files = list(Path(tdir.joinpath(params_s[pyrate.constants.OUT_DIR])).glob('*_coh.tif'))
     if coh_mask:
         assert len(coh_files) == 17
         assert len(mlooked_coh_files) == 17
-    dem_file = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_dem.tif'))[0]
-    mlooked_dem_file = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('dem.tif'))[0]
+    dem_file = list(Path(tdir.joinpath(params_s[pyrate.constants.OUT_DIR])).glob('*_dem.tif'))[0]
+    mlooked_dem_file = list(Path(tdir.joinpath(params_s[pyrate.constants.OUT_DIR])).glob('dem.tif'))[0]
     import itertools
 
     # assert coherence and ifgs have correct metadata
@@ -190,15 +191,16 @@ def same_exts_ifgs():
 
 def extents_from_params(params):
     """Custom extents from supplied parameters"""
-    keys = (cf.IFG_XFIRST, cf.IFG_YFIRST, cf.IFG_XLAST, cf.IFG_YLAST)
+    keys = (
+    pyrate.constants.IFG_XFIRST, pyrate.constants.IFG_YFIRST, pyrate.constants.IFG_XLAST, pyrate.constants.IFG_YLAST)
     return CustomExts(*[params[k] for k in keys])
 
 
 def test_extents_from_params():
     xf, yf = 1.0, 2.0
     xl, yl = 5.0, 7.0
-    pars = {cf.IFG_XFIRST: xf, cf.IFG_XLAST: xl,
-            cf.IFG_YFIRST: yf, cf.IFG_YLAST: yl}
+    pars = {pyrate.constants.IFG_XFIRST: xf, pyrate.constants.IFG_XLAST: xl,
+            pyrate.constants.IFG_YFIRST: yf, pyrate.constants.IFG_YLAST: yl}
 
     assert extents_from_params(pars) == CustomExts(xf, yf, xl, yl)
 
@@ -232,7 +234,7 @@ class TestPrepifgOutput(UnitTestAdaptation):
         cls.ifg_paths = [i.data_path for i in cls.ifgs]
 
         cls.params = Configuration(common.TEST_CONF_ROIPAC).__dict__
-        cls.params[cf.OUT_DIR] = cls.random_dir
+        cls.params[pyrate.constants.OUT_DIR] = cls.random_dir
         cls.headers = [roipac.roipac_header(i.data_path, cls.params) for i in cls.ifgs]
         paths = ["060619-061002_ifg.tif",
                  "060619-061002_ifg.tif",
@@ -293,9 +295,9 @@ class TestPrepifgOutput(UnitTestAdaptation):
                                    user_exts=None)
         out_dir = tempfile.mkdtemp()
         params = common.min_params(out_dir)
-        params[cf.IFG_LKSX] = xlooks
-        params[cf.IFG_LKSY] = ylooks
-        params[cf.IFG_CROP_OPT] = MAXIMUM_CROP
+        params[pyrate.constants.IFG_LKSX] = xlooks
+        params[pyrate.constants.IFG_LKSY] = ylooks
+        params[pyrate.constants.IFG_CROP_OPT] = MAXIMUM_CROP
 
         mlooked_paths = [mlooked_path(f, params, input_type=InputTypes.IFG)
                          for f in self.ifg_paths]
@@ -466,7 +468,7 @@ class TestPrepifgOutput(UnitTestAdaptation):
 
         # verify DEM has been correctly processed
         # ignore output values as resampling has already been tested for phase
-        exp_dem_path = join(self.params[cf.OUT_DIR], 'dem.tif')
+        exp_dem_path = join(self.params[pyrate.constants.OUT_DIR], 'dem.tif')
         self.assertTrue(exists(exp_dem_path))
         orignal_dem = DEM(SML_TEST_DEM_TIF)
         orignal_dem.open()
@@ -502,9 +504,9 @@ class TestPrepifgOutput(UnitTestAdaptation):
         xlooks = ylooks = scale
         prepare_ifgs(ifg_paths, CUSTOM_CROP, xlooks, ylooks, thresh=1.0, user_exts=cext, headers=self.headers,
                      params=self.params)
-        self.params[cf.IFG_LKSX] = xlooks
-        self.params[cf.IFG_LKSY] = ylooks
-        self.params[cf.IFG_CROP_OPT] = CUSTOM_CROP
+        self.params[pyrate.constants.IFG_LKSX] = xlooks
+        self.params[pyrate.constants.IFG_LKSY] = ylooks
+        self.params[pyrate.constants.IFG_CROP_OPT] = CUSTOM_CROP
         for i, t in zip(ifg_paths, data_types):
             mlooked_ifg = mlooked_path(i, self.params, input_type=t)
             ds1 = DEM(mlooked_ifg)
@@ -615,9 +617,9 @@ class TestSameSizeTests(UnitTestAdaptation):
         xlooks = ylooks = 2
         out_dir = tempfile.mkdtemp()
         params = common.min_params(out_dir)
-        params[cf.IFG_LKSX] = xlooks
-        params[cf.IFG_LKSY] = ylooks
-        params[cf.IFG_CROP_OPT] = ALREADY_SAME_SIZE
+        params[pyrate.constants.IFG_LKSX] = xlooks
+        params[pyrate.constants.IFG_LKSY] = ylooks
+        params[pyrate.constants.IFG_CROP_OPT] = ALREADY_SAME_SIZE
         prepare_ifgs(ifg_data_paths, ALREADY_SAME_SIZE, xlooks, ylooks, self.headers, params)
         looks_paths = [mlooked_path(d, params, input_type=InputTypes.IFG) for d in ifg_data_paths]
         mlooked = [Ifg(i) for i in looks_paths]
@@ -641,9 +643,9 @@ def test_mlooked_path():
     for xlks, ylks, cr, input_type in product([2, 4, 8], [4, 2, 5], [1, 2, 3, 4], [InputTypes.IFG, InputTypes.COH]):
         out_dir = tempfile.mkdtemp()
         params = common.min_params(out_dir)
-        params[cf.IFG_LKSX] = xlks
-        params[cf.IFG_LKSY] = ylks
-        params[cf.IFG_CROP_OPT] = cr
+        params[pyrate.constants.IFG_LKSX] = xlks
+        params[pyrate.constants.IFG_LKSY] = ylks
+        params[pyrate.constants.IFG_CROP_OPT] = cr
         m = mlooked_path(path, params, input_type=input_type)
         assert Path(m).name == f'060619-061002_{input_type.value}.tif'
 
@@ -729,7 +731,8 @@ class TestLegacyEqualityTestRoipacSmallTestData(UnitTestAdaptation):
         cls.ifg_paths = [i.data_path for i in cls.ifgs]
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.headers = [roipac.roipac_header(i.data_path, params) for i in cls.ifgs]
-        params[cf.IFG_LKSX], params[cf.IFG_LKSY], params[cf.IFG_CROP_OPT] = 1, 1, 1
+        params[pyrate.constants.IFG_LKSX], params[pyrate.constants.IFG_LKSY], params[
+            pyrate.constants.IFG_CROP_OPT] = 1, 1, 1
         prepare_ifgs(cls.ifg_paths, crop_opt=1, xlooks=1, ylooks=1, headers=cls.headers, params=params)
         looks_paths = [mlooked_path(d, params, t) for d, t in zip(cls.ifg_paths, [InputTypes.IFG]*len(cls.ifgs))]
         cls.ifgs_with_nan = [Ifg(i) for i in looks_paths]
@@ -818,32 +821,32 @@ class TestOneIncidenceOrElevationMap(UnitTestAdaptation):
     def teardown_class(cls):
         params = Configuration(cls.conf_file).__dict__
         shutil.rmtree(cls.base_dir)
-        common.remove_tifs(params[cf.OBS_DIR])
+        common.remove_tifs(params[pyrate.constants.OBS_DIR])
 
     def make_input_files(self, inc='', ele=''):
         with open(self.conf_file, 'w') as conf:
-            conf.write('{}: {}\n'.format(cf.NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(cf.OBS_DIR, common.SML_TEST_GAMMA))
-            conf.write('{}: {}\n'.format(cf.OUT_DIR, self.base_dir))
-            conf.write('{}: {}\n'.format(cf.IFG_FILE_LIST, self.ifgListFile))
-            conf.write('{}: {}\n'.format(cf.BASE_FILE_LIST, self.baseListFile))
-            conf.write('{}: {}\n'.format(cf.PROCESSOR, '1'))
+            conf.write('{}: {}\n'.format(pyrate.constants.NO_DATA_VALUE, '0.0'))
+            conf.write('{}: {}\n'.format(pyrate.constants.OBS_DIR, common.SML_TEST_GAMMA))
+            conf.write('{}: {}\n'.format(pyrate.constants.OUT_DIR, self.base_dir))
+            conf.write('{}: {}\n'.format(pyrate.constants.IFG_FILE_LIST, self.ifgListFile))
+            conf.write('{}: {}\n'.format(pyrate.constants.BASE_FILE_LIST, self.baseListFile))
+            conf.write('{}: {}\n'.format(pyrate.constants.PROCESSOR, '1'))
             conf.write('{}: {}\n'.format(
-                cf.DEM_HEADER_FILE, os.path.join(
+                pyrate.constants.DEM_HEADER_FILE, os.path.join(
                     common.SML_TEST_GAMMA, '20060619_utm_dem.par')))
-            conf.write('{}: {}\n'.format(cf.IFG_LKSX, '1'))
-            conf.write('{}: {}\n'.format(cf.IFG_LKSY, '1'))
-            conf.write('{}: {}\n'.format(cf.IFG_CROP_OPT, '1'))
-            conf.write('{}: {}\n'.format(cf.NO_DATA_AVERAGING_THRESHOLD, '0.5'))
-            conf.write('{}: {}\n'.format(cf.SLC_DIR, ''))
-            conf.write('{}: {}\n'.format(cf.HDR_FILE_LIST,
+            conf.write('{}: {}\n'.format(pyrate.constants.IFG_LKSX, '1'))
+            conf.write('{}: {}\n'.format(pyrate.constants.IFG_LKSY, '1'))
+            conf.write('{}: {}\n'.format(pyrate.constants.IFG_CROP_OPT, '1'))
+            conf.write('{}: {}\n'.format(pyrate.constants.NO_DATA_AVERAGING_THRESHOLD, '0.5'))
+            conf.write('{}: {}\n'.format(pyrate.constants.SLC_DIR, ''))
+            conf.write('{}: {}\n'.format(pyrate.constants.HDR_FILE_LIST,
                                          common.SML_TEST_GAMMA_HEADER_LIST))
-            conf.write('{}: {}\n'.format(cf.DEM_FILE, common.SML_TEST_DEM_GAMMA))
-            conf.write('{}: {}\n'.format(cf.APS_INCIDENCE_MAP, inc))
-            conf.write('{}: {}\n'.format(cf.APS_ELEVATION_MAP, ele))
-            conf.write('{}: {}\n'.format(cf.APS_CORRECTION, '1'))
-            conf.write('{}: {}\n'.format(cf.APS_METHOD, '2'))
-            conf.write('{}: {}\n'.format(cf.TIME_SERIES_SM_ORDER, 1))
+            conf.write('{}: {}\n'.format(pyrate.constants.DEM_FILE, common.SML_TEST_DEM_GAMMA))
+            conf.write('{}: {}\n'.format(pyrate.constants.APS_INCIDENCE_MAP, inc))
+            conf.write('{}: {}\n'.format(pyrate.constants.APS_ELEVATION_MAP, ele))
+            conf.write('{}: {}\n'.format(pyrate.constants.APS_CORRECTION, '1'))
+            conf.write('{}: {}\n'.format(pyrate.constants.APS_METHOD, '2'))
+            conf.write('{}: {}\n'.format(pyrate.constants.TIME_SERIES_SM_ORDER, 1))
 
     def common_check(self, ele, inc):
         import glob
@@ -856,10 +859,10 @@ class TestOneIncidenceOrElevationMap(UnitTestAdaptation):
         sys.argv = ['dummy', self.conf_file]
         prepifg.main(params)
         # test 17 geotiffs created
-        geotifs = glob.glob(os.path.join(params[cf.OUT_DIR], '*_unw.tif'))
+        geotifs = glob.glob(os.path.join(params[pyrate.constants.OUT_DIR], '*_unw.tif'))
         self.assertEqual(17, len(geotifs))
         # test dem geotiff created
-        demtif = glob.glob(os.path.join(params[cf.OUT_DIR], '*_dem.tif'))
+        demtif = glob.glob(os.path.join(params[pyrate.constants.OUT_DIR], '*_dem.tif'))
         self.assertEqual(1, len(demtif))
         # elevation/incidence file
         # not computing anymore
