@@ -24,7 +24,7 @@ from os.path import join
 from pathlib import Path
 
 import pyrate.constants
-from pyrate.core import geometry, shared, mpiops, config as cf, ifgconstants as ifc
+from pyrate.core import geometry, shared, mpiops, ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core.shared import Ifg, Geometry, DEM, Tile, tiles_split
 from pyrate.core.timeseries import TimeSeriesError

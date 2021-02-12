@@ -26,7 +26,6 @@ from pathlib import Path
 
 import pyrate.configuration
 import pyrate.constants
-import pyrate.core.config as cf
 from pyrate.core.shared import Ifg, DEM
 from pyrate.core import ifgconstants as ifc
 from pyrate import conv2tif, prepifg, configuration

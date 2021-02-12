@@ -22,7 +22,6 @@ import numpy as np
 import pyrate.constants
 from pyrate.core.phase_closure.mst_closure import WeightedLoop
 from pyrate.core.logger import pyratelogger as log
-from pyrate.core import config as cf
 
 # norm = mpl.colors.Normalize(vmin=-PI/2, vmax=PI/2)
 

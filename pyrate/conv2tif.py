@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pyrate.constants
 from pyrate.core.prepifg_helper import PreprocessError
-from pyrate.core import shared, mpiops, config as cf, gamma, roipac
+from pyrate.core import shared, mpiops, gamma, roipac
 from pyrate.core import ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import MultiplePaths

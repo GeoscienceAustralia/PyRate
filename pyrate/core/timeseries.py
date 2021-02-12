@@ -32,7 +32,7 @@ from scipy.stats import linregress
 import pyrate.constants
 from pyrate.core.shared import tiles_split
 from pyrate.core.algorithm import first_second_ids, get_epochs
-from pyrate.core import config as cf, mst as mst_module, shared
+from pyrate.core import mst as mst_module, shared
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration, ConfigException
 

@@ -28,7 +28,6 @@ import pyrate.constants
 from pyrate.configuration import ConfigException, parse_namelist
 import pyrate.core.ifgconstants as ifc
 from pyrate.constants import sixteen_digits_pattern, BASELINE_FILE_PATHS, BASE_FILE_DIR
-from pyrate.core import config as cf
 from pyrate.core.shared import extract_epochs_from_filename, data_format
 from pyrate.core.logger import pyratelogger as log
 import struct

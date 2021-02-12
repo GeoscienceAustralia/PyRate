@@ -33,7 +33,6 @@ from osgeo import gdal
 
 import pyrate.configuration
 import pyrate.constants
-from pyrate.core import config as cf
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core.shared import Ifg, DEM, dem_or_ifg
 from pyrate.core.shared import InputTypes

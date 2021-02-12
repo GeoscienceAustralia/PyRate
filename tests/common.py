@@ -36,7 +36,7 @@ from numpy import isnan, sum as nsum
 from osgeo import gdal
 
 import pyrate.constants
-from pyrate.core import algorithm, ifgconstants as ifc, config as cf, timeseries, mst, stack
+from pyrate.core import algorithm, ifgconstants as ifc, timeseries, mst, stack
 from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info,
                                 write_output_geotiff, dem_or_ifg)
 from pyrate.core import roipac

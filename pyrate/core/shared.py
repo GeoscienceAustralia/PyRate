@@ -46,7 +46,7 @@ try:
 except ImportError:
     import gdal
 
-from pyrate.core import ifgconstants as ifc, mpiops, config as cf
+from pyrate.core import ifgconstants as ifc, mpiops
 from pyrate.core.logger import pyratelogger as log
 
 

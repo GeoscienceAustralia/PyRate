@@ -27,7 +27,6 @@ from numpy.testing import assert_array_almost_equal
 import pyrate.constants
 from pyrate import conv2tif, prepifg, correct
 from pyrate.configuration import Configuration, MultiplePaths
-import pyrate.core.config as cf
 from pyrate.core import shared
 from pyrate.core.aps import wrap_spatio_temporal_filter, _interpolate_nans_2d, _kernel
 from pyrate.core.aps import gaussian_temporal_filter as tlpfilter, gaussian_spatial_filter as slpfilter

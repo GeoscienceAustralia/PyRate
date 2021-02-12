@@ -28,7 +28,7 @@ from pyrate.constants import NO_OF_PARALLEL_PROCESSES, sixteen_digits_pattern, t
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
 from pyrate.core.shared import extract_epochs_from_filename, InputTypes, get_tiles
-from pyrate.core import config as cf, mpiops
+
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):

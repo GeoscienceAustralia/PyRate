@@ -31,7 +31,7 @@ from scipy.interpolate import griddata
 import pyrate.constants
 from pyrate.core.logger import pyratelogger as log
 
-from pyrate.core import shared, ifgconstants as ifc, mpiops, config as cf
+from pyrate.core import shared, ifgconstants as ifc, mpiops
 from pyrate.core.covariance import cvd_from_phase, RDist
 from pyrate.core.algorithm import get_epochs
 from pyrate.core.shared import Ifg, Tile, EpochList

@@ -27,7 +27,7 @@ import numpy as np
 from osgeo import gdal
 
 import pyrate.constants
-from pyrate.core import shared, geometry, mpiops, config as cf, prepifg_helper, gamma, roipac, ifgconstants as ifc, gdal_python
+from pyrate.core import shared, geometry, mpiops, prepifg_helper, gamma, roipac, ifgconstants as ifc
 from pyrate.core.prepifg_helper import PreprocessError, coherence_paths_for, transform_params
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import MultiplePaths

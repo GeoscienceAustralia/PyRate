@@ -25,7 +25,7 @@ from pathlib import Path
 import pyrate.configuration
 import pyrate.constants
 from pyrate.core.shared import DEM
-from pyrate.core import ifgconstants as ifc, config as cf
+from pyrate.core import ifgconstants as ifc
 from pyrate.core.prepifg_helper import _is_number
 from pyrate import prepifg, conv2tif, configuration
 from tests.common import SML_TEST_DIR, small_data_setup, copytree, TEST_CONF_ROIPAC, TEST_CONF_GAMMA

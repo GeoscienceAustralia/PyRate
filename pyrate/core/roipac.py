@@ -23,7 +23,6 @@ import datetime
 
 import pyrate.constants
 import pyrate.core.ifgconstants as ifc
-from pyrate.core import config as cf
 from pyrate.core.shared import extract_epochs_from_filename
 
 # ROIPAC RSC header file constants

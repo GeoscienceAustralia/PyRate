@@ -23,7 +23,6 @@ import numpy as np
 
 import pyrate.configuration
 import pyrate.constants
-from pyrate.core import config as cf
 from pyrate import conv2tif, prepifg
 from pyrate.configuration import Configuration
 from tests.common import (

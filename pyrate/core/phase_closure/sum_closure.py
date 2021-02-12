@@ -21,8 +21,8 @@ from nptyping import NDArray, Float32, UInt16
 import numpy as np
 
 import pyrate.constants
-from pyrate.core import config as cf, mpiops, ifgconstants as ifc
-from pyrate.core.shared import Ifg, join_dicts, iterable_split
+from pyrate.core import mpiops
+from pyrate.core.shared import Ifg, join_dicts
 from pyrate.core.phase_closure.mst_closure import Edge, WeightedLoop
 
 IndexedIfg = namedtuple('IndexedIfg', ['index', 'IfgPhase'])

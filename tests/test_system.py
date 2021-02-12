@@ -26,7 +26,6 @@ import pytest
 import numpy as np
 
 import pyrate.constants
-from pyrate.core import config as cf
 from pyrate.configuration import Configuration
 from tests.common import MEXICO_CROPA_CONF, PY37GDAL302, PYTHON3P9
 

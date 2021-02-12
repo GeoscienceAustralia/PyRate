@@ -29,7 +29,6 @@ from numpy import nan, mean, std, isnan
 import pyrate.configuration
 import pyrate.constants
 import pyrate.core.refpixel
-from pyrate.core import config as cf
 from pyrate.core.refpixel import ref_pixel, _step, RefPixelError, ref_pixel_calc_wrapper, \
     convert_geographic_coordinate_to_pixel_value, convert_pixel_value_to_geographic_coordinate
 from pyrate.core import shared, ifgconstants as ifc

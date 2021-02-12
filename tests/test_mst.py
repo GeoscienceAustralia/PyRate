@@ -18,21 +18,17 @@ This module contains tests for the mst.py PyRate module.
 """
 import os
 import shutil
-from pathlib import Path
 from itertools import product
 from numpy import empty, array, nan, isnan, sum as nsum
-
 import numpy as np
 
 import pyrate.constants
-from tests.common import MockIfg, small5_mock_ifgs, small_data_setup
-
-from pyrate.core import algorithm, config as cf, mst
+from pyrate.core import algorithm, mst
 from pyrate.core.shared import IfgPart, Tile, Ifg, save_numpy_phase
 from pyrate.configuration import Configuration
 from pyrate import conv2tif, prepifg, correct
 from tests import common
-from tests.common import UnitTestAdaptation, TEST_CONF_GAMMA
+from tests.common import UnitTestAdaptation, TEST_CONF_GAMMA, MockIfg, small5_mock_ifgs, small_data_setup
 
 
 class TestMST(UnitTestAdaptation):

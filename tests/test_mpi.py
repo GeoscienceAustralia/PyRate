@@ -31,7 +31,7 @@ import pyrate.core.orbital
 import pyrate.core.ref_phs_est
 import pyrate.core.refpixel
 from pyrate import correct, prepifg, conv2tif, configuration
-from pyrate.core import mpiops, config as cf
+from pyrate.core import mpiops
 from tests import common
 from tests.common import SML_TEST_DIR
 from tests.test_covariance import legacy_maxvar

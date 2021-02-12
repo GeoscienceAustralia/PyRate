@@ -31,7 +31,7 @@ import pyrate.core.prepifg_helper
 import pyrate.core.ref_phs_est
 import pyrate.core.refpixel
 import tests.common
-from pyrate.core import shared, config as cf, covariance as vcm_module
+from pyrate.core import covariance as vcm_module
 from pyrate.core.stack import stack_rate_pixel, mask_rate
 from pyrate import correct, prepifg, conv2tif
 from pyrate.configuration import Configuration

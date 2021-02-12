@@ -11,7 +11,6 @@ import pyrate.constants
 from tests import common
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate import prepifg, correct
-import pyrate.core.config as cf
 from pyrate.core.geometry import get_lonlat_coords
 from pyrate.core.dem_error import dem_error_calc_wrapper, _calculate_bperp_wrapper
 from pyrate.core.ref_phs_est import ref_phase_est_wrapper

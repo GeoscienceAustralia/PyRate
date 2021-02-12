@@ -24,7 +24,7 @@ import pytest
 
 import pyrate.constants
 from pyrate.constants import PYRATEPATH
-from pyrate.core import mpiops, config as cf, shared
+from pyrate.core import mpiops, shared
 from pyrate.configuration import Configuration
 from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA, SML_TEST_DEM_TIF, MEXICO_CROPA_CONF
 from tests.common import ROIPAC_SYSTEM_CONF, GAMMA_SYSTEM_CONF, GEOTIF_SYSTEM_CONF, SML_TEST_COH_LIST

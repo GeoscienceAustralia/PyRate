@@ -5,7 +5,7 @@ from os.path import join
 import pytest
 
 import pyrate.constants
-from pyrate.core import ifgconstants as ifc, config as cf
+from pyrate.core import ifgconstants as ifc
 from pyrate.core.geometry import get_lonlat_coords, get_sat_positions, vincinv
 from pyrate.core.refpixel import convert_pixel_value_to_geographic_coordinate
 from tests import common

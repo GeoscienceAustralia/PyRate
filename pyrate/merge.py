@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 import pyrate.constants
-from pyrate.core import shared, stack, ifgconstants as ifc, mpiops, config as cf
+from pyrate.core import shared, stack, ifgconstants as ifc, mpiops
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration
 from pyrate.core.shared import Tile

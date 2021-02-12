@@ -23,7 +23,7 @@ from joblib import Parallel, delayed
 import numpy as np
 
 import pyrate.constants
-from pyrate.core import ifgconstants as ifc, config as cf, mpiops, shared
+from pyrate.core import ifgconstants as ifc, shared
 from pyrate.core.shared import joblib_log_level, nanmedian, Ifg
 from pyrate.core import mpiops
 from pyrate.configuration import Configuration

@@ -25,7 +25,7 @@ from numpy import nan, isnan, sqrt, diag, delete, array, float32, size
 import numpy as np
 
 import pyrate.constants
-from pyrate.core import config as cf, shared
+from pyrate.core import shared
 from pyrate.core.shared import tiles_split
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration

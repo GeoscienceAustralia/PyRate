@@ -30,7 +30,7 @@ from osgeo import gdal
 import pyrate.configuration
 import pyrate.constants
 import pyrate.core.ifgconstants as ifc
-from pyrate.core import shared, config as cf, gamma
+from pyrate.core import shared, gamma
 from pyrate import prepifg, conv2tif
 from pyrate.core.shared import write_fullres_geotiff, GeotiffException
 from pyrate.constants import PYRATEPATH, IFG_FILE_LIST, PROCESSOR, OBS_DIR, OUT_DIR, DEM_HEADER_FILE, SLC_DIR, \

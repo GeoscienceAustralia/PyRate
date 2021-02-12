@@ -31,7 +31,7 @@ import pyrate.core.prepifg_helper
 import pyrate.core.ref_phs_est
 import pyrate.core.refpixel
 import tests.common as common
-from pyrate.core import config as cf, mst, covariance
+from pyrate.core import mst, covariance
 from pyrate import correct, prepifg, conv2tif
 from pyrate.configuration import Configuration
 from pyrate.core.timeseries import time_series, linear_rate_pixel, linear_rate_array, TimeSeriesError

@@ -31,7 +31,7 @@ import pyrate.core.prepifg_helper
 import pyrate.core.shared
 import pyrate.main
 import tests.common
-from pyrate.core import shared, config as cf, config, prepifg_helper, mst
+from pyrate.core import shared, prepifg_helper
 from pyrate.core.shared import dem_or_ifg
 from pyrate import correct, prepifg, conv2tif
 from pyrate.configuration import MultiplePaths, Configuration

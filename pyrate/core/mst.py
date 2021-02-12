@@ -30,7 +30,6 @@ from joblib import Parallel, delayed
 import pyrate.constants
 from pyrate.core.algorithm import ifg_date_lookup
 from pyrate.core.algorithm import ifg_date_index_lookup
-from pyrate.core import config as cf
 from pyrate.core.shared import IfgPart, create_tiles, tiles_split
 from pyrate.core.shared import joblib_log_level, Tile
 from pyrate.core.logger import pyratelogger as log

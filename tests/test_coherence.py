@@ -30,8 +30,6 @@ import pyrate.core.prepifg_helper
 import pyrate.core.shared
 from pyrate.core.shared import Ifg
 from pyrate.core import gdal_python
-from pyrate.core import config as cf
-from pyrate.core import prepifg_helper
 from pyrate.core import ifgconstants as ifc
 from pyrate.configuration import MultiplePaths
 from pyrate import conv2tif

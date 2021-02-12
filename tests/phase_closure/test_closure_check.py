@@ -18,10 +18,8 @@
 import numpy as np
 
 import pyrate.constants
-from pyrate.core import config as cf
 from pyrate.core.phase_closure.mst_closure import (
     sort_loops_based_on_weights_and_date,
-    __find_signed_closed_loops
 )
 from pyrate.core.phase_closure.closure_check import (
     discard_loops_containing_max_ifg_count,

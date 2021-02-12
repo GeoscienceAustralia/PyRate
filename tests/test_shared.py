@@ -37,7 +37,7 @@ from osgeo.gdal import Open, Dataset, UseExceptions
 import pyrate.constants
 import tests.common
 from tests.common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
-from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, gamma
+from pyrate.core import shared, ifgconstants as ifc, gamma
 from pyrate.core.shared import dem_or_ifg
 from pyrate.core import mpiops
 from pyrate import prepifg, conv2tif

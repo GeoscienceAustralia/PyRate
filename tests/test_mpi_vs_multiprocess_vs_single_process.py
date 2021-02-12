@@ -25,7 +25,6 @@ import numpy as np
 
 import pyrate.constants
 from pyrate.configuration import Configuration, write_config_file
-from pyrate.core import config as cf
 
 from tests.common import (
     assert_same_files_produced,

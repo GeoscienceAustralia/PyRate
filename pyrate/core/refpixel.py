@@ -28,7 +28,7 @@ from numpy import isnan, std, mean, sum as nsum
 from joblib import Parallel, delayed
 
 import pyrate.constants
-from pyrate.core import ifgconstants as ifc, config as cf, mpiops
+from pyrate.core import ifgconstants as ifc
 from pyrate.core import mpiops
 from pyrate.core.shared import Ifg
 from pyrate.core.shared import joblib_log_level

@@ -26,7 +26,7 @@ import pytest
 import numpy as np
 
 import pyrate.constants
-from pyrate.core import ifgconstants as ifc, config as cf
+from pyrate.core import ifgconstants as ifc
 from pyrate.core.ref_phs_est import ReferencePhaseError, ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.orbital import remove_orbital_error

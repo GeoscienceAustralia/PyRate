@@ -27,12 +27,11 @@ from numpy.testing import assert_array_almost_equal
 import pyrate.constants
 import pyrate.core.ref_phs_est
 import pyrate.core.refpixel
-from pyrate.core import shared, ref_phs_est as rpe, ifgconstants as ifc, config as cf
+from pyrate.core import shared, ifgconstants as ifc
 from pyrate import correct, prepifg, conv2tif
 from pyrate.core.covariance import cvd, get_vcmt, RDist
 from pyrate.configuration import Configuration, MultiplePaths
 import pyrate.core.orbital
-from pyrate.core import roipac
 from tests import common
 from tests.common import (
     small5_mock_ifgs,

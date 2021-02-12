@@ -24,7 +24,6 @@ import pytest
 import pyrate.constants
 from pyrate.configuration import ConfigException, Configuration, write_config_file
 from pyrate import correct, prepifg, conv2tif
-import pyrate.core.config as cf
 from tests import common
 
 

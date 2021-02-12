@@ -20,7 +20,6 @@ import numpy as np
 
 import pyrate.constants
 from pyrate.configuration import Configuration, write_config_file
-from pyrate.core import config as cf
 from tests.common import MEXICO_CROPA_CONF, manipulate_test_conf, PYTHON3P8, sub_process_run
 
 

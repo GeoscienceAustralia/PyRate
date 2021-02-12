@@ -28,7 +28,7 @@ from scipy.fftpack import fft2, ifft2, fftshift
 from scipy.optimize import fmin
 
 import pyrate.constants
-from pyrate.core import shared, ifgconstants as ifc, config as cf, mpiops
+from pyrate.core import shared, ifgconstants as ifc, mpiops
 from pyrate.core.shared import PrereadIfg, Ifg
 from pyrate.core.algorithm import first_second_ids
 from pyrate.core.logger import pyratelogger as log

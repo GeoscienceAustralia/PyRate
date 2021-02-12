@@ -21,7 +21,6 @@ from subprocess import check_call
 import pytest
 
 import pyrate.constants
-from pyrate.core import config as cf
 from pyrate import correct
 from pyrate.configuration import Configuration
 from tests.common import MEXICO_CROPA_CONF

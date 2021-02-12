@@ -30,7 +30,7 @@ from joblib import Parallel, delayed
 
 import pyrate.constants
 from pyrate.core.algorithm import first_second_ids, get_all_epochs
-from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, mst, mpiops
+from pyrate.core import shared, ifgconstants as ifc, prepifg_helper, mst, mpiops
 from pyrate.core.shared import nanmedian, Ifg, InputTypes
 from pyrate.core.logger import pyratelogger as log
 from pyrate.prepifg import find_header

@@ -24,7 +24,7 @@ import pickle as cp
 from typing import List
 
 import pyrate.constants
-from pyrate.core import (shared, algorithm, mpiops, config as cf)
+from pyrate.core import (shared, algorithm, mpiops)
 from pyrate.core.aps import wrap_spatio_temporal_filter
 from pyrate.core.covariance import maxvar_vcm_calc_wrapper
 from pyrate.core.mst import mst_calc_wrapper
