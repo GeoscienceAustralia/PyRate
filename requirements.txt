@@ -7,3 +7,4 @@ pyproj==3.0.0
 scipy==1.4.1
 numexpr==2.7.2
 nptyping==1.4.0
+joblib==1.0.0
