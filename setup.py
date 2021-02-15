@@ -15,6 +15,8 @@
 #   limitations under the License.
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
+from setuptools.command.install import install
+from setuptools.command.develop import develop
 from subprocess import check_output, run
 import platform
 import setuptools
@@ -44,6 +46,19 @@ for r in requirements_lines:
         requirements.append(r)
 
 setup_requirements = [r for r in requirements if "numpy==" in r]
+
+
+class CustomInstall(install):
+    def run(self):
+        self.install_setup_requirements()
+        # numpy becomes available after this line. Test it
+        import numpy
+        print(numpy.__version__)
+        super().run()
+
+    def install_setup_requirements(self):
+        for s in setup_requirements:
+            run(args=['pip', 'install', s])
 
 
 class PyTest(TestCommand, object):
@@ -119,5 +134,7 @@ setup(
     ],
     cmdclass={
         'test': PyTest,
+        'install': CustomInstall,
+        # 'develop': CustomDevelop,
     }
 )
