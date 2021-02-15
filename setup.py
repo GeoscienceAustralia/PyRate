@@ -40,10 +40,20 @@ requirements = []
 for r in requirements_lines:
     if r == 'GDAL':
         requirements.append(r + '=={GDAL_VERSION}'.format(GDAL_VERSION=GDAL_VERSION))
-    elif r.startswith('mpi4py') and (run(args=['which', 'mpirun']).returncode == 0):
-        requirements.append(r)
+    elif r.startswith('mpi4py'):
+        if run(args=['which', 'mpirun']).returncode == 0:
+            requirements.append(r)
     else:
         requirements.append(r)
+
+
+def update_reqs_based_on_envs(reqs):
+    with open('requirements.txt', 'w') as f:
+        for r in reqs:
+            f.write('{}\n'.format(r))
+
+
+update_reqs_based_on_envs(requirements)
 
 setup_requirements = [r for r in requirements if "numpy==" in r]
 
@@ -54,11 +64,26 @@ class CustomInstall(install):
         # numpy becomes available after this line. Test it
         import numpy
         print(numpy.__version__)
+        self.install_requirements()
         super().run()
+        # run(args=['git', 'checkout', 'HEAD', '--', 'requirements.txt'])
 
-    def install_setup_requirements(self):
+    @staticmethod
+    def install_setup_requirements():
         for s in setup_requirements:
+            print(f'installing {s}')
             run(args=['pip', 'install', s])
+
+    @staticmethod
+    def install_requirements():
+        for s in requirements:
+            print(f'installing {s}')
+            run(args=['pip', 'install', s])
+
+#
+#
+# class CustomDevelop(develop, InstallDevelopMixin):
+#     "mod of install"
 
 
 class PyTest(TestCommand, object):
