@@ -23,7 +23,7 @@ __version__ = "0.5.0"
 # Get requirements (and dev requirements for testing) from requirements
 #  txt files. Also ensure we are using correct GDAL version.
 with open('requirements.txt') as f:
-    requirements = f.read().splitlines()
+    requirements_lines = f.read().splitlines()
 with open('requirements-test.txt') as f:
     test_requirements = f.read().splitlines()
 with open('requirements-dev.txt') as f:
@@ -35,7 +35,7 @@ else:
     GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
 
 requirements = []
-for r in requirements:
+for r in requirements_lines:
     if r == 'GDAL':
         requirements.append(r + '=={GDAL_VERSION}'.format(GDAL_VERSION=GDAL_VERSION))
     elif r.startswith('mpi4py') and (run(args=['which', 'mpirun']).returncode == 0):
