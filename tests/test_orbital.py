@@ -926,6 +926,7 @@ class TestOrbErrorCorrectionsOnDiscReused:
         last_mod_times = np.array([os.stat(o).st_mtime for o in orb_error_files])
 
         # run orbit removal again
+
         remove_orbital_error(self.ifg_paths, self.params)
         orb_error_files2 = [MultiplePaths.orb_error_path(i, self.params) for i in self.ifg_paths]
         # if files are written again - times will change
@@ -940,7 +941,8 @@ class TestOrbErrorCorrectionsOnDiscReused:
 
         # test_orb_errors_recalculated_if_params_change
         self.params[cf.ORBITAL_FIT_DEGREE] = _degrees.pop()
-
+        import time
+        time.sleep(0.1)
         remove_orbital_error(self.ifg_paths, self.params)
         orb_error_files3 = [MultiplePaths.orb_error_path(i, self.params) for i in self.ifg_paths]
         last_mod_times_3 = np.array([os.stat(o).st_mtime for o in orb_error_files3])
