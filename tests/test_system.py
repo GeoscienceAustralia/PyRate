@@ -24,10 +24,10 @@ from subprocess import check_call
 from pathlib import Path
 import pytest
 import numpy as np
-
 import pyrate.constants
+from pyrate.core.mpiops import MPI_INSTALLED
 from pyrate.configuration import Configuration
-from tests.common import MEXICO_CROPA_CONF, PY37GDAL302, PYTHON3P9
+from tests.common import MEXICO_CROPA_CONF, PY37GDAL302
 
 
 @pytest.mark.mpi
@@ -52,10 +52,10 @@ def test_workflow(system_conf):
 
 
 def test_single_workflow(gamma_or_mexicoa_conf):
-    if PYTHON3P9:
-        check_call(f"pyrate workflow -f {gamma_or_mexicoa_conf}", shell=True)
-    else:
+    if MPI_INSTALLED:
         check_call(f"mpirun -n 4 pyrate workflow -f {gamma_or_mexicoa_conf}", shell=True)
+    else:
+        check_call(f"pyrate workflow -f {gamma_or_mexicoa_conf}", shell=True)
 
     params = Configuration(gamma_or_mexicoa_conf).__dict__
 
