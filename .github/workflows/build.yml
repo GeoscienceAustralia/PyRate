@@ -79,32 +79,27 @@ jobs:
       - name: ${{ matrix.python-version }} with MPI
         if: env.PYTHONVERSION != '3.9'
         run: |
-          sed -i '/^GDAL/d' requirements.txt
-          pip install -r requirements.txt -r requirements-dev.txt -r requirements-test.txt
-          pip install GDAL==$(gdal-config --version)
           python setup.py install
           rm -rf Py_Rate.egg-info  # remove the local egg
-          echo "PYTHONPATH=$PYRATEPATH:$PYTHONPATH" >> $GITHUB_ENV
+          echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
           chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif  # makes the file readonly, used in a test
       - name: ${{ matrix.python-version }} without MPI
         if: env.PYTHONVERSION == '3.9'
         run: |
-          sed -i '/^GDAL/d' requirements.txt
-          sed -i '/^mpi4py/d' requirements.txt
-          pip install -r requirements.txt -r requirements-test.txt
-          pip install GDAL==$(gdal-config --version)
           python setup.py install
           rm -rf Py_Rate.egg-info  # remove the local egg
-          echo "PYTHONPATH=$PYRATEPATH:$PYTHONPATH" >> $GITHUB_ENV
+          echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
           chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif  # makes the file readonly, used in a test
       - name: Test Pyrate in ${{ matrix.python-version }} with MPI
         if: env.PYTHONVERSION != '3.9'
         run: |
+          pip install -r requirements-dev.txt -r requirements-test.txt
           pytest tests/ -m "slow"
           mpirun -n 3 pytest tests/test_shared.py -k test_tiles_split -s
           pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/ -m "not slow"
       - name: Test Pyrate in ${{ matrix.python-version }} without MPI
         if: env.PYTHONVERSION == '3.9'
         run: |
+          pip install -r requirements-test.txt
           pytest tests/ -m "not mpi and slow"
           pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/ -m "not slow and not mpi"
