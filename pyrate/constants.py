@@ -71,3 +71,6 @@ TWELVE_DIGIT_EPOCH_PAIR = r'\d{6}-\d{6}'
 twelve_digits_pattern = re.compile(TWELVE_DIGIT_EPOCH_PAIR)
 EIGHT_DIGIT_EPOCH = r'\d{8}'
 PTN = re.compile(EIGHT_DIGIT_EPOCH)  # match 8 digits for the dates
+
+# temp constants
+DISABLE_PHASE_CLOSURE = True
