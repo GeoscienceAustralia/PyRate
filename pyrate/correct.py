@@ -163,12 +163,12 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
                 filtered_multi_paths.append(m_p)
         return filtered_multi_paths
 
-    params[cf.INTERFEROGRAM_FILES] = \
-        mpiops.run_once(_filter_to_closure_checked_multiple_paths, params[cf.INTERFEROGRAM_FILES])
+    params[pyrate.constants.INTERFEROGRAM_FILES] = \
+        mpiops.run_once(_filter_to_closure_checked_multiple_paths, params[pyrate.constants.INTERFEROGRAM_FILES])
 
     if mpiops.rank == 0:
         with open(config.phase_closure_filtered_ifgs_list(params), 'w') as f:
-            lines = [p.converted_path + '\n' for p in params[cf.INTERFEROGRAM_FILES]]
+            lines = [p.converted_path + '\n' for p in params[pyrate.constants.INTERFEROGRAM_FILES]]
             f.writelines(lines)
 
     # insert nans where phase unwrap threshold is breached
