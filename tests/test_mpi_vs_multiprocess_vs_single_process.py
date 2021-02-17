@@ -237,6 +237,9 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
 
 
 def __check_equality_of_phase_closure_outputs(mpi_conf, sr_conf):
+    from pyrate.constants import DISABLE_PHASE_CLOSURE
+    if DISABLE_PHASE_CLOSURE:
+        return
     m_config = Configuration(mpi_conf)
     s_config = Configuration(sr_conf)
     m_close = m_config.closure()

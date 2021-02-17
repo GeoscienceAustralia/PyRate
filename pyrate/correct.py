@@ -145,8 +145,9 @@ def _update_params_with_tiles(params: dict) -> None:
 
 def update_params_with_closure_checked_ifg_list(params: dict, config: Configuration):
 
-    log.warn("Phase closure is not supported at the moment! We are working hard to enable this feature!")
-    return
+    if pyrate.constants.DISABLE_PHASE_CLOSURE:
+        log.warn("Phase closure is not supported at the moment! We are working hard to enable this feature!")
+        return
 
     if not params[pyrate.constants.PHASE_CLOSURE]:
         log.info("Phase closure correction is not required!")
