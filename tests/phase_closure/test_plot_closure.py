@@ -20,6 +20,7 @@ from pathlib import Path
 from subprocess import check_call
 import pytest
 from pyrate.core import config as cf
+import pyrate.constants as c
 from pyrate import correct
 from pyrate.configuration import Configuration
 from tests.common import MEXICO_CROPA_CONF
@@ -40,7 +41,8 @@ steps = ['orbfit',  'refphase',  'phase_closure']
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(not PLOT, reason='skipped as plotting packages are missing')
+@pytest.mark.skipif((not PLOT) or c.DISABLE_PHASE_CLOSURE,
+                    reason='skipped as plotting packages are missing')
 def test_plot_closure(mexico_cropa_params):
     config = Configuration(MEXICO_CROPA_CONF)
     params = config.__dict__

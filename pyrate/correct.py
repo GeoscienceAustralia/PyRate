@@ -35,6 +35,7 @@ from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.shared import PrereadIfg, get_tiles, mpi_vs_multiprocess_logging, join_dicts
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration, MultiplePaths
+from pyrate.constants import DISABLE_PHASE_CLOSURE
 
 MAIN_PROCESS = 0
 
@@ -143,8 +144,10 @@ def _update_params_with_tiles(params: dict) -> None:
 
 
 def update_params_with_closure_checked_ifg_list(params: dict, config: Configuration):
-    log.warn("Phase closure is not supported at the moment! We are working hard to enable this feature!")
-    return
+
+    if DISABLE_PHASE_CLOSURE:
+        log.warn("Phase closure is not supported at the moment! We are working hard to enable this feature!")
+        return
 
     if not params[cf.PHASE_CLOSURE]:
         log.info("Phase closure correction is not required!")
@@ -163,12 +166,12 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
                 filtered_multi_paths.append(m_p)
         return filtered_multi_paths
 
-    params[pyrate.constants.INTERFEROGRAM_FILES] = \
-        mpiops.run_once(_filter_to_closure_checked_multiple_paths, params[pyrate.constants.INTERFEROGRAM_FILES])
+    params[cf.INTERFEROGRAM_FILES] = \
+        mpiops.run_once(_filter_to_closure_checked_multiple_paths, params[cf.INTERFEROGRAM_FILES])
 
     if mpiops.rank == 0:
         with open(config.phase_closure_filtered_ifgs_list(params), 'w') as f:
-            lines = [p.converted_path + '\n' for p in params[pyrate.constants.INTERFEROGRAM_FILES]]
+            lines = [p.converted_path + '\n' for p in params[cf.INTERFEROGRAM_FILES]]
             f.writelines(lines)
 
     # insert nans where phase unwrap threshold is breached
