@@ -16,6 +16,7 @@
 """
 This Python module contains tests for the coherence.py PyRate module.
 """
+import shutil
 import os
 import stat
 import tempfile
@@ -31,18 +32,20 @@ import pyrate.core.shared
 from pyrate.core.shared import Ifg
 from pyrate.core import gdal_python
 from pyrate.core import ifgconstants as ifc
-from pyrate.configuration import MultiplePaths
+from pyrate.configuration import MultiplePaths, Configuration
 from pyrate import conv2tif
 
 from tests import common
 
 
-def test_small_data_coherence(gamma_params):
+def test_small_data_coherence(gamma_or_mexicoa_conf):
+    temp_obs_dir = Path(tempfile.mkdtemp())
+    params = common.manipulate_test_conf(conf_file=gamma_or_mexicoa_conf, temp_obs_dir=temp_obs_dir)
 
-    gamma_params[pyrate.constants.COH_MASK] = 1
+    params[pyrate.constants.COH_MASK] = 1
 
-    ifg_multilist = copy(gamma_params[pyrate.constants.INTERFEROGRAM_FILES])
-    conv2tif.main(gamma_params)
+    ifg_multilist = copy(params[pyrate.constants.INTERFEROGRAM_FILES])
+    conv2tif.main(params)
 
     for i in ifg_multilist:
         p = Path(i.converted_path)
@@ -54,17 +57,18 @@ def test_small_data_coherence(gamma_params):
         # now do coherence masking and compare
         ifg = pyrate.core.shared.dem_or_ifg(data_path=p.as_posix())
         ifg.open()
-        converted_coh_file_path = pyrate.core.prepifg_helper.coherence_paths_for(p, gamma_params, tif=True)
+        converted_coh_file_path = pyrate.core.prepifg_helper.coherence_paths_for(p, params, tif=True)
         gdal_python.coherence_masking(ifg.dataset,
                                       coh_file_path=converted_coh_file_path,
-                                      coh_thr=gamma_params[pyrate.constants.COH_THRESH]
+                                      coh_thr=params[pyrate.constants.COH_THRESH]
                                       )
         nans = np.isnan(ifg.phase_data)
-        coherence_path = pyrate.core.prepifg_helper.coherence_paths_for(p, gamma_params, tif=True)
+        coherence_path = pyrate.core.prepifg_helper.coherence_paths_for(p, params, tif=True)
         cifg = Ifg(coherence_path)
         cifg.open()
-        cifg_below_thrhold = cifg.phase_data < gamma_params[pyrate.constants.COH_THRESH]
+        cifg_below_thrhold = cifg.phase_data < params[pyrate.constants.COH_THRESH]
         np.testing.assert_array_equal(nans, cifg_below_thrhold)
+    shutil.rmtree(temp_obs_dir)
 
 
 def test_coherence_files_not_converted():
