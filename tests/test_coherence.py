@@ -26,7 +26,7 @@ from osgeo import gdal
 from pathlib import Path
 from copy import copy
 
-import pyrate.constants
+import pyrate.constants as c
 import pyrate.core.prepifg_helper
 import pyrate.core.shared
 from pyrate.core.shared import Ifg
@@ -42,9 +42,9 @@ def test_small_data_coherence(gamma_or_mexicoa_conf):
     temp_obs_dir = Path(tempfile.mkdtemp())
     params = common.manipulate_test_conf(conf_file=gamma_or_mexicoa_conf, temp_obs_dir=temp_obs_dir)
 
-    params[pyrate.constants.COH_MASK] = 1
+    params[c.COH_MASK] = 1
 
-    ifg_multilist = copy(params[pyrate.constants.INTERFEROGRAM_FILES])
+    ifg_multilist = copy(params[c.INTERFEROGRAM_FILES])
     conv2tif.main(params)
 
     for i in ifg_multilist:
@@ -60,13 +60,13 @@ def test_small_data_coherence(gamma_or_mexicoa_conf):
         converted_coh_file_path = pyrate.core.prepifg_helper.coherence_paths_for(p, params, tif=True)
         gdal_python.coherence_masking(ifg.dataset,
                                       coh_file_path=converted_coh_file_path,
-                                      coh_thr=params[pyrate.constants.COH_THRESH]
+                                      coh_thr=params[c.COH_THRESH]
                                       )
         nans = np.isnan(ifg.phase_data)
         coherence_path = pyrate.core.prepifg_helper.coherence_paths_for(p, params, tif=True)
         cifg = Ifg(coherence_path)
         cifg.open()
-        cifg_below_thrhold = cifg.phase_data < params[pyrate.constants.COH_THRESH]
+        cifg_below_thrhold = cifg.phase_data < params[c.COH_THRESH]
         np.testing.assert_array_equal(nans, cifg_below_thrhold)
     shutil.rmtree(temp_obs_dir)
 

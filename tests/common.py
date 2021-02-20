@@ -589,6 +589,8 @@ def manipulate_test_conf(conf_file, temp_obs_dir: Path):
         shutil.copy2(params[c.HDR_FILE_LIST], temp_obs_dir)
         shutil.copy2(params[c.COH_FILE_LIST], temp_obs_dir)
         shutil.copy2(params[c.BASE_FILE_LIST], temp_obs_dir)
+        for m_path in params[c.INTERFEROGRAM_FILES]:
+            m_path.converted_path = temp_obs_dir.joinpath(Path(m_path.converted_path).name).as_posix()
     else:  # legacy unit test data
         copytree(params[c.OBS_DIR], temp_obs_dir)
 
