@@ -197,7 +197,7 @@ class TestPyRate:
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(not PY37GDAL304, reason="Only run in GDAL3.0.4 and Python3.7 env")
+@pytest.mark.skipif(not PY37GDAL304, reason="Only run in one CI env")
 class TestParallelPyRate:
     """
     parallel vs serial pyrate tests verifying results from all steps equal
@@ -328,7 +328,7 @@ class TestParallelPyRate:
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(not PY37GDAL304, reason="Only run in python 3.8")
+@pytest.mark.skipif(not PY37GDAL304, reason="Only run in one CI env")
 class TestPrePrepareIfgs:
 
     @classmethod

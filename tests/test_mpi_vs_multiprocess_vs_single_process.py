@@ -33,7 +33,6 @@ from tests.common import (
     MEXICO_CROPA_CONF,
     PY37GDAL304,
     PY38GDAL304,
-    PYTHON3P7
 )
 
 
@@ -85,7 +84,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(not PY38GDAL304, reason="Only run in GDAL3.0.2 and Python3.7 env")
+@pytest.mark.skipif(not PY38GDAL304, reason="Only run in one CI env")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     """
     Tests proving single/multiprocess/mpi produce same output
@@ -337,7 +336,7 @@ def create_mpi_files():
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(not PY37GDAL304, reason="Only run in GDAL3.0.4 and python3.7 env")
+@pytest.mark.skipif(not PY37GDAL304, reason="Only run in one CI env")
 def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_conf, create_mpi_files, parallel):
     """
     Checks performed:
