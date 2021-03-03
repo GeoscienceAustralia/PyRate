@@ -509,6 +509,14 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": [1, 0],
         "Required": False
     },
+    "velerror_nsig": {
+        "DataType": int,
+        "DefaultValue": 2,
+        "MinValue": 1,
+        "MaxValue": 2,
+        "PossibleValues": [1, 2],
+        "Required": False
+    },
     "correct": {
         "DataType": list,
         "DefaultValue": ['orbfit', 'refphase', 'demerror', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack'],

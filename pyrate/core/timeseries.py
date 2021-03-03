@@ -376,7 +376,7 @@ def linear_rate_array(tscuml, ifgs, params):
             linrate[i, j], intercept[i, j], rsquared[i, j], error[i, j], samples[i, j] = \
                 linear_rate_pixel(tscuml[i, j, :], t)
 
-    return linrate, intercept, rsquared, error, samples
+    return linrate, intercept, rsquared, params["velerror_nsig"]*error, samples
 
 
 def _missing_option_error(option):

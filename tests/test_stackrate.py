@@ -38,7 +38,6 @@ from pyrate.configuration import Configuration
 from tests import common
 from tests.common import SML_TEST_DIR, prepare_ifgs_without_phase, pre_prepare_ifgs
 
-
 def default_params():
     return {'pthr': 3, 'nsig': 3, 'maxsig': 2, 'parallel': 1, 'processes': 8}
 
@@ -114,6 +113,8 @@ class TestLegacyEquality:
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         params[pyrate.constants.TEMP_MLOOKED_DIR] = os.path.join(params[pyrate.constants.OUT_DIR],
                                                                  pyrate.constants.TEMP_MLOOKED_DIR)
+        # force error maps to 1-sigma to match legacy
+        params["velerror_nsig"] = 1
         conv2tif.main(params)
         prepifg.main(params)
 
@@ -202,7 +203,7 @@ class TestLegacyEquality:
 
     def test_stackrate_error(self):
         """
-        Compare with legacy data
+        Compare with legacy data. Default behaviour is now 2-sigma, so mult legacy by 2.
         """
         assert_array_almost_equal(self.error_s, self.error_container, decimal=3)
 
