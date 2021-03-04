@@ -21,7 +21,9 @@ used for correcting interferograms for residual topographic effects (a.k.a. DEM 
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
 import numpy as np
 from typing import Tuple, Union
-from pyrate.core import ifgconstants as ifc, config as cf
+
+import pyrate.constants
+from pyrate.core import ifgconstants as ifc
 from pyrate.core.gamma import read_lookup_table
 from pyrate.core.shared import Ifg, IfgPart, Tile, MemGeometry
 
@@ -66,15 +68,15 @@ def calc_radar_coords(ifg: Ifg, params: dict, xmin: int, xmax: int,
     :return: lt_rg: Radar geometry range coordinate for each pixel.
     """
     # lookup table file:
-    lookup_table = params[cf.LT_FILE]
+    lookup_table = params[pyrate.constants.LT_FILE]
 
     if lookup_table is None:
         msg = f"No lookup table file supplied: Geometry cannot be computed"
         raise FileNotFoundError(msg)
 
     # PyRate IFG multi-looking factors
-    ifglksx = params[cf.IFG_LKSX]
-    ifglksy = params[cf.IFG_LKSY]
+    ifglksx = params[pyrate.constants.IFG_LKSX]
+    ifglksy = params[pyrate.constants.IFG_LKSY]
     # transform float lookup table file to np array, min/max pixel coordinates are required for cropping
     lt_az, lt_rg = read_lookup_table(ifg, lookup_table, ifglksx, ifglksy, xmin, xmax, ymin, ymax)
     # replace 0.0 with NaN

@@ -19,15 +19,14 @@ This Python module defines executable run configuration for the PyRate software
 
 import os
 import argparse
-import pickle as cp
 from argparse import RawTextHelpFormatter
 import time
 from pathlib import Path
 
+import pyrate.constants
 from pyrate.constants import CLI_DESCRIPTION
 from pyrate import conv2tif, prepifg, correct, merge
 from pyrate.core.logger import pyratelogger as log, configure_stage_log
-from pyrate.core import config as cf
 from pyrate.core import mpiops
 from pyrate.configuration import Configuration
 from pyrate.core.shared import mpi_vs_multiprocess_logging
@@ -109,7 +108,7 @@ def main():
 
     params = mpiops.run_once(_params_from_conf, args.config_file)
 
-    configure_stage_log(args.verbosity, args.command, Path(params[cf.OUT_DIR]).joinpath('pyrate.log.').as_posix())
+    configure_stage_log(args.verbosity, args.command, Path(params[pyrate.constants.OUT_DIR]).joinpath('pyrate.log.').as_posix())
 
     log.debug("Starting PyRate")
     log.debug("Arguments supplied at command line: ")

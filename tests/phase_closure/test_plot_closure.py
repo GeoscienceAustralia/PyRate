@@ -19,7 +19,7 @@ import shutil
 from pathlib import Path
 from subprocess import check_call
 import pytest
-from pyrate.core import config as cf
+
 import pyrate.constants as c
 from pyrate import correct
 from pyrate.configuration import Configuration
@@ -53,7 +53,7 @@ def test_plot_closure(mexico_cropa_params):
     # house keeping
     correct._update_params_with_tiles(params)
     correct._create_ifg_dict(params)
-    params[cf.REFX_FOUND], params[cf.REFY_FOUND] = correct.ref_pixel_calc_wrapper(params)
+    params[c.REFX_FOUND], params[c.REFY_FOUND] = correct.ref_pixel_calc_wrapper(params)
 
     # run through the correct steps in user specified sequence
     for step in steps:
@@ -62,6 +62,6 @@ def test_plot_closure(mexico_cropa_params):
         else:
             correct.correct_steps[step](params)
 
-    closure_plot_file = Path(params[cf.OUT_DIR]).joinpath('closure_loops.png')
+    closure_plot_file = Path(params[c.OUT_DIR]).joinpath('closure_loops.png')
     assert closure_plot_file.exists()
-    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
+    shutil.rmtree(params[c.OUT_DIR], ignore_errors=True)

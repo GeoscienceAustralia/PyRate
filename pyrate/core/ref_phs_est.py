@@ -22,7 +22,8 @@ from typing import List
 from joblib import Parallel, delayed
 import numpy as np
 
-from pyrate.core import ifgconstants as ifc, config as cf, mpiops, shared
+import pyrate.constants
+from pyrate.core import ifgconstants as ifc, shared
 from pyrate.core.shared import joblib_log_level, nanmedian, Ifg
 from pyrate.core import mpiops
 from pyrate.configuration import Configuration
@@ -45,9 +46,9 @@ def est_ref_phase_patch_median(ifg_paths, params, refpx, refpy):
     :rtype: ndarray
     :return: ifgs: Reference phase data is removed interferograms in place
     """
-    half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
+    half_chip_size = int(np.floor(params[pyrate.constants.REF_CHIP_SIZE] / 2.0))
     chipsize = 2 * half_chip_size + 1
-    thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
+    thresh = chipsize * chipsize * params[pyrate.constants.REF_MIN_FRAC]
 
     def _inner(ifg_paths):
         if isinstance(ifg_paths[0], Ifg):
@@ -60,9 +61,9 @@ def est_ref_phase_patch_median(ifg_paths, params, refpx, refpy):
                 ifg.open(readonly=False)
 
         phase_data = [i.phase_data for i in ifgs]
-        if params[cf.PARALLEL]:
-            ref_phs = Parallel(n_jobs=params[cf.PROCESSES],
-                               verbose=joblib_log_level(cf.LOG_LEVEL))(
+        if params[pyrate.constants.PARALLEL]:
+            ref_phs = Parallel(n_jobs=params[pyrate.constants.PROCESSES],
+                               verbose=joblib_log_level(pyrate.constants.LOG_LEVEL))(
                 delayed(_est_ref_phs_patch_median)(p, half_chip_size, refpx, refpy, thresh)
                 for p in phase_data)
 
@@ -139,9 +140,9 @@ def est_ref_phase_ifg_median(ifg_paths, params):
         comp = np.isnan(phase_data_sum)
         comp = np.ravel(comp, order='F')
 
-        if params[cf.PARALLEL]:
+        if params[pyrate.constants.PARALLEL]:
             log.info("Calculating ref phase using multiprocessing")
-            ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+            ref_phs = Parallel(n_jobs=params[pyrate.constants.PROCESSES], verbose=joblib_log_level(pyrate.constants.LOG_LEVEL))(
                 delayed(_est_ref_phs_ifg_median)(p.phase_data, comp) for p in proc_ifgs
             )
             for n, ifg in enumerate(proc_ifgs):
@@ -200,8 +201,8 @@ def ref_phase_est_wrapper(params):
     """
     Wrapper for reference phase estimation.
     """
-    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
-    refpx, refpy = params[cf.REFX_FOUND], params[cf.REFY_FOUND]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[pyrate.constants.INTERFEROGRAM_FILES]]
+    refpx, refpy = params[pyrate.constants.REFX_FOUND], params[pyrate.constants.REFY_FOUND]
     if len(ifg_paths) < 2:
         raise ReferencePhaseError(
             "At least two interferograms required for reference phase correction ({len_ifg_paths} "
@@ -223,10 +224,10 @@ def ref_phase_est_wrapper(params):
         shared.save_numpy_phase(ifg_paths, params)
         return ref_phs, ifgs
 
-    if params[cf.REF_EST_METHOD] == 1:
+    if params[pyrate.constants.REF_EST_METHOD] == 1:
         log.info("Calculating reference phase as median of interferogram")
         ref_phs = est_ref_phase_ifg_median(ifg_paths, params)
-    elif params[cf.REF_EST_METHOD] == 2:
+    elif params[pyrate.constants.REF_EST_METHOD] == 2:
         log.info('Calculating reference phase in a patch surrounding pixel (x, y): ({}, {})'.format(refpx, refpy))
         ref_phs = est_ref_phase_patch_median(ifg_paths, params, refpx, refpy)
     else:

@@ -28,15 +28,8 @@ from osgeo import gdal
 
 import pyrate.core.ifgconstants as ifc
 from pyrate.core import shared, roipac
-from pyrate.core.config import (
-    INPUT_IFG_PROJECTION,
-    NO_DATA_VALUE,
-    OBS_DIR,
-    OUT_DIR,
-    IFG_FILE_LIST,
-    PROCESSOR,
-    DEM_HEADER_FILE
-)
+from pyrate.constants import IFG_FILE_LIST, PROCESSOR, OBS_DIR, OUT_DIR, DEM_HEADER_FILE, INPUT_IFG_PROJECTION, \
+    NO_DATA_VALUE
 # from pyrate.scripts.conv2tif import main as roipacMain
 from pyrate.core.shared import GeotiffException
 from pyrate.core.shared import write_fullres_geotiff

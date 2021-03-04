@@ -19,11 +19,15 @@ This Python module contains tools for reading GAMMA format input data.
 # coding: utf-8
 import re
 import os
+from os.path import split
 from pathlib import Path
 from datetime import date, time, timedelta
 import numpy as np
+
+import pyrate.constants
+from pyrate.configuration import ConfigException, parse_namelist
 import pyrate.core.ifgconstants as ifc
-from pyrate.core import config as cf
+from pyrate.constants import sixteen_digits_pattern, BASELINE_FILE_PATHS, BASE_FILE_DIR
 from pyrate.core.shared import extract_epochs_from_filename, data_format
 from pyrate.core.logger import pyratelogger as log
 import struct
@@ -461,7 +465,7 @@ def get_header_paths(input_file, slc_file_list):
     """
     f = Path(input_file)
     epochs = extract_epochs_from_filename(f.name)
-    header_names = cf.parse_namelist(slc_file_list)
+    header_names = parse_namelist(slc_file_list)
     matches = [hdr for hdr in header_names if any(e in hdr for e in epochs)]
     return matches
 
@@ -478,17 +482,17 @@ def gamma_header(ifg_file_path, params):
         A combined header dictionary containing metadata from matching
         gamma headers and DEM header.   
     """
-    dem_hdr_path = params[cf.DEM_HEADER_FILE]
-    header_paths = get_header_paths(ifg_file_path, params[cf.HDR_FILE_LIST])
-    if len(header_paths) == 2 and params[cf.BASE_FILE_LIST] is not None:
-        baseline_path = cf.baseline_paths_for(ifg_file_path, params)
+    dem_hdr_path = params[pyrate.constants.DEM_HEADER_FILE]
+    header_paths = get_header_paths(ifg_file_path, params[pyrate.constants.HDR_FILE_LIST])
+    if len(header_paths) == 2 and params[pyrate.constants.BASE_FILE_LIST] is not None:
+        baseline_path = baseline_paths_for(ifg_file_path, params)
     else:
         baseline_path = None  # don't read baseline files for DEM
 
     combined_headers = manage_headers(dem_hdr_path, header_paths, baseline_path)
 
     if os.path.basename(ifg_file_path).split('.')[1] == \
-            (params[cf.APS_INCIDENCE_EXT] or params[cf.APS_ELEVATION_EXT]):
+            (params[pyrate.constants.APS_INCIDENCE_EXT] or params[pyrate.constants.APS_ELEVATION_EXT]):
         # TODO: implement incidence class here
         combined_headers['FILE_TYPE'] = 'Incidence'
 
@@ -591,3 +595,36 @@ def _check_raw_data(bytes_per_col, data_path, ncols, nrows):
 
 class GammaException(Exception):
     """Gamma generic exception class"""
+
+
+def baseline_paths_for(path: str, params: dict) -> str:
+    """
+    Returns path to baseline file for given interferogram. Pattern matches
+    based on epoch in filename.
+
+    Example:
+        '20151025-20160501_base.par'
+        Date pair is the epoch.
+
+    Args:
+        path: Path to intergerogram to find baseline file for.
+        params: Parameter dictionary.
+        tif: Find converted tif if True (_cc.tif), else find .cc file.
+
+    Returns:
+        Path to baseline file.
+    """
+
+    _, filename = split(path)
+    try:
+        epoch = re.search(sixteen_digits_pattern, filename).group(0)
+    except: # catch cases where filename does not have two epochs, e.g. DEM file
+        return None
+
+    base_file_paths = [f.unwrapped_path for f in params[BASELINE_FILE_PATHS] if epoch in f.unwrapped_path]
+
+    if len(base_file_paths) > 1:
+        raise ConfigException(f"'{BASE_FILE_DIR}': found more than one baseline "
+                              f"file for '{path}'. There must be only one "
+                              f"baseline file per interferogram. Found {base_file_paths}.")
+    return base_file_paths[0]

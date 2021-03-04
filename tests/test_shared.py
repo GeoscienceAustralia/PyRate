@@ -34,8 +34,10 @@ from numpy.testing import assert_array_equal
 from osgeo import gdal
 from osgeo.gdal import Open, Dataset, UseExceptions
 
+import pyrate.constants
+import tests.common
 from tests.common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
-from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, gamma
+from pyrate.core import shared, ifgconstants as ifc, gamma
 from pyrate.core.shared import dem_or_ifg
 from pyrate.core import mpiops
 from pyrate import prepifg, conv2tif
@@ -335,25 +337,26 @@ class TestWriteUnw:
     @pytest.fixture(autouse=True)
     def setup_class(cls, gamma_params):
         # change the required params
-        shutil.rmtree(gamma_params[cf.OUT_DIR])  # start with a clean directory
-        shared.mkdir_p(gamma_params[cf.OUT_DIR])
+        shutil.rmtree(gamma_params[pyrate.constants.OUT_DIR])  # start with a clean directory
+        shared.mkdir_p(gamma_params[pyrate.constants.OUT_DIR])
         cls.params = gamma_params
-        cls.params[cf.OBS_DIR] = common.SML_TEST_GAMMA
-        cls.params[cf.PROCESSOR] = 1  # gamma
-        cls.params[cf.PARALLEL] = 0
-        cls.params[cf.REF_EST_METHOD] = 1
-        cls.params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
-        cls.params[cf.BASE_FILE_LIST] = common.SML_TEST_GAMMA
+        cls.params[pyrate.constants.OBS_DIR] = common.SML_TEST_GAMMA
+        cls.params[pyrate.constants.PROCESSOR] = 1  # gamma
+        cls.params[pyrate.constants.PARALLEL] = 0
+        cls.params[pyrate.constants.REF_EST_METHOD] = 1
+        cls.params[pyrate.constants.DEM_FILE] = common.SML_TEST_DEM_GAMMA
+        cls.params[pyrate.constants.BASE_FILE_LIST] = common.SML_TEST_GAMMA
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
-        cls.base_unw_paths = cf.original_ifg_paths(cls.params[cf.IFG_FILE_LIST], cls.params[cf.OBS_DIR])
+        cls.base_unw_paths = tests.common.original_ifg_paths(cls.params[pyrate.constants.IFG_FILE_LIST], cls.params[
+            pyrate.constants.OBS_DIR])
         cls.base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
 
         # dest_paths are tifs that have been geotif converted and multilooked
         conv2tif.main(cls.params)
         prepifg.main(cls.params)
 
-        cls.dest_paths = [Path(cls.params[cf.OUT_DIR]).joinpath(Path(c.sampled_path).name).as_posix()
-                          for c in cls.params[cf.INTERFEROGRAM_FILES][:-2]]
+        cls.dest_paths = [Path(cls.params[pyrate.constants.OUT_DIR]).joinpath(Path(c.sampled_path).name).as_posix()
+                          for c in cls.params[pyrate.constants.INTERFEROGRAM_FILES][:-2]]
         cls.ifgs = [dem_or_ifg(i) for i in cls.dest_paths]
         for i in cls.ifgs:
             i.open()
@@ -419,7 +422,7 @@ class TestWriteUnw:
         # Convert back to .unw
         dest_unws = []
         for g in set(geotiffs):
-            dest_unw = os.path.join(self.params[cf.OUT_DIR], Path(g).stem + '.unw')
+            dest_unw = os.path.join(self.params[pyrate.constants.OUT_DIR], Path(g).stem + '.unw')
             shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw=dest_unw, ifg_proc=1)
             dest_unws.append(dest_unw)
 
@@ -445,12 +448,12 @@ class TestWriteUnw:
 
     def test_roipac_raises(self):
         geotiffs = [os.path.join(
-            self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '_' 
-            + os.path.basename(b).split('.')[1] + '.tif')
+            self.params[pyrate.constants.OUT_DIR], os.path.basename(b).split('.')[0] + '_'
+                                                   + os.path.basename(b).split('.')[1] + '.tif')
             for b in self.base_unw_paths]
 
         for g in geotiffs[:1]:
-            dest_unw = os.path.join(self.params[cf.OUT_DIR], os.path.splitext(g)[0] + '.unw')
+            dest_unw = os.path.join(self.params[pyrate.constants.OUT_DIR], os.path.splitext(g)[0] + '.unw')
             with pytest.raises(NotImplementedError):
                 shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw=dest_unw, ifg_proc=0)
 
@@ -529,11 +532,11 @@ def data_type(request):
 
 def test_tiles_split(parallel, data_type):
     params = {
-        cf.TILES: data_types[data_type],
-        cf.PARALLEL: parallel,
-        cf.LOG_LEVEL: 'INFO',
+        pyrate.constants.TILES: data_types[data_type],
+        pyrate.constants.PARALLEL: parallel,
+        pyrate.constants.LOG_LEVEL: 'INFO',
         'multiplier': 2,
-        cf.PROCESSES: 4
+        pyrate.constants.PROCESSES: 4
     }
 
     def func(tile, params):

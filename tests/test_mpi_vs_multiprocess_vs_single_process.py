@@ -23,8 +23,8 @@ from pathlib import Path
 from subprocess import check_call, CalledProcessError, run
 import numpy as np
 
+import pyrate.constants
 from pyrate.configuration import Configuration, write_config_file
-from pyrate.core import config as cf
 
 from tests.common import (
     assert_same_files_produced,
@@ -32,7 +32,7 @@ from tests.common import (
     manipulate_test_conf,
     MEXICO_CROPA_CONF,
     PY37GDAL304,
-    PY38GDAL304
+    PY38GDAL304,
 )
 
 
@@ -52,22 +52,23 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
         tdir = Path(tempdir())
         params = manipulate_test_conf(conf_file, tdir)
 
-        if params[cf.PROCESSOR] == 1:  # turn on coherence for gamma
-            params[cf.COH_MASK] = 1
+        if params[pyrate.constants.PROCESSOR] == 1:  # turn on coherence for gamma
+            params[pyrate.constants.COH_MASK] = 1
 
-        params[cf.PARALLEL] = parallel_vs_serial
-        params[cf.PROCESSES] = 4
-        params[cf.APSEST] = 1
-        params[cf.IFG_LKSX], params[cf.IFG_LKSY] = get_lks, get_lks
-        params[cf.REFNX], params[cf.REFNY] = 2, 2
+        params[pyrate.constants.PARALLEL] = parallel_vs_serial
+        params[pyrate.constants.PROCESSES] = 4
+        params[pyrate.constants.APSEST] = 1
+        params[pyrate.constants.IFG_LKSX], params[pyrate.constants.IFG_LKSY] = get_lks, get_lks
+        params[pyrate.constants.REFNX], params[pyrate.constants.REFNY] = 2, 2
 
-        params[cf.IFG_CROP_OPT] = get_crop
-        params[cf.ORBITAL_FIT_LOOKS_X], params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks, orbfit_lks
-        params[cf.ORBITAL_FIT] = 1
-        params[cf.ORBITAL_FIT_METHOD] = orbfit_method
-        params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
-        params[cf.REF_EST_METHOD] = ref_est_method
-        params[cf.MAX_LOOP_LENGTH] = 3
+        params[pyrate.constants.IFG_CROP_OPT] = get_crop
+        params[pyrate.constants.ORBITAL_FIT_LOOKS_X], params[
+            pyrate.constants.ORBITAL_FIT_LOOKS_Y] = orbfit_lks, orbfit_lks
+        params[pyrate.constants.ORBITAL_FIT] = 1
+        params[pyrate.constants.ORBITAL_FIT_METHOD] = orbfit_method
+        params[pyrate.constants.ORBITAL_FIT_DEGREE] = orbfit_degrees
+        params[pyrate.constants.REF_EST_METHOD] = ref_est_method
+        params[pyrate.constants.MAX_LOOP_LENGTH] = 3
         params["rows"], params["cols"] = 3, 2
         params["savenpy"] = 1
         params["notiles"] = params["rows"] * params["cols"]  # number of tiles
@@ -83,7 +84,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(not PY38GDAL304, reason="Only run in GDAL3.0.2 and Python3.7 env")
+@pytest.mark.skipif(not PY38GDAL304, reason="Only run in one CI env")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     """
     Tests proving single/multiprocess/mpi produce same output
@@ -123,22 +124,24 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
 
     # convert2tif tests, 17 interferograms
     if not gamma_conf == MEXICO_CROPA_CONF:
-        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_unw.tif", 17)
+        assert_same_files_produced(params[pyrate.constants.OUT_DIR], params_m[pyrate.constants.OUT_DIR], params_s[
+            pyrate.constants.OUT_DIR], "*_unw.tif", 17)
         # if coherence masking, comprare coh files were converted
-        if params[cf.COH_FILE_LIST] is not None:
-            assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "*_cc.tif", 17)
+        if params[pyrate.constants.COH_FILE_LIST] is not None:
+            assert_same_files_produced(params[pyrate.constants.OUT_DIR], params_m[pyrate.constants.OUT_DIR], params_s[
+                pyrate.constants.OUT_DIR], "*_cc.tif", 17)
             print("coherence files compared")
 
-    if params[cf.COH_FILE_LIST] is not None:
+    if params[pyrate.constants.COH_FILE_LIST] is not None:
         no_of_files = 61 if gamma_conf == MEXICO_CROPA_CONF else 35
     else:
         # 17 ifgs + 1 dem + 17 mlooked coh files
         no_of_files = 31 if gamma_conf == MEXICO_CROPA_CONF else 18
 
-    if params[cf.DEMERROR]:
+    if params[pyrate.constants.DEMERROR]:
         # check files required by dem error correction are produced
         assert_same_files_produced(
-            params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
+            params[pyrate.constants.OUT_DIR], params_m[pyrate.constants.OUT_DIR], params_s[pyrate.constants.OUT_DIR],
             [
                 'rdc_range.tif',
                 'rdc_azimuth.tif',
@@ -150,65 +153,86 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
             6
         )
 
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR],
+    assert_same_files_produced(params[pyrate.constants.OUT_DIR], params_m[pyrate.constants.OUT_DIR], params_s[
+        pyrate.constants.OUT_DIR],
                                ["*_ifg.tif", "*_coh.tif", "dem.tif"], no_of_files)
 
     num_files = 30 if gamma_conf == MEXICO_CROPA_CONF else 17
     # cf.TEMP_MLOOKED_DIR will contain the temp files that can be potentially deleted later
-    assert_same_files_produced(params[cf.TEMP_MLOOKED_DIR], params_m[cf.TEMP_MLOOKED_DIR],
-                               params_s[cf.TEMP_MLOOKED_DIR], "*_ifg.tif", num_files)
+    assert_same_files_produced(params[pyrate.constants.TEMP_MLOOKED_DIR], params_m[pyrate.constants.TEMP_MLOOKED_DIR],
+                               params_s[pyrate.constants.TEMP_MLOOKED_DIR], "*_ifg.tif", num_files)
 
     # prepifg + correct steps that overwrite tifs test
     # ifg phase checking in the previous step checks the correct pipeline upto APS correction
 
     # 2 x because of aps files
-    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "tsincr_*.npy",
+    assert_same_files_produced(params[pyrate.constants.TMPDIR], params_m[pyrate.constants.TMPDIR], params_s[
+        pyrate.constants.TMPDIR], "tsincr_*.npy",
                                params['notiles'] * 2)
 
-    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "tscuml_*.npy",
+    assert_same_files_produced(params[pyrate.constants.TMPDIR], params_m[pyrate.constants.TMPDIR], params_s[
+        pyrate.constants.TMPDIR], "tscuml_*.npy",
                                params['notiles'])
 
-    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "linear_rate_*.npy",
+    assert_same_files_produced(params[pyrate.constants.TMPDIR], params_m[pyrate.constants.TMPDIR], params_s[
+        pyrate.constants.TMPDIR], "linear_rate_*.npy",
                                params['notiles'])
-    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "linear_error_*.npy",
+    assert_same_files_produced(params[pyrate.constants.TMPDIR], params_m[pyrate.constants.TMPDIR], params_s[
+        pyrate.constants.TMPDIR], "linear_error_*.npy",
                                params['notiles'])
-    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "linear_intercept_*.npy",
+    assert_same_files_produced(params[pyrate.constants.TMPDIR], params_m[pyrate.constants.TMPDIR], params_s[
+        pyrate.constants.TMPDIR], "linear_intercept_*.npy",
                                params['notiles'])
-    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "linear_rsquared_*.npy",
+    assert_same_files_produced(params[pyrate.constants.TMPDIR], params_m[pyrate.constants.TMPDIR], params_s[
+        pyrate.constants.TMPDIR], "linear_rsquared_*.npy",
                                params['notiles'])
-    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "linear_samples_*.npy",
+    assert_same_files_produced(params[pyrate.constants.TMPDIR], params_m[pyrate.constants.TMPDIR], params_s[
+        pyrate.constants.TMPDIR], "linear_samples_*.npy",
                                params['notiles'])
 
-    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "stack_rate_*.npy",
+    assert_same_files_produced(params[pyrate.constants.TMPDIR], params_m[pyrate.constants.TMPDIR], params_s[
+        pyrate.constants.TMPDIR], "stack_rate_*.npy",
                                params['notiles'])
-    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "stack_error_*.npy",
+    assert_same_files_produced(params[pyrate.constants.TMPDIR], params_m[pyrate.constants.TMPDIR], params_s[
+        pyrate.constants.TMPDIR], "stack_error_*.npy",
                                params['notiles'])
-    assert_same_files_produced(params[cf.TMPDIR], params_m[cf.TMPDIR], params_s[cf.TMPDIR], "stack_samples_*.npy",
+    assert_same_files_produced(params[pyrate.constants.TMPDIR], params_m[pyrate.constants.TMPDIR], params_s[
+        pyrate.constants.TMPDIR], "stack_samples_*.npy",
                                params['notiles'])
 
     # compare merge step
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.tif", 3)
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.kml", 2)
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.png", 2)
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "stack*.npy", 3)
+    assert_same_files_produced(params[pyrate.constants.OUT_DIR], params_m[pyrate.constants.OUT_DIR], params_s[
+        pyrate.constants.OUT_DIR], "stack*.tif", 3)
+    assert_same_files_produced(params[pyrate.constants.OUT_DIR], params_m[pyrate.constants.OUT_DIR], params_s[
+        pyrate.constants.OUT_DIR], "stack*.kml", 2)
+    assert_same_files_produced(params[pyrate.constants.OUT_DIR], params_m[pyrate.constants.OUT_DIR], params_s[
+        pyrate.constants.OUT_DIR], "stack*.png", 2)
+    assert_same_files_produced(params[pyrate.constants.OUT_DIR], params_m[pyrate.constants.OUT_DIR], params_s[
+        pyrate.constants.OUT_DIR], "stack*.npy", 3)
     
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.tif", 5)
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.kml", 3)
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.png", 3)
-    assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "linear_*.npy", 5)
+    assert_same_files_produced(params[pyrate.constants.OUT_DIR], params_m[pyrate.constants.OUT_DIR], params_s[
+        pyrate.constants.OUT_DIR], "linear_*.tif", 5)
+    assert_same_files_produced(params[pyrate.constants.OUT_DIR], params_m[pyrate.constants.OUT_DIR], params_s[
+        pyrate.constants.OUT_DIR], "linear_*.kml", 3)
+    assert_same_files_produced(params[pyrate.constants.OUT_DIR], params_m[pyrate.constants.OUT_DIR], params_s[
+        pyrate.constants.OUT_DIR], "linear_*.png", 3)
+    assert_same_files_produced(params[pyrate.constants.OUT_DIR], params_m[pyrate.constants.OUT_DIR], params_s[
+        pyrate.constants.OUT_DIR], "linear_*.npy", 5)
 
-    if params[cf.PHASE_CLOSURE]:
+    if params[pyrate.constants.PHASE_CLOSURE]:
         __check_equality_of_phase_closure_outputs(mpi_conf, sr_conf)
         __check_equality_of_phase_closure_outputs(mpi_conf, mr_conf)
     else:
-        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tscuml*.tif", 12)
-        assert_same_files_produced(params[cf.OUT_DIR], params_m[cf.OUT_DIR], params_s[cf.OUT_DIR], "tsincr*.tif", 12)
+        assert_same_files_produced(params[pyrate.constants.OUT_DIR], params_m[pyrate.constants.OUT_DIR], params_s[
+            pyrate.constants.OUT_DIR], "tscuml*.tif", 12)
+        assert_same_files_produced(params[pyrate.constants.OUT_DIR], params_m[pyrate.constants.OUT_DIR], params_s[
+            pyrate.constants.OUT_DIR], "tsincr*.tif", 12)
 
     print("==========================xxx===========================")
 
-    shutil.rmtree(params[cf.OBS_DIR])
-    shutil.rmtree(params_m[cf.OBS_DIR])
-    shutil.rmtree(params_s[cf.OBS_DIR])
+    shutil.rmtree(params[pyrate.constants.OBS_DIR])
+    shutil.rmtree(params_m[pyrate.constants.OBS_DIR])
+    shutil.rmtree(params_s[pyrate.constants.OBS_DIR])
 
 
 def __check_equality_of_phase_closure_outputs(mpi_conf, sr_conf):
@@ -257,21 +281,22 @@ def modified_config_short(tempdir, local_crop, get_lks, coh_mask):
     def modify_params(conf_file, parallel, output_conf_file, largetifs):
         tdir = Path(tempdir())
         params = manipulate_test_conf(conf_file, tdir)
-        params[cf.COH_MASK] = coh_mask
-        params[cf.PARALLEL] = parallel
-        params[cf.PROCESSES] = 4
-        params[cf.APSEST] = 1
-        params[cf.LARGE_TIFS] = largetifs
-        params[cf.IFG_LKSX], params[cf.IFG_LKSY] = get_lks, get_lks
-        params[cf.REFX], params[cf.REFY] = ref_pixel
-        params[cf.REFNX], params[cf.REFNY] = 4, 4
+        params[pyrate.constants.COH_MASK] = coh_mask
+        params[pyrate.constants.PARALLEL] = parallel
+        params[pyrate.constants.PROCESSES] = 4
+        params[pyrate.constants.APSEST] = 1
+        params[pyrate.constants.LARGE_TIFS] = largetifs
+        params[pyrate.constants.IFG_LKSX], params[pyrate.constants.IFG_LKSY] = get_lks, get_lks
+        params[pyrate.constants.REFX], params[pyrate.constants.REFY] = ref_pixel
+        params[pyrate.constants.REFNX], params[pyrate.constants.REFNY] = 4, 4
 
-        params[cf.IFG_CROP_OPT] = local_crop
-        params[cf.ORBITAL_FIT_LOOKS_X], params[cf.ORBITAL_FIT_LOOKS_Y] = orbfit_lks, orbfit_lks
-        params[cf.ORBITAL_FIT] = 1
-        params[cf.ORBITAL_FIT_METHOD] = orbfit_method
-        params[cf.ORBITAL_FIT_DEGREE] = orbfit_degrees
-        params[cf.REF_EST_METHOD] = ref_est_method
+        params[pyrate.constants.IFG_CROP_OPT] = local_crop
+        params[pyrate.constants.ORBITAL_FIT_LOOKS_X], params[
+            pyrate.constants.ORBITAL_FIT_LOOKS_Y] = orbfit_lks, orbfit_lks
+        params[pyrate.constants.ORBITAL_FIT] = 1
+        params[pyrate.constants.ORBITAL_FIT_METHOD] = orbfit_method
+        params[pyrate.constants.ORBITAL_FIT_DEGREE] = orbfit_degrees
+        params[pyrate.constants.REF_EST_METHOD] = ref_est_method
         params["rows"], params["cols"] = 3, 2
         params["savenpy"] = 1
         params["notiles"] = params["rows"] * params["cols"]  # number of tiles
@@ -311,7 +336,7 @@ def create_mpi_files():
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(not PY37GDAL304, reason="Only run in GDAL3.0.4 and python3.7 env")
+@pytest.mark.skipif(not PY37GDAL304, reason="Only run in one CI env")
 def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_conf, create_mpi_files, parallel):
     """
     Checks performed:
@@ -334,50 +359,50 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     check_call(f"pyrate workflow -f {sr_conf}", shell=True)
 
     # convert2tif tests, 17 interferograms
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_unw.tif", 17)
+    assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "*_unw.tif", 17)
 
     # if coherence masking, compare coh files were converted
-    if params[cf.COH_FILE_LIST] is not None:
-        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "*_cc.tif", 17)
+    if params[pyrate.constants.COH_FILE_LIST] is not None:
+        assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "*_cc.tif", 17)
         print("coherence files compared")
 
     # prepifg + correct steps that overwrite tifs test
     # 17 mlooked ifgs + 1 dem + 17 mlooked coherence files
-    if params[cf.COH_FILE_LIST] is not None:
-        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], ["*_ifg.tif", "*_coh.tif", 'dem.tif'], 35)
+    if params[pyrate.constants.COH_FILE_LIST] is not None:
+        assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], ["*_ifg.tif", "*_coh.tif", 'dem.tif'], 35)
     else:
-        assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], ["*_ifg.tif", 'dem.tif'], 18)
+        assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], ["*_ifg.tif", 'dem.tif'], 18)
 
-    assert_two_dirs_equal(params[cf.TEMP_MLOOKED_DIR], params_p[cf.TEMP_MLOOKED_DIR], "*_ifg.tif", 17)
+    assert_two_dirs_equal(params[pyrate.constants.TEMP_MLOOKED_DIR], params_p[pyrate.constants.TEMP_MLOOKED_DIR], "*_ifg.tif", 17)
 
     # ifg phase checking in the previous step checks the correct pipeline upto APS correction
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tsincr_*.npy", params['notiles'] * 2)
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "tscuml_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[pyrate.constants.TMPDIR], params_p[pyrate.constants.TMPDIR], "tsincr_*.npy", params['notiles'] * 2)
+    assert_two_dirs_equal(params[pyrate.constants.TMPDIR], params_p[pyrate.constants.TMPDIR], "tscuml_*.npy", params['notiles'])
 
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "linear_rate_*.npy", params['notiles'])
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "linear_error_*.npy", params['notiles'])
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "linear_samples_*.npy", params['notiles'])
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "linear_intercept_*.npy", params['notiles'])
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "linear_rsquared_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[pyrate.constants.TMPDIR], params_p[pyrate.constants.TMPDIR], "linear_rate_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[pyrate.constants.TMPDIR], params_p[pyrate.constants.TMPDIR], "linear_error_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[pyrate.constants.TMPDIR], params_p[pyrate.constants.TMPDIR], "linear_samples_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[pyrate.constants.TMPDIR], params_p[pyrate.constants.TMPDIR], "linear_intercept_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[pyrate.constants.TMPDIR], params_p[pyrate.constants.TMPDIR], "linear_rsquared_*.npy", params['notiles'])
 
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_rate_*.npy", params['notiles'])
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_error_*.npy", params['notiles'])
-    assert_two_dirs_equal(params[cf.TMPDIR], params_p[cf.TMPDIR], "stack_samples_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[pyrate.constants.TMPDIR], params_p[pyrate.constants.TMPDIR], "stack_rate_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[pyrate.constants.TMPDIR], params_p[pyrate.constants.TMPDIR], "stack_error_*.npy", params['notiles'])
+    assert_two_dirs_equal(params[pyrate.constants.TMPDIR], params_p[pyrate.constants.TMPDIR], "stack_samples_*.npy", params['notiles'])
 
     # compare merge step
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.tif", 3)
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.kml", 2)
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.png", 2)
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "stack*.npy", 3)
+    assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "stack*.tif", 3)
+    assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "stack*.kml", 2)
+    assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "stack*.png", 2)
+    assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "stack*.npy", 3)
 
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "linear*.tif", 5)
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "linear*.kml", 3)
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "linear*.png", 3)
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "linear*.npy", 5)
+    assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "linear*.tif", 5)
+    assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "linear*.kml", 3)
+    assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "linear*.png", 3)
+    assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "linear*.npy", 5)
 
-    assert_two_dirs_equal(params[cf.OUT_DIR], params_p[cf.OUT_DIR], "tscuml*.tif")
+    assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "tscuml*.tif")
 
     print("==========================xxx===========================")
 
-    shutil.rmtree(params[cf.OBS_DIR])
-    shutil.rmtree(params_p[cf.OBS_DIR])
+    shutil.rmtree(params[pyrate.constants.OBS_DIR])
+    shutil.rmtree(params_p[pyrate.constants.OBS_DIR])

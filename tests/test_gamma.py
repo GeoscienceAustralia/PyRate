@@ -28,20 +28,13 @@ from numpy.testing import assert_array_almost_equal
 from osgeo import gdal
 
 import pyrate.configuration
+import pyrate.constants
 import pyrate.core.ifgconstants as ifc
-from pyrate.core import shared, config as cf, gamma
-from pyrate.core.config import (
-    DEM_HEADER_FILE,
-    NO_DATA_VALUE,
-    OBS_DIR,
-    IFG_FILE_LIST,
-    BASE_FILE_LIST,
-    PROCESSOR,
-    OUT_DIR,
-    SLC_DIR)
+from pyrate.core import shared, gamma
 from pyrate import prepifg, conv2tif
 from pyrate.core.shared import write_fullres_geotiff, GeotiffException
-from pyrate.constants import PYRATEPATH
+from pyrate.constants import PYRATEPATH, IFG_FILE_LIST, PROCESSOR, OBS_DIR, OUT_DIR, DEM_HEADER_FILE, SLC_DIR, \
+    NO_DATA_VALUE, BASE_FILE_LIST
 
 from tests.common import manipulate_test_conf
 from pyrate.configuration import Configuration
@@ -310,7 +303,7 @@ def parallel_ifgs(gamma_conf):
     tdir = Path(tempfile.mkdtemp())
 
     params_p = manipulate_test_conf(gamma_conf, tdir)
-    params_p[cf.PARALLEL] = 1
+    params_p[pyrate.constants.PARALLEL] = 1
 
     output_conf_file = 'conf.conf'
     output_conf = tdir.joinpath(output_conf_file)
@@ -335,7 +328,7 @@ def series_ifgs(gamma_conf):
     tdir = Path(tempfile.mkdtemp())
 
     params_s = manipulate_test_conf(gamma_conf, tdir)
-    params_s[cf.PARALLEL] = 0
+    params_s[pyrate.constants.PARALLEL] = 0
 
     output_conf_file = 'conf.conf'
     output_conf = tdir.joinpath(output_conf_file)

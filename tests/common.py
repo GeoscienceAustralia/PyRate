@@ -35,12 +35,13 @@ import numpy as np
 from numpy import isnan, sum as nsum
 from osgeo import gdal
 
-from pyrate.core import algorithm, ifgconstants as ifc, config as cf, timeseries, mst, stack
+import pyrate.constants as c
+from pyrate.constants import PYRATEPATH
+from pyrate.core import algorithm, ifgconstants as ifc, timeseries, mst, stack
 from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info,
                                 write_output_geotiff, dem_or_ifg)
 from pyrate.core import roipac
-from pyrate.constants import PYRATEPATH
-from pyrate.configuration import Configuration
+from pyrate.configuration import Configuration, parse_namelist
 
 PYTHON_VERSION = check_output(["python", "--version"]).decode(encoding="utf-8").strip().split(" ")[1][:3]
 
@@ -322,12 +323,12 @@ def reconstruct_stack_rate(shape, tiles, output_dir, out_type):
 
 
 def reconstruct_mst(shape, tiles, output_dir):
-    mst_file_0 = os.path.join(output_dir, cf.MST_DIR, 'mst_mat_{}.npy'.format(0))
+    mst_file_0 = os.path.join(output_dir, c.MST_DIR, 'mst_mat_{}.npy'.format(0))
     shape0 = np.load(mst_file_0).shape[0]
 
     mst = np.empty(shape=((shape0,) + shape), dtype=np.float32)
     for i, t in enumerate(tiles):
-        mst_file_n = os.path.join(output_dir, cf.MST_DIR, 'mst_mat_{}.npy'.format(i))
+        mst_file_n = os.path.join(output_dir, c.MST_DIR, 'mst_mat_{}.npy'.format(i))
         mst[:, t.top_left_y:t.bottom_right_y,
                 t.top_left_x: t.bottom_right_x] = np.load(mst_file_n)
     return mst
@@ -354,10 +355,10 @@ def prepare_ifgs_without_phase(ifg_paths, params):
     for i in ifgs:
         if not i.is_open:
             i.open(readonly=False)
-        nan_conversion = params[cf.NAN_CONVERSION]
+        nan_conversion = params[c.NAN_CONVERSION]
         if nan_conversion:  # nan conversion happens here in networkx mst
             # if not ifg.nan_converted:
-            i.nodata_value = params[cf.NO_DATA_VALUE]
+            i.nodata_value = params[c.NO_DATA_VALUE]
             i.convert_to_nans()
     return ifgs
 
@@ -367,7 +368,7 @@ def mst_calculation(ifg_paths_or_instance, params):
         ifgs = pre_prepare_ifgs(ifg_paths_or_instance, params)
         mst_grid = mst.mst_parallel(ifgs, params)
         # write mst output to a file
-        mst_mat_binary_file = join(params[cf.OUT_DIR], 'mst_mat')
+        mst_mat_binary_file = join(params[c.OUT_DIR], 'mst_mat')
         np.save(file=mst_mat_binary_file, arr=mst_grid)
 
         for i in ifgs:
@@ -403,8 +404,8 @@ def compute_time_series(ifgs, mst_grid, params, vcmt):
         ifgs, params, vcmt=vcmt, mst=mst_grid)
 
     # tsvel_file = join(params[cf.OUT_DIR], 'tsvel.npy')
-    tsincr_file = join(params[cf.OUT_DIR], 'tsincr.npy')
-    tscum_file = join(params[cf.OUT_DIR], 'tscum.npy')
+    tsincr_file = join(params[c.OUT_DIR], 'tsincr.npy')
+    tscum_file = join(params[c.OUT_DIR], 'tscum.npy')
     np.save(file=tsincr_file, arr=tsincr)
     np.save(file=tscum_file, arr=tscum)
     # np.save(file=tsvel_file, arr=tsvel)
@@ -436,7 +437,7 @@ def write_timeseries_geotiff(ifgs, params, tsincr, pr_type):
         md['SEQUENCE_POSITION'] = i+1  # sequence position
 
         data = tsincr[:, :, i]
-        dest = join(params[cf.OUT_DIR], pr_type + "_" +
+        dest = join(params[c.OUT_DIR], pr_type + "_" +
                     str(epochlist.dates[i + 1]) + ".tif")
         md[ifc.DATA_TYPE] = pr_type
         write_output_geotiff(md, gt, wkt, data, dest, np.nan)
@@ -460,23 +461,23 @@ def write_stackrate_tifs(ifgs, params, res):
     rate, error, samples = res
     gt, md, wkt = get_geotiff_header_info(ifgs[0].data_path)
     epochlist = algorithm.get_epochs(ifgs)[0]
-    dest = join(params[cf.OUT_DIR], "stack_rate.tif")
+    dest = join(params[c.OUT_DIR], "stack_rate.tif")
     md[ifc.EPOCH_DATE] = epochlist.dates
     md[ifc.DATA_TYPE] = ifc.STACKRATE
     write_output_geotiff(md, gt, wkt, rate, dest, np.nan)
-    dest = join(params[cf.OUT_DIR], "stack_error.tif")
+    dest = join(params[c.OUT_DIR], "stack_error.tif")
     md[ifc.DATA_TYPE] = ifc.STACKERROR
     write_output_geotiff(md, gt, wkt, error, dest, np.nan)
-    dest = join(params[cf.OUT_DIR], "stack_samples.tif")
+    dest = join(params[c.OUT_DIR], "stack_samples.tif")
     md[ifc.DATA_TYPE] = ifc.STACKSAMP
     write_output_geotiff(md, gt, wkt, samples, dest, np.nan)
     write_stackrate_numpy_files(error, rate, samples, params)
 
 
 def write_stackrate_numpy_files(error, rate, samples, params):
-    rate_file = join(params[cf.OUT_DIR], 'rate.npy')
-    error_file = join(params[cf.OUT_DIR], 'error.npy')
-    samples_file = join(params[cf.OUT_DIR], 'samples.npy')
+    rate_file = join(params[c.OUT_DIR], 'rate.npy')
+    error_file = join(params[c.OUT_DIR], 'error.npy')
+    samples_file = join(params[c.OUT_DIR], 'samples.npy')
     np.save(file=rate_file, arr=rate)
     np.save(file=error_file, arr=error)
     np.save(file=samples_file, arr=samples)
@@ -521,12 +522,12 @@ def copytree(src, dst, symlinks=False, ignore=None):
 
 
 def repair_params_for_correct_tests(out_dir, params):
-    base_ifg_paths = [c.unwrapped_path for c in params[cf.INTERFEROGRAM_FILES]]
+    base_ifg_paths = [d.unwrapped_path for d in params[c.INTERFEROGRAM_FILES]]
     headers = [roipac.roipac_header(i, params) for i in base_ifg_paths]
-    params[cf.INTERFEROGRAM_FILES] = params[cf.INTERFEROGRAM_FILES][:-2]
-    dest_paths = [Path(out_dir).joinpath(Path(c.sampled_path).name).as_posix()
-                  for c in params[cf.INTERFEROGRAM_FILES]]
-    for p, d in zip(params[cf.INTERFEROGRAM_FILES], dest_paths):  # hack
+    params[c.INTERFEROGRAM_FILES] = params[c.INTERFEROGRAM_FILES][:-2]
+    dest_paths = [Path(out_dir).joinpath(Path(d.sampled_path).name).as_posix()
+                  for d in params[c.INTERFEROGRAM_FILES]]
+    for p, d in zip(params[c.INTERFEROGRAM_FILES], dest_paths):  # hack
         p.sampled_path = d
     return dest_paths, headers
 
@@ -584,26 +585,31 @@ def manipulate_test_conf(conf_file, temp_obs_dir: Path):
         copytree(MEXICO_CROPA_DIR_HEADERS, temp_obs_dir)
         copytree(MEXICO_CROPA_DIR_GEOMETRY, temp_obs_dir)
         copytree(MEXICO_CROPA_DIR_DEM_ERROR, temp_obs_dir)
-        shutil.copy2(params[cf.IFG_FILE_LIST], temp_obs_dir)
-        shutil.copy2(params[cf.HDR_FILE_LIST], temp_obs_dir)
-        shutil.copy2(params[cf.COH_FILE_LIST], temp_obs_dir)
-        shutil.copy2(params[cf.BASE_FILE_LIST], temp_obs_dir)
+        shutil.copy2(params[c.IFG_FILE_LIST], temp_obs_dir)
+        shutil.copy2(params[c.HDR_FILE_LIST], temp_obs_dir)
+        shutil.copy2(params[c.COH_FILE_LIST], temp_obs_dir)
+        shutil.copy2(params[c.BASE_FILE_LIST], temp_obs_dir)
+        for m_path in params[c.INTERFEROGRAM_FILES]:
+            m_path.converted_path = temp_obs_dir.joinpath(Path(m_path.converted_path).name).as_posix()
     else:  # legacy unit test data
-        copytree(params[cf.OBS_DIR], temp_obs_dir)
+        copytree(params[c.OBS_DIR], temp_obs_dir)
 
-    params[cf.OBS_DIR] = temp_obs_dir.as_posix()
+    params[c.OBS_DIR] = temp_obs_dir.as_posix()
     # manipulate params
     outdir = temp_obs_dir.joinpath('out')
     outdir.mkdir(exist_ok=True)
-    params[cf.OUT_DIR] = outdir.as_posix()
-    params[cf.TEMP_MLOOKED_DIR] = outdir.joinpath(cf.TEMP_MLOOKED_DIR).as_posix()
-    params[cf.DEM_FILE] = temp_obs_dir.joinpath(Path(params[cf.DEM_FILE]).name).as_posix()
-    params[cf.DEM_HEADER_FILE] = temp_obs_dir.joinpath(Path(params[cf.DEM_HEADER_FILE]).name).as_posix()
-    params[cf.HDR_FILE_LIST] = temp_obs_dir.joinpath(Path(params[cf.HDR_FILE_LIST]).name).as_posix()
-    params[cf.SLC_DIR] = temp_obs_dir.as_posix()
-    params[cf.IFG_FILE_LIST] = temp_obs_dir.joinpath(Path(params[cf.IFG_FILE_LIST]).name).as_posix()
-    params[cf.COH_FILE_DIR] = temp_obs_dir.as_posix()
-    params[cf.TMPDIR] = outdir.joinpath(Path(params[cf.TMPDIR]).name).as_posix()
+    params[c.OUT_DIR] = outdir.as_posix()
+    params[c.TEMP_MLOOKED_DIR] = outdir.joinpath(c.TEMP_MLOOKED_DIR).as_posix()
+    params[c.DEM_FILE] = temp_obs_dir.joinpath(Path(params[c.DEM_FILE]).name).as_posix()
+    params[c.DEM_HEADER_FILE] = temp_obs_dir.joinpath(
+        Path(params[c.DEM_HEADER_FILE]).name).as_posix()
+    params[c.HDR_FILE_LIST] = temp_obs_dir.joinpath(
+        Path(params[c.HDR_FILE_LIST]).name).as_posix()
+    params[c.SLC_DIR] = temp_obs_dir.as_posix()
+    params[c.IFG_FILE_LIST] = temp_obs_dir.joinpath(
+        Path(params[c.IFG_FILE_LIST]).name).as_posix()
+    params[c.COH_FILE_DIR] = temp_obs_dir.as_posix()
+    params[c.TMPDIR] = outdir.joinpath(Path(params[c.TMPDIR]).name).as_posix()
     return params
 
 
@@ -650,18 +656,33 @@ class UnitTestAdaptation:
 
 def min_params(out_dir):
     params = {}
-    params[cf.OUT_DIR] = out_dir
-    params[cf.IFG_LKSX] = 1
-    params[cf.IFG_LKSY] = 1
-    params[cf.IFG_CROP_OPT] = 4
-    params[cf.TEMP_MLOOKED_DIR] = Path(tempfile.mkdtemp())
-    params[cf.ORBFIT_OFFSET] = 1
-    params[cf.ORBITAL_FIT_METHOD] = 1
-    params[cf.ORBITAL_FIT_DEGREE] = 2
-    params[cf.ORBITAL_FIT_LOOKS_X] = 1
-    params[cf.ORBITAL_FIT_LOOKS_Y] = 1
+    params[c.OUT_DIR] = out_dir
+    params[c.IFG_LKSX] = 1
+    params[c.IFG_LKSY] = 1
+    params[c.IFG_CROP_OPT] = 4
+    params[c.TEMP_MLOOKED_DIR] = Path(tempfile.mkdtemp())
+    params[c.ORBFIT_OFFSET] = 1
+    params[c.ORBITAL_FIT_METHOD] = 1
+    params[c.ORBITAL_FIT_DEGREE] = 2
+    params[c.ORBITAL_FIT_LOOKS_X] = 1
+    params[c.ORBITAL_FIT_LOOKS_Y] = 1
     return params
 
 
 def sub_process_run(cmd, *args, **kwargs):
     return run(cmd, *args, shell=True, check=True, **kwargs)
+
+
+def original_ifg_paths(ifglist_path, obs_dir):
+    """
+    Returns sequence of paths to files in given ifglist file.
+
+    Args:
+        ifglist_path: Absolute path to interferogram file list.
+        obs_dir: Absolute path to observations directory.
+
+    Returns:
+        list: List of full paths to interferogram files.
+    """
+    ifglist = parse_namelist(ifglist_path)
+    return [os.path.join(obs_dir, p) for p in ifglist]

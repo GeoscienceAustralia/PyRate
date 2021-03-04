@@ -23,8 +23,9 @@ import pytest
 from pathlib import Path
 
 import pyrate.configuration
+import pyrate.constants
 from pyrate.core.shared import DEM
-from pyrate.core import ifgconstants as ifc, config as cf
+from pyrate.core import ifgconstants as ifc
 from pyrate.core.prepifg_helper import _is_number
 from pyrate import prepifg, conv2tif, configuration
 from tests.common import SML_TEST_DIR, small_data_setup, copytree, TEST_CONF_ROIPAC, TEST_CONF_GAMMA
@@ -43,34 +44,34 @@ def test_files_are_same(tempdir, get_config):
     gamma_params = __workflow(gamma_params, gamma_tdir)
 
     # conv2tif output equal
-    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR], "*_unw.tif", 17)
+    __assert_same_files_produced(roipac_params[pyrate.constants.OUT_DIR], gamma_params[pyrate.constants.OUT_DIR], "*_unw.tif", 17)
 
     # prepifg output equal
-    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR], f"*_ifg.tif", 17)
+    __assert_same_files_produced(roipac_params[pyrate.constants.OUT_DIR], gamma_params[pyrate.constants.OUT_DIR], f"*_ifg.tif", 17)
 
-    __assert_same_files_produced(roipac_params[cf.OUT_DIR], gamma_params[cf.OUT_DIR], "dem.tif", 1)
+    __assert_same_files_produced(roipac_params[pyrate.constants.OUT_DIR], gamma_params[pyrate.constants.OUT_DIR], "dem.tif", 1)
 
     # clean up
-    shutil.rmtree(roipac_params[cf.OBS_DIR])
-    shutil.rmtree(gamma_params[cf.OBS_DIR])
+    shutil.rmtree(roipac_params[pyrate.constants.OBS_DIR])
+    shutil.rmtree(gamma_params[pyrate.constants.OBS_DIR])
 
 
 def __workflow(params, tdir):
-    copytree(params[cf.OBS_DIR], tdir)
+    copytree(params[pyrate.constants.OBS_DIR], tdir)
     # manipulate params
-    params[cf.OBS_DIR] = tdir.as_posix()
+    params[pyrate.constants.OBS_DIR] = tdir.as_posix()
     outdir = tdir.joinpath('out')
     outdir.mkdir(exist_ok=True)
-    params[cf.OUT_DIR] = outdir.as_posix()
+    params[pyrate.constants.OUT_DIR] = outdir.as_posix()
 
-    params[cf.DEM_FILE] = tdir.joinpath(Path(params[cf.DEM_FILE]).name).as_posix()
-    params[cf.DEM_HEADER_FILE] = tdir.joinpath(Path(params[cf.DEM_HEADER_FILE]).name).as_posix()
-    params[cf.HDR_FILE_LIST] = tdir.joinpath(Path(params[cf.HDR_FILE_LIST]).name).as_posix()
-    params[cf.SLC_DIR] = tdir.as_posix()
-    params[cf.IFG_FILE_LIST] = tdir.joinpath(Path(params[cf.IFG_FILE_LIST]).name).as_posix()
-    params[cf.COH_FILE_DIR] = tdir.as_posix()
-    params[cf.APS_INCIDENCE_MAP] = tdir.joinpath(Path(params[cf.APS_INCIDENCE_MAP]).name).as_posix()
-    params[cf.TMPDIR] = tdir.joinpath(Path(params[cf.TMPDIR]).name).as_posix()
+    params[pyrate.constants.DEM_FILE] = tdir.joinpath(Path(params[pyrate.constants.DEM_FILE]).name).as_posix()
+    params[pyrate.constants.DEM_HEADER_FILE] = tdir.joinpath(Path(params[
+                                                                      pyrate.constants.DEM_HEADER_FILE]).name).as_posix()
+    params[pyrate.constants.HDR_FILE_LIST] = tdir.joinpath(Path(params[pyrate.constants.HDR_FILE_LIST]).name).as_posix()
+    params[pyrate.constants.SLC_DIR] = tdir.as_posix()
+    params[pyrate.constants.IFG_FILE_LIST] = tdir.joinpath(Path(params[pyrate.constants.IFG_FILE_LIST]).name).as_posix()
+    params[pyrate.constants.COH_FILE_DIR] = tdir.as_posix()
+    params[pyrate.constants.TMPDIR] = tdir.joinpath(Path(params[pyrate.constants.TMPDIR]).name).as_posix()
     output_conf = tdir.joinpath('roipac_temp.conf')
     pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
     params = configuration.Configuration(output_conf).__dict__

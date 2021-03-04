@@ -21,12 +21,14 @@ import re
 from configparser import ConfigParser
 from pathlib import Path, PurePath
 from typing import Union
-from pyrate.constants import NO_OF_PARALLEL_PROCESSES, sixteen_digits_pattern, twelve_digits_pattern
+
+import pyrate.constants
+from pyrate.constants import NO_OF_PARALLEL_PROCESSES, sixteen_digits_pattern, twelve_digits_pattern, ORB_ERROR_DIR, \
+    DEM_ERROR_DIR, TEMP_MLOOKED_DIR
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
 from pyrate.core.shared import extract_epochs_from_filename, InputTypes, get_tiles
-from pyrate.core.config import parse_namelist, ConfigException, ORB_ERROR_DIR, DEM_ERROR_DIR, TEMP_MLOOKED_DIR
-from pyrate.core import config as cf, mpiops
+
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
@@ -86,8 +88,8 @@ class MultiplePaths:
     def __init__(self, file_name: str, params: dict, input_type: InputTypes = InputTypes.IFG):
 
         self.input_type = input_type
-        out_dir = params[cf.OUT_DIR]
-        tempdir = params[cf.TEMP_MLOOKED_DIR]
+        out_dir = params[pyrate.constants.OUT_DIR]
+        tempdir = params[pyrate.constants.TEMP_MLOOKED_DIR]
         if isinstance(tempdir, str):
             tempdir = Path(tempdir)
         b = Path(file_name)
@@ -117,33 +119,33 @@ class MultiplePaths:
     def orb_error_path(ifg_path: Union[str, Path], params) -> Path:
         if isinstance(ifg_path, str):
             ifg_path = Path(ifg_path)
-        return Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR,
+        return Path(params[pyrate.constants.OUT_DIR], pyrate.constants.ORB_ERROR_DIR,
                     ifg_path.stem + '_' +
-                    '_'.join([str(params[cf.ORBITAL_FIT_METHOD]),
-                              str(params[cf.ORBITAL_FIT_DEGREE]),
-                              str(params[cf.ORBITAL_FIT_LOOKS_X]),
-                              str(params[cf.ORBITAL_FIT_LOOKS_Y])]) +
+                    '_'.join([str(params[pyrate.constants.ORBITAL_FIT_METHOD]),
+                              str(params[pyrate.constants.ORBITAL_FIT_DEGREE]),
+                              str(params[pyrate.constants.ORBITAL_FIT_LOOKS_X]),
+                              str(params[pyrate.constants.ORBITAL_FIT_LOOKS_Y])]) +
                     '_orbfit.npy')
 
     @staticmethod
     def dem_error_path(ifg_path: Union[str, Path], params) -> Path:
         if isinstance(ifg_path, str):
             ifg_path = Path(ifg_path)
-        return Path(params[cf.OUT_DIR], cf.DEM_ERROR_DIR,
-                    ifg_path.stem + '_' + str(params[cf.DE_PTHR]) + '_dem_error.npy')
+        return Path(params[pyrate.constants.OUT_DIR], pyrate.constants.DEM_ERROR_DIR,
+                    ifg_path.stem + '_' + str(params[pyrate.constants.DE_PTHR]) + '_dem_error.npy')
 
     @staticmethod
     def aps_error_path(ifg_path: Union[str, Path], params) -> Path:
         if isinstance(ifg_path, str):
             ifg_path = Path(ifg_path)
-        return Path(params[cf.OUT_DIR], cf.APS_ERROR_DIR,
+        return Path(params[pyrate.constants.OUT_DIR], pyrate.constants.APS_ERROR_DIR,
                     ifg_path.stem + '_' +
                     '_'.join([str(x) for x in [
-                        params[cf.SLPF_CUTOFF],
-                        params[cf.SLPF_NANFILL],
-                        params[cf.SLPF_NANFILL_METHOD],
-                        params[cf.TLPF_CUTOFF],
-                        params[cf.TLPF_PTHR]
+                        params[pyrate.constants.SLPF_CUTOFF],
+                        params[pyrate.constants.SLPF_NANFILL],
+                        params[pyrate.constants.SLPF_NANFILL_METHOD],
+                        params[pyrate.constants.TLPF_CUTOFF],
+                        params[pyrate.constants.TLPF_PTHR]
                     ]
                               ]) + '_aps_error.npy')
 
@@ -254,14 +256,14 @@ class Configuration:
         self.dem_error_dir.mkdir(parents=True, exist_ok=True)
 
         # create aps error dir
-        self.aps_error_dir = Path(self.outdir).joinpath(cf.APS_ERROR_DIR)
+        self.aps_error_dir = Path(self.outdir).joinpath(pyrate.constants.APS_ERROR_DIR)
         self.aps_error_dir.mkdir(parents=True, exist_ok=True)
 
         # create mst dir
-        self.mst_dir = Path(self.outdir).joinpath(cf.MST_DIR)
+        self.mst_dir = Path(self.outdir).joinpath(pyrate.constants.MST_DIR)
         self.mst_dir.mkdir(parents=True, exist_ok=True)
 
-        self.phase_closure_dir = Path(self.outdir).joinpath(cf.PHASE_CLOSURE_DIR)
+        self.phase_closure_dir = Path(self.outdir).joinpath(pyrate.constants.PHASE_CLOSURE_DIR)
         self.phase_closure_dir.mkdir(parents=True, exist_ok=True)
 
         # create temp multilooked files dir
@@ -305,11 +307,12 @@ class Configuration:
 
     @staticmethod
     def ref_pixel_path(params):
-        return Path(params[cf.OUT_DIR]).joinpath(
+        return Path(params[pyrate.constants.OUT_DIR]).joinpath(
             '_'.join(
                 [str(x) for x in [
-                    'ref_pixel', params[cf.REFX], params[cf.REFY], params[cf.REFNX], params[cf.REFNY],
-                    params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC], '.npy'
+                    'ref_pixel', params[pyrate.constants.REFX], params[pyrate.constants.REFY], params[
+                        pyrate.constants.REFNX], params[pyrate.constants.REFNY],
+                    params[pyrate.constants.REF_CHIP_SIZE], params[pyrate.constants.REF_MIN_FRAC], '.npy'
                 ]
                  ]
             )
@@ -317,38 +320,38 @@ class Configuration:
 
     @staticmethod
     def mst_path(params, index) -> Path:
-        return Path(params[cf.OUT_DIR], cf.MST_DIR).joinpath(f'mst_mat_{index}.npy')
+        return Path(params[pyrate.constants.OUT_DIR], pyrate.constants.MST_DIR).joinpath(f'mst_mat_{index}.npy')
 
     @staticmethod
     def preread_ifgs(params: dict) -> Path:
-        return Path(params[cf.TMPDIR], 'preread_ifgs.pk')
+        return Path(params[pyrate.constants.TMPDIR], 'preread_ifgs.pk')
 
     @staticmethod
     def vcmt_path(params):
-        return Path(params[cf.OUT_DIR], cf.VCMT).with_suffix('.npy')
+        return Path(params[pyrate.constants.OUT_DIR], pyrate.constants.VCMT).with_suffix('.npy')
 
     @staticmethod
     def phase_closure_filtered_ifgs_list(params):
-        return Path(params[cf.TEMP_MLOOKED_DIR]).joinpath('phase_closure_filtered_ifgs_list')
+        return Path(params[pyrate.constants.TEMP_MLOOKED_DIR]).joinpath('phase_closure_filtered_ifgs_list')
 
     def refresh_ifg_list(self, params):  # update params dict
         filtered_ifgs_list = self.phase_closure_filtered_ifgs_list(params)
         files = parse_namelist(filtered_ifgs_list.as_posix())
-        params[cf.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.__dict__, input_type=InputTypes.IFG) for p in files]
+        params[pyrate.constants.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.__dict__, input_type=InputTypes.IFG) for p in files]
         return params
 
     @staticmethod
     def ref_phs_file(params):
         ref_pixel_path = Configuration.ref_pixel_path(params)
         # add ref pixel path as when ref pixel changes - ref phs path should also change
-        return Path(params[cf.OUT_DIR]).joinpath(
+        return Path(params[pyrate.constants.OUT_DIR]).joinpath(
             ref_pixel_path.stem + '_' +
-            '_'.join(['ref_phs', str(params[cf.REF_EST_METHOD]), '.npy'])
+            '_'.join(['ref_phs', str(params[pyrate.constants.REF_EST_METHOD]), '.npy'])
         )
 
     @staticmethod
     def get_tiles(params):
-        ifg_path = params[cf.INTERFEROGRAM_FILES][0].sampled_path
+        ifg_path = params[pyrate.constants.INTERFEROGRAM_FILES][0].sampled_path
         rows, cols = params['rows'], params['cols']
         return get_tiles(ifg_path, rows, cols)
 
@@ -407,3 +410,24 @@ def write_config_file(params, output_conf_file):
                     f.write(''.join([k, ':\t', str(vv), '\n']))
             else:
                 f.write(''.join([k, ':\t', '', '\n']))
+
+
+def parse_namelist(nml):
+    """
+    Parses name list file into array of paths
+
+    :param str nml: interferogram file list
+
+    :return: list of interferogram file names
+    :rtype: list
+    """
+    with open(nml) as f_in:
+        lines = [line.rstrip() for line in f_in]
+    return filter(None, lines)
+
+
+class ConfigException(Exception):
+    """
+    Default exception class for configuration errors.
+    """
+

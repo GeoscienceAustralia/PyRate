@@ -27,13 +27,14 @@ import numpy as np
 from numpy import isnan, std, mean, sum as nsum
 from joblib import Parallel, delayed
 
-from pyrate.core import ifgconstants as ifc, config as cf, mpiops
+import pyrate.constants
+from pyrate.core import ifgconstants as ifc
 from pyrate.core import mpiops
 from pyrate.core.shared import Ifg
 from pyrate.core.shared import joblib_log_level
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core import prepifg_helper
-from pyrate.configuration import Configuration
+from pyrate.configuration import Configuration, ConfigException
 
 MAIN_PROCESS = 0
 
@@ -155,11 +156,11 @@ def ref_pixel(ifgs, params):
     :rtype: tuple
     """
     half_patch_size, thresh, grid = ref_pixel_setup(ifgs, params)
-    parallel = params[cf.PARALLEL]
+    parallel = params[pyrate.constants.PARALLEL]
     if parallel:
         phase_data = [i.phase_data for i in ifgs]
-        mean_sds = Parallel(n_jobs=params[cf.PROCESSES], 
-                            verbose=joblib_log_level(cf.LOG_LEVEL))(
+        mean_sds = Parallel(n_jobs=params[pyrate.constants.PROCESSES],
+                            verbose=joblib_log_level(pyrate.constants.LOG_LEVEL))(
             delayed(_ref_pixel_multi)(g, half_patch_size, phase_data,
                                      thresh, params) for g in grid)
         refxy = find_min_mean(mean_sds, grid)
@@ -217,10 +218,10 @@ def ref_pixel_setup(ifgs_or_paths, params):
     :rtype: list
     """
     log.debug('Setting up ref pixel computation')
-    refnx, refny, chipsize, min_frac = params[cf.REFNX], \
-                                       params[cf.REFNY], \
-                                       params[cf.REF_CHIP_SIZE], \
-                                       params[cf.REF_MIN_FRAC]
+    refnx, refny, chipsize, min_frac = params[pyrate.constants.REFNX], \
+                                       params[pyrate.constants.REFNY], \
+                                       params[pyrate.constants.REF_CHIP_SIZE], \
+                                       params[pyrate.constants.REF_MIN_FRAC]
     if len(ifgs_or_paths) < 1:
         msg = 'Reference pixel search requires 2+ interferograms'
         raise RefPixelError(msg)
@@ -260,11 +261,11 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
     :return: None, file saved to disk
     """
     log.debug('Saving ref pixel blocks')
-    outdir = params[cf.TMPDIR]
+    outdir = params[pyrate.constants.TMPDIR]
     for pth in ifg_paths:
         ifg = Ifg(pth)
         ifg.open(readonly=True)
-        ifg.nodata_value = params[cf.NO_DATA_VALUE]
+        ifg.nodata_value = params[pyrate.constants.NO_DATA_VALUE]
         ifg.convert_to_nans()
         ifg.convert_to_mm()
         for y, x in grid:
@@ -301,7 +302,7 @@ def _ref_pixel_multi(g, half_patch_size, phase_data_or_ifg_paths,
         # this consumes a lot less memory
         # one ifg.phase_data in memory at any time
         data = []
-        output_dir = params[cf.TMPDIR]
+        output_dir = params[pyrate.constants.TMPDIR]
         for p in phase_data_or_ifg_paths:
             data_file = os.path.join(output_dir,
                                      'ref_phase_data_{b}_{y}_{x}.npy'.format(
@@ -350,7 +351,7 @@ def _validate_chipsize(chipsize, head):
     Sanity check min chipsize
     """
     if chipsize is None:
-        raise cf.ConfigException('Chipsize is None')
+        raise ConfigException('Chipsize is None')
 
     if chipsize < 3 or chipsize > head.ncols or (chipsize % 2 == 0):
         msg = "Chipsize setting must be >=3 and at least <= grid width"
@@ -363,7 +364,7 @@ def _validate_minimum_fraction(min_frac):
     Sanity check min fraction
     """
     if min_frac is None:
-        raise cf.ConfigException('Minimum fraction is None')
+        raise ConfigException('Minimum fraction is None')
 
     if min_frac < 0.0 or min_frac > 1.0:
         raise RefPixelError("Minimum fraction setting must be >= 0.0 and <= 1.0 ")
@@ -374,7 +375,7 @@ def _validate_search_win(refnx, refny, chipsize, head):
     Sanity check X|Y steps
     """
     if refnx is None:
-        raise cf.ConfigException('refnx is None')
+        raise ConfigException('refnx is None')
 
     max_width = (head.ncols - (chipsize-1))
     if refnx < 1 or refnx > max_width:
@@ -382,7 +383,7 @@ def _validate_search_win(refnx, refny, chipsize, head):
         raise RefPixelError(msg % max_width)
 
     if refny is None:
-        raise cf.ConfigException('refny is None')
+        raise ConfigException('refny is None')
 
     max_rows = (head.nrows - (chipsize-1))
     if refny < 1 or refny > max_rows:
@@ -394,14 +395,15 @@ def __validate_supplied_lat_lon(params: dict) -> None:
     """
     Function to validate that the user supplied lat/lon values sit within image bounds
     """
-    lon, lat = params[cf.REFX], params[cf.REFY]
+    lon, lat = params[pyrate.constants.REFX], params[pyrate.constants.REFY]
     if lon == -1 or lat == -1:
         return
     xmin, ymin, xmax, ymax = prepifg_helper.get_analysis_extent(
-        crop_opt=params[cf.IFG_CROP_OPT],
-        rasters=[prepifg_helper.dem_or_ifg(p.sampled_path) for p in params[cf.INTERFEROGRAM_FILES]],
-        xlooks=params[cf.IFG_LKSX], ylooks=params[cf.IFG_LKSY],
-        user_exts=(params[cf.IFG_XFIRST], params[cf.IFG_YFIRST], params[cf.IFG_XLAST], params[cf.IFG_YLAST])
+        crop_opt=params[pyrate.constants.IFG_CROP_OPT],
+        rasters=[prepifg_helper.dem_or_ifg(p.sampled_path) for p in params[pyrate.constants.INTERFEROGRAM_FILES]],
+        xlooks=params[pyrate.constants.IFG_LKSX], ylooks=params[pyrate.constants.IFG_LKSY],
+        user_exts=(params[pyrate.constants.IFG_XFIRST], params[pyrate.constants.IFG_YFIRST], params[
+            pyrate.constants.IFG_XLAST], params[pyrate.constants.IFG_YLAST])
     )
     msg = "Supplied {} value is outside the bounds of the interferogram data"
     lat_lon_txt = ''
@@ -424,9 +426,9 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
     Wrapper for reference pixel calculation
     """
     __validate_supplied_lat_lon(params)
-    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
-    lon = params[cf.REFX]
-    lat = params[cf.REFY]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[pyrate.constants.INTERFEROGRAM_FILES]]
+    lon = params[pyrate.constants.REFX]
+    lat = params[pyrate.constants.REFY]
 
     ifg = Ifg(ifg_paths[0])
     ifg.open(readonly=True)
@@ -441,7 +443,7 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
             log.info('Reusing pre-calculated ref-pixel values: ({}, {}) from file {}'.format(
                 refx, refy, ref_pixel_file.as_posix()))
             log.warning("Reusing ref-pixel values from previous run!!!")
-            params[cf.REFX_FOUND], params[cf.REFY_FOUND] = int(refx), int(refy)
+            params[pyrate.constants.REFX_FOUND], params[pyrate.constants.REFY_FOUND] = int(refx), int(refy)
             return int(refx), int(refy)
         else:
             return None, None
@@ -485,5 +487,5 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
 
     log.debug("refpx, refpy: "+str(refx) + " " + str(refy))
     ifg.close()
-    params[cf.REFX_FOUND], params[cf.REFY_FOUND] = int(refx), int(refy)
+    params[pyrate.constants.REFX_FOUND], params[pyrate.constants.REFY_FOUND] = int(refx), int(refy)
     return int(refx), int(refy)
