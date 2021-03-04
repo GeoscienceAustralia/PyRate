@@ -203,7 +203,7 @@ class TestLegacyEquality:
 
     def test_stackrate_error(self):
         """
-        Compare with legacy data. Default behaviour is now 2-sigma, so mult legacy by 2.
+        Compare with legacy data.
         """
         assert_array_almost_equal(self.error_s, self.error_container, decimal=3)
 
