@@ -610,6 +610,7 @@ def manipulate_test_conf(conf_file, temp_obs_dir: Path):
         Path(params[c.IFG_FILE_LIST]).name).as_posix()
     params[c.COH_FILE_DIR] = temp_obs_dir.as_posix()
     params[c.TMPDIR] = outdir.joinpath(Path(params[c.TMPDIR]).name).as_posix()
+    params[c.COHERENCE_DIR] = outdir.joinpath(c.COHERENCE_DIR).as_posix()
     return params
 
 

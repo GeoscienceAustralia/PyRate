@@ -100,7 +100,6 @@ def __calc_coherence_stats(params, ifg_path):
     for i in ifgs:
         i.open()
     phase_data = np.stack([i.phase_data for i in ifgs])
-    # import IPython; IPython.embed(); import sys; sys.exit()
     coh_stats = Configuration.coherence_stats(params)
 
     for stat_func, out_type in zip([np.nanmedian, np.nanmean, np.nanstd], [ifg.COH_MEDIAN, ifg.COH_MEAN, ifg.COH_STD]):
