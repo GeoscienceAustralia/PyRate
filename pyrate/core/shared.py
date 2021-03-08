@@ -577,9 +577,9 @@ class IfgPart(object):
             self.second = None
             self.time_span = None
         if isinstance(ifg, Ifg):
-            self.read_required(ifg)
+            self.read_tile(ifg)
 
-    def read_required(self, ifg: Ifg):
+    def read_tile(self, ifg: Ifg):
         """
         Read interferogram file if not already open.
         """
@@ -594,6 +594,11 @@ class IfgPart(object):
         self.time_span = ifg.time_span
         ifg.phase_data = None
         ifg.close()  # close base ifg
+
+    def write_tile(self, ifg: Ifg, tile_data: np.ndarray):
+        if not ifg.is_open:
+            ifg.open(readonly=False)
+        pass
 
     @property
     def nrows(self):

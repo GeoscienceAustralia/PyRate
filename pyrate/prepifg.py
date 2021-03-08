@@ -26,11 +26,11 @@ from joblib import Parallel, delayed
 import numpy as np
 from osgeo import gdal
 
-import pyrate.constants
+import pyrate.constants as C
 from pyrate.core import shared, geometry, mpiops, prepifg_helper, gamma, roipac, ifgconstants as ifc
 from pyrate.core.prepifg_helper import PreprocessError, coherence_paths_for, transform_params
 from pyrate.core.logger import pyratelogger as log
-from pyrate.configuration import MultiplePaths
+from pyrate.configuration import MultiplePaths, Configuration
 from pyrate.core.shared import Ifg, DEM
 from pyrate.core.refpixel import convert_geographic_coordinate_to_pixel_value
 
@@ -54,21 +54,21 @@ def main(params):
     # pylint: disable=too-many-branches
     shared.mpi_vs_multiprocess_logging("prepifg", params)
 
-    ifg_paths = params[pyrate.constants.INTERFEROGRAM_FILES]
-    if params[pyrate.constants.DEM_FILE] is not None:  # optional DEM conversion
-        ifg_paths.append(params[pyrate.constants.DEM_FILE_PATH])
+    ifg_paths = params[C.INTERFEROGRAM_FILES]
+    if params[C.DEM_FILE] is not None:  # optional DEM conversion
+        ifg_paths.append(params[C.DEM_FILE_PATH])
 
-    if params[pyrate.constants.COH_FILE_LIST] is not None:
-        ifg_paths.extend(params[pyrate.constants.COHERENCE_FILE_PATHS])
+    if params[C.COH_FILE_LIST] is not None:
+        ifg_paths.extend(params[C.COHERENCE_FILE_PATHS])
 
-    if params[pyrate.constants.COH_FILE_LIST] is None and params[pyrate.constants.COH_MASK]:
+    if params[C.COH_FILE_LIST] is None and params[C.COH_MASK]:
         raise FileNotFoundError("Cannot apply coherence masking: no coherence file list "
                                 "supplied (parameter 'cohfilelist')")
 
-    shared.mkdir_p(params[pyrate.constants.OUT_DIR])  # create output dir
+    shared.mkdir_p(params[C.OUT_DIR])  # create output dir
 
-    user_exts = (params[pyrate.constants.IFG_XFIRST], params[pyrate.constants.IFG_YFIRST], params[
-        pyrate.constants.IFG_XLAST], params[pyrate.constants.IFG_YLAST])
+    user_exts = (params[C.IFG_XFIRST], params[C.IFG_YFIRST], params[
+        C.IFG_XLAST], params[C.IFG_YLAST])
     xlooks, ylooks, crop = transform_params(params)
     ifgs = [prepifg_helper.dem_or_ifg(p.converted_path) for p in ifg_paths]
     exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks, user_exts=user_exts)
@@ -78,13 +78,24 @@ def main(params):
     process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     do_prepifg(process_ifgs_paths, exts, params)
 
-    if params[pyrate.constants.LT_FILE] is not None:
+    if params[C.LT_FILE] is not None:
         log.info("Calculating and writing geometry files")
-        mpiops.run_once(_write_geometry_files, params, exts, transform, ifg_paths[0])
+        mpiops.run_once(__write_geometry_files, params, exts, transform, ifg_paths[0])
     else:
         log.info("Skipping geometry calculations: Lookup table not provided")
 
+    if params[C.COH_FILE_LIST] is not None:
+        log.info("Calculating and writing geometry files")
+        mpiops.run_once(__calc_coherence_stats, params, exts, transform, ifg_paths[0])
+    else:
+        log.info("Skipping coherence file statistics computation.")
+
     log.info("Finished 'prepifg' step")
+
+
+def __calc_coherence_stats(params):
+    tiles = Configuration.get_tiles(params)
+
 
 
 def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float, float], params: dict) -> None:
@@ -93,7 +104,7 @@ def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float
 
     """
     # pylint: disable=expression-not-assigned
-    parallel = params[pyrate.constants.PARALLEL]
+    parallel = params[C.PARALLEL]
     if mpiops.size > 1:
         parallel = False
 
@@ -102,22 +113,22 @@ def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float
             raise FileNotFoundError("Can not find geotiff: " + str(f) + ". Ensure you have converted your "
                                     "interferograms to geotiffs.")
 
-    if params[pyrate.constants.LARGE_TIFS]:
+    if params[C.LARGE_TIFS]:
         log.info("Using gdal system calls to execute 'prepifg' step")
         ifg = prepifg_helper.dem_or_ifg(multi_paths[0].converted_path)
         ifg.open()
-        xlooks, ylooks = params[pyrate.constants.IFG_LKSX], params[pyrate.constants.IFG_LKSY]
+        xlooks, ylooks = params[C.IFG_LKSX], params[C.IFG_LKSY]
         res_str = [xlooks * ifg.x_step, ylooks * ifg.y_step]
         res_str = ' '.join([str(e) for e in res_str])
         if parallel:
-            Parallel(n_jobs=params[pyrate.constants.PROCESSES], verbose=50)(
+            Parallel(n_jobs=params[C.PROCESSES], verbose=50)(
                 delayed(__prepifg_system)(exts, gtiff_path, params, res_str) for gtiff_path in multi_paths)
         else:
             for m_path in multi_paths:
                 __prepifg_system(exts, m_path, params, res_str)
     else:
         if parallel:
-            Parallel(n_jobs=params[pyrate.constants.PROCESSES], verbose=50)(
+            Parallel(n_jobs=params[C.PROCESSES], verbose=50)(
                 delayed(_prepifg_multiprocessing)(p, exts, params) for p in multi_paths
             )
         else:
@@ -132,7 +143,7 @@ GDAL_CALC = 'gdal_calc_local.py'
 
 
 def __prepifg_system(exts, gtiff, params, res):
-    thresh = params[pyrate.constants.NO_DATA_AVERAGING_THRESHOLD]
+    thresh = params[C.NO_DATA_AVERAGING_THRESHOLD]
     p, c, l = _prepifg_multiprocessing(gtiff, exts, params)
     log.info("Multilooking {p} into {l}".format(p=p, l=l))
     extents = ' '.join([str(e) for e in exts])
@@ -143,7 +154,7 @@ def __prepifg_system(exts, gtiff, params, res):
         __update_meta_data(p, c, l, params)
         return
 
-    p_unset = Path(params[pyrate.constants.OUT_DIR]).joinpath(Path(p).name).with_suffix('.unset.tif')
+    p_unset = Path(params[C.OUT_DIR]).joinpath(Path(p).name).with_suffix('.unset.tif')
     # change nodataval from zero, also leave input geotifs unchanged if one supplies conv2tif output/geotifs
     check_call('gdal_translate {co} -a_nodata nan\t{p}\t{q}'.format(co=COMMON_OPTIONS, p=p, q=p_unset),
                shell=True)
@@ -158,13 +169,13 @@ def __prepifg_system(exts, gtiff, params, res):
         # find all the nans
         log.info(f"applying coherence + nodata masking on {p}")
         check_call(f'{GDAL_CALC} {COMMON_OPTIONS2} -A {p_unset} -B {c} --outfile={nan_frac}\t'
-                   f'--calc=\"logical_or((B<{params[pyrate.constants.COH_THRESH]}), isclose(A,0,atol=0.000001))\"\t'
+                   f'--calc=\"logical_or((B<{params[C.COH_THRESH]}), isclose(A,0,atol=0.000001))\"\t'
                    f'--NoDataValue=nan', shell=True)
 
         # coh masking
         check_call(f'{GDAL_CALC} {COMMON_OPTIONS2} --overwrite -A {p_unset} -B {c}\t'
-                   f'--calc=\"A*(B>={params[pyrate.constants.COH_THRESH]}) - '
-                   f'99999*logical_or((B<{params[pyrate.constants.COH_THRESH]}), isclose(A,0,atol=0.000001))\"\t'
+                   f'--calc=\"A*(B>={params[C.COH_THRESH]}) - '
+                   f'99999*logical_or((B<{params[C.COH_THRESH]}), isclose(A,0,atol=0.000001))\"\t'
                    f'--outfile={corrected_p}\t'
                    f'--NoDataValue=nan', shell=True)
     else:
@@ -206,13 +217,13 @@ def __update_meta_data(p_unset, c, l, params):
     md = ds.GetMetadata()
     # remove data type
     v = md.pop(ifc.DATA_TYPE)
-    md[ifc.IFG_LKSX] = str(params[pyrate.constants.IFG_LKSX])
-    md[ifc.IFG_LKSY] = str(params[pyrate.constants.IFG_LKSY])
-    md[ifc.IFG_CROP] = str(params[pyrate.constants.IFG_CROP_OPT])
+    md[ifc.IFG_LKSX] = str(params[C.IFG_LKSX])
+    md[ifc.IFG_LKSY] = str(params[C.IFG_LKSY])
+    md[ifc.IFG_CROP] = str(params[C.IFG_CROP_OPT])
     # update data type
     if c is not None:  # it's a interferogram when COH_MASK=1
         md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MLOOKED_COH_MASKED_IFG)
-        md[ifc.COH_THRESH] = str(params[pyrate.constants.COH_THRESH])
+        md[ifc.COH_THRESH] = str(params[C.COH_THRESH])
     else:
         if v == ifc.DEM:  # it's a dem
             md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MLOOKED_DEM)
@@ -233,7 +244,7 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, fl
     """
     Multiprocessing wrapper for prepifg
     """
-    thresh = params[pyrate.constants.NO_DATA_AVERAGING_THRESHOLD]
+    thresh = params[C.NO_DATA_AVERAGING_THRESHOLD]
     hdr = find_header(m_path, params)
     hdr[ifc.INPUT_TYPE] = m_path.input_type
     xlooks, ylooks, crop = transform_params(params)
@@ -242,14 +253,14 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, fl
     hdr[ifc.IFG_CROP] = crop
 
     # If we're performing coherence masking, find the coherence file for this IFG.
-    if params[pyrate.constants.COH_MASK] and shared._is_interferogram(hdr):
+    if params[C.COH_MASK] and shared._is_interferogram(hdr):
         coherence_path = coherence_paths_for(m_path.converted_path, params, tif=True)
-        coherence_thresh = params[pyrate.constants.COH_THRESH]
+        coherence_thresh = params[C.COH_THRESH]
     else:
         coherence_path = None
         coherence_thresh = None
 
-    if params[pyrate.constants.LARGE_TIFS]:
+    if params[C.LARGE_TIFS]:
         return m_path.converted_path, coherence_path, m_path.sampled_path
     else:
         prepifg_helper.prepare_ifg(m_path.converted_path, xlooks, ylooks, exts, thresh, crop,
@@ -259,7 +270,7 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, fl
 
 
 def find_header(path: MultiplePaths, params: dict):
-    processor = params[pyrate.constants.PROCESSOR]  # roipac, gamma or geotif
+    processor = params[C.PROCESSOR]  # roipac, gamma or geotif
     tif_path = path.converted_path
     if (processor == GAMMA) or (processor == GEOTIF):
         header = gamma.gamma_header(tif_path, params)
@@ -274,8 +285,8 @@ def find_header(path: MultiplePaths, params: dict):
     return header
 
 
-def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
-                          transform, ifg_path: MultiplePaths) -> None:
+def __write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
+                           transform, ifg_path: MultiplePaths) -> None:
     """
     Calculate geometry and save to geotiff files using the information in the
     first interferogram in the stack, i.e.:
@@ -311,7 +322,7 @@ def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
     az, rg = geometry.calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax)
 
     # Read height data from DEM
-    dem_file = os.path.join(params[pyrate.constants.OUT_DIR], 'dem.tif')
+    dem_file = os.path.join(params[C.OUT_DIR], 'dem.tif')
     dem = DEM(dem_file)
     # calculate per-pixel look angle (also calculates and saves incidence and azimuth angles)
     lk_ang, inc_ang, az_ang, rg_dist = geometry.calc_pixel_geometry(ifg, rg, lon.data, lat.data, dem.data)
@@ -319,7 +330,7 @@ def _write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
     # save radar coordinates and angles to geotiff files
     for out, ot in zip([az, rg, lk_ang, inc_ang, az_ang, rg_dist],
             ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle', 'range_dist']):
-        _save_geom_files(ifg_path, params[pyrate.constants.OUT_DIR], out, ot)
+        _save_geom_files(ifg_path, params[C.OUT_DIR], out, ot)
 
 
 def _save_geom_files(ifg_path, outdir, array, out_type):
