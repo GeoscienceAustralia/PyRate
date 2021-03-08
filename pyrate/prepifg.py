@@ -33,6 +33,7 @@ from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import MultiplePaths, Configuration
 from pyrate.core.shared import Ifg, DEM
 from pyrate.core.refpixel import convert_geographic_coordinate_to_pixel_value
+from pyrate.core import ifgconstants as ifg
 
 
 GAMMA = 1
@@ -80,22 +81,32 @@ def main(params):
 
     if params[C.LT_FILE] is not None:
         log.info("Calculating and writing geometry files")
-        mpiops.run_once(__write_geometry_files, params, exts, transform, ifg_paths[0])
+        mpiops.run_once(__write_geometry_files, params, exts, transform, ifg_paths[0].sampled_path)
     else:
         log.info("Skipping geometry calculations: Lookup table not provided")
 
     if params[C.COH_FILE_LIST] is not None:
         log.info("Calculating and writing geometry files")
-        mpiops.run_once(__calc_coherence_stats, params, exts, transform, ifg_paths[0])
+        mpiops.run_once(__calc_coherence_stats, params, ifg_paths[0].sampled_path)
     else:
         log.info("Skipping coherence file statistics computation.")
-
     log.info("Finished 'prepifg' step")
 
 
-def __calc_coherence_stats(params):
-    tiles = Configuration.get_tiles(params)
+def __calc_coherence_stats(params, ifg_path):
+    coherence_files_multi_paths = params[C.COHERENCE_FILE_PATHS]
+    sampled_paths = [c.sampled_path for c in coherence_files_multi_paths]
+    ifgs = [Ifg(s) for s in sampled_paths]
+    for i in ifgs:
+        i.open()
+    phase_data = np.stack([i.phase_data for i in ifgs])
+    # import IPython; IPython.embed(); import sys; sys.exit()
+    coh_stats = Configuration.coherence_stats(params)
 
+    for stat_func, out_type in zip([np.nanmedian, np.nanmean, np.nanstd], [ifg.COH_MEDIAN, ifg.COH_MEAN, ifg.COH_STD]):
+        arr = stat_func(phase_data, axis=0)
+        dest = coh_stats.coh_stats_paths[out_type]
+        __save_geom_files(ifg_path, dest, arr, out_type)
 
 
 def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float, float], params: dict) -> None:
@@ -286,7 +297,7 @@ def find_header(path: MultiplePaths, params: dict):
 
 
 def __write_geometry_files(params: dict, exts: Tuple[float, float, float, float],
-                           transform, ifg_path: MultiplePaths) -> None:
+                           transform, ifg_path: str) -> None:
     """
     Calculate geometry and save to geotiff files using the information in the
     first interferogram in the stack, i.e.:
@@ -296,7 +307,6 @@ def __write_geometry_files(params: dict, exts: Tuple[float, float, float, float]
     - incidence_angle.tif (incidence angle at each pixel)
     - look_angle.tif (look angle at each pixel)
     """
-    ifg_path = ifg_path.sampled_path
     ifg = Ifg(ifg_path)
     ifg.open(readonly=True)
 
@@ -330,30 +340,31 @@ def __write_geometry_files(params: dict, exts: Tuple[float, float, float, float]
     # save radar coordinates and angles to geotiff files
     for out, ot in zip([az, rg, lk_ang, inc_ang, az_ang, rg_dist],
             ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle', 'range_dist']):
-        _save_geom_files(ifg_path, params[C.OUT_DIR], out, ot)
+
+        dest = os.path.join(params[C.OUT_DIR], ot + ".tif")
+        __save_geom_files(ifg_path, dest, out, ot)
 
 
-def _save_geom_files(ifg_path, outdir, array, out_type):
+out_type_md_dict = {
+    'rdc_azimuth': ifc.RDC_AZIMUTH,
+    'rdc_range': ifc.RDC_RANGE,
+    'look_angle': ifc.LOOK,
+    'incidence_angle': ifc.INCIDENCE,
+    'azimuth_angle': ifc.AZIMUTH,
+    'range_dist': ifc.RANGE_DIST,
+    ifc.COH_MEAN: ifc.COH_MEAN,
+    ifc.COH_MEDIAN: ifc.COH_MEDIAN,
+    ifc.COH_STD: ifc.COH_STD
+}
+
+
+def __save_geom_files(ifg_path, dest, array, out_type):
     """
     Convenience function to save geometry geotiff files
     """
     log.debug('Saving PyRate outputs {}'.format(out_type))
     gt, md, wkt = shared.get_geotiff_header_info(ifg_path)
-
-    if out_type == 'rdc_azimuth':
-        md[ifc.DATA_TYPE] = ifc.RDC_AZIMUTH
-    elif out_type == 'rdc_range':
-        md[ifc.DATA_TYPE] = ifc.RDC_RANGE
-    elif out_type == 'look_angle':
-        md[ifc.DATA_TYPE] = ifc.LOOK
-    elif out_type == 'incidence_angle':
-        md[ifc.DATA_TYPE] = ifc.INCIDENCE
-    elif out_type == 'azimuth_angle':
-        md[ifc.DATA_TYPE] = ifc.AZIMUTH
-    elif out_type == 'range_dist':
-        md[ifc.DATA_TYPE] = ifc.RANGE_DIST
-
-    dest = os.path.join(outdir, out_type + ".tif")
+    md[ifc.DATA_TYPE] = out_type_md_dict[out_type]
     shared.remove_file_if_exists(dest)
     log.info(f"Writing geotiff: {dest}")
     shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)

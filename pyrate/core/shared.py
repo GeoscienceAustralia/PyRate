@@ -20,7 +20,7 @@ all other PyRate modules
 """
 # pylint: disable=too-many-lines
 import re
-from typing import List, Union, Optional, Iterable, Callable
+from typing import List, Union, Optional, Iterable, Callable, Dict
 
 import errno
 import math
@@ -595,10 +595,10 @@ class IfgPart(object):
         ifg.phase_data = None
         ifg.close()  # close base ifg
 
-    def write_tile(self, ifg: Ifg, tile_data: np.ndarray):
-        if not ifg.is_open:
-            ifg.open(readonly=False)
-        pass
+    # def write_tile(self, ifg: Ifg, tile_data: np.ndarray):
+    #     if not ifg.is_open:
+    #         ifg.open(readonly=False)
+    #     ifg.phase_band.WriteArray(tile_data, xoff=self.c_start, yoff=self.r_start)
 
     @property
     def nrows(self):

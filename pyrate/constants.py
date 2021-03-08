@@ -286,6 +286,7 @@ APS_ERROR_DIR = 'aps_error'
 PHASE_CLOSURE_DIR = 'phase_closure_dir'
 MST_DIR = 'mst_dir'
 TEMP_MLOOKED_DIR = 'temp_mlooked_dir'
+COHERENCE_DIR = 'coherence_dir'
 
 
 # temp constants
