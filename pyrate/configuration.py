@@ -22,13 +22,13 @@ from configparser import ConfigParser
 from pathlib import Path, PurePath
 from typing import Union
 
-import pyrate.constants
+import pyrate.constants as C
 from pyrate.constants import NO_OF_PARALLEL_PROCESSES, sixteen_digits_pattern, twelve_digits_pattern, ORB_ERROR_DIR, \
     DEM_ERROR_DIR, TEMP_MLOOKED_DIR
+from pyrate.core import ifgconstants as ifg
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
 from pyrate.core.shared import extract_epochs_from_filename, InputTypes, get_tiles
-
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
@@ -88,8 +88,8 @@ class MultiplePaths:
     def __init__(self, file_name: str, params: dict, input_type: InputTypes = InputTypes.IFG):
 
         self.input_type = input_type
-        out_dir = params[pyrate.constants.OUT_DIR]
-        tempdir = params[pyrate.constants.TEMP_MLOOKED_DIR]
+        out_dir = params[C.OUT_DIR]
+        tempdir = params[C.TEMP_MLOOKED_DIR]
         if isinstance(tempdir, str):
             tempdir = Path(tempdir)
         b = Path(file_name)
@@ -111,6 +111,8 @@ class MultiplePaths:
             self.unwrapped_path = b.as_posix()
             converted_path = Path(out_dir).joinpath(b.stem.split('.')[0] + '_' + b.suffix[1:]).with_suffix('.tif')
             self.sampled_path = converted_path.with_name(filestr + input_type.value + '.tif')
+
+        # tmp_sampled_paths are used after prepifg, during correct steps
         self.tmp_sampled_path = tempdir.joinpath(self.sampled_path.name).as_posix()
         self.converted_path = converted_path.as_posix()
         self.sampled_path = self.sampled_path.as_posix()
@@ -119,33 +121,33 @@ class MultiplePaths:
     def orb_error_path(ifg_path: Union[str, Path], params) -> Path:
         if isinstance(ifg_path, str):
             ifg_path = Path(ifg_path)
-        return Path(params[pyrate.constants.OUT_DIR], pyrate.constants.ORB_ERROR_DIR,
+        return Path(params[C.OUT_DIR], C.ORB_ERROR_DIR,
                     ifg_path.stem + '_' +
-                    '_'.join([str(params[pyrate.constants.ORBITAL_FIT_METHOD]),
-                              str(params[pyrate.constants.ORBITAL_FIT_DEGREE]),
-                              str(params[pyrate.constants.ORBITAL_FIT_LOOKS_X]),
-                              str(params[pyrate.constants.ORBITAL_FIT_LOOKS_Y])]) +
+                    '_'.join([str(params[C.ORBITAL_FIT_METHOD]),
+                              str(params[C.ORBITAL_FIT_DEGREE]),
+                              str(params[C.ORBITAL_FIT_LOOKS_X]),
+                              str(params[C.ORBITAL_FIT_LOOKS_Y])]) +
                     '_orbfit.npy')
 
     @staticmethod
     def dem_error_path(ifg_path: Union[str, Path], params) -> Path:
         if isinstance(ifg_path, str):
             ifg_path = Path(ifg_path)
-        return Path(params[pyrate.constants.OUT_DIR], pyrate.constants.DEM_ERROR_DIR,
-                    ifg_path.stem + '_' + str(params[pyrate.constants.DE_PTHR]) + '_dem_error.npy')
+        return Path(params[C.OUT_DIR], C.DEM_ERROR_DIR,
+                    ifg_path.stem + '_' + str(params[C.DE_PTHR]) + '_dem_error.npy')
 
     @staticmethod
     def aps_error_path(ifg_path: Union[str, Path], params) -> Path:
         if isinstance(ifg_path, str):
             ifg_path = Path(ifg_path)
-        return Path(params[pyrate.constants.OUT_DIR], pyrate.constants.APS_ERROR_DIR,
+        return Path(params[C.OUT_DIR], C.APS_ERROR_DIR,
                     ifg_path.stem + '_' +
                     '_'.join([str(x) for x in [
-                        params[pyrate.constants.SLPF_CUTOFF],
-                        params[pyrate.constants.SLPF_NANFILL],
-                        params[pyrate.constants.SLPF_NANFILL_METHOD],
-                        params[pyrate.constants.TLPF_CUTOFF],
-                        params[pyrate.constants.TLPF_PTHR]
+                        params[C.SLPF_CUTOFF],
+                        params[C.SLPF_NANFILL],
+                        params[C.SLPF_NANFILL_METHOD],
+                        params[C.TLPF_CUTOFF],
+                        params[C.TLPF_PTHR]
                     ]
                               ]) + '_aps_error.npy')
 
@@ -256,15 +258,18 @@ class Configuration:
         self.dem_error_dir.mkdir(parents=True, exist_ok=True)
 
         # create aps error dir
-        self.aps_error_dir = Path(self.outdir).joinpath(pyrate.constants.APS_ERROR_DIR)
+        self.aps_error_dir = Path(self.outdir).joinpath(C.APS_ERROR_DIR)
         self.aps_error_dir.mkdir(parents=True, exist_ok=True)
 
         # create mst dir
-        self.mst_dir = Path(self.outdir).joinpath(pyrate.constants.MST_DIR)
+        self.mst_dir = Path(self.outdir).joinpath(C.MST_DIR)
         self.mst_dir.mkdir(parents=True, exist_ok=True)
 
-        self.phase_closure_dir = Path(self.outdir).joinpath(pyrate.constants.PHASE_CLOSURE_DIR)
+        self.phase_closure_dir = Path(self.outdir).joinpath(C.PHASE_CLOSURE_DIR)
         self.phase_closure_dir.mkdir(parents=True, exist_ok=True)
+
+        self.coherence_dir = Path(self.outdir).joinpath(C.COHERENCE_DIR)
+        self.coherence_dir.mkdir(parents=True, exist_ok=True)
 
         # create temp multilooked files dir
         self.temp_mlooked_dir = Path(self.outdir).joinpath(TEMP_MLOOKED_DIR)
@@ -307,12 +312,12 @@ class Configuration:
 
     @staticmethod
     def ref_pixel_path(params):
-        return Path(params[pyrate.constants.OUT_DIR]).joinpath(
+        return Path(params[C.OUT_DIR]).joinpath(
             '_'.join(
                 [str(x) for x in [
-                    'ref_pixel', params[pyrate.constants.REFX], params[pyrate.constants.REFY], params[
-                        pyrate.constants.REFNX], params[pyrate.constants.REFNY],
-                    params[pyrate.constants.REF_CHIP_SIZE], params[pyrate.constants.REF_MIN_FRAC], '.npy'
+                    'ref_pixel', params[C.REFX], params[C.REFY], params[
+                        C.REFNX], params[C.REFNY],
+                    params[C.REF_CHIP_SIZE], params[C.REF_MIN_FRAC], '.npy'
                 ]
                  ]
             )
@@ -320,38 +325,38 @@ class Configuration:
 
     @staticmethod
     def mst_path(params, index) -> Path:
-        return Path(params[pyrate.constants.OUT_DIR], pyrate.constants.MST_DIR).joinpath(f'mst_mat_{index}.npy')
+        return Path(params[C.OUT_DIR], C.MST_DIR).joinpath(f'mst_mat_{index}.npy')
 
     @staticmethod
     def preread_ifgs(params: dict) -> Path:
-        return Path(params[pyrate.constants.TMPDIR], 'preread_ifgs.pk')
+        return Path(params[C.TMPDIR], 'preread_ifgs.pk')
 
     @staticmethod
     def vcmt_path(params):
-        return Path(params[pyrate.constants.OUT_DIR], pyrate.constants.VCMT).with_suffix('.npy')
+        return Path(params[C.OUT_DIR], C.VCMT).with_suffix('.npy')
 
     @staticmethod
     def phase_closure_filtered_ifgs_list(params):
-        return Path(params[pyrate.constants.TEMP_MLOOKED_DIR]).joinpath('phase_closure_filtered_ifgs_list')
+        return Path(params[C.TEMP_MLOOKED_DIR]).joinpath('phase_closure_filtered_ifgs_list')
 
     def refresh_ifg_list(self, params):  # update params dict
         filtered_ifgs_list = self.phase_closure_filtered_ifgs_list(params)
         files = parse_namelist(filtered_ifgs_list.as_posix())
-        params[pyrate.constants.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.__dict__, input_type=InputTypes.IFG) for p in files]
+        params[C.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.__dict__, input_type=InputTypes.IFG) for p in files]
         return params
 
     @staticmethod
     def ref_phs_file(params):
         ref_pixel_path = Configuration.ref_pixel_path(params)
         # add ref pixel path as when ref pixel changes - ref phs path should also change
-        return Path(params[pyrate.constants.OUT_DIR]).joinpath(
+        return Path(params[C.OUT_DIR]).joinpath(
             ref_pixel_path.stem + '_' +
-            '_'.join(['ref_phs', str(params[pyrate.constants.REF_EST_METHOD]), '.npy'])
+            '_'.join(['ref_phs', str(params[C.REF_EST_METHOD]), '.npy'])
         )
 
     @staticmethod
     def get_tiles(params):
-        ifg_path = params[pyrate.constants.INTERFEROGRAM_FILES][0].sampled_path
+        ifg_path = params[C.INTERFEROGRAM_FILES][0].sampled_path
         rows, cols = params['rows'], params['cols']
         return get_tiles(ifg_path, rows, cols)
 
@@ -361,16 +366,29 @@ class Configuration:
         return [MultiplePaths(p, self.__dict__, input_type=input_type) for p in files]
 
     def closure(self):
-        closure_d = self.phase_closure_dir
+        closure_d = Path(self.phase_closure_dir)
 
         class Closure:
             def __init__(self):
-                self.closure = Path(closure_d).joinpath('closure.npy')
-                self.ifgs_breach_count = Path(closure_d).joinpath('ifgs_breach_count.npy')
-                self.num_occurences_each_ifg = Path(closure_d).joinpath('num_occurrences_each_ifg.npy')
-                self.loops = Path(closure_d).joinpath('loops.npy')
+                self.closure = closure_d.joinpath('closure.npy')
+                self.ifgs_breach_count = closure_d.joinpath('ifgs_breach_count.npy')
+                self.num_occurences_each_ifg = closure_d.joinpath('num_occurrences_each_ifg.npy')
+                self.loops = closure_d.joinpath('loops.npy')
 
         return Closure()
+
+    @staticmethod
+    def coherence_stats(params):
+        coh_d = Path(params[C.COHERENCE_DIR])
+
+        class Coherence:
+            def __init__(self):
+                self.coh_stats_paths = {
+                    k: coh_d.joinpath(k + '.tif').as_posix()
+                    for k in [ifg.COH_MEDIAN, ifg.COH_MEAN, ifg.COH_STD]
+                }
+
+        return Coherence()
 
 
 def write_config_parser_file(conf: ConfigParser, output_conf_file: Union[str, Path]):
