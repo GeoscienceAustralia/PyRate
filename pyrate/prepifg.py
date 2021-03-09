@@ -86,7 +86,7 @@ def main(params):
         log.info("Skipping geometry calculations: Lookup table not provided")
 
     if params[C.COH_FILE_LIST] is not None:
-        log.info("Calculating and writing geometry files")
+        log.info("Calculating and writing coherence statistics")
         mpiops.run_once(__calc_coherence_stats, params, ifg_paths[0].sampled_path)
     else:
         log.info("Skipping coherence file statistics computation.")
@@ -353,7 +353,7 @@ out_type_md_dict = {
     'range_dist': ifc.RANGE_DIST,
     ifc.COH_MEAN: ifc.COH_MEAN,
     ifc.COH_MEDIAN: ifc.COH_MEDIAN,
-    ifc.COH_STD: ifc.COH_STD
+    ifc.COH_STD: ifc.COH_STD + '_1SIGMA'
 }
 
 
