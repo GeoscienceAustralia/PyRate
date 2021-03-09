@@ -513,8 +513,8 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "DataType": int,
         "DefaultValue": 2,
         "MinValue": 1,
-        "MaxValue": 2,
-        "PossibleValues": [1, 2],
+        "MaxValue": None,
+        "PossibleValues": None,
         "Required": False
     },
     "correct": {
