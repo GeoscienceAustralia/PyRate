@@ -233,7 +233,6 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
             params[C.COHERENCE_DIR], params_m[C.COHERENCE_DIR], params_s[C.COHERENCE_DIR],
             "coh*.tif", 3
         )
-        
 
     print("==========================xxx===========================")
 
