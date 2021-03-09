@@ -118,7 +118,6 @@ def get_config():
 @pytest.fixture
 def gamma_params():
     params = Configuration(TEST_CONF_GAMMA).__dict__
-    shutil.rmtree(params[pyrate.constants.OUT_DIR], ignore_errors=True)
     shared.mkdir_p(params[pyrate.constants.OUT_DIR])
     yield params
     shutil.rmtree(params[pyrate.constants.OUT_DIR], ignore_errors=True)
