@@ -595,11 +595,6 @@ class IfgPart(object):
         ifg.phase_data = None
         ifg.close()  # close base ifg
 
-    # def write_tile(self, ifg: Ifg, tile_data: np.ndarray):
-    #     if not ifg.is_open:
-    #         ifg.open(readonly=False)
-    #     ifg.phase_band.WriteArray(tile_data, xoff=self.c_start, yoff=self.r_start)
-
     @property
     def nrows(self):
         """

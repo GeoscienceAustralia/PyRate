@@ -337,7 +337,6 @@ class TestWriteUnw:
     @pytest.fixture(autouse=True)
     def setup_class(cls, gamma_params):
         # change the required params
-        # shutil.rmtree(gamma_params[pyrate.constants.OUT_DIR])  # start with a clean directory
         shared.mkdir_p(gamma_params[pyrate.constants.OUT_DIR])
         cls.params = gamma_params
         cls.params[pyrate.constants.OBS_DIR] = common.SML_TEST_GAMMA

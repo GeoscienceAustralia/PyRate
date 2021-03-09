@@ -231,7 +231,7 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     if params[C.COH_FILE_LIST] is not None:
         assert_same_files_produced(
             params[C.COHERENCE_DIR], params_m[C.COHERENCE_DIR], params_s[C.COHERENCE_DIR],
-            "COH*.tif", 3
+            "coh*.tif", 3
         )
         
 

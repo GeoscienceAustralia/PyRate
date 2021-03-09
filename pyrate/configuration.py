@@ -384,7 +384,7 @@ class Configuration:
         class Coherence:
             def __init__(self):
                 self.coh_stats_paths = {
-                    k: coh_d.joinpath(k + '.tif').as_posix()
+                    k: coh_d.joinpath(k.lower() + '.tif').as_posix()
                     for k in [ifg.COH_MEDIAN, ifg.COH_MEAN, ifg.COH_STD]
                 }
 
