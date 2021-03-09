@@ -107,7 +107,7 @@ def __calc_coherence_stats(params, ifg_path):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
             arr = stat_func(phase_data, axis=0)
-        dest = coh_stats.coh_stats_paths[out_type]
+        dest = coh_stats[out_type]
         __save_geom_files(ifg_path, dest, arr, out_type)
 
 

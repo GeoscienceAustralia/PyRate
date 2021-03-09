@@ -380,15 +380,7 @@ class Configuration:
     @staticmethod
     def coherence_stats(params):
         coh_d = Path(params[C.COHERENCE_DIR])
-
-        class Coherence:
-            def __init__(self):
-                self.coh_stats_paths = {
-                    k: coh_d.joinpath(k.lower() + '.tif').as_posix()
-                    for k in [ifg.COH_MEDIAN, ifg.COH_MEAN, ifg.COH_STD]
-                }
-
-        return Coherence()
+        return {k: coh_d.joinpath(k.lower() + '.tif').as_posix() for k in [ifg.COH_MEDIAN, ifg.COH_MEAN, ifg.COH_STD]}
 
 
 def write_config_parser_file(conf: ConfigParser, output_conf_file: Union[str, Path]):

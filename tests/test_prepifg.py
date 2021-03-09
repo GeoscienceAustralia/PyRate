@@ -924,7 +924,7 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, params, t
 @pytest.mark.slow
 @pytest.mark.skipif(not PYTHON3P9, reason="Only run in one CI env")
 def test_coh_stats_equality(mexico_cropa_params):
-    subprocess.run(f"pyrate prepifg -f {MEXICO_CROPA_CONF.as_posix()}", shell=True)    
+    subprocess.run(f"mpirun -n 2 pyrate prepifg -f {MEXICO_CROPA_CONF.as_posix()}", shell=True)
     params = mexico_cropa_params
     MEXICO_CROPA_COH_STATS_DIR = Path(BASE_TEST).joinpath("cropA", 'coherence_stats')
     assert_two_dirs_equal(params[C.COHERENCE_DIR], MEXICO_CROPA_COH_STATS_DIR, ext="coh*.tif", num_files=3)
