@@ -20,6 +20,7 @@ interferogram geotiff files.
 # -*- coding: utf-8 -*-
 import os
 from subprocess import check_call
+import warnings
 from typing import List, Tuple
 from pathlib import Path
 from joblib import Parallel, delayed
@@ -103,7 +104,9 @@ def __calc_coherence_stats(params, ifg_path):
     coh_stats = Configuration.coherence_stats(params)
 
     for stat_func, out_type in zip([np.nanmedian, np.nanmean, np.nanstd], [ifg.COH_MEDIAN, ifg.COH_MEAN, ifg.COH_STD]):
-        arr = stat_func(phase_data, axis=0)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            arr = stat_func(phase_data, axis=0)
         dest = coh_stats.coh_stats_paths[out_type]
         __save_geom_files(ifg_path, dest, arr, out_type)
 
