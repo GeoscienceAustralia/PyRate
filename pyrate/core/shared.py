@@ -1043,7 +1043,6 @@ def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
             f.write(col_data)
 
 
-# This function may be able to be deprecated
 def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     # pylint: disable=too-many-arguments
     """
@@ -1065,10 +1064,9 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     # set spatial reference for geotiff
     ds.SetGeoTransform(gt)
     ds.SetProjection(wkt)
-#    ds.SetMetadataItem(ifc.EPOCH_DATE, str(md[ifc.EPOCH_DATE]))
 
     # set data type metadata
-    ds.SetMetadataItem('DATA_TYPE', str(md['DATA_TYPE']))
+    ds.SetMetadataItem(ifc.DATA_TYPE, str(md[ifc.DATA_TYPE]))
 
     # set other metadata
     for k in [ifc.SEQUENCE_POSITION, ifc.PYRATE_REFPIX_X, ifc.PYRATE_REFPIX_Y, ifc.PYRATE_REFPIX_LAT,

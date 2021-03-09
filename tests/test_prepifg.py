@@ -926,5 +926,14 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, params, t
 def test_coh_stats_equality(mexico_cropa_params):
     subprocess.run(f"mpirun -n 2 pyrate prepifg -f {MEXICO_CROPA_CONF.as_posix()}", shell=True)
     params = mexico_cropa_params
-    MEXICO_CROPA_COH_STATS_DIR = Path(BASE_TEST).joinpath("cropA", 'coherence_stats')
-    assert_two_dirs_equal(params[C.COHERENCE_DIR], MEXICO_CROPA_COH_STATS_DIR, ext="coh*.tif", num_files=3)
+    mexico_cropa_coh_stats_dir = Path(BASE_TEST).joinpath("cropA", 'coherence_stats')
+    assert_two_dirs_equal(params[C.COHERENCE_DIR], mexico_cropa_coh_stats_dir, ext="coh*.tif", num_files=3)
+
+    # assert metadata was written
+    from pyrate.prepifg import out_type_md_dict
+    for stat_tif in mexico_cropa_coh_stats_dir.glob("coh*.tif"):
+        ds = gdal.Open(stat_tif.as_posix())
+        md = ds.GetMetadata()
+        expected_md = out_type_md_dict[stat_tif.stem.upper()]
+        assert ifc.DATA_TYPE in md.keys()
+        assert expected_md in md.values()

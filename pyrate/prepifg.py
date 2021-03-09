@@ -370,4 +370,3 @@ def __save_geom_files(ifg_path, dest, array, out_type):
     shared.remove_file_if_exists(dest)
     log.info(f"Writing geotiff: {dest}")
     shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
-
