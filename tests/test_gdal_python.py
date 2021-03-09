@@ -467,7 +467,3 @@ def test_small_data_coherence(gamma_or_mexicoa_conf):
         cifg_below_thrhold = cifg.phase_data < params[c.COH_THRESH]
         np.testing.assert_array_equal(nans, cifg_below_thrhold)
     shutil.rmtree(temp_obs_dir)
-
-
-def test_coh_stats_equality(mexico_cropa_params):
-    pass

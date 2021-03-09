@@ -32,6 +32,7 @@ from tests.common import (
     PY37GDAL302
 )
 
+
 @pytest.fixture(params=[1, 2, 3, 4])
 def local_crop(request):
     return request.param
@@ -131,12 +132,12 @@ def modified_config_largetifs(tempdir, local_crop, get_lks, coh_mask):
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(not PY37GDAL302, reason="Only run in python 3.8")
+@pytest.mark.skipif(not PY37GDAL302, reason="Only run in one CI env")
 def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, create_mpi_files):
 
     print("\n\n")
     print("===x==="*10)
-    if GITHUB_ACTIONS and np.random.randint(0, 1000) > 499:  # skip 50% of tests randomly
+    if GITHUB_ACTIONS and np.random.randint(0, 1000) > 899:  # skip 90% of tests randomly
         pytest.skip("Randomly skipping as part of 50 percent")
 
     params = create_mpi_files(gamma_conf)
