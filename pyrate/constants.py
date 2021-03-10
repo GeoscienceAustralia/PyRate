@@ -272,6 +272,11 @@ ORB_DEGREE_NAMES = {PLANAR: 'PLANAR',
                     PART_CUBIC: 'PART CUBIC'}
 
 
+# geometry outputs
+GEOMETRY_OUTPUT_TYPES = ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle', 'range_dist']
+
+
+# LOS projection
 LOS_PROJECTION = 'los_projection'
 LINE_OF_SIGHT = 0
 PSEUDO_VERTICAL = 1
@@ -299,6 +304,7 @@ PHASE_CLOSURE_DIR = 'phase_closure_dir'
 MST_DIR = 'mst_dir'
 TEMP_MLOOKED_DIR = 'temp_mlooked_dir'
 COHERENCE_DIR = 'coherence_dir'
+GEOMETRY_DIR = 'geometry_dir'
 
 
 # temp constants

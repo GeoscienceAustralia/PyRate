@@ -340,18 +340,16 @@ def __write_geometry_files(params: dict, exts: Tuple[float, float, float, float]
     lk_ang, inc_ang, az_ang, rg_dist = geometry.calc_pixel_geometry(ifg, rg, lon.data, lat.data, dem.data)
 
     # save radar coordinates and angles to geotiff files
-    combinations = zip(
-        [az, rg, lk_ang, inc_ang, az_ang, rg_dist],
-        ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle', 'range_dist'])
+    combinations = zip([az, rg, lk_ang, inc_ang, az_ang, rg_dist], C.GEOMETRY_OUTPUT_TYPES)
     shared.iterable_split(__parallelly_write, combinations, params, ifg_path)
 
 
 def __parallelly_write(tup, params, ifg_path):
-    out, ot = tup
-    dest = os.path.join(params[C.OUT_DIR], ot + ".tif")
+    array, output_type = tup
+    dest = Configuration.geometry_files(params)[output_type]
     if mpiops.size > 0:
         log.debug(f"Writing {dest} using process {mpiops.rank}")
-    __save_geom_files(ifg_path, dest, out, ot)
+    __save_geom_files(ifg_path, dest, array, output_type)
 
 
 out_type_md_dict = {

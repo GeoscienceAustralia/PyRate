@@ -271,6 +271,9 @@ class Configuration:
         self.coherence_dir = Path(self.outdir).joinpath(C.COHERENCE_DIR)
         self.coherence_dir.mkdir(parents=True, exist_ok=True)
 
+        self.geometry_dir = Path(self.outdir).joinpath(C.GEOMETRY_DIR)
+        self.geometry_dir.mkdir(parents=True, exist_ok=True)
+
         # create temp multilooked files dir
         self.temp_mlooked_dir = Path(self.outdir).joinpath(TEMP_MLOOKED_DIR)
         self.temp_mlooked_dir.mkdir(parents=True, exist_ok=True)
@@ -381,6 +384,11 @@ class Configuration:
     def coherence_stats(params):
         coh_d = Path(params[C.COHERENCE_DIR])
         return {k: coh_d.joinpath(k.lower() + '.tif').as_posix() for k in [ifg.COH_MEDIAN, ifg.COH_MEAN, ifg.COH_STD]}
+
+    @staticmethod
+    def geometry_files(params):
+        geom_dir = Path(params[C.GEOMETRY_DIR])
+        return {k: geom_dir.joinpath(k.lower() + '.tif').as_posix() for k in C.GEOMETRY_OUTPUT_TYPES}
 
 
 def write_config_parser_file(conf: ConfigParser, output_conf_file: Union[str, Path]):
