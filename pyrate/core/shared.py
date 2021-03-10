@@ -109,12 +109,13 @@ class RasterBase(object):
     """
     # pylint: disable=missing-docstring
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, path: Union[gdal.Dataset, str]):
+    def __init__(self, path: Union[gdal.Dataset, str, Path]):
         if isinstance(path, gdal.Dataset):
             self.dataset = path  # path will be Dataset in this case
             self.data_path = self.dataset  # data_path dummy
             self.add_geographic_data()
         else:
+            path = path.as_posix() if isinstance(path, Path) else path
             self.data_path = path
             self.dataset = None  # for GDAL dataset obj
             self._readonly = not os.access(path, os.R_OK | os.W_OK)
@@ -287,7 +288,6 @@ class Ifg(RasterBase):
 
         :param str path: Path to interferogram file
         """
-        path = path.as_posix() if isinstance(path, Path) else path
         RasterBase.__init__(self, path)
         self._phase_band = None
         self._phase_data = None

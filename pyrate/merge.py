@@ -303,9 +303,9 @@ def __save_merged_files(ifgs_dict, params, array, out_type, index=None, savenpy=
     if out_type in los_projection_out_types:  # apply LOS projection
         incidence_path = Path(Configuration.geometry_files(params)['incidence_angle'])
         if incidence_path.exists():  #  We can do LOS projection
-            incidence = shared.Ifg(incidence_path)
+            incidence = shared.Geometry(incidence_path)
             incidence.open()
-            array *= los_projection_multiplier[params[C.LOS_PROJECTION]](incidence.phase_data)
+            array *= los_projection_multiplier[params[C.LOS_PROJECTION]](incidence.data)
             md[C.LOS_PROJECTION] = ifc.LOS_PROJECTION_OPTION[params[C.LOS_PROJECTION]]
 
     shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)

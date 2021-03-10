@@ -50,7 +50,7 @@ def create_merge_output(tempdir, gamma_conf):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(not PY37GDAL304, reason="Only run in GDAL3.0.4 and Python3.7 env")
+@pytest.mark.skipif(not PY37GDAL304, reason="Only run in one CI env")
 def test_file_creation(create_merge_output):
     params = create_merge_output
 
