@@ -25,7 +25,7 @@ import subprocess
 from pathlib import Path
 from typing import Optional, Tuple
 
-import pyrate.constants
+import pyrate.constants as C
 from pyrate.core import shared, stack, ifgconstants as ifc, mpiops
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration
@@ -40,7 +40,7 @@ def main(params: dict) -> None:
     single geotiff files
     """
     out_types = []
-    stfile = join(params[pyrate.constants.TMPDIR], 'stack_rate_0.npy')
+    stfile = join(params[C.TMPDIR], 'stack_rate_0.npy')
     if exists(stfile):
         # setup paths
         mpiops.run_once(_merge_stack, params)
@@ -48,7 +48,7 @@ def main(params: dict) -> None:
     else:
         log.warning('Not merging stack products; {} does not exist'.format(stfile))
 
-    tsfile = join(params[pyrate.constants.TMPDIR], 'tscuml_0.npy')
+    tsfile = join(params[C.TMPDIR], 'tscuml_0.npy')
     if exists(tsfile):
         _merge_timeseries(params, 'tscuml')
         _merge_linrate(params)
@@ -60,45 +60,43 @@ def main(params: dict) -> None:
     else:
         log.warning('Not merging time series products; {} does not exist'.format(tsfile))
 
-
     if len(out_types) > 0:
         process_out_types = mpiops.array_split(out_types)
         for out_type in process_out_types:
-            create_png_and_kml_from_tif(params[pyrate.constants.OUT_DIR], output_type=out_type)
+            create_png_and_kml_from_tif(params[C.OUT_DIR], output_type=out_type)
     else:
         log.warning('Exiting: no products to merge')
-
 
 
 def _merge_stack(params: dict) -> None:
     """
     Merge stacking outputs
     """
-    shape, tiles, ifgs_dict = _merge_setup(params)
+    shape, tiles, ifgs_dict = __merge_setup(params)
 
     log.info('Merging and writing Stack Rate product geotiffs')
 
     # read and assemble tile outputs
-    rate = assemble_tiles(shape, params[pyrate.constants.TMPDIR], tiles, out_type='stack_rate')
-    error = assemble_tiles(shape, params[pyrate.constants.TMPDIR], tiles, out_type='stack_error')
-    samples = assemble_tiles(shape, params[pyrate.constants.TMPDIR], tiles, out_type='stack_samples')
+    rate = assemble_tiles(shape, params[C.TMPDIR], tiles, out_type='stack_rate')
+    error = assemble_tiles(shape, params[C.TMPDIR], tiles, out_type='stack_error')
+    samples = assemble_tiles(shape, params[C.TMPDIR], tiles, out_type='stack_samples')
 
     # mask pixels according to threshold
-    if params[pyrate.constants.LR_MAXSIG] > 0:
-        rate, error = stack.mask_rate(rate, error, params[pyrate.constants.LR_MAXSIG])
+    if params[C.LR_MAXSIG] > 0:
+        rate, error = stack.mask_rate(rate, error, params[C.LR_MAXSIG])
     else:
         log.info('Skipping stack product masking (maxsig = 0)')
 
     # save geotiff and numpy array files
     for out, ot in zip([rate, error, samples], ['stack_rate', 'stack_error', 'stack_samples']):
-        _save_merged_files(ifgs_dict, params[pyrate.constants.OUT_DIR], out, ot, savenpy=params["savenpy"])
+        __save_merged_files(ifgs_dict, params[C.OUT_DIR], out, ot, savenpy=params["savenpy"])
 
 
 def _merge_linrate(params: dict) -> None:
     """
     Merge linear rate outputs
     """
-    shape, tiles, ifgs_dict = mpiops.run_once(_merge_setup, params)
+    shape, tiles, ifgs_dict = mpiops.run_once(__merge_setup, params)
 
     log.info('Merging and writing Linear Rate product geotiffs')
 
@@ -106,8 +104,8 @@ def _merge_linrate(params: dict) -> None:
     out_types = ['linear_' + x for x in ['rate', 'rsquared', 'error', 'intercept', 'samples']]
     process_out_types = mpiops.array_split(out_types)
     for p_out_type in process_out_types:
-        out = assemble_tiles(shape, params[pyrate.constants.TMPDIR], tiles, out_type=p_out_type)
-        _save_merged_files(ifgs_dict, params[pyrate.constants.OUT_DIR], out, p_out_type, savenpy=params["savenpy"])
+        out = assemble_tiles(shape, params[C.TMPDIR], tiles, out_type=p_out_type)
+        __save_merged_files(ifgs_dict, params[C.OUT_DIR], out, p_out_type, savenpy=params["savenpy"])
     mpiops.comm.barrier()
 
 
@@ -116,10 +114,10 @@ def _merge_timeseries(params: dict, tstype: str) -> None:
     Merge tiled time series outputs
     """
     log.info('Merging {} time series outputs'.format(tstype))
-    shape, tiles, ifgs_dict = _merge_setup(params)
+    shape, tiles, ifgs_dict = __merge_setup(params)
 
     # load the first time series file to determine the number of time series tifs
-    ts_file = join(params[pyrate.constants.TMPDIR], tstype + '_0.npy')
+    ts_file = join(params[C.TMPDIR], tstype + '_0.npy')
     ts = np.load(file=ts_file)
     # pylint: disable=no-member
     no_ts_tifs = ts.shape[2]
@@ -131,13 +129,12 @@ def _merge_timeseries(params: dict, tstype: str) -> None:
     log.info('Process {} writing {} {} time series tifs of '
              'total {}'.format(mpiops.rank, len(process_tifs), tstype, no_ts_tifs))
     for i in process_tifs:
-        ts_arr = assemble_tiles(shape, params[pyrate.constants.TMPDIR], tiles, out_type=tstype, index=i)
-        _save_merged_files(ifgs_dict, params[pyrate.constants.OUT_DIR], ts_arr, out_type=tstype, index=i,
-                           savenpy=params["savenpy"])
+        ts_arr = assemble_tiles(shape, params[C.TMPDIR], tiles, out_type=tstype, index=i)
+        __save_merged_files(ifgs_dict, params[C.OUT_DIR], ts_arr, out_type=tstype, index=i, savenpy=params["savenpy"])
 
     mpiops.comm.barrier()
     log.debug('Process {} finished writing {} {} time series tifs of '
-             'total {}'.format(mpiops.rank, len(process_tifs), tstype, no_ts_tifs))
+              'total {}'.format(mpiops.rank, len(process_tifs), tstype, no_ts_tifs))
 
 
 def create_png_and_kml_from_tif(output_folder_path: str, output_type: str) -> None:
@@ -179,7 +176,7 @@ def create_png_and_kml_from_tif(output_folder_path: str, output_type: str) -> No
 </kml>"""
     with open(kml_file_path, "w") as f:
         f.write(kml_file_content)
-    
+
     # Get raster statistics
     srcband = gtif.GetRasterBand(1)
     minimum, maximum, _, _ = srcband.GetStatistics(True, True)
@@ -208,19 +205,19 @@ def create_png_and_kml_from_tif(output_folder_path: str, output_type: str) -> No
     if output_type in ('stack_error', 'linear_error', 'linear_rsquared'):
         # colours: white -> red (minimum error -> maximum error  
         # allocate RGB values to three numpy arrays r, g, b
-        r = np.ones(no_of_steps+1)*255
-        g = np.arange(0,no_of_steps+1)/(no_of_steps)
-        g = np.flipud(g)*255
-        b = g  
-    # generate the colourmap file in the output folder   
+        r = np.ones(no_of_steps + 1) * 255
+        g = np.arange(0, no_of_steps + 1) / (no_of_steps)
+        g = np.flipud(g) * 255
+        b = g
+        # generate the colourmap file in the output folder
     color_map_path = join(output_folder_path, f"colourmap_{output_type}.txt")
     log.info('Saving colour map to file {}; min/max values: {:.2f}/{:.2f}'.format(
-             color_map_path, minimum, maximum))
+        color_map_path, minimum, maximum))
 
     # write colourmap as text file
     with open(color_map_path, "w") as f:
         f.write("nan 0 0 0 0\n")
-        for i, value in enumerate(np.linspace(minimum, maximum, no_of_steps+1)):
+        for i, value in enumerate(np.linspace(minimum, maximum, no_of_steps + 1)):
             f.write("%f %f %f %f 255\n" % (value, r[i], g[i], b[i]))
 
     # create PNG image file
@@ -248,18 +245,34 @@ def assemble_tiles(s: Tuple, dir: str, tiles: Tile, out_type: str, index: Option
 
     # loop over each tile, load and slot in to correct spot
     for t in tiles:
-        tile_file = Path(join(dir, out_type + '_'+str(t.index)+'.npy'))
+        tile_file = Path(join(dir, out_type + '_' + str(t.index) + '.npy'))
         tile = np.load(file=tile_file)
-        if index is None:  #2D array
+        if index is None:  # 2D array
             merged_array[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = tile
-        else:  #3D array
+        else:  # 3D array
             merged_array[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x] = tile[:, :, index]
 
     log.debug('Finished assembling tiles for {}'.format(out_type))
     return merged_array
 
 
-def _save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=None):
+out_type_md_dict = {
+    'stack_rate': ifc.STACKRATE,
+    'stack_error': ifc.STACKERROR,
+    'stack_samples': ifc.STACKSAMP,
+    'linear_rate': ifc.LINRATE,
+    'linear_error': ifc.LINERROR,
+    'linear_samples': ifc.LINSAMP,
+    'linear_intercept': ifc.LINICPT,
+    'linear_rsquared': ifc.LINRSQ,
+    'tsincr': ifc.INCR,
+    'tscuml': ifc.CUML
+}
+
+los_projection_out_types = {'tsincr', 'tscuml', 'linear_rate', 'stack_rate'}
+
+
+def __save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=None):
     """
     Convenience function to save PyRate geotiff and numpy array files
     """
@@ -272,35 +285,14 @@ def _save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=N
         dest = join(outdir, out_type + "_" + str(epoch) + ".tif")
         npy_file = join(outdir, out_type + "_" + str(epoch) + ".npy")
         # sequence position; first time slice is #0
-        md['SEQUENCE_POSITION'] = index+1
+        md['SEQUENCE_POSITION'] = index + 1
         md[ifc.EPOCH_DATE] = epoch
     else:
         dest = join(outdir, out_type + ".tif")
         npy_file = join(outdir, out_type + '.npy')
         md[ifc.EPOCH_DATE] = [d.strftime('%Y-%m-%d') for d in epochlist.dates]
 
-    if out_type == 'stack_rate':
-        md[ifc.DATA_TYPE] = ifc.STACKRATE
-    elif out_type == 'stack_error':
-        md[ifc.DATA_TYPE] = ifc.STACKERROR
-    elif out_type == 'stack_samples':
-        md[ifc.DATA_TYPE] = ifc.STACKSAMP
-    elif out_type == 'linear_rate':
-        md[ifc.DATA_TYPE] = ifc.LINRATE
-    elif out_type == 'linear_error':
-        md[ifc.DATA_TYPE] = ifc.LINERROR
-    elif out_type == 'linear_samples':
-        md[ifc.DATA_TYPE] = ifc.LINSAMP
-    elif out_type == 'linear_intercept':
-        md[ifc.DATA_TYPE] = ifc.LINICPT
-    elif out_type == 'linear_rsquared':
-        md[ifc.DATA_TYPE] = ifc.LINRSQ
-    elif out_type == 'tsincr':
-        md[ifc.DATA_TYPE] = ifc.INCR
-    elif out_type == 'tscuml':
-        md[ifc.DATA_TYPE] = ifc.CUML
-    else:
-        log.warning('Output type "{}" not recognised'.format(out_type))
+    md[ifc.DATA_TYPE] = out_type_md_dict[out_type]
 
     shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
     if savenpy:
@@ -309,7 +301,7 @@ def _save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=N
     log.debug('Finished saving {}'.format(out_type))
 
 
-def _merge_setup(params):
+def __merge_setup(params):
     """
     Convenience function for Merge set up steps
     """

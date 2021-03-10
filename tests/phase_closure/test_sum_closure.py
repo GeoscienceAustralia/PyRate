@@ -20,7 +20,7 @@ import numpy as np
 
 import pyrate.constants as c
 from pyrate.configuration import Configuration, write_config_file
-from tests.common import MEXICO_CROPA_CONF, manipulate_test_conf, PYTHON3P8, sub_process_run
+from tests.common import MEXICO_CROPA_CONF, manipulate_test_conf, PY37GDAL302, sub_process_run
 
 
 @pytest.fixture
@@ -61,7 +61,7 @@ def modified_config(tempdir, get_lks=1, get_crop=1, orbfit_lks=2, orbfit_method=
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif((not PYTHON3P8) or c.DISABLE_PHASE_CLOSURE, reason="Only run Python3.8 env")
+@pytest.mark.skipif((not PY37GDAL302) or c.DISABLE_PHASE_CLOSURE, reason="Only run Python3.8 env")
 def test_mpi_vs_single_process(modified_config):
     mpi_conf, m_params = modified_config(MEXICO_CROPA_CONF, 0, 'mpi_conf.conf')
     sub_process_run(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}")

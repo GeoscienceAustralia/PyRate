@@ -52,11 +52,10 @@ PYTHON3P9 = True if PYTHON_VERSION == '3.9' else False
 GDAL_VERSION = check_output(["gdal-config", "--version"]).decode(encoding="utf-8").split('\n')[0]
 GITHUB_ACTIONS = True if ('GITHUB_ACTIONS' in os.environ) else False
 
+# python3.7 and gdal3.0.2
 PY37GDAL302 = PYTHON3P7 and (GDAL_VERSION == '3.0.2')
 # python3.7 and gdal3.0.4
 PY37GDAL304 = PYTHON3P7 and (GDAL_VERSION == '3.0.4')
-# python3.8 and gdal3.0.4
-PY38GDAL304 = PYTHON3P8 and (GDAL_VERSION == '3.0.4')
 
 
 TEMPDIR = tempfile.gettempdir()

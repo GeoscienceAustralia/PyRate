@@ -132,7 +132,7 @@ def modified_config_largetifs(tempdir, local_crop, get_lks, coh_mask):
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(not PY37GDAL302, reason="Only run in one CI env")
+@pytest.mark.skipif(True, reason="Only run in one CI env")  # disable these tests as we are not using largetifs option
 def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, create_mpi_files):
 
     print("\n\n")
