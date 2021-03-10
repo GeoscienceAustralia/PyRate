@@ -23,7 +23,7 @@ from argparse import RawTextHelpFormatter
 import time
 from pathlib import Path
 
-import pyrate.constants
+import pyrate.constants as C
 from pyrate.constants import CLI_DESCRIPTION
 from pyrate import conv2tif, prepifg, correct, merge
 from pyrate.core.logger import pyratelogger as log, configure_stage_log
@@ -108,7 +108,7 @@ def main():
 
     params = mpiops.run_once(_params_from_conf, args.config_file)
 
-    configure_stage_log(args.verbosity, args.command, Path(params[pyrate.constants.OUT_DIR]).joinpath('pyrate.log.').as_posix())
+    configure_stage_log(args.verbosity, args.command, Path(params[C.OUT_DIR]).joinpath('pyrate.log.').as_posix())
 
     log.debug("Starting PyRate")
     log.debug("Arguments supplied at command line: ")

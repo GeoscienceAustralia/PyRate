@@ -7,7 +7,7 @@ import math
 import pytest
 import numpy as np
 
-import pyrate.constants
+import pyrate.constants as C
 from tests import common
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate import prepifg, correct
@@ -43,7 +43,7 @@ class TestPyRateGammaBperp:
         rdc_rg_file = geom_files['rdc_range']
         geom_rg = Geometry(rdc_rg_file)
         cls.rg = geom_rg.data
-        dem_file = join(cls.params[pyrate.constants.OUT_DIR], 'dem.tif')
+        dem_file = join(cls.params[C.OUT_DIR], 'dem.tif')
         dem_data = DEM(dem_file)
         cls.dem = dem_data.data
         # calc bperp using pyrate funcs
@@ -102,7 +102,7 @@ class TestPyRateGammaBperp:
         """
         Calculate Bperp image for each ifg using PyRate functions
         """
-        multi_paths = cls.params[pyrate.constants.INTERFEROGRAM_FILES]
+        multi_paths = cls.params[C.INTERFEROGRAM_FILES]
         tmp_paths = [ifg_path.tmp_sampled_path for ifg_path in multi_paths]
         # keep only ifg files in path list (i.e. remove coherence and dem files)
         ifg_paths = [item for item in tmp_paths if 'ifg.tif' in item]
@@ -118,7 +118,7 @@ class TestPyRateGammaBperp:
 
     @classmethod
     def teardown_class(cls):
-        shutil.rmtree(cls.params[pyrate.constants.OUT_DIR], ignore_errors=True)
+        shutil.rmtree(cls.params[C.OUT_DIR], ignore_errors=True)
 
     def test_pyrate_bperp_matches_gamma_bperp(self, point):
         x, y = point
@@ -149,12 +149,12 @@ class TestDEMErrorFilesReusedFromDisc:
         cls.params = Configuration(cls.conf).__dict__
         prepifg.main(cls.params)
         cls.params = Configuration(cls.conf).__dict__
-        multi_paths = cls.params[pyrate.constants.INTERFEROGRAM_FILES]
+        multi_paths = cls.params[C.INTERFEROGRAM_FILES]
         cls.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
 
     @classmethod
     def teardown_class(cls):
-        shutil.rmtree(cls.params[pyrate.constants.OUT_DIR])
+        shutil.rmtree(cls.params[C.OUT_DIR])
 
     def test_dem_error_used_from_disc_on_rerun(self):
         correct._update_params_with_tiles(self.params)
@@ -182,14 +182,14 @@ class TestDEMErrorResults:
         cls.params = Configuration(cls.conf).__dict__
         prepifg.main(cls.params)
         cls.params = Configuration(cls.conf).__dict__
-        multi_paths = cls.params[pyrate.constants.INTERFEROGRAM_FILES]
+        multi_paths = cls.params[C.INTERFEROGRAM_FILES]
         cls.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
-        cls.params[pyrate.constants.REFX_FOUND] = 8  # this is the pixel of the location given in the pyrate_mexico_cropa.conf file
-        cls.params[pyrate.constants.REFY_FOUND] = 33  # however, the median of the whole interferogram is used for this validation
+        cls.params[C.REFX_FOUND] = 8  # this is the pixel of the location given in the pyrate_mexico_cropa.conf file
+        cls.params[C.REFY_FOUND] = 33  # however, the median of the whole interferogram is used for this validation
 
     @classmethod
     def teardown_class(cls):
-        shutil.rmtree(cls.params[pyrate.constants.OUT_DIR])
+        shutil.rmtree(cls.params[C.OUT_DIR])
 
     def test_calc_dem_errors(self):
         # validate output of current version of the code with saved files from an independent test run
@@ -208,7 +208,7 @@ class TestDEMErrorResults:
         ref_phase_est_wrapper(self.params)
         dem_error_calc_wrapper(self.params)
         # dem_error.tif from this run (result)
-        dem_error_tif_res = join(self.params[pyrate.constants.OUT_DIR], 'dem_error.tif')
+        dem_error_tif_res = join(self.params[C.OUT_DIR], 'dem_error.tif')
         dem = DEM(dem_error_tif_res)
         dem_error_res = dem.data
         # check equality
@@ -227,11 +227,11 @@ class TestDEMErrorResults:
         dem_error_ifg3_path = join(dem_error_path, '20180412-20180518_ifg_20_dem_error.npy')
         dem_error_ifg3_exp = np.load(dem_error_ifg3_path)
         # load correction values saved from this run (result)
-        dem_error_ifg1_path = join(self.params[pyrate.constants.OUT_DIR], 'dem_error/20180106-20180319_ifg_20_dem_error.npy')
+        dem_error_ifg1_path = join(self.params[C.OUT_DIR], 'dem_error/20180106-20180319_ifg_20_dem_error.npy')
         dem_error_ifg1_res = np.load(dem_error_ifg1_path)
-        dem_error_ifg2_path = join(self.params[pyrate.constants.OUT_DIR], 'dem_error/20180130-20180412_ifg_20_dem_error.npy')
+        dem_error_ifg2_path = join(self.params[C.OUT_DIR], 'dem_error/20180130-20180412_ifg_20_dem_error.npy')
         dem_error_ifg2_res = np.load(dem_error_ifg2_path)
-        dem_error_ifg3_path = join(self.params[pyrate.constants.OUT_DIR], 'dem_error/20180412-20180518_ifg_20_dem_error.npy')
+        dem_error_ifg3_path = join(self.params[C.OUT_DIR], 'dem_error/20180412-20180518_ifg_20_dem_error.npy')
         dem_error_ifg3_res = np.load(dem_error_ifg3_path)
         # check equality
         np.testing.assert_allclose(dem_error_ifg1_exp, dem_error_ifg1_res)

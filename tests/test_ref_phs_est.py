@@ -25,7 +25,7 @@ import tempfile
 import pytest
 import numpy as np
 
-import pyrate.constants
+import pyrate.constants as C
 from pyrate.core import ifgconstants as ifc
 from pyrate.core.ref_phs_est import ReferencePhaseError, ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
@@ -80,36 +80,36 @@ class TestRefPhsTests:
     def setup_method(self):
         self.params = Configuration(common.TEST_CONF_GAMMA).__dict__
         self.tmp_dir = tempfile.mkdtemp()
-        self.params[pyrate.constants.OUT_DIR] = self.tmp_dir
-        self.params[pyrate.constants.REF_EST_METHOD] = 1
-        self.params[pyrate.constants.PARALLEL] = False
-        self.params[pyrate.constants.TMPDIR] = self.tmp_dir
+        self.params[C.OUT_DIR] = self.tmp_dir
+        self.params[C.REF_EST_METHOD] = 1
+        self.params[C.PARALLEL] = False
+        self.params[C.TMPDIR] = self.tmp_dir
         common.copytree(common.SML_TEST_TIF, self.tmp_dir)
         self.small_tifs = glob.glob(os.path.join(self.tmp_dir, "*.tif"))
         for s in self.small_tifs:
             os.chmod(s, 0o644)
         self.ifgs = common.small_data_setup(self.tmp_dir, is_dir=True)
-        self.params[pyrate.constants.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.params) for p in self.small_tifs]
-        for p in self.params[pyrate.constants.INTERFEROGRAM_FILES]:
+        self.params[C.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.params) for p in self.small_tifs]
+        for p in self.params[C.INTERFEROGRAM_FILES]:
             p.sampled_path = p.converted_path
             p.tmp_sampled_path = p.sampled_path
         for ifg in self.ifgs:
             ifg.close()
 
-        self.params[pyrate.constants.REFX], self.params[pyrate.constants.REFY] = -1, -1
-        self.params[pyrate.constants.REFNX], self.params[pyrate.constants.REFNY] = 10, 10
-        self.params[pyrate.constants.REF_CHIP_SIZE], self.params[pyrate.constants.REF_MIN_FRAC] = 21, 0.5
+        self.params[C.REFX], self.params[C.REFY] = -1, -1
+        self.params[C.REFNX], self.params[C.REFNY] = 10, 10
+        self.params[C.REF_CHIP_SIZE], self.params[C.REF_MIN_FRAC] = 21, 0.5
         self.params['rows'], self.params['cols'] = 3, 2
-        self.params[pyrate.constants.REF_PIXEL_FILE] = Configuration.ref_pixel_path(self.params)
+        self.params[C.REF_PIXEL_FILE] = Configuration.ref_pixel_path(self.params)
         correct._update_params_with_tiles(self.params)
         correct.ref_pixel_calc_wrapper(self.params)
        
     def teardown_method(self):
-        shutil.rmtree(self.params[pyrate.constants.OUT_DIR])
+        shutil.rmtree(self.params[C.OUT_DIR])
 
     def test_need_at_least_two_ifgs(self):
-        self.params[pyrate.constants.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.params) for p in self.small_tifs[:1]]
-        for p in self.params[pyrate.constants.INTERFEROGRAM_FILES]:
+        self.params[C.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.params) for p in self.small_tifs[:1]]
+        for p in self.params[C.INTERFEROGRAM_FILES]:
             p.sampled_path = p.converted_path
             p.tmp_sampled_path = p.sampled_path
 
@@ -130,8 +130,8 @@ class TestRefPhsTests:
     def test_mixed_metadata_raises(self):
 
         # change config to 5 ifgs
-        self.params[pyrate.constants.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.params) for p in self.small_tifs[:5]]
-        for p in self.params[pyrate.constants.INTERFEROGRAM_FILES]:
+        self.params[C.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.params) for p in self.small_tifs[:5]]
+        for p in self.params[C.INTERFEROGRAM_FILES]:
             p.sampled_path = p.converted_path
             p.tmp_sampled_path = p.sampled_path
 
@@ -141,8 +141,8 @@ class TestRefPhsTests:
             ifg.open()
 
         # change config to all ifgs
-        self.params[pyrate.constants.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.params) for p in self.small_tifs]
-        for p in self.params[pyrate.constants.INTERFEROGRAM_FILES]:
+        self.params[C.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.params) for p in self.small_tifs]
+        for p in self.params[C.INTERFEROGRAM_FILES]:
             p.sampled_path = p.converted_path
             p.tmp_sampled_path = p.sampled_path
 
@@ -162,14 +162,14 @@ class TestRefPhsEstimationLegacyTestMethod1Serial:
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         conv2tif.main(params)
         prepifg.main(params)
-        for p in params[pyrate.constants.INTERFEROGRAM_FILES]:  # hack
+        for p in params[C.INTERFEROGRAM_FILES]:  # hack
             p.tmp_sampled_path = p.sampled_path
             Path(p.sampled_path).chmod(0o664)  # assign write permission as conv2tif output is readonly
-        params[pyrate.constants.REF_EST_METHOD] = 1
-        params[pyrate.constants.PARALLEL] = False
-        params[pyrate.constants.ORBFIT_OFFSET] = True
+        params[C.REF_EST_METHOD] = 1
+        params[C.PARALLEL] = False
+        params[C.ORBFIT_OFFSET] = True
 
-        dest_paths, headers = common.repair_params_for_correct_tests(params[pyrate.constants.OUT_DIR], params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[C.OUT_DIR], params)
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
@@ -187,9 +187,9 @@ class TestRefPhsEstimationLegacyTestMethod1Serial:
         for ifg in ifgs:
             ifg.close()
 
-        for p in params[pyrate.constants.INTERFEROGRAM_FILES]:
+        for p in params[C.INTERFEROGRAM_FILES]:
             p.tmp_sampled_path = p.sampled_path
-        params[pyrate.constants.REFX], params[pyrate.constants.REFY] = refx, refy
+        params[C.REFX], params[C.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
         correct._update_params_with_tiles(params)
         cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
@@ -197,7 +197,7 @@ class TestRefPhsEstimationLegacyTestMethod1Serial:
 
     @classmethod
     def teardown_class(cls):
-        shutil.rmtree(cls.params[pyrate.constants.OUT_DIR])
+        shutil.rmtree(cls.params[C.OUT_DIR])
 
     def test_estimate_reference_phase(self):
         np.testing.assert_array_almost_equal(legacy_ref_phs_method1, self.ref_phs, decimal=3)
@@ -243,16 +243,16 @@ class TestRefPhsEstimationLegacyTestMethod1Parallel:
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         conv2tif.main(params)
         prepifg.main(params)
-        for p in params[pyrate.constants.INTERFEROGRAM_FILES]:  # hack
+        for p in params[C.INTERFEROGRAM_FILES]:  # hack
             p.tmp_sampled_path = p.sampled_path
             Path(p.sampled_path).chmod(0o664)  # assign write permission as conv2tif output is readonly
 
 
-        params[pyrate.constants.REF_EST_METHOD] = 1
-        params[pyrate.constants.PARALLEL] = True
-        params[pyrate.constants.ORBFIT_OFFSET] = True
+        params[C.REF_EST_METHOD] = 1
+        params[C.PARALLEL] = True
+        params[C.ORBFIT_OFFSET] = True
 
-        dest_paths, headers = common.repair_params_for_correct_tests(params[pyrate.constants.OUT_DIR], params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[C.OUT_DIR], params)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -270,9 +270,9 @@ class TestRefPhsEstimationLegacyTestMethod1Parallel:
 
         for i in ifgs:
             i.close()
-        for p in params[pyrate.constants.INTERFEROGRAM_FILES]:
+        for p in params[C.INTERFEROGRAM_FILES]:
             p.tmp_sampled_path = p.sampled_path
-        params[pyrate.constants.REFX], params[pyrate.constants.REFY] = refx, refy
+        params[C.REFX], params[C.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
         correct._update_params_with_tiles(params)
         cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
@@ -280,7 +280,7 @@ class TestRefPhsEstimationLegacyTestMethod1Parallel:
 
     @classmethod
     def teardown_class(cls):
-        shutil.rmtree(cls.params[pyrate.constants.OUT_DIR])
+        shutil.rmtree(cls.params[C.OUT_DIR])
 
     def test_estimate_reference_phase(self):
         np.testing.assert_array_almost_equal(legacy_ref_phs_method1, self.ref_phs, decimal=3)
@@ -328,15 +328,15 @@ class TestRefPhsEstimationLegacyTestMethod2Serial:
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         conv2tif.main(params)
         prepifg.main(params)
-        for p in params[pyrate.constants.INTERFEROGRAM_FILES]:  # hack
+        for p in params[C.INTERFEROGRAM_FILES]:  # hack
             p.tmp_sampled_path = p.sampled_path
             Path(p.sampled_path).chmod(0o664)  # assign write permission as conv2tif output is readonly
 
-        params[pyrate.constants.REF_EST_METHOD] = 2
-        params[pyrate.constants.PARALLEL] = False
-        params[pyrate.constants.ORBFIT_OFFSET] = True
+        params[C.REF_EST_METHOD] = 2
+        params[C.PARALLEL] = False
+        params[C.ORBFIT_OFFSET] = True
 
-        dest_paths, headers = common.repair_params_for_correct_tests(params[pyrate.constants.OUT_DIR], params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[C.OUT_DIR], params)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -354,9 +354,9 @@ class TestRefPhsEstimationLegacyTestMethod2Serial:
         
         for i in ifgs:
             i.close()
-        for p in params[pyrate.constants.INTERFEROGRAM_FILES]:
+        for p in params[C.INTERFEROGRAM_FILES]:
             p.tmp_sampled_path = p.sampled_path
-        params[pyrate.constants.REFX], params[pyrate.constants.REFY] = refx, refy
+        params[C.REFX], params[C.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
         correct._update_params_with_tiles(params)
 
@@ -365,7 +365,7 @@ class TestRefPhsEstimationLegacyTestMethod2Serial:
 
     @classmethod
     def teardown_class(cls):
-        shutil.rmtree(cls.params[pyrate.constants.OUT_DIR])
+        shutil.rmtree(cls.params[C.OUT_DIR])
 
     def test_ifgs_after_ref_phs_est(self):
         for ifg in self.ifgs:
@@ -414,15 +414,15 @@ class TestRefPhsEstimationLegacyTestMethod2Parallel:
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         conv2tif.main(params)
         prepifg.main(params)
-        for p in params[pyrate.constants.INTERFEROGRAM_FILES]:  # hack
+        for p in params[C.INTERFEROGRAM_FILES]:  # hack
             p.tmp_sampled_path = p.sampled_path
             Path(p.sampled_path).chmod(0o664)  # assign write permission as conv2tif output is readonly
 
-        params[pyrate.constants.REF_EST_METHOD] = 2
-        params[pyrate.constants.PARALLEL] = 1
-        params[pyrate.constants.ORBFIT_OFFSET] = True
+        params[C.REF_EST_METHOD] = 2
+        params[C.PARALLEL] = 1
+        params[C.ORBFIT_OFFSET] = True
 
-        dest_paths, headers = common.repair_params_for_correct_tests(params[pyrate.constants.OUT_DIR], params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[C.OUT_DIR], params)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -440,9 +440,9 @@ class TestRefPhsEstimationLegacyTestMethod2Parallel:
         for i in ifgs:
             i.close()
 
-        for p in params[pyrate.constants.INTERFEROGRAM_FILES]:
+        for p in params[C.INTERFEROGRAM_FILES]:
             p.tmp_sampled_path = p.sampled_path
-        params[pyrate.constants.REFX], params[pyrate.constants.REFY] = refx, refy
+        params[C.REFX], params[C.REFY] = refx, refy
         params['rows'], params['cols'] = 3, 2
         correct._update_params_with_tiles(params)
         cls.ref_phs, cls.ifgs = ref_phase_est_wrapper(params)
@@ -450,7 +450,7 @@ class TestRefPhsEstimationLegacyTestMethod2Parallel:
 
     @classmethod
     def teardown_class(cls):
-        shutil.rmtree(cls.params[pyrate.constants.OUT_DIR])
+        shutil.rmtree(cls.params[C.OUT_DIR])
 
     def test_ifgs_after_ref_phs_est(self):
         for ifg in self.ifgs:
@@ -499,11 +499,11 @@ class TestRefPhsEstReusedFromDisc:
 
     @classmethod
     def teardown_class(cls):
-        shutil.rmtree(cls.params[pyrate.constants.OUT_DIR])
+        shutil.rmtree(cls.params[C.OUT_DIR])
 
     def test_ref_phase_used_from_disc_on_rerun(self, ref_est_method):
         self.params = Configuration(self.conf).__dict__
-        self.params[pyrate.constants.REF_EST_METHOD] = ref_est_method
+        self.params[C.REF_EST_METHOD] = ref_est_method
         correct._update_params_with_tiles(self.params)
 
         phase_prev, time_written = self.__run_once()
@@ -525,10 +525,10 @@ class TestRefPhsEstReusedFromDisc:
     def __run_once(self):
         ref_phs_file = Configuration.ref_phs_file(self.params)
         correct._copy_mlooked(self.params)
-        multi_paths = self.params[pyrate.constants.INTERFEROGRAM_FILES]
+        multi_paths = self.params[C.INTERFEROGRAM_FILES]
         ifg_paths = [p.tmp_sampled_path for p in multi_paths]
         ifgs = [Ifg(i) for i in ifg_paths]
-        self.params[pyrate.constants.REFX_FOUND], self.params[pyrate.constants.REFY_FOUND] = ref_pixel_calc_wrapper(self.params)
+        self.params[C.REFX_FOUND], self.params[C.REFY_FOUND] = ref_pixel_calc_wrapper(self.params)
         correct._create_ifg_dict(self.params)
         ref_phase_est_wrapper(self.params)
         for i in ifgs:

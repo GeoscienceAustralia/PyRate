@@ -21,7 +21,7 @@ import shutil
 from pathlib import Path
 import pytest
 
-import pyrate.constants
+import pyrate.constants as C
 from pyrate.configuration import ConfigException, Configuration, write_config_file
 from pyrate import correct, prepifg, conv2tif
 from tests import common
@@ -45,26 +45,26 @@ def test_process_treats_prepif_outputs_readonly(gamma_conf, tempdir, coh_mask):
     from pyrate.configuration import Configuration
     tdir = Path(tempdir())
     params = common.manipulate_test_conf(gamma_conf, tdir)
-    params[pyrate.constants.COH_MASK] = coh_mask
-    params[pyrate.constants.PARALLEL] = 0
+    params[C.COH_MASK] = coh_mask
+    params[C.PARALLEL] = 0
     output_conf = tdir.joinpath('conf.cfg')
     write_config_file(params=params, output_conf_file=output_conf)
     params = Configuration(output_conf).__dict__
     conv2tif.main(params)
-    tifs = list(Path(params[pyrate.constants.OUT_DIR]).glob('*_unw.tif'))
+    tifs = list(Path(params[C.OUT_DIR]).glob('*_unw.tif'))
     assert len(tifs) == 17
 
-    if params[pyrate.constants.COH_FILE_LIST] is not None:
-        coh_tifs = list(Path(params[pyrate.constants.OUT_DIR]).glob('*_cc.tif'))
+    if params[C.COH_FILE_LIST] is not None:
+        coh_tifs = list(Path(params[C.OUT_DIR]).glob('*_cc.tif'))
         assert len(coh_tifs) == 17
 
     params = Configuration(output_conf).__dict__
     prepifg.main(params)
-    cropped_coh = list(Path(params[pyrate.constants.OUT_DIR]).glob('*_coh.tif'))
-    cropped_ifgs = list(Path(params[pyrate.constants.OUT_DIR]).glob('*_ifg.tif'))
-    dem_ifgs = list(Path(params[pyrate.constants.OUT_DIR]).glob('*_dem.tif'))
+    cropped_coh = list(Path(params[C.OUT_DIR]).glob('*_coh.tif'))
+    cropped_ifgs = list(Path(params[C.OUT_DIR]).glob('*_ifg.tif'))
+    dem_ifgs = list(Path(params[C.OUT_DIR]).glob('*_dem.tif'))
 
-    if params[pyrate.constants.COH_FILE_LIST] is not None:  # 17 + 1 dem + 17 coh files
+    if params[C.COH_FILE_LIST] is not None:  # 17 + 1 dem + 17 coh files
         assert len(cropped_coh) + len(cropped_ifgs) + len(dem_ifgs) == 35
     else:  # 17 + 1 dem
         assert len(cropped_coh) + len(cropped_ifgs) + len(dem_ifgs) == 18
@@ -82,4 +82,4 @@ def test_process_treats_prepif_outputs_readonly(gamma_conf, tempdir, coh_mask):
     # check all after correct steps multilooked files are still readonly
     for c in cropped_coh + cropped_ifgs + dem_ifgs:
         assert c.stat().st_mode == 33060
-    shutil.rmtree(params[pyrate.constants.OUT_DIR])
+    shutil.rmtree(params[C.OUT_DIR])

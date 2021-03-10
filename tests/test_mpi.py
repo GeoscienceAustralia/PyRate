@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 import pyrate.configuration
-import pyrate.constants
+import pyrate.constants as C
 import pyrate.core.covariance
 import pyrate.core.orbital
 import pyrate.core.ref_phs_est
@@ -44,9 +44,9 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, roipac_or_gamma_conf):
     LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
     legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR, 'vcmt.csv'), delimiter=',')
     tmpdir = Path(mpiops.run_once(tempdir))
-    mpiops.run_once(common.copytree, params[pyrate.constants.OBS_DIR], tmpdir)
-    params[pyrate.constants.OUT_DIR] = tmpdir.joinpath('out')
-    params[pyrate.constants.PARALLEL] = 0
+    mpiops.run_once(common.copytree, params[C.OBS_DIR], tmpdir)
+    params[C.OUT_DIR] = tmpdir.joinpath('out')
+    params[C.PARALLEL] = 0
     output_conf = Path(tmpdir).joinpath('conf.cfg')
     pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
     params = configuration.Configuration(output_conf).__dict__
@@ -57,7 +57,7 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, roipac_or_gamma_conf):
     params = configuration.Configuration(output_conf).__dict__
     prepifg.main(params)
     params = configuration.Configuration(output_conf).__dict__
-    params[pyrate.constants.ORBFIT_OFFSET] = True
+    params[C.ORBFIT_OFFSET] = True
     correct._copy_mlooked(params=params)
     correct._update_params_with_tiles(params)
     correct._create_ifg_dict(params=params)

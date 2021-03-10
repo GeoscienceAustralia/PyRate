@@ -22,7 +22,7 @@ from pathlib import Path
 import numpy as np
 
 import pyrate.configuration
-import pyrate.constants
+import pyrate.constants as C
 from pyrate import conv2tif, prepifg
 from pyrate.configuration import Configuration
 from tests.common import (
@@ -50,20 +50,20 @@ def modified_config_short(tempdir, local_crop, get_lks, coh_mask):
         tdir = Path(tempdir())
 
         params = manipulate_test_conf(conf_file, tdir)
-        params[pyrate.constants.COH_MASK] = coh_mask
-        params[pyrate.constants.PARALLEL] = parallel
-        params[pyrate.constants.PROCESSES] = 4
-        params[pyrate.constants.APSEST] = 1
-        params[pyrate.constants.IFG_LKSX], params[pyrate.constants.IFG_LKSY] = get_lks, get_lks
-        params[pyrate.constants.REFNX], params[pyrate.constants.REFNY] = 4, 4
+        params[C.COH_MASK] = coh_mask
+        params[C.PARALLEL] = parallel
+        params[C.PROCESSES] = 4
+        params[C.APSEST] = 1
+        params[C.IFG_LKSX], params[C.IFG_LKSY] = get_lks, get_lks
+        params[C.REFNX], params[C.REFNY] = 4, 4
 
-        params[pyrate.constants.IFG_CROP_OPT] = local_crop
-        params[pyrate.constants.ORBITAL_FIT_LOOKS_X], params[
-            pyrate.constants.ORBITAL_FIT_LOOKS_Y] = orbfit_lks, orbfit_lks
-        params[pyrate.constants.ORBITAL_FIT] = 1
-        params[pyrate.constants.ORBITAL_FIT_METHOD] = orbfit_method
-        params[pyrate.constants.ORBITAL_FIT_DEGREE] = orbfit_degrees
-        params[pyrate.constants.REF_EST_METHOD] = ref_est_method
+        params[C.IFG_CROP_OPT] = local_crop
+        params[C.ORBITAL_FIT_LOOKS_X], params[
+            C.ORBITAL_FIT_LOOKS_Y] = orbfit_lks, orbfit_lks
+        params[C.ORBITAL_FIT] = 1
+        params[C.ORBITAL_FIT_METHOD] = orbfit_method
+        params[C.ORBITAL_FIT_DEGREE] = orbfit_degrees
+        params[C.REF_EST_METHOD] = ref_est_method
         params["rows"], params["cols"] = 3, 2
         params["notiles"] = params["rows"] * params["cols"]  # number of tiles
 
@@ -102,21 +102,21 @@ def modified_config_largetifs(tempdir, local_crop, get_lks, coh_mask):
     def modify_params(conf_file, parallel, output_conf_file):
         tdir = Path(tempdir())
         params = manipulate_test_conf(conf_file, tdir)
-        params[pyrate.constants.COH_MASK] = coh_mask
-        params[pyrate.constants.LARGE_TIFS] = 1
-        params[pyrate.constants.PARALLEL] = parallel
-        params[pyrate.constants.PROCESSES] = 4
-        params[pyrate.constants.APSEST] = 1
-        params[pyrate.constants.IFG_LKSX], params[pyrate.constants.IFG_LKSY] = get_lks, get_lks
-        params[pyrate.constants.REFNX], params[pyrate.constants.REFNY] = 4, 4
+        params[C.COH_MASK] = coh_mask
+        params[C.LARGE_TIFS] = 1
+        params[C.PARALLEL] = parallel
+        params[C.PROCESSES] = 4
+        params[C.APSEST] = 1
+        params[C.IFG_LKSX], params[C.IFG_LKSY] = get_lks, get_lks
+        params[C.REFNX], params[C.REFNY] = 4, 4
 
-        params[pyrate.constants.IFG_CROP_OPT] = local_crop
-        params[pyrate.constants.ORBITAL_FIT_LOOKS_X], params[
-            pyrate.constants.ORBITAL_FIT_LOOKS_Y] = orbfit_lks, orbfit_lks
-        params[pyrate.constants.ORBITAL_FIT] = 1
-        params[pyrate.constants.ORBITAL_FIT_METHOD] = orbfit_method
-        params[pyrate.constants.ORBITAL_FIT_DEGREE] = orbfit_degrees
-        params[pyrate.constants.REF_EST_METHOD] = ref_est_method
+        params[C.IFG_CROP_OPT] = local_crop
+        params[C.ORBITAL_FIT_LOOKS_X], params[
+            C.ORBITAL_FIT_LOOKS_Y] = orbfit_lks, orbfit_lks
+        params[C.ORBITAL_FIT] = 1
+        params[C.ORBITAL_FIT_METHOD] = orbfit_method
+        params[C.ORBITAL_FIT_DEGREE] = orbfit_degrees
+        params[C.REF_EST_METHOD] = ref_est_method
         params["rows"], params["cols"] = 3, 2
         params["notiles"] = params["rows"] * params["cols"]  # number of tiles
 
@@ -148,22 +148,22 @@ def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, crea
     prepifg.main(params_p)
     params_p = Configuration(sr_conf).__dict__
     # convert2tif tests, 17 interferograms
-    assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "*_unw.tif", 17)
+    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "*_unw.tif", 17)
 
     # if coherence masking, compare coh files were converted
-    if params[pyrate.constants.COH_FILE_LIST] is not None:
-        assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "*_cc.tif", 17)
+    if params[C.COH_FILE_LIST] is not None:
+        assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "*_cc.tif", 17)
         # 17 ifgs + 1 dem + 17 mlooked file
-        assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "*_coh.tif", 17)
+        assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "*_coh.tif", 17)
 
-    assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "*_dem.tif", 1)
+    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "*_dem.tif", 1)
     # prepifg
     # 17 ifgs + 1 dem
-    assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "*_ifg.tif", 17)
-    assert_two_dirs_equal(params[pyrate.constants.OUT_DIR], params_p[pyrate.constants.OUT_DIR], "dem.tif", 1)
+    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "*_ifg.tif", 17)
+    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "dem.tif", 1)
 
 
     print("==========================xxx===========================")
 
-    shutil.rmtree(params[pyrate.constants.OBS_DIR])
-    shutil.rmtree(params_p[pyrate.constants.OBS_DIR])
+    shutil.rmtree(params[C.OBS_DIR])
+    shutil.rmtree(params_p[C.OBS_DIR])

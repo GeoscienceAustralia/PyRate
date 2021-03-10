@@ -26,7 +26,7 @@ from pathlib import Path
 import numpy as np
 
 import pyrate.configuration
-import pyrate.constants
+import pyrate.constants as C
 import pyrate.core.prepifg_helper
 import pyrate.core.shared
 import pyrate.main
@@ -58,7 +58,7 @@ CURRENT_DIR = os.getcwd()
 
 
 def test_transform_params():
-    params = {pyrate.constants.IFG_LKSX: 3, pyrate.constants.IFG_LKSY: 2, pyrate.constants.IFG_CROP_OPT: 1}
+    params = {C.IFG_LKSX: 3, C.IFG_LKSY: 2, C.IFG_CROP_OPT: 1}
     assert pyrate.core.prepifg_helper.transform_params(params) == (3, 2, 1)
 
 
@@ -134,22 +134,22 @@ class TestPyRate:
             config = Configuration(common.TEST_CONF_ROIPAC)
             params = config.__dict__
             params['correct'] = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar']
-            params[pyrate.constants.OUT_DIR] = cls.BASE_OUT_DIR
-            params[pyrate.constants.PROCESSOR] = 0  # roipac
-            params[pyrate.constants.APS_CORRECTION] = 0
+            params[C.OUT_DIR] = cls.BASE_OUT_DIR
+            params[C.PROCESSOR] = 0  # roipac
+            params[C.APS_CORRECTION] = 0
             paths = glob.glob(join(cls.BASE_OUT_DIR, 'geo_*-*.tif'))
             paths = sorted(paths)
-            params[pyrate.constants.PARALLEL] = False
-            params[pyrate.constants.ORBFIT_OFFSET] = True
-            params[pyrate.constants.TEMP_MLOOKED_DIR] = cls.BASE_OUT_DIR.join(pyrate.constants.TEMP_MLOOKED_DIR)
-            params[pyrate.constants.INTERFEROGRAM_FILES] = [MultiplePaths(p, params) for p in paths]
-            for p in params[pyrate.constants.INTERFEROGRAM_FILES]:  # cheat
+            params[C.PARALLEL] = False
+            params[C.ORBFIT_OFFSET] = True
+            params[C.TEMP_MLOOKED_DIR] = cls.BASE_OUT_DIR.join(C.TEMP_MLOOKED_DIR)
+            params[C.INTERFEROGRAM_FILES] = [MultiplePaths(p, params) for p in paths]
+            for p in params[C.INTERFEROGRAM_FILES]:  # cheat
                 p.sampled_path = p.converted_path
                 p.tmp_sampled_path = p.converted_path
             params["rows"], params["cols"] = 2, 2
-            params[pyrate.constants.REF_PIXEL_FILE] = Configuration.ref_pixel_path(params)
-            Path(params[pyrate.constants.OUT_DIR]).joinpath(pyrate.constants.APS_ERROR_DIR).mkdir(exist_ok=True, parents=True)
-            Path(params[pyrate.constants.OUT_DIR]).joinpath(pyrate.constants.MST_DIR).mkdir(exist_ok=True, parents=True)
+            params[C.REF_PIXEL_FILE] = Configuration.ref_pixel_path(params)
+            Path(params[C.OUT_DIR]).joinpath(C.APS_ERROR_DIR).mkdir(exist_ok=True, parents=True)
+            Path(params[C.OUT_DIR]).joinpath(C.MST_DIR).mkdir(exist_ok=True, parents=True)
             correct.correct_ifgs(config)
 
             if not hasattr(cls, 'ifgs'):
@@ -214,12 +214,12 @@ class TestParallelPyRate:
         from pyrate.configuration import Configuration
         # change the required params
         # params[cf.OBS_DIR] = common.SML_TEST_GAMMA
-        params[pyrate.constants.PROCESSES] = 4
-        params[pyrate.constants.PROCESSOR] = 1  # gamma
-        params[pyrate.constants.IFG_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
-        params[pyrate.constants.PARALLEL] = 1
-        params[pyrate.constants.APS_CORRECTION] = 0
-        params[pyrate.constants.REFX], params[pyrate.constants.REFY] = -1, -1
+        params[C.PROCESSES] = 4
+        params[C.PROCESSOR] = 1  # gamma
+        params[C.IFG_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
+        params[C.PARALLEL] = 1
+        params[C.APS_CORRECTION] = 0
+        params[C.REFX], params[C.REFY] = -1, -1
         rows, cols = params["rows"], params["cols"]
 
         output_conf_file = 'gamma.conf'
@@ -232,7 +232,7 @@ class TestParallelPyRate:
         common.sub_process_run(f"pyrate conv2tif -f {output_conf}")
         common.sub_process_run(f"pyrate prepifg -f {output_conf}")
 
-        cls.sampled_paths = [p.tmp_sampled_path for p in params[pyrate.constants.INTERFEROGRAM_FILES]]
+        cls.sampled_paths = [p.tmp_sampled_path for p in params[C.INTERFEROGRAM_FILES]]
 
         ifgs = common.small_data_setup()
         correct._copy_mlooked(params)
@@ -241,23 +241,23 @@ class TestParallelPyRate:
         pyrate.main.timeseries(config)
         pyrate.main.stack(config)
         cls.refpixel_p, cls.maxvar_p, cls.vcmt_p = \
-            (params[pyrate.constants.REFX], params[pyrate.constants.REFY]), params[pyrate.constants.MAXVAR], params[
-                pyrate.constants.VCMT]
-        cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[pyrate.constants.OUT_DIR])
+            (params[C.REFX], params[C.REFY]), params[C.MAXVAR], params[
+                C.VCMT]
+        cls.mst_p = common.reconstruct_mst(ifgs[0].shape, tiles, params[C.OUT_DIR])
         cls.rate_p, cls.error_p, cls.samples_p = \
-            [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[pyrate.constants.TMPDIR], t) for t in rate_types]
+            [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[C.TMPDIR], t) for t in rate_types]
         
-        common.remove_tifs(params[pyrate.constants.OBS_DIR])
+        common.remove_tifs(params[C.OBS_DIR])
 
         # now create the non parallel version
         cls.tif_dir_s = Path(tempfile.mkdtemp())
         params = manipulate_test_conf(gamma_conf, cls.tif_dir_s)
-        params[pyrate.constants.PROCESSES] = 4
-        params[pyrate.constants.PROCESSOR] = 1  # gamma
-        params[pyrate.constants.IFG_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
-        params[pyrate.constants.PARALLEL] = 0
-        params[pyrate.constants.APS_CORRECTION] = 0
-        params[pyrate.constants.REFX], params[pyrate.constants.REFY] = -1, -1
+        params[C.PROCESSES] = 4
+        params[C.PROCESSOR] = 1  # gamma
+        params[C.IFG_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
+        params[C.PARALLEL] = 0
+        params[C.APS_CORRECTION] = 0
+        params[C.REFX], params[C.REFY] = -1, -1
         output_conf_file = 'gamma.conf'
         output_conf = cls.tif_dir_s.joinpath(output_conf_file).as_posix()
         pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
@@ -272,16 +272,16 @@ class TestParallelPyRate:
         pyrate.main.timeseries(config)
         pyrate.main.stack(config)
         cls.refpixel, cls.maxvar, cls.vcmt = \
-            (params[pyrate.constants.REFX], params[pyrate.constants.REFY]), params[pyrate.constants.MAXVAR], params[
-                pyrate.constants.VCMT]
-        cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[pyrate.constants.OUT_DIR])
+            (params[C.REFX], params[C.REFY]), params[C.MAXVAR], params[
+                C.VCMT]
+        cls.mst = common.reconstruct_mst(ifgs[0].shape, tiles, params[C.OUT_DIR])
         cls.rate, cls.error, cls.samples = \
-            [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[pyrate.constants.TMPDIR], t) for t in rate_types]
+            [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[C.TMPDIR], t) for t in rate_types]
         cls.params = params
 
     @classmethod
     def teardown_class(cls):
-        shutil.rmtree(cls.params[pyrate.constants.OUT_DIR])
+        shutil.rmtree(cls.params[C.OUT_DIR])
 
     def test_orbital_correction(self):
         key = 'ORBITAL_ERROR'
@@ -346,7 +346,7 @@ class TestPrePrepareIfgs:
         for i in cls.ifg_ret:
             i.close()
 
-        nan_conversion = params[pyrate.constants.NAN_CONVERSION]
+        nan_conversion = params[C.NAN_CONVERSION]
 
         # prepare a second set
         cls.tmp_dir2 = tempfile.mkdtemp()
@@ -363,7 +363,7 @@ class TestPrePrepareIfgs:
             if not i.is_open:
                 i.open(readonly=False)
             if nan_conversion:  # nan conversion happens here in networkx mst
-                i.nodata_value = params[pyrate.constants.NO_DATA_VALUE]
+                i.nodata_value = params[C.NO_DATA_VALUE]
                 i.convert_to_nans()
             if not i.mm_converted:
                 i.convert_to_mm()

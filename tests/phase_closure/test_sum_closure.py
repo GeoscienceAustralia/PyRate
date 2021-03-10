@@ -18,7 +18,7 @@ import pytest
 from pathlib import Path
 import numpy as np
 
-import pyrate.constants as c
+import pyrate.constants as C
 from pyrate.configuration import Configuration, write_config_file
 from tests.common import MEXICO_CROPA_CONF, manipulate_test_conf, PY37GDAL302, sub_process_run
 
@@ -29,23 +29,23 @@ def modified_config(tempdir, get_lks=1, get_crop=1, orbfit_lks=2, orbfit_method=
         tdir = Path(tempdir())
         params = manipulate_test_conf(conf_file, tdir)
 
-        if params[c.PROCESSOR] == 1:  # turn on coherence for gamma
-            params[c.COH_MASK] = 1
+        if params[C.PROCESSOR] == 1:  # turn on coherence for gamma
+            params[C.COH_MASK] = 1
 
-        params[c.PARALLEL] = parallel_vs_serial
-        params[c.PROCESSES] = 4
-        params[c.APSEST] = 1
-        params[c.IFG_LKSX], params[c.IFG_LKSY] = get_lks, get_lks
-        params[c.REFNX], params[c.REFNY] = 2, 2
+        params[C.PARALLEL] = parallel_vs_serial
+        params[C.PROCESSES] = 4
+        params[C.APSEST] = 1
+        params[C.IFG_LKSX], params[C.IFG_LKSY] = get_lks, get_lks
+        params[C.REFNX], params[C.REFNY] = 2, 2
 
-        params[c.IFG_CROP_OPT] = get_crop
-        params[c.ORBITAL_FIT_LOOKS_X], params[
-            c.ORBITAL_FIT_LOOKS_Y] = orbfit_lks, orbfit_lks
-        params[c.ORBITAL_FIT] = 1
-        params[c.ORBITAL_FIT_METHOD] = orbfit_method
-        params[c.ORBITAL_FIT_DEGREE] = orbfit_degrees
-        params[c.REF_EST_METHOD] = ref_est_method
-        params[c.MAX_LOOP_LENGTH] = 3
+        params[C.IFG_CROP_OPT] = get_crop
+        params[C.ORBITAL_FIT_LOOKS_X], params[
+            C.ORBITAL_FIT_LOOKS_Y] = orbfit_lks, orbfit_lks
+        params[C.ORBITAL_FIT] = 1
+        params[C.ORBITAL_FIT_METHOD] = orbfit_method
+        params[C.ORBITAL_FIT_DEGREE] = orbfit_degrees
+        params[C.REF_EST_METHOD] = ref_est_method
+        params[C.MAX_LOOP_LENGTH] = 3
         params["rows"], params["cols"] = 3, 2
         params["savenpy"] = 1
         params["notiles"] = params["rows"] * params["cols"]  # number of tiles
@@ -61,7 +61,7 @@ def modified_config(tempdir, get_lks=1, get_crop=1, orbfit_lks=2, orbfit_method=
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif((not PY37GDAL302) or c.DISABLE_PHASE_CLOSURE, reason="Only run in one CI env")
+@pytest.mark.skipif((not PY37GDAL302) or C.DISABLE_PHASE_CLOSURE, reason="Only run in one CI env")
 def test_mpi_vs_single_process(modified_config):
     mpi_conf, m_params = modified_config(MEXICO_CROPA_CONF, 0, 'mpi_conf.conf')
     sub_process_run(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}")

@@ -23,7 +23,7 @@ import itertools
 import pytest
 from pathlib import Path
 
-import pyrate.constants
+import pyrate.constants as C
 from pyrate.merge import create_png_and_kml_from_tif
 from pyrate.merge import _merge_stack, _merge_linrate
 from pyrate.configuration import Configuration, write_config_file
@@ -56,13 +56,13 @@ def test_file_creation(create_merge_output):
 
     # check if color map is created
     for ot in ['stack_rate', 'stack_error', 'linear_rate', 'linear_error', 'linear_rsquared']:
-        create_png_and_kml_from_tif(params[pyrate.constants.OUT_DIR], output_type=ot)
-        output_color_map_path = os.path.join(params[pyrate.constants.OUT_DIR], f"colourmap_{ot}.txt")
+        create_png_and_kml_from_tif(params[C.OUT_DIR], output_type=ot)
+        output_color_map_path = os.path.join(params[C.OUT_DIR], f"colourmap_{ot}.txt")
         assert Path(output_color_map_path).exists(), "Output color map file not found at: " + output_color_map_path
 
     # check if merged files are created
     for _type, ot in itertools.product(['stack_rate', 'stack_error', 'linear_rate',
                                         'linear_error', 'linear_rsquared'], ['.tif', '.png', '.kml']):
-        output_image_path = os.path.join(params[pyrate.constants.OUT_DIR], _type + ot)
+        output_image_path = os.path.join(params[C.OUT_DIR], _type + ot)
         print(f"checking {output_image_path}")
         assert Path(output_image_path).exists(), f"Output {ot} file not found at {output_image_path}"

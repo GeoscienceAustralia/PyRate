@@ -22,10 +22,10 @@ used for correcting interferograms for residual topographic effects (a.k.a. DEM 
 import numpy as np
 from typing import Tuple, Union
 
-import pyrate.constants
+import pyrate.constants as C
 from pyrate.core import ifgconstants as ifc
 from pyrate.core.gamma import read_lookup_table
-from pyrate.core.shared import Ifg, IfgPart, Tile, MemGeometry
+from pyrate.core.shared import Ifg, IfgPart, MemGeometry
 
 
 def get_lonlat_coords(ifg: Ifg) -> Tuple[MemGeometry, MemGeometry]:
@@ -68,15 +68,15 @@ def calc_radar_coords(ifg: Ifg, params: dict, xmin: int, xmax: int,
     :return: lt_rg: Radar geometry range coordinate for each pixel.
     """
     # lookup table file:
-    lookup_table = params[pyrate.constants.LT_FILE]
+    lookup_table = params[C.LT_FILE]
 
     if lookup_table is None:
         msg = f"No lookup table file supplied: Geometry cannot be computed"
         raise FileNotFoundError(msg)
 
     # PyRate IFG multi-looking factors
-    ifglksx = params[pyrate.constants.IFG_LKSX]
-    ifglksy = params[pyrate.constants.IFG_LKSY]
+    ifglksx = params[C.IFG_LKSX]
+    ifglksy = params[C.IFG_LKSY]
     # transform float lookup table file to np array, min/max pixel coordinates are required for cropping
     lt_az, lt_rg = read_lookup_table(ifg, lookup_table, ifglksx, ifglksy, xmin, xmax, ymin, ymax)
     # replace 0.0 with NaN
@@ -121,7 +121,7 @@ def get_sat_positions(lat: np.ndarray, lon: np.ndarray, look_angle: np.ndarray, 
 
 
 def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarray, lat: np.ndarray,
-        dem_height: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+                        dem_height: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Function to calculate angular satellite to ground geometries and distance for each pixel.
     :param ifg: pyrate.core.shared.Ifg Class object.

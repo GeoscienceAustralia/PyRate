@@ -28,11 +28,12 @@ from numpy.testing import assert_array_almost_equal
 from osgeo import gdal
 
 import pyrate.configuration
-import pyrate.constants
+
 import pyrate.core.ifgconstants as ifc
 from pyrate.core import shared, gamma
 from pyrate import prepifg, conv2tif
 from pyrate.core.shared import write_fullres_geotiff, GeotiffException
+import pyrate.constants as C
 from pyrate.constants import PYRATEPATH, IFG_FILE_LIST, PROCESSOR, OBS_DIR, OUT_DIR, DEM_HEADER_FILE, SLC_DIR, \
     NO_DATA_VALUE, BASE_FILE_LIST
 
@@ -303,7 +304,7 @@ def parallel_ifgs(gamma_conf):
     tdir = Path(tempfile.mkdtemp())
 
     params_p = manipulate_test_conf(gamma_conf, tdir)
-    params_p[pyrate.constants.PARALLEL] = 1
+    params_p[C.PARALLEL] = 1
 
     output_conf_file = 'conf.conf'
     output_conf = tdir.joinpath(output_conf_file)
@@ -328,7 +329,7 @@ def series_ifgs(gamma_conf):
     tdir = Path(tempfile.mkdtemp())
 
     params_s = manipulate_test_conf(gamma_conf, tdir)
-    params_s[pyrate.constants.PARALLEL] = 0
+    params_s[C.PARALLEL] = 0
 
     output_conf_file = 'conf.conf'
     output_conf = tdir.joinpath(output_conf_file)

@@ -28,7 +28,7 @@ from numpy import isnan
 from scipy.fftpack import fft2, ifft2, fftshift, ifftshift
 from scipy.interpolate import griddata
 
-import pyrate.constants
+import pyrate.constants as C
 from pyrate.core.logger import pyratelogger as log
 
 from pyrate.core import shared, ifgconstants as ifc, mpiops
@@ -46,14 +46,14 @@ def wrap_spatio_temporal_filter(params: dict) -> None:
     See docstring for spatio_temporal_filter.
     :param params: Dictionary of PyRate configuration parameters.
     """
-    if params[pyrate.constants.APSEST]:
+    if params[C.APSEST]:
         log.info('Doing APS spatio-temporal filtering')
     else:
         log.info('APS spatio-temporal filtering not required')
         return
-    tiles = params[pyrate.constants.TILES]
-    preread_ifgs = params[pyrate.constants.PREREAD_IFGS]
-    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[pyrate.constants.INTERFEROGRAM_FILES]]
+    tiles = params[C.TILES]
+    preread_ifgs = params[C.PREREAD_IFGS]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
 
     # perform some checks on existing ifgs
     log.debug('Checking APS correction status')
@@ -111,7 +111,7 @@ def _calc_svd_time_series(ifg_paths: List[str], params: dict, preread_ifgs: dict
              'correction')
     # copy params temporarily
     new_params = deepcopy(params)
-    new_params[pyrate.constants.TIME_SERIES_METHOD] = 2  # use SVD method
+    new_params[C.TIME_SERIES_METHOD] = 2  # use SVD method
 
     process_tiles = mpiops.array_split(tiles)
 
@@ -122,7 +122,7 @@ def _calc_svd_time_series(ifg_paths: List[str], params: dict, preread_ifgs: dict
         ifgp = [shared.IfgPart(p, t, preread_ifgs, params) for p in ifg_paths]
         mst_tile = np.load(Configuration.mst_path(params, t.index))
         tsincr = time_series(ifgp, new_params, vcmt=None, mst=mst_tile)[0]
-        np.save(file=os.path.join(params[pyrate.constants.TMPDIR],
+        np.save(file=os.path.join(params[C.TMPDIR],
                                   f'tsincr_aps_{t.index}.npy'), arr=tsincr)
         nvels = tsincr.shape[2]
 
@@ -144,7 +144,7 @@ def _assemble_tsincr(ifg_paths: List[str], params: dict, preread_ifgs: dict,
     tsincr_p = {}
     process_nvels = mpiops.array_split(range(nvels))
     for i in process_nvels:
-        tsincr_p[i] = assemble_tiles(shape, params[pyrate.constants.TMPDIR], tiles,
+        tsincr_p[i] = assemble_tiles(shape, params[C.TMPDIR], tiles,
                                      out_type='tsincr_aps', index=i)
     tsincr_g = shared.join_dicts(mpiops.comm.allgather(tsincr_p))
     return np.dstack([v[1] for v in sorted(tsincr_g.items())])
@@ -202,7 +202,7 @@ def spatial_low_pass_filter(ts_hp: np.ndarray, ifg: Ifg, params: dict) -> np.nda
     log.info('Applying spatial low-pass filter')
 
     nvels = ts_hp.shape[2]
-    cutoff = params[pyrate.constants.SLPF_CUTOFF]
+    cutoff = params[C.SLPF_CUTOFF]
     # nanfill = params[cf.SLPF_NANFILL]
     # fillmethod = params[cf.SLPF_NANFILL_METHOD]
     if cutoff == 0:
@@ -243,9 +243,9 @@ def _slpfilter(phase: np.ndarray, ifg: Ifg, r_dist: float, params: dict) -> np.n
     """
     Wrapper function for spatial low pass filter
     """
-    cutoff = params[pyrate.constants.SLPF_CUTOFF]
-    nanfill = params[pyrate.constants.SLPF_NANFILL]
-    fillmethod = params[pyrate.constants.SLPF_NANFILL_METHOD]
+    cutoff = params[C.SLPF_CUTOFF]
+    nanfill = params[C.SLPF_NANFILL]
+    fillmethod = params[C.SLPF_NANFILL_METHOD]
 
     if np.all(np.isnan(phase)):  # return for nan matrix
         return phase
@@ -326,8 +326,8 @@ def temporal_high_pass_filter(tsincr: np.ndarray, epochlist: EpochList,
     :return: ts_hp: Filtered high frequency time series data; shape (ifg.shape, nepochs).
     """
     log.info('Applying temporal high-pass filter')
-    threshold = params[pyrate.constants.TLPF_PTHR]
-    cutoff_day = params[pyrate.constants.TLPF_CUTOFF]
+    threshold = params[C.TLPF_PTHR]
+    cutoff_day = params[C.TLPF_CUTOFF]
     if cutoff_day < 1 or type(cutoff_day) != int:
         raise ValueError(f'tlpf_cutoff must be an integer greater than or '
                          f'equal to 1 day. Value provided = {cutoff_day}')

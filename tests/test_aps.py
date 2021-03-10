@@ -24,7 +24,7 @@ from os.path import join
 from scipy.ndimage import gaussian_filter1d, gaussian_filter
 from numpy.testing import assert_array_almost_equal
 
-import pyrate.constants
+import pyrate.constants as C
 from pyrate import conv2tif, prepifg, correct
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.core import shared
@@ -181,7 +181,7 @@ class TestAPSErrorCorrectionsOnDiscReused:
         correct._copy_mlooked(cls.params)
         correct._update_params_with_tiles(cls.params)
         correct._create_ifg_dict(cls.params)
-        multi_paths = cls.params[pyrate.constants.INTERFEROGRAM_FILES]
+        multi_paths = cls.params[C.INTERFEROGRAM_FILES]
         cls.ifg_paths = [p.tmp_sampled_path for p in multi_paths]
         cls.ifgs = [shared.Ifg(i) for i in cls.ifg_paths]
         for i in cls.ifgs:
@@ -191,11 +191,11 @@ class TestAPSErrorCorrectionsOnDiscReused:
 
     @classmethod
     def teardown_method(cls):
-        shutil.rmtree(cls.params[pyrate.constants.OUT_DIR])
+        shutil.rmtree(cls.params[C.OUT_DIR])
 
     def test_aps_error_files_on_disc(self, slpnanfill_method, slpfcutoff):
-        self.params[pyrate.constants.SLPF_NANFILL_METHOD] = slpnanfill_method
-        self.params[pyrate.constants.SLPF_CUTOFF] = slpfcutoff
+        self.params[C.SLPF_NANFILL_METHOD] = slpnanfill_method
+        self.params[C.SLPF_CUTOFF] = slpfcutoff
         wrap_spatio_temporal_filter(self.params)
 
         # test_orb_errors_written

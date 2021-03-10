@@ -23,7 +23,7 @@ from numpy import array
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-import pyrate.constants
+import pyrate.constants as C
 import pyrate.core.ref_phs_est
 import pyrate.core.refpixel
 from pyrate.core import shared, ifgconstants as ifc
@@ -49,8 +49,8 @@ class TestCovariance:
         for i in cls.ifgs:
             i.mm_converted = True
         params = dict()
-        params[pyrate.constants.NO_DATA_VALUE] = 0
-        params[pyrate.constants.NAN_CONVERSION] = True
+        params[C.NO_DATA_VALUE] = 0
+        params[C.NAN_CONVERSION] = True
         cls.params = params
         cls.r_dist = RDist(cls.ifgs[0])()
 
@@ -189,16 +189,16 @@ class TestLegacyEquality:
         roipac_params = Configuration(TEST_CONF_ROIPAC).__dict__
         from copy import deepcopy
         params = deepcopy(roipac_params)
-        shared.mkdir_p(params[pyrate.constants.TMPDIR])
-        params[pyrate.constants.REF_EST_METHOD] = 2
+        shared.mkdir_p(params[C.TMPDIR])
+        params[C.REF_EST_METHOD] = 2
         conv2tif.main(params)
         params = deepcopy(roipac_params)
         prepifg.main(params)
         params = deepcopy(roipac_params)
-        base_ifg_paths = [c.unwrapped_path for c in params[pyrate.constants.INTERFEROGRAM_FILES]]
-        dest_paths = [c.converted_path for c in params[pyrate.constants.INTERFEROGRAM_FILES]]
-        params[pyrate.constants.INTERFEROGRAM_FILES] = [MultiplePaths(d, params) for d in dest_paths]
-        for p in params[pyrate.constants.INTERFEROGRAM_FILES]:  # hack
+        base_ifg_paths = [c.unwrapped_path for c in params[C.INTERFEROGRAM_FILES]]
+        dest_paths = [c.converted_path for c in params[C.INTERFEROGRAM_FILES]]
+        params[C.INTERFEROGRAM_FILES] = [MultiplePaths(d, params) for d in dest_paths]
+        for p in params[C.INTERFEROGRAM_FILES]:  # hack
             p.sampled_path = p.converted_path
 
         for i in dest_paths:
@@ -208,13 +208,13 @@ class TestLegacyEquality:
         correct._update_params_with_tiles(params)
         correct._create_ifg_dict(params)
         pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
-        params[pyrate.constants.ORBFIT_OFFSET] = True
+        params[C.ORBFIT_OFFSET] = True
         pyrate.core.orbital.remove_orbital_error(ifgs, params)
         ifgs = prepare_ifgs_without_phase(dest_paths, params)
         for ifg in ifgs:
             ifg.close()
 
-        for p in params[pyrate.constants.INTERFEROGRAM_FILES]:  # hack
+        for p in params[C.INTERFEROGRAM_FILES]:  # hack
             p.tmp_sampled_path = p.sampled_path
         _, cls.ifgs = pyrate.core.ref_phs_est.ref_phase_est_wrapper(params)
         ifgs[0].open()
@@ -229,7 +229,7 @@ class TestLegacyEquality:
 
     @classmethod
     def teardown_class(cls):
-        shutil.rmtree(cls.params[pyrate.constants.OUT_DIR])
+        shutil.rmtree(cls.params[C.OUT_DIR])
 
     def test_legacy_maxvar_equality_small_test_files(self):
         np.testing.assert_array_almost_equal(self.maxvar, legacy_maxvar, decimal=3)
@@ -252,6 +252,6 @@ class TestLegacyEquality:
         for ifg in self.ifgs:
             if not ifg.is_open:
                 ifg.open()
-            data_file = join(self.params[pyrate.constants.TMPDIR],
+            data_file = join(self.params[C.TMPDIR],
                              'cvd_data_{b}.npy'.format(b=basename(ifg.data_path).split('.')[0]))
             assert isfile(data_file)

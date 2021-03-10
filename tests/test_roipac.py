@@ -17,9 +17,7 @@
 This Python module contains tests for the roipac.py PyRate module.
 """
 import os
-import shutil
 import sys
-import tempfile
 from datetime import date
 from os.path import exists, join
 
@@ -27,10 +25,7 @@ from numpy.testing import assert_array_almost_equal
 from osgeo import gdal
 
 import pyrate.core.ifgconstants as ifc
-from pyrate.core import shared, roipac
-from pyrate.constants import IFG_FILE_LIST, PROCESSOR, OBS_DIR, OUT_DIR, DEM_HEADER_FILE, INPUT_IFG_PROJECTION, \
-    NO_DATA_VALUE
-# from pyrate.scripts.conv2tif import main as roipacMain
+from pyrate.core import roipac
 from pyrate.core.shared import GeotiffException
 from pyrate.core.shared import write_fullres_geotiff
 from tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF

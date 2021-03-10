@@ -17,7 +17,7 @@
 
 import numpy as np
 
-import pyrate.constants
+import pyrate.constants as C
 from pyrate.core.phase_closure.mst_closure import (
     sort_loops_based_on_weights_and_date,
 )
@@ -38,23 +38,23 @@ def test_discard_loops_containing_max_ifg_count(geotiffs):
 def retain_loops(tifs):
     sorted_loops = sort_loops_based_on_weights_and_date(tifs)
     params = {
-        pyrate.constants.MAX_LOOPS_IN_IFG: 2,
-        pyrate.constants.MAX_LOOP_LENGTH: 3
+        C.MAX_LOOPS_IN_IFG: 2,
+        C.MAX_LOOP_LENGTH: 3
     }
     retained_loops_meeting_max_loop_criteria = [sl for sl in sorted_loops
-                                                if len(sl) <= params[pyrate.constants.MAX_LOOP_LENGTH]]
-    msg = f"After applying MAX_LOOP_LENGTH={params[pyrate.constants.MAX_LOOP_LENGTH]} criteria, " \
+                                                if len(sl) <= params[C.MAX_LOOP_LENGTH]]
+    msg = f"After applying MAX_LOOP_LENGTH={params[C.MAX_LOOP_LENGTH]} criteria, " \
           f"{len(retained_loops_meeting_max_loop_criteria)} loops are retained"
     print(msg)
     retained_loops = discard_loops_containing_max_ifg_count(retained_loops_meeting_max_loop_criteria, params)
-    msg = f"After applying MAX_LOOPS_IN_IFG={params[pyrate.constants.MAX_LOOPS_IN_IFG]} criteria, " \
+    msg = f"After applying MAX_LOOPS_IN_IFG={params[C.MAX_LOOPS_IN_IFG]} criteria, " \
           f"{len(retained_loops)} loops are retained"
     print(msg)
     return retained_loops
 
 
 def test_drop_ifgs_if_not_part_of_any_loop(geotiffs):
-    params = {pyrate.constants.NO_DATA_VALUE: 0.0}
+    params = {C.NO_DATA_VALUE: 0.0}
     loops1 = retain_loops(geotiffs)
     selected_tifs1 = __drop_ifgs_if_not_part_of_any_loop(geotiffs, loops1, params)
 

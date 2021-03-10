@@ -27,7 +27,7 @@ import numpy as np
 from scipy.fftpack import fft2, ifft2, fftshift
 from scipy.optimize import fmin
 
-import pyrate.constants
+import pyrate.constants as C
 from pyrate.core import shared, ifgconstants as ifc, mpiops
 from pyrate.core.shared import PrereadIfg, Ifg
 from pyrate.core.algorithm import first_second_ids
@@ -182,7 +182,7 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
     # optionally save acg vs dist observations to disk
     if save_acg:
         _save_cvd_data(acg, r_dist[indices_to_keep],
-                       ifg.data_path, params[pyrate.constants.TMPDIR])
+                       ifg.data_path, params[C.TMPDIR])
 
     if calc_alpha:
         # bin width for collecting data
@@ -328,8 +328,8 @@ def maxvar_vcm_calc_wrapper(params):
     """
     MPI wrapper for maxvar and vcmt computation
     """
-    preread_ifgs = params[pyrate.constants.PREREAD_IFGS]
-    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[pyrate.constants.INTERFEROGRAM_FILES]]
+    preread_ifgs = params[C.PREREAD_IFGS]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
     log.info('Calculating the temporal variance-covariance matrix')
 
     def _get_r_dist(ifg_path):
@@ -353,6 +353,6 @@ def maxvar_vcm_calc_wrapper(params):
 
     vcmt = mpiops.run_once(get_vcmt, preread_ifgs, maxvar)
     log.debug("Finished maxvar and vcm calc!")
-    params[pyrate.constants.MAXVAR], params[pyrate.constants.VCMT] = maxvar, vcmt
+    params[C.MAXVAR], params[C.VCMT] = maxvar, vcmt
     np.save(Configuration.vcmt_path(params), arr=vcmt)
     return maxvar, vcmt

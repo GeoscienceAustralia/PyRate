@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import List
 import numpy as np
 
-import pyrate.constants
+import pyrate.constants as C
 from pyrate.core.phase_closure.mst_closure import WeightedLoop
 from pyrate.core.logger import pyratelogger as log
 
@@ -69,6 +69,6 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], params, thr: fl
     # ax = fig.add_subplot(plt_rows, plt_cols, tot_plots+1)
     # fig.colorbar(mpl.cm.ScalarMappable(cmap=cmap), cax=ax, orientation='horizontal', label='radians')
 
-    closure_plot_file = Path(params[pyrate.constants.OUT_DIR]).joinpath(f'closure_loops.png')
+    closure_plot_file = Path(params[C.OUT_DIR]).joinpath(f'closure_loops.png')
     plt.savefig(closure_plot_file)
     log.info(f'{n_loops} closure loops plotted in {closure_plot_file}')

@@ -20,7 +20,7 @@ from pathlib import Path
 from subprocess import check_call
 import pytest
 
-import pyrate.constants as c
+import pyrate.constants as C
 from pyrate import correct
 from pyrate.configuration import Configuration
 from tests.common import MEXICO_CROPA_CONF
@@ -41,7 +41,7 @@ steps = ['orbfit',  'refphase',  'phase_closure']
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif((not PLOT) or c.DISABLE_PHASE_CLOSURE,
+@pytest.mark.skipif((not PLOT) or C.DISABLE_PHASE_CLOSURE,
                     reason='skipped as plotting packages are missing')
 def test_plot_closure(mexico_cropa_params):
     config = Configuration(MEXICO_CROPA_CONF)
@@ -53,7 +53,7 @@ def test_plot_closure(mexico_cropa_params):
     # house keeping
     correct._update_params_with_tiles(params)
     correct._create_ifg_dict(params)
-    params[c.REFX_FOUND], params[c.REFY_FOUND] = correct.ref_pixel_calc_wrapper(params)
+    params[C.REFX_FOUND], params[C.REFY_FOUND] = correct.ref_pixel_calc_wrapper(params)
 
     # run through the correct steps in user specified sequence
     for step in steps:
@@ -62,6 +62,6 @@ def test_plot_closure(mexico_cropa_params):
         else:
             correct.correct_steps[step](params)
 
-    closure_plot_file = Path(params[c.OUT_DIR]).joinpath('closure_loops.png')
+    closure_plot_file = Path(params[C.OUT_DIR]).joinpath('closure_loops.png')
     assert closure_plot_file.exists()
-    shutil.rmtree(params[c.OUT_DIR], ignore_errors=True)
+    shutil.rmtree(params[C.OUT_DIR], ignore_errors=True)

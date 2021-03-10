@@ -23,7 +23,7 @@ from typing import Tuple, Optional
 from os.path import join
 from pathlib import Path
 
-import pyrate.constants
+import pyrate.constants as C
 from pyrate.core import geometry, shared, mpiops, ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core.shared import Ifg, Geometry, DEM, Tile, tiles_split
@@ -37,12 +37,12 @@ def dem_error_calc_wrapper(params: dict) -> None:
     MPI wrapper for DEM error correction
     :param params: Dictionary of PyRate configuration parameters.
     """
-    if not params[pyrate.constants.DEMERROR]:
+    if not params[C.DEMERROR]:
         log.info("DEM error correction not required")
         return
 
     # geometry information needed to calculate Bperp for each pixel using first IFG in list
-    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[pyrate.constants.INTERFEROGRAM_FILES]]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
 
     # check if DEM error correction is already available
     if mpiops.run_once(__check_and_apply_demerrors_found_on_disc, ifg_paths, params):
@@ -60,7 +60,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
             log.warning("Geometry calculations are not implemented for ROI_PAC")
             return
 
-        if params[pyrate.constants.BASE_FILE_LIST] is None:
+        if params[C.BASE_FILE_LIST] is None:
             log.warning("No baseline files supplied: DEM error has not been computed")
             return
 
@@ -75,7 +75,7 @@ def dem_error_calc_wrapper(params: dict) -> None:
         # split full arrays in to tiles for parallel processing
         tiles_split(_process_dem_error_per_tile, params)
 
-        preread_ifgs = params[pyrate.constants.PREREAD_IFGS]
+        preread_ifgs = params[C.PREREAD_IFGS]
         # write dem error and correction values to file
         mpiops.run_once(_write_dem_errors, ifg_paths, params, preread_ifgs)
         shared.save_numpy_phase(ifg_paths, params)
@@ -89,7 +89,7 @@ def _process_dem_error_per_tile(tile: Tile, params: dict) -> None:
     :param tile: pyrate.core.shared.Tile Class object.
     :param params: Dictionary of PyRate configuration parameters.
     """
-    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[pyrate.constants.INTERFEROGRAM_FILES]]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
     ifg0_path = ifg_paths[0]
     ifg0 = Ifg(ifg0_path)
     ifg0.open(readonly=True)
@@ -101,10 +101,10 @@ def _process_dem_error_per_tile(tile: Tile, params: dict) -> None:
     geom_az = Geometry(rdc_az_file)
     rdc_rg_file = geom_files['rdc_range']
     geom_rg = Geometry(rdc_rg_file)
-    dem_file = join(params[pyrate.constants.OUT_DIR], 'dem.tif')
+    dem_file = join(params[C.OUT_DIR], 'dem.tif')
     dem = DEM(dem_file)
-    preread_ifgs = params[pyrate.constants.PREREAD_IFGS]
-    threshold = params[pyrate.constants.DE_PTHR]
+    preread_ifgs = params[C.PREREAD_IFGS]
+    threshold = params[C.DE_PTHR]
     ifg_parts = [shared.IfgPart(p, tile, preread_ifgs, params) for p in ifg_paths]
     lon_parts = lon(tile)
     lat_parts = lat(tile)
@@ -126,16 +126,16 @@ def _process_dem_error_per_tile(tile: Tile, params: dict) -> None:
     # dem_error_correction contains the correction value for each interferogram
     # size [num_ifg, row, col]
     # save tiled data in tmpdir
-    np.save(file=os.path.join(params[pyrate.constants.TMPDIR], 'dem_error_{}.npy'.format(tile.index)), arr=dem_error)
+    np.save(file=os.path.join(params[C.TMPDIR], 'dem_error_{}.npy'.format(tile.index)), arr=dem_error)
     # swap the axes of 3D array to fit the style used in function assemble_tiles
     tmp_array = np.moveaxis(dem_error_correction, 0, -1)
     # new dimension is [row, col, num_ifg]
     # save tiled data into tmpdir
-    np.save(file=os.path.join(params[pyrate.constants.TMPDIR], 'dem_error_correction_{}.npy'.format(tile.index)), arr=tmp_array)
+    np.save(file=os.path.join(params[C.TMPDIR], 'dem_error_correction_{}.npy'.format(tile.index)), arr=tmp_array)
 
     # Calculate and save the average perpendicular baseline for the tile
     bperp_avg =  np.mean(bperp, axis=(1, 2), dtype=np.float64)
-    np.save(file=os.path.join(params[pyrate.constants.TMPDIR], 'bperp_avg_{}.npy'.format(tile.index)), arr=bperp_avg)
+    np.save(file=os.path.join(params[C.TMPDIR], 'bperp_avg_{}.npy'.format(tile.index)), arr=bperp_avg)
 
 
 def _calculate_bperp_wrapper(ifg_paths: list, az_parts: np.ndarray, rg_parts: np.ndarray,
@@ -259,7 +259,7 @@ def _write_dem_errors(ifg_paths: list, params: dict, preread_ifgs: dict) -> None
     :param params: Dictionary of PyRate configuration parameters.
     :param preread_ifgs: Dictionary of interferogram metadata.
     """
-    tiles = params[pyrate.constants.TILES]
+    tiles = params[C.TILES]
 
     # re-assemble tiles and save into dem_error dir
     shape = preread_ifgs[ifg_paths[0]].shape
@@ -267,15 +267,15 @@ def _write_dem_errors(ifg_paths: list, params: dict, preread_ifgs: dict) -> None
     # save dem error as geotiff file in out directory
     gt, md, wkt = shared.get_geotiff_header_info(ifg_paths[0])
     md[ifc.DATA_TYPE] = ifc.DEM_ERROR
-    dem_error = assemble_tiles(shape, params[pyrate.constants.TMPDIR], tiles, out_type='dem_error')
-    dem_error_file = os.path.join(params[pyrate.constants.OUT_DIR], 'dem_error.tif')
+    dem_error = assemble_tiles(shape, params[C.TMPDIR], tiles, out_type='dem_error')
+    dem_error_file = os.path.join(params[C.OUT_DIR], 'dem_error.tif')
     shared.remove_file_if_exists(dem_error_file)
     shared.write_output_geotiff(md, gt, wkt, dem_error, dem_error_file, np.nan)
 
     # read the average bperp vals for each ifg and each tile
     bperp = np.empty(shape=(len(tiles), len(ifg_paths)), dtype=np.float64)
     for t in tiles:
-        bperp_file = Path(join(params[pyrate.constants.TMPDIR], 'bperp_avg_' + str(t.index) + '.npy'))
+        bperp_file = Path(join(params[C.TMPDIR], 'bperp_avg_' + str(t.index) + '.npy'))
         arr = np.load(file=bperp_file)
         bperp[t.index, :] = arr
 
@@ -285,7 +285,7 @@ def _write_dem_errors(ifg_paths: list, params: dict, preread_ifgs: dict) -> None
         ifg = Ifg(ifg_path)
         ifg.open()
         # read dem error correction file from tmpdir
-        dem_error_correction_ifg = assemble_tiles(shape, params[pyrate.constants.TMPDIR], tiles, out_type='dem_error_correction',
+        dem_error_correction_ifg = assemble_tiles(shape, params[C.TMPDIR], tiles, out_type='dem_error_correction',
                                                   index=idx)
         # calculate average bperp value across all tiles for the ifg
         bperp_val = np.mean(bperp[:, idx])

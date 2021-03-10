@@ -23,7 +23,7 @@ from pathlib import Path
 import pickle as cp
 from typing import List
 
-import pyrate.constants
+import pyrate.constants as C
 from pyrate.core import (shared, algorithm, mpiops)
 from pyrate.core.aps import wrap_spatio_temporal_filter
 from pyrate.core.covariance import maxvar_vcm_calc_wrapper
@@ -54,7 +54,7 @@ def _create_ifg_dict(params):
                 interferograms that are used later in workflow
     :rtype: dict
     """
-    dest_tifs = [ifg_path for ifg_path in params[pyrate.constants.INTERFEROGRAM_FILES]]
+    dest_tifs = [ifg_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
     ifgs_dict = {}
     process_tifs = mpiops.array_split(dest_tifs)
     for d in process_tifs:
@@ -75,13 +75,13 @@ def _create_ifg_dict(params):
 
     ifgs_dict = mpiops.run_once(__save_ifgs_dict_with_headers_and_epochs, dest_tifs, ifgs_dict, params, process_tifs)
 
-    params[pyrate.constants.PREREAD_IFGS] = ifgs_dict
+    params[C.PREREAD_IFGS] = ifgs_dict
     log.debug('Finished converting phase_data to numpy in process {}'.format(mpiops.rank))
     return ifgs_dict
 
 
 def __save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, process_tifs):
-    tmpdir = params[pyrate.constants.TMPDIR]
+    tmpdir = params[C.TMPDIR]
     if not os.path.exists(tmpdir):
         shared.mkdir_p(tmpdir)
 
@@ -106,7 +106,7 @@ def __save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, proce
 
 def _copy_mlooked(params):
     log.info("Copying input files into tempdir for manipulation during 'correct' steps")
-    mpaths = params[pyrate.constants.INTERFEROGRAM_FILES]
+    mpaths = params[C.INTERFEROGRAM_FILES]
     process_mpaths = mpiops.array_split(mpaths)
     for p in process_mpaths:
         shutil.copy(p.sampled_path, p.tmp_sampled_path)
@@ -136,20 +136,20 @@ def main(config):
 
 
 def _update_params_with_tiles(params: dict) -> None:
-    ifg_path = params[pyrate.constants.INTERFEROGRAM_FILES][0].sampled_path
+    ifg_path = params[C.INTERFEROGRAM_FILES][0].sampled_path
     rows, cols = params["rows"], params["cols"]
     tiles = mpiops.run_once(get_tiles, ifg_path, rows, cols)
     # add tiles to params
-    params[pyrate.constants.TILES] = tiles
+    params[C.TILES] = tiles
 
 
 def update_params_with_closure_checked_ifg_list(params: dict, config: Configuration):
 
-    if pyrate.constants.DISABLE_PHASE_CLOSURE:
+    if C.DISABLE_PHASE_CLOSURE:
         log.warn("Phase closure is not supported at the moment! We are working hard to enable this feature!")
         return
 
-    if not params[pyrate.constants.PHASE_CLOSURE]:
+    if not params[C.PHASE_CLOSURE]:
         log.info("Phase closure correction is not required!")
         return
 
@@ -166,12 +166,12 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
                 filtered_multi_paths.append(m_p)
         return filtered_multi_paths
 
-    params[pyrate.constants.INTERFEROGRAM_FILES] = \
-        mpiops.run_once(_filter_to_closure_checked_multiple_paths, params[pyrate.constants.INTERFEROGRAM_FILES])
+    params[C.INTERFEROGRAM_FILES] = \
+        mpiops.run_once(_filter_to_closure_checked_multiple_paths, params[C.INTERFEROGRAM_FILES])
 
     if mpiops.rank == 0:
         with open(config.phase_closure_filtered_ifgs_list(params), 'w') as f:
-            lines = [p.converted_path + '\n' for p in params[pyrate.constants.INTERFEROGRAM_FILES]]
+            lines = [p.converted_path + '\n' for p in params[C.INTERFEROGRAM_FILES]]
             f.writelines(lines)
 
     # insert nans where phase unwrap threshold is breached
@@ -204,7 +204,7 @@ def correct_ifgs(config: Configuration) -> None:
     # house keeping
     _update_params_with_tiles(params)
     _create_ifg_dict(params)
-    params[pyrate.constants.REFX_FOUND], params[pyrate.constants.REFY_FOUND] = ref_pixel_calc_wrapper(params)
+    params[C.REFX_FOUND], params[C.REFY_FOUND] = ref_pixel_calc_wrapper(params)
 
     # run through the correct steps in user specified sequence
     for step in params['correct']:

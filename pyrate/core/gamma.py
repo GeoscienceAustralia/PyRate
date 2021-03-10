@@ -24,7 +24,7 @@ from pathlib import Path
 from datetime import date, time, timedelta
 import numpy as np
 
-import pyrate.constants
+import pyrate.constants as C
 from pyrate.configuration import ConfigException, parse_namelist
 import pyrate.core.ifgconstants as ifc
 from pyrate.constants import sixteen_digits_pattern, BASELINE_FILE_PATHS, BASE_FILE_DIR
@@ -482,9 +482,9 @@ def gamma_header(ifg_file_path, params):
         A combined header dictionary containing metadata from matching
         gamma headers and DEM header.   
     """
-    dem_hdr_path = params[pyrate.constants.DEM_HEADER_FILE]
-    header_paths = get_header_paths(ifg_file_path, params[pyrate.constants.HDR_FILE_LIST])
-    if len(header_paths) == 2 and params[pyrate.constants.BASE_FILE_LIST] is not None:
+    dem_hdr_path = params[C.DEM_HEADER_FILE]
+    header_paths = get_header_paths(ifg_file_path, params[C.HDR_FILE_LIST])
+    if len(header_paths) == 2 and params[C.BASE_FILE_LIST] is not None:
         baseline_path = baseline_paths_for(ifg_file_path, params)
     else:
         baseline_path = None  # don't read baseline files for DEM
@@ -492,7 +492,7 @@ def gamma_header(ifg_file_path, params):
     combined_headers = manage_headers(dem_hdr_path, header_paths, baseline_path)
 
     if os.path.basename(ifg_file_path).split('.')[1] == \
-            (params[pyrate.constants.APS_INCIDENCE_EXT] or params[pyrate.constants.APS_ELEVATION_EXT]):
+            (params[C.APS_INCIDENCE_EXT] or params[C.APS_ELEVATION_EXT]):
         # TODO: implement incidence class here
         combined_headers['FILE_TYPE'] = 'Incidence'
 
