@@ -21,12 +21,14 @@ import os
 from subprocess import check_call
 import itertools
 import tempfile
+import pickle
 import pytest
 from pathlib import Path
 
 import pyrate.constants as C
-from pyrate.merge import create_png_and_kml_from_tif
-from pyrate.merge import _merge_stack, _merge_linrate
+from pyrate.merge import create_png_and_kml_from_tif, los_projection_out_types
+from pyrate.merge import _merge_stack, _merge_linrate, _merge_timeseries
+from pyrate.core.shared import DEM
 from pyrate.core.ifgconstants import LOS_PROJECTION_OPTION
 from pyrate.configuration import Configuration, write_config_file
 from tests.common import manipulate_test_conf, PY37GDAL304, MEXICO_CROPA_CONF
@@ -63,6 +65,8 @@ def test_file_creation(create_pre_merge_output, los_projection):
     try:
         _merge_stack(params)
         _merge_linrate(params)
+        _merge_timeseries(params, 'tscuml')
+        _merge_timeseries(params, 'tsincr')
     except RuntimeError:
         return
     # check if color map is created
@@ -77,3 +81,14 @@ def test_file_creation(create_pre_merge_output, los_projection):
         output_image_path = os.path.join(params[C.OUT_DIR], _type + ot)
         print(f"checking {output_image_path}")
         assert Path(output_image_path).exists(), f"Output {ot} file not found at {output_image_path}"
+
+    # check los_projection metadata
+    for out_type in los_projection_out_types:
+        for tif in Path(params[C.OUT_DIR]).glob(out_type + '*.tif'):
+            __check_md(los_projection, tif.as_posix())
+
+
+def __check_md(los_projection, output_image_path):
+    ifg = DEM(output_image_path)
+    ifg.open()
+    assert ifg.dataset.GetMetadataItem(C.LOS_PROJECTION) == LOS_PROJECTION_OPTION[los_projection]

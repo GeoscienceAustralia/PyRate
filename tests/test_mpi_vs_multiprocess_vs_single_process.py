@@ -164,8 +164,7 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
                                params['notiles'] * 2)
 
     assert_same_files_produced(params[C.TMPDIR], params_m[C.TMPDIR], params_s[
-        C.TMPDIR], "tscuml_*.npy",
-                               params['notiles'])
+        C.TMPDIR], "tscuml_*.npy", params['notiles'])
 
     assert_same_files_produced(params[C.TMPDIR], params_m[C.TMPDIR], params_s[
         C.TMPDIR], "linear_rate_*.npy",
