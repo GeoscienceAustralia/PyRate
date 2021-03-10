@@ -141,15 +141,8 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     if params[C.DEMERROR]:
         # check files required by dem error correction are produced
         assert_same_files_produced(
-            params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[C.OUT_DIR],
-            [
-                'rdc_range.tif',
-                'rdc_azimuth.tif',
-                'look_angle.tif',
-                'incidence_angle.tif',
-                'azimuth_angle.tif',
-                'range_dist.tif'
-            ],
+            params[C.GEOMETRY_DIR], params_m[C.GEOMETRY_DIR], params_s[C.GEOMETRY_DIR],
+            [ft + '.tif' for ft in C.GEOMETRY_OUTPUT_TYPES],
             6
         )
 

@@ -36,10 +36,11 @@ class TestPyRateGammaBperp:
         # copy IFGs to temp folder
         correct._copy_mlooked(cls.params)
         # read radar azimuth, range and dem tif files
-        rdc_az_file = join(cls.params[pyrate.constants.OUT_DIR], 'rdc_azimuth.tif')
+        geom_files = Configuration.geometry_files(cls.params)
+        rdc_az_file = geom_files['rdc_azimuth']
         geom_az = Geometry(rdc_az_file)
         cls.az = geom_az.data
-        rdc_rg_file = join(cls.params[pyrate.constants.OUT_DIR], 'rdc_range.tif')
+        rdc_rg_file = geom_files['rdc_range']
         geom_rg = Geometry(rdc_rg_file)
         cls.rg = geom_rg.data
         dem_file = join(cls.params[pyrate.constants.OUT_DIR], 'dem.tif')

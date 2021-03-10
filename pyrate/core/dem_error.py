@@ -28,7 +28,7 @@ from pyrate.core import geometry, shared, mpiops, ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core.shared import Ifg, Geometry, DEM, Tile, tiles_split
 from pyrate.core.timeseries import TimeSeriesError
-from pyrate.configuration import MultiplePaths
+from pyrate.configuration import MultiplePaths, Configuration
 from pyrate.merge import assemble_tiles
 
 
@@ -96,9 +96,10 @@ def _process_dem_error_per_tile(tile: Tile, params: dict) -> None:
     # read lon and lat values of multi-looked ifg (first ifg only)
     lon, lat = geometry.get_lonlat_coords(ifg0)
     # read azimuth and range coords and DEM from tif files generated in prepifg
-    rdc_az_file = join(params[pyrate.constants.OUT_DIR], 'rdc_azimuth.tif')
+    geom_files = Configuration.geometry_files(params)
+    rdc_az_file = geom_files['rdc_azimuth']
     geom_az = Geometry(rdc_az_file)
-    rdc_rg_file = join(params[pyrate.constants.OUT_DIR], 'rdc_range.tif')
+    rdc_rg_file = geom_files['rdc_range']
     geom_rg = Geometry(rdc_rg_file)
     dem_file = join(params[pyrate.constants.OUT_DIR], 'dem.tif')
     dem = DEM(dem_file)
