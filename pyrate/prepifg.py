@@ -82,7 +82,7 @@ def main(params):
 
     if params[C.LT_FILE] is not None:
         log.info("Calculating and writing geometry files")
-        mpiops.run_once(__write_geometry_files, params, exts, transform, ifg_paths[0].sampled_path)
+        __write_geometry_files(params, exts, transform, ifg_paths[0].sampled_path)
     else:
         log.info("Skipping geometry calculations: Lookup table not provided")
 
@@ -340,11 +340,18 @@ def __write_geometry_files(params: dict, exts: Tuple[float, float, float, float]
     lk_ang, inc_ang, az_ang, rg_dist = geometry.calc_pixel_geometry(ifg, rg, lon.data, lat.data, dem.data)
 
     # save radar coordinates and angles to geotiff files
-    for out, ot in zip([az, rg, lk_ang, inc_ang, az_ang, rg_dist],
-            ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle', 'range_dist']):
+    combinations = zip(
+        [az, rg, lk_ang, inc_ang, az_ang, rg_dist],
+        ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle', 'range_dist'])
+    shared.iterable_split(__parallelly_write, combinations, params, ifg_path)
 
-        dest = os.path.join(params[C.OUT_DIR], ot + ".tif")
-        __save_geom_files(ifg_path, dest, out, ot)
+
+def __parallelly_write(tup, params, ifg_path):
+    out, ot = tup
+    dest = os.path.join(params[C.OUT_DIR], ot + ".tif")
+    if mpiops.size > 0:
+        log.debug(f"Writing {dest} using process {mpiops.rank}")
+    __save_geom_files(ifg_path, dest, out, ot)
 
 
 out_type_md_dict = {
