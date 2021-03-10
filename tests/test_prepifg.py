@@ -47,7 +47,7 @@ from pyrate.configuration import Configuration, MultiplePaths
 from pyrate import conv2tif, prepifg
 
 from tests import common
-from tests.common import SML_TEST_LEGACY_PREPIFG_DIR, PYTHON3P9, BASE_TEST
+from tests.common import SML_TEST_LEGACY_PREPIFG_DIR, PY37GDAL302, BASE_TEST
 from tests.common import PREP_TEST_TIF, PREP_TEST_OBS, MEXICO_CROPA_CONF, assert_two_dirs_equal
 from tests.common import SML_TEST_DEM_TIF, SML_TEST_DEM_HDR, manipulate_test_conf, UnitTestAdaptation
 
@@ -922,7 +922,7 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, params, t
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(not PYTHON3P9, reason="Only run in one CI env")
+@pytest.mark.skipif(not PY37GDAL302, reason="Only run in one CI env")
 def test_coh_stats_equality(mexico_cropa_params):
     subprocess.run(f"mpirun -n 2 pyrate prepifg -f {MEXICO_CROPA_CONF.as_posix()}", shell=True)
     params = mexico_cropa_params
