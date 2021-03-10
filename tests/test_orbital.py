@@ -771,8 +771,6 @@ class TestLegacyComparisonTestsOrbfitMethod1:
             for k, j in enumerate([m.tmp_sampled_path for m in multi_paths]):
                 ifg = Ifg(j)
                 ifg.open()
-                print(f)
-                print(j)
                 if os.path.basename(j).split('_ifg.')[0] == os.path.basename(f).split(
                         '_orb_planar_1lks_method1_geo_')[1].split('.')[0]:
                     count += 1

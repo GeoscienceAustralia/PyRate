@@ -103,7 +103,7 @@ class TestPyRateAngleFiles:
         # exp = -2.94684600830078
         # GAMMA azimuth is defined towards satellite in an anti-clockwise angle system, with East being zero
         # PyRate azimuth angle is defined towards the satellite in a clockwise angle system with North being zero
-        tif_file = join(self.params[C.OUT_DIR], 'azimuth_angle.tif')
+        tif_file = join(self.params[C.GEOMETRY_DIR], 'azimuth_angle.tif')
         azimuth_angle_pyrate = self.get_pyrate_angle(x0, y0, tif_file)
         # convert PyRate azimuth into GAMMA azimuth
         res = -(azimuth_angle_pyrate - np.pi / 2)
@@ -121,7 +121,7 @@ class TestPyRateAngleFiles:
         # exp = 1.0111095905304
         # GAMMA angle is defined from the horizontal plane with the zenith direction being pi / 2 radians (i.e.90 deg)
         # PyRate angle is defined from the vertical axis with the zenith direction being zero
-        tif_file = join(self.params[C.OUT_DIR], 'incidence_angle.tif')
+        tif_file = join(self.params[C.GEOMETRY_DIR], 'incidence_angle.tif')
         incidence_angle_pyrate = self.get_pyrate_angle(x0, y0, tif_file)
         # convert PyRate incidence into GAMMA incidence
         res = np.pi / 2 - incidence_angle_pyrate
@@ -146,10 +146,10 @@ class TestPyRateAngleFiles:
         lon, lat = get_lonlat_coords(ifg0)
 
         # read incidence and look angle files
-        tif_file = join(self.params[C.OUT_DIR], 'incidence_angle.tif')
+        tif_file = join(self.params[C.GEOMETRY_DIR], 'incidence_angle.tif')
         geom = Geometry(tif_file)
         incidence_angle = geom.data
-        tif_file = join(self.params[C.OUT_DIR], 'look_angle.tif')
+        tif_file = join(self.params[C.GEOMETRY_DIR], 'look_angle.tif')
         geom = Geometry(tif_file)
         look_angle = geom.data
         # get metadata
