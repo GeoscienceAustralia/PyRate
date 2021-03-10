@@ -509,6 +509,14 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": [1, 0],
         "Required": False
     },
+    "los_projection": {
+        "DataType": int,
+        "DefaultValue": 0,
+        "MinValue": 0,
+        "MaxValue": 2,
+        "PossibleValues": [2, 1, 0],
+        "Required": False
+    },
     "correct": {
         "DataType": list,
         "DefaultValue": ['orbfit', 'refphase', 'demerror', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack'],

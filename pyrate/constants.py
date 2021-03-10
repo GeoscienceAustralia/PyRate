@@ -278,15 +278,6 @@ GEOMETRY_OUTPUT_TYPES = ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_an
 
 # LOS projection
 LOS_PROJECTION = 'los_projection'
-LINE_OF_SIGHT = 0
-PSEUDO_VERTICAL = 1
-PSEUDO_HORIZONTAL = 2
-
-LOS_PROJECTION_OPTION = {
-    LINE_OF_SIGHT: 'LINE-OF-SIGHT',
-    PSEUDO_VERTICAL: 'PSEUDO-VERTICAL',
-    PSEUDO_HORIZONTAL: 'PSEUDO-HORIZONTAL'
-}
 
 # dir for temp files
 TMPDIR = 'tmpdir'

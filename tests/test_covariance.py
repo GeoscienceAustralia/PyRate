@@ -19,7 +19,6 @@ This Python module contains tests for the covariance.py PyRate module.
 import os
 import shutil
 from pathlib import Path
-import pytest
 from numpy import array
 import numpy as np
 from numpy.testing import assert_array_almost_equal

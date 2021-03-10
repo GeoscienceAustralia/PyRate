@@ -89,7 +89,7 @@ def _merge_stack(params: dict) -> None:
 
     # save geotiff and numpy array files
     for out, ot in zip([rate, error, samples], ['stack_rate', 'stack_error', 'stack_samples']):
-        __save_merged_files(ifgs_dict, params[C.OUT_DIR], out, ot, savenpy=params["savenpy"])
+        __save_merged_files(ifgs_dict, params, out, ot, savenpy=params["savenpy"])
 
 
 def _merge_linrate(params: dict) -> None:
@@ -105,7 +105,7 @@ def _merge_linrate(params: dict) -> None:
     process_out_types = mpiops.array_split(out_types)
     for p_out_type in process_out_types:
         out = assemble_tiles(shape, params[C.TMPDIR], tiles, out_type=p_out_type)
-        __save_merged_files(ifgs_dict, params[C.OUT_DIR], out, p_out_type, savenpy=params["savenpy"])
+        __save_merged_files(ifgs_dict, params, out, p_out_type, savenpy=params["savenpy"])
     mpiops.comm.barrier()
 
 
@@ -130,7 +130,7 @@ def _merge_timeseries(params: dict, tstype: str) -> None:
              'total {}'.format(mpiops.rank, len(process_tifs), tstype, no_ts_tifs))
     for i in process_tifs:
         ts_arr = assemble_tiles(shape, params[C.TMPDIR], tiles, out_type=tstype, index=i)
-        __save_merged_files(ifgs_dict, params[C.OUT_DIR], ts_arr, out_type=tstype, index=i, savenpy=params["savenpy"])
+        __save_merged_files(ifgs_dict, params, ts_arr, out_type=tstype, index=i, savenpy=params["savenpy"])
 
     mpiops.comm.barrier()
     log.debug('Process {} finished writing {} {} time series tifs of '
@@ -270,12 +270,18 @@ out_type_md_dict = {
 }
 
 los_projection_out_types = {'tsincr', 'tscuml', 'linear_rate', 'stack_rate'}
+los_projection_multiplier = {
+    ifc.LINE_OF_SIGHT: np.ones_like,
+    ifc.PSEUDO_VERTICAL: np.sin,
+    ifc.PSEUDO_HORIZONTAL: np.cos
+}
 
 
-def __save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=None):
+def __save_merged_files(ifgs_dict, params, array, out_type, index=None, savenpy=None):
     """
     Convenience function to save PyRate geotiff and numpy array files
     """
+    outdir = params[C.OUT_DIR]
     log.debug('Saving PyRate outputs {}'.format(out_type))
     gt, md, wkt = ifgs_dict['gt'], ifgs_dict['md'], ifgs_dict['wkt']
     epochlist = ifgs_dict['epochlist']
@@ -293,6 +299,14 @@ def __save_merged_files(ifgs_dict, outdir, array, out_type, index=None, savenpy=
         md[ifc.EPOCH_DATE] = [d.strftime('%Y-%m-%d') for d in epochlist.dates]
 
     md[ifc.DATA_TYPE] = out_type_md_dict[out_type]
+
+    if out_type in los_projection_out_types:  # apply LOS projection
+        incidence_path = Path(Configuration.geometry_files(params)['incidence_angle'])
+        if incidence_path.exists():  #  We can do LOS projection
+            incidence = shared.Ifg(incidence_path)
+            incidence.open()
+            array *= los_projection_multiplier[params[C.LOS_PROJECTION]](incidence.phase_data)
+            md[C.LOS_PROJECTION] = ifc.LOS_PROJECTION_OPTION[params[C.LOS_PROJECTION]]
 
     shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
     if savenpy:
