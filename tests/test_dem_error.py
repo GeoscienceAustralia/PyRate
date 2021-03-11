@@ -2,6 +2,7 @@ import shutil
 import glob
 import os
 from os.path import join
+from pathlib import Path
 from scipy.interpolate import griddata
 import math
 import pytest
@@ -227,11 +228,11 @@ class TestDEMErrorResults:
         dem_error_ifg3_path = join(dem_error_path, '20180412-20180518_ifg_20_dem_error.npy')
         dem_error_ifg3_exp = np.load(dem_error_ifg3_path)
         # load correction values saved from this run (result)
-        dem_error_ifg1_path = join(self.params[C.OUT_DIR], 'dem_error/20180106-20180319_ifg_20_dem_error.npy')
+        dem_error_ifg1_path = Path(self.params[C.DEM_ERROR_DIR]).joinpath('20180106-20180319_ifg_20_dem_error.npy')
         dem_error_ifg1_res = np.load(dem_error_ifg1_path)
-        dem_error_ifg2_path = join(self.params[C.OUT_DIR], 'dem_error/20180130-20180412_ifg_20_dem_error.npy')
+        dem_error_ifg2_path = Path(self.params[C.DEM_ERROR_DIR]).joinpath('20180130-20180412_ifg_20_dem_error.npy')
         dem_error_ifg2_res = np.load(dem_error_ifg2_path)
-        dem_error_ifg3_path = join(self.params[C.OUT_DIR], 'dem_error/20180412-20180518_ifg_20_dem_error.npy')
+        dem_error_ifg3_path = Path(self.params[C.DEM_ERROR_DIR]).joinpath('20180412-20180518_ifg_20_dem_error.npy')
         dem_error_ifg3_res = np.load(dem_error_ifg3_path)
         # check equality
         np.testing.assert_allclose(dem_error_ifg1_exp, dem_error_ifg1_res)

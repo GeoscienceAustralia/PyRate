@@ -146,8 +146,7 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
             6
         )
 
-    assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
-        C.OUT_DIR],
+    assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[C.OUT_DIR],
                                ["*_ifg.tif", "*_coh.tif", "dem.tif"], no_of_files)
 
     num_files = 30 if gamma_conf == MEXICO_CROPA_CONF else 17
