@@ -288,9 +288,9 @@ TMPDIR = 'tmpdir'
 
 # filenames reused in  many parts of the program
 REF_PIXEL_FILE = 'ref_pixel_file'
-ORB_ERROR_DIR = 'orb_error'
-DEM_ERROR_DIR = 'dem_error'
-APS_ERROR_DIR = 'aps_error'
+ORB_ERROR_DIR = 'orb_error_dir'
+DEM_ERROR_DIR = 'dem_error_dir'
+APS_ERROR_DIR = 'aps_error_dir'
 PHASE_CLOSURE_DIR = 'phase_closure_dir'
 MST_DIR = 'mst_dir'
 TEMP_MLOOKED_DIR = 'temp_mlooked_dir'

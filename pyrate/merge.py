@@ -270,7 +270,7 @@ out_type_md_dict = {
 }
 
 los_projection_out_types = {'tsincr', 'tscuml', 'linear_rate', 'stack_rate'}
-los_projection_multiplier = {
+los_projection_divisors = {
     ifc.LINE_OF_SIGHT: np.ones_like,
     ifc.PSEUDO_VERTICAL: np.sin,
     ifc.PSEUDO_HORIZONTAL: np.cos
@@ -305,10 +305,12 @@ def __save_merged_files(ifgs_dict, params, array, out_type, index=None, savenpy=
         if incidence_path.exists():  #  We can do LOS projection
             incidence = shared.Geometry(incidence_path)
             incidence.open()
-            array *= los_projection_multiplier[params[C.LOS_PROJECTION]](incidence.data)
+            array /= los_projection_divisors[params[C.LOS_PROJECTION]](incidence.data)
             md[C.LOS_PROJECTION] = ifc.LOS_PROJECTION_OPTION[params[C.LOS_PROJECTION]]
 
     shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
+    if C.LOS_PROJECTION in md:   # clear the extra metadata so it does not mess up other images
+        md.pop(C.LOS_PROJECTION)
     if savenpy:
         np.save(file=npy_file, arr=array)
 

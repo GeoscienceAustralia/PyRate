@@ -160,37 +160,28 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
 
     # 2 x because of aps files
     assert_same_files_produced(params[C.TMPDIR], params_m[C.TMPDIR], params_s[
-        C.TMPDIR], "tsincr_*.npy",
-                               params['notiles'] * 2)
+        C.TMPDIR], "tsincr_*.npy", params['notiles'] * 2)
 
     assert_same_files_produced(params[C.TMPDIR], params_m[C.TMPDIR], params_s[
         C.TMPDIR], "tscuml_*.npy", params['notiles'])
 
     assert_same_files_produced(params[C.TMPDIR], params_m[C.TMPDIR], params_s[
-        C.TMPDIR], "linear_rate_*.npy",
-                               params['notiles'])
+        C.TMPDIR], "linear_rate_*.npy", params['notiles'])
     assert_same_files_produced(params[C.TMPDIR], params_m[C.TMPDIR], params_s[
-        C.TMPDIR], "linear_error_*.npy",
-                               params['notiles'])
+        C.TMPDIR], "linear_error_*.npy", params['notiles'])
     assert_same_files_produced(params[C.TMPDIR], params_m[C.TMPDIR], params_s[
-        C.TMPDIR], "linear_intercept_*.npy",
-                               params['notiles'])
+        C.TMPDIR], "linear_intercept_*.npy", params['notiles'])
     assert_same_files_produced(params[C.TMPDIR], params_m[C.TMPDIR], params_s[
-        C.TMPDIR], "linear_rsquared_*.npy",
-                               params['notiles'])
+        C.TMPDIR], "linear_rsquared_*.npy", params['notiles'])
     assert_same_files_produced(params[C.TMPDIR], params_m[C.TMPDIR], params_s[
-        C.TMPDIR], "linear_samples_*.npy",
-                               params['notiles'])
+        C.TMPDIR], "linear_samples_*.npy", params['notiles'])
 
     assert_same_files_produced(params[C.TMPDIR], params_m[C.TMPDIR], params_s[
-        C.TMPDIR], "stack_rate_*.npy",
-                               params['notiles'])
+        C.TMPDIR], "stack_rate_*.npy", params['notiles'])
     assert_same_files_produced(params[C.TMPDIR], params_m[C.TMPDIR], params_s[
-        C.TMPDIR], "stack_error_*.npy",
-                               params['notiles'])
+        C.TMPDIR], "stack_error_*.npy", params['notiles'])
     assert_same_files_produced(params[C.TMPDIR], params_m[C.TMPDIR], params_s[
-        C.TMPDIR], "stack_samples_*.npy",
-                               params['notiles'])
+        C.TMPDIR], "stack_samples_*.npy", params['notiles'])
 
     # compare merge step
     assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
@@ -343,7 +334,7 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     3. Doing 1 and 2 means we have checked single vs parallel python multiprocess pipelines
     4. This also checks the entire pipeline using largetifs (new prepifg) vs old perpifg (python based)
     """
-    if np.random.randint(0, 1000) > 100:  # skip 90% of tests randomly
+    if np.random.randint(0, 1000) > 300:  # skip 90% of tests randomly
         pytest.skip("Randomly skipping as part of 60 percent")
 
     print("\n\n")

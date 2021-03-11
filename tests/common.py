@@ -611,6 +611,12 @@ def manipulate_test_conf(conf_file, temp_obs_dir: Path):
     params[C.TMPDIR] = outdir.joinpath(Path(params[C.TMPDIR]).name).as_posix()
     params[C.COHERENCE_DIR] = outdir.joinpath(C.COHERENCE_DIR).as_posix()
     params[C.GEOMETRY_DIR] = outdir.joinpath(C.GEOMETRY_DIR).as_posix()
+    params[C.APS_ERROR_DIR] = outdir.joinpath(C.APS_ERROR_DIR).as_posix()
+    params[C.MST_DIR] = outdir.joinpath(C.MST_DIR).as_posix()
+    params[C.ORB_ERROR_DIR] = outdir.joinpath(C.ORB_ERROR_DIR).as_posix()
+    params[C.PHASE_CLOSURE_DIR] = outdir.joinpath(C.PHASE_CLOSURE_DIR).as_posix()
+    params[C.DEM_ERROR_DIR] = outdir.joinpath(C.DEM_ERROR_DIR).as_posix()
+
     return params
 
 
