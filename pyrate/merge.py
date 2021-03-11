@@ -271,9 +271,9 @@ out_type_md_dict = {
 
 los_projection_out_types = {'tsincr', 'tscuml', 'linear_rate', 'stack_rate'}
 los_projection_divisors = {
-    ifc.LINE_OF_SIGHT: np.ones_like,
-    ifc.PSEUDO_VERTICAL: np.sin,
-    ifc.PSEUDO_HORIZONTAL: np.cos
+    ifc.LINE_OF_SIGHT: lambda data: 1,
+    ifc.PSEUDO_VERTICAL: lambda data: np.sin(data),
+    ifc.PSEUDO_HORIZONTAL: lambda data: np.cos(data)
 }
 
 
@@ -300,9 +300,9 @@ def __save_merged_files(ifgs_dict, params, array, out_type, index=None, savenpy=
 
     md[ifc.DATA_TYPE] = out_type_md_dict[out_type]
 
-    if out_type in los_projection_out_types:  # apply LOS projection
+    if out_type in los_projection_out_types:  # apply LOS projection for these outputs
         incidence_path = Path(Configuration.geometry_files(params)['incidence_angle'])
-        if incidence_path.exists():  #  We can do LOS projection
+        if incidence_path.exists():  # We can do LOS projection
             incidence = shared.Geometry(incidence_path)
             incidence.open()
             array /= los_projection_divisors[params[C.LOS_PROJECTION]](incidence.data)
