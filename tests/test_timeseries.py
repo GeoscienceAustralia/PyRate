@@ -19,6 +19,7 @@ This Python module contains tests for the timeseries.py PyRate module.
 """
 import os
 import shutil
+from copy import deepcopy
 import pytest
 from datetime import date, timedelta
 from numpy import nan, asarray, where, array
@@ -399,6 +400,18 @@ class TestLinearRateArray:
         assert_array_almost_equal(self.rsq, r, 1e-20)
         assert_array_almost_equal(self.error, e, 1e-20)
         assert_array_almost_equal(self.samp, s, 1e-20)
+
+    def test_linear_rate_array_two_sigma(self):
+        """
+        Check that the "nsigma" switch in the config dictionary
+        actually results in a change in the error map.
+        """
+        # make a deep copy of the params dict to avoid changing
+        # state for other tests if this one fails
+        params = deepcopy(self.params)
+        params["velerror_nsig"] = 2
+        _, _, _, e, _ = linear_rate_array(self.tscuml, self.ifgs, params)
+        assert_array_almost_equal(self.error*2, e, 1e-20)
 
     def test_linear_rate_array_exception(self):
         # depth of tscuml should equal nepochs

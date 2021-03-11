@@ -111,8 +111,10 @@ class TestLegacyEquality:
     @classmethod
     def setup_class(cls):
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
-        params[C.TEMP_MLOOKED_DIR] = os.path.join(params[C.OUT_DIR],
-                                                                 C.TEMP_MLOOKED_DIR)
+        params[C.TEMP_MLOOKED_DIR] = os.path.join(params[C.OUT_DIR], C.TEMP_MLOOKED_DIR)
+
+        # force error maps to 1-sigma to match legacy
+        params["velerror_nsig"] = 1
         conv2tif.main(params)
         prepifg.main(params)
 
