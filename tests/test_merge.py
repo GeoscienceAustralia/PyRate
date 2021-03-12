@@ -91,4 +91,4 @@ def test_file_creation(create_pre_merge_output, los_projection):
 def __check_md(los_projection, output_image_path):
     ifg = DEM(output_image_path)
     ifg.open()
-    assert ifg.dataset.GetMetadataItem(C.LOS_PROJECTION) == LOS_PROJECTION_OPTION[los_projection]
+    assert ifg.dataset.GetMetadataItem(C.LOS_PROJECTION.upper()) == LOS_PROJECTION_OPTION[los_projection]
