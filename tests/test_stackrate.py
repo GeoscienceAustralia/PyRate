@@ -122,7 +122,7 @@ class TestLegacyEquality:
 
         xlks, _, crop = pyrate.core.prepifg_helper.transform_params(params)
 
-        dest_paths, headers = common.repair_params_for_correct_tests(params[C.OUT_DIR], params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[C.INTERFEROGRAM_DIR], params)
         correct._copy_mlooked(params)
         copied_dest_paths = [os.path.join(params[C.TEMP_MLOOKED_DIR], os.path.basename(d)) for d in dest_paths]
         del dest_paths

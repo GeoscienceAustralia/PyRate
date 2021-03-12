@@ -169,7 +169,7 @@ class TestRefPhsEstimationLegacyTestMethod1Serial:
         params[C.PARALLEL] = False
         params[C.ORBFIT_OFFSET] = True
 
-        dest_paths, headers = common.repair_params_for_correct_tests(params[C.OUT_DIR], params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[C.INTERFEROGRAM_DIR], params)
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
         mst_grid = common.mst_calculation(dest_paths, params)
@@ -252,7 +252,7 @@ class TestRefPhsEstimationLegacyTestMethod1Parallel:
         params[C.PARALLEL] = True
         params[C.ORBFIT_OFFSET] = True
 
-        dest_paths, headers = common.repair_params_for_correct_tests(params[C.OUT_DIR], params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[C.INTERFEROGRAM_DIR], params)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -336,7 +336,7 @@ class TestRefPhsEstimationLegacyTestMethod2Serial:
         params[C.PARALLEL] = False
         params[C.ORBFIT_OFFSET] = True
 
-        dest_paths, headers = common.repair_params_for_correct_tests(params[C.OUT_DIR], params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[C.INTERFEROGRAM_DIR], params)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)
@@ -422,7 +422,7 @@ class TestRefPhsEstimationLegacyTestMethod2Parallel:
         params[C.PARALLEL] = 1
         params[C.ORBFIT_OFFSET] = True
 
-        dest_paths, headers = common.repair_params_for_correct_tests(params[C.OUT_DIR], params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[C.INTERFEROGRAM_DIR], params)
 
         # start run_pyrate copy
         ifgs = common.pre_prepare_ifgs(dest_paths, params)

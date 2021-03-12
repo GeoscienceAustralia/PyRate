@@ -338,7 +338,8 @@ class TestWriteUnw:
     def setup_class(cls, gamma_params):
         # change the required params
         shared.mkdir_p(gamma_params[C.OUT_DIR])
-        cls.params = gamma_params
+        from copy import deepcopy
+        cls.params = deepcopy(gamma_params)
         cls.params[C.OBS_DIR] = common.SML_TEST_GAMMA
         cls.params[C.PROCESSOR] = 1  # gamma
         cls.params[C.PARALLEL] = 0
@@ -346,16 +347,18 @@ class TestWriteUnw:
         cls.params[C.DEM_FILE] = common.SML_TEST_DEM_GAMMA
         cls.params[C.BASE_FILE_LIST] = common.SML_TEST_GAMMA
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
-        cls.base_unw_paths = tests.common.original_ifg_paths(cls.params[C.IFG_FILE_LIST], cls.params[
-            C.OBS_DIR])
+        cls.base_unw_paths = tests.common.original_ifg_paths(cls.params[C.IFG_FILE_LIST], cls.params[C.OBS_DIR])
         cls.base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
 
         # dest_paths are tifs that have been geotif converted and multilooked
         conv2tif.main(cls.params)
         prepifg.main(cls.params)
 
-        cls.dest_paths = [Path(cls.params[C.OUT_DIR]).joinpath(Path(c.sampled_path).name).as_posix()
-                          for c in cls.params[C.INTERFEROGRAM_FILES][:-2]]
+        cls.dest_paths = [Path(cls.params[C.INTERFEROGRAM_DIR]).joinpath(Path(c.sampled_path).name).as_posix()
+                          for c in gamma_params[C.INTERFEROGRAM_FILES]]
+        cls.dest_paths += [Path(cls.params[C.COHERENCE_DIR]).joinpath(Path(c.sampled_path).name).as_posix()
+                          for c in gamma_params[C.COHERENCE_FILE_PATHS]]
+
         cls.ifgs = [dem_or_ifg(i) for i in cls.dest_paths]
         for i in cls.ifgs:
             i.open()
@@ -436,8 +439,9 @@ class TestWriteUnw:
 
         # Ensure original multilooked geotiffs and 
         #  unw back to geotiff are the same
-        geotiffs.sort()
-        new_geotiffs.sort()
+        geotiffs.sort(key=lambda x: Path(x).name)
+        new_geotiffs.sort(key=lambda x: Path(x).name)
+
         for g, u in zip(geotiffs, new_geotiffs):
             g_ds = gdal.Open(g)
             u_gs = gdal.Open(u)
