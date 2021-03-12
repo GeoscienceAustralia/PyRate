@@ -306,11 +306,11 @@ def __save_merged_files(ifgs_dict, params, array, out_type, index=None, savenpy=
             incidence = shared.Geometry(incidence_path)
             incidence.open()
             array /= los_projection_divisors[params[C.LOS_PROJECTION]](incidence.data)
-            md[C.LOS_PROJECTION] = ifc.LOS_PROJECTION_OPTION[params[C.LOS_PROJECTION]]
+            md[C.LOS_PROJECTION.upper()] = ifc.LOS_PROJECTION_OPTION[params[C.LOS_PROJECTION]]
 
     shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
     if C.LOS_PROJECTION in md:   # clear the extra metadata so it does not mess up other images
-        md.pop(C.LOS_PROJECTION)
+        md.pop(C.LOS_PROJECTION.upper())
     if savenpy:
         np.save(file=npy_file, arr=array)
 
