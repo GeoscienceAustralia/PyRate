@@ -132,7 +132,7 @@ def modified_config_largetifs(tempdir, local_crop, get_lks, coh_mask):
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(True, reason="Only run in one CI env")  # disable these tests as we are not using largetifs option
+@pytest.mark.skipif(not PY37GDAL302, reason="Only run in one CI env")
 def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, create_mpi_files):
 
     print("\n\n")
@@ -148,20 +148,22 @@ def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, crea
     prepifg.main(params_p)
     params_p = Configuration(sr_conf).__dict__
     # convert2tif tests, 17 interferograms
-    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "*_unw.tif", 17)
+    assert_two_dirs_equal(params[C.INTERFEROGRAM_DIR], params_p[C.INTERFEROGRAM_DIR], "*_unw.tif", 17)
 
     # if coherence masking, compare coh files were converted
     if params[C.COH_FILE_LIST] is not None:
-        assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "*_cc.tif", 17)
+        assert_two_dirs_equal(params[C.COHERENCE_DIR], params_p[C.COHERENCE_DIR], "*_cc.tif", 17)
         # 17 ifgs + 1 dem + 17 mlooked file
-        assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "*_coh.tif", 17)
+        assert_two_dirs_equal(params[C.COHERENCE_DIR], params_p[C.COHERENCE_DIR], "*_coh.tif", 17)
+        assert_two_dirs_equal(params[C.COHERENCE_DIR], params_p[C.COHERENCE_DIR], ["coh_*.tif"], 3)
 
-    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "*_dem.tif", 1)
+    assert_two_dirs_equal(params[C.GEOMETRY_DIR], params_p[C.GEOMETRY_DIR], "*_dem.tif", 1)
+    assert_two_dirs_equal(params[C.GEOMETRY_DIR], params_p[C.GEOMETRY_DIR],
+                          [t + '.tif' for t in C.GEOMETRY_OUTPUT_TYPES], 6)
     # prepifg
     # 17 ifgs + 1 dem
-    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "*_ifg.tif", 17)
-    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "dem.tif", 1)
-
+    assert_two_dirs_equal(params[C.INTERFEROGRAM_DIR], params_p[C.INTERFEROGRAM_DIR], "*_ifg.tif", 17)
+    assert_two_dirs_equal(params[C.GEOMETRY_DIR], params_p[C.GEOMETRY_DIR], "dem.tif", 1)
 
     print("==========================xxx===========================")
 
