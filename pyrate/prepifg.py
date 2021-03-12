@@ -334,7 +334,7 @@ def __write_geometry_files(params: dict, exts: Tuple[float, float, float, float]
     az, rg = geometry.calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax)
 
     # Read height data from DEM
-    dem_file = os.path.join(params[C.OUT_DIR], 'dem.tif')
+    dem_file = params[C.DEM_FILE_PATH].sampled_path
     dem = DEM(dem_file)
     # calculate per-pixel look angle (also calculates and saves incidence and azimuth angles)
     lk_ang, inc_ang, az_ang, rg_dist = geometry.calc_pixel_geometry(ifg, rg, lon.data, lat.data, dem.data)

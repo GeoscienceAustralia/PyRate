@@ -103,13 +103,16 @@ class MultiplePaths:
         else:
             filestr = ''
 
+        dir_exists = input_type.value in InputTypes.dir_map.value.keys()
+        anchoring_dir = Path(out_dir).joinpath(InputTypes.dir_map.value[input_type.value]) if dir_exists else Path(out_dir)
+
         if b.suffix == ".tif":
             self.unwrapped_path = None
             converted_path = b  # original file
-            self.sampled_path = Path(out_dir).joinpath(filestr + input_type.value + '.tif')
+            self.sampled_path = anchoring_dir.joinpath(filestr + input_type.value + '.tif')
         else:
             self.unwrapped_path = b.as_posix()
-            converted_path = Path(out_dir).joinpath(b.stem.split('.')[0] + '_' + b.suffix[1:]).with_suffix('.tif')
+            converted_path = anchoring_dir.joinpath(b.stem.split('.')[0] + '_' + b.suffix[1:]).with_suffix('.tif')
             self.sampled_path = converted_path.with_name(filestr + input_type.value + '.tif')
 
         # tmp_sampled_paths are used after prepifg, during correct steps
@@ -252,6 +255,9 @@ class Configuration:
         # create orbfit error dir
         self.orb_error_dir = Path(self.outdir).joinpath(ORB_ERROR_DIR)
         self.orb_error_dir.mkdir(parents=True, exist_ok=True)
+
+        self.interferogram_dir = Path(self.outdir).joinpath(C.INTERFEROGRAM_DIR)
+        self.interferogram_dir.mkdir(parents=True, exist_ok=True)
 
         # create DEM error dir
         self.dem_error_dir = Path(self.outdir).joinpath(DEM_ERROR_DIR)
