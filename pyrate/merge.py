@@ -311,7 +311,7 @@ def __save_merged_files(ifgs_dict, params, array, out_type, index=None, savenpy=
             md[C.LOS_PROJECTION.upper()] = ifc.LOS_PROJECTION_OPTION[params[C.LOS_PROJECTION]]
 
     shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
-    if C.LOS_PROJECTION in md:   # clear the extra metadata so it does not mess up other images
+    if C.LOS_PROJECTION.upper() in md:   # clear the extra metadata so it does not mess up other images
         md.pop(C.LOS_PROJECTION.upper())
     if savenpy:
         np.save(file=npy_file, arr=array)
