@@ -54,7 +54,7 @@ def test_conv2tif_file_types(tempdir, gamma_conf):
     conv2tif.main(params_s)
     ifg_files = list(Path(tdir.joinpath(params_s[C.OUT_DIR])).glob('*_ifg.tif'))
     coh_files = list(Path(tdir.joinpath(params_s[C.OUT_DIR])).glob('*_coh.tif'))
-    dem_file = list(Path(tdir.joinpath(params_s[C.OUT_DIR])).glob('*_dem.tif'))[0]
+    dem_file = list(Path(tdir.joinpath(params_s[C.GEOMETRY_DIR])).glob('*_dem.tif'))[0]
     # assert coherence and ifgs have correct metadata
     for i in itertools.chain(*[ifg_files, coh_files]):
         ifg = Ifg(i)
@@ -77,11 +77,14 @@ def test_conv2tif_file_types(tempdir, gamma_conf):
 
 def test_tifs_placed_in_out_dir(gamma_params):
     # Test no tifs in obs dir
-    tifs = glob.glob(os.path.join(gamma_params[C.OUT_DIR], '*.tif'))
+    tifs = glob.glob(os.path.join(gamma_params[C.INTERFEROGRAM_DIR], '*.tif'))
     assert len(tifs) == 0
     # Test tifs in obs dir
     conv2tif.main(gamma_params)
-    tifs = glob.glob(os.path.join(gamma_params[C.OUT_DIR], '*.tif'))
+    tifs = glob.glob(os.path.join(gamma_params[C.INTERFEROGRAM_DIR], '*.tif')) + \
+        glob.glob(os.path.join(gamma_params[C.COHERENCE_DIR], '*.tif')) + \
+        glob.glob(os.path.join(gamma_params[C.GEOMETRY_DIR], '*.tif')) \
+
     assert len(tifs) == 35
 
 

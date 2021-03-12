@@ -104,7 +104,8 @@ class MultiplePaths:
             filestr = ''
 
         dir_exists = input_type.value in InputTypes.dir_map.value.keys()
-        anchoring_dir = Path(out_dir).joinpath(InputTypes.dir_map.value[input_type.value]) if dir_exists else Path(out_dir)
+        anchoring_dir = Path(out_dir).joinpath(InputTypes.dir_map.value[input_type.value]) \
+            if dir_exists else Path(out_dir)
 
         if b.suffix == ".tif":
             self.unwrapped_path = None

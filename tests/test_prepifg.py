@@ -68,14 +68,14 @@ def test_prepifg_treats_inputs_and_outputs_read_only(gamma_conf, tempdir, coh_ma
     params = Configuration(output_conf.as_posix()).__dict__
     conv2tif.main(params)
 
-    tifs = list(Path(params[C.OUT_DIR]).glob('*_unw.tif'))
+    tifs = list(Path(params[C.INTERFEROGRAM_DIR]).glob('*_unw.tif'))
     assert len(tifs) == 17
 
     params = Configuration(output_conf.as_posix()).__dict__
     prepifg.main(params)
-    cropped_ifgs = list(Path(params[C.OUT_DIR]).glob('*_ifg.tif'))
-    cropped_cohs = list(Path(params[C.OUT_DIR]).glob('*_coh.tif'))
-    cropped_dem = list(Path(params[C.OUT_DIR]).glob('*_dem.tif'))
+    cropped_ifgs = list(Path(params[C.INTERFEROGRAM_DIR]).glob('*_ifg.tif'))
+    cropped_cohs = list(Path(params[C.COHERENCE_DIR]).glob('*_coh.tif'))
+    cropped_dem = list(Path(params[C.GEOMETRY_DIR]).glob('*_dem.tif'))
 
     if params[C.COH_FILE_LIST] is not None:  # 17 + 1 dem + 17 coh files
         assert len(cropped_ifgs) + len(cropped_cohs) + len(cropped_dem) == 35
@@ -103,17 +103,17 @@ def test_prepifg_file_types(tempdir, gamma_conf, coh_mask):
     # reread params from config
     params_s = Configuration(output_conf).__dict__
     prepifg.main(params_s)
-    ifg_files = list(Path(tdir.joinpath(params_s[C.OUT_DIR])).glob('*_unw.tif'))
+    ifg_files = list(Path(tdir.joinpath(params_s[C.INTERFEROGRAM_DIR])).glob('*_unw.tif'))
     assert len(ifg_files) == 17
-    mlooked_files = list(Path(tdir.joinpath(params_s[C.OUT_DIR])).glob('*_ifg.tif'))
+    mlooked_files = list(Path(tdir.joinpath(params_s[C.INTERFEROGRAM_DIR])).glob('*_ifg.tif'))
     assert len(mlooked_files) == 17
-    coh_files = list(Path(tdir.joinpath(params_s[C.OUT_DIR])).glob('*_cc.tif'))
-    mlooked_coh_files = list(Path(tdir.joinpath(params_s[C.OUT_DIR])).glob('*_coh.tif'))
+    coh_files = list(Path(tdir.joinpath(params_s[C.COHERENCE_DIR])).glob('*_cc.tif'))
+    mlooked_coh_files = list(Path(tdir.joinpath(params_s[C.COHERENCE_DIR])).glob('*_coh.tif'))
     if coh_mask:
         assert len(coh_files) == 17
         assert len(mlooked_coh_files) == 17
-    dem_file = list(Path(tdir.joinpath(params_s[C.OUT_DIR])).glob('*_dem.tif'))[0]
-    mlooked_dem_file = list(Path(tdir.joinpath(params_s[C.OUT_DIR])).glob('dem.tif'))[0]
+    dem_file = list(Path(tdir.joinpath(params_s[C.GEOMETRY_DIR])).glob('*_dem.tif'))[0]
+    mlooked_dem_file = list(Path(tdir.joinpath(params_s[C.GEOMETRY_DIR])).glob('dem.tif'))[0]
     import itertools
 
     # assert coherence and ifgs have correct metadata
@@ -236,6 +236,11 @@ class TestPrepifgOutput(UnitTestAdaptation):
 
         cls.params = Configuration(common.TEST_CONF_ROIPAC).__dict__
         cls.params[C.OUT_DIR] = cls.random_dir
+        cls.params[C.GEOMETRY_DIR] = Path(cls.random_dir).joinpath(C.GEOMETRY_DIR)
+        cls.params[C.GEOMETRY_DIR].mkdir(exist_ok=True)
+        cls.params[C.INTERFEROGRAM_DIR] = Path(cls.random_dir).joinpath(C.INTERFEROGRAM_DIR)
+        cls.params[C.INTERFEROGRAM_DIR].mkdir(exist_ok=True)
+
         cls.headers = [roipac.roipac_header(i.data_path, cls.params) for i in cls.ifgs]
         paths = ["060619-061002_ifg.tif",
                  "060619-061002_ifg.tif",
@@ -245,7 +250,7 @@ class TestPrepifgOutput(UnitTestAdaptation):
                  "070326-070917_ifg.tif",
                  "070326-070917_ifg.tif",
                  "070326-070917_ifg.tif"]
-        cls.exp_files = [join(cls.random_dir, p) for p in paths]
+        cls.exp_files = [join(cls.random_dir, C.INTERFEROGRAM_DIR,  p) for p in paths]
 
     @staticmethod
     def test_mlooked_paths():
@@ -299,6 +304,10 @@ class TestPrepifgOutput(UnitTestAdaptation):
         params[C.IFG_LKSX] = xlooks
         params[C.IFG_LKSY] = ylooks
         params[C.IFG_CROP_OPT] = MAXIMUM_CROP
+        params[C.GEOMETRY_DIR] = Path(out_dir).joinpath(C.GEOMETRY_DIR)
+        params[C.GEOMETRY_DIR].mkdir(exist_ok=True)
+        params[C.INTERFEROGRAM_DIR] = Path(out_dir).joinpath(C.INTERFEROGRAM_DIR)
+        params[C.INTERFEROGRAM_DIR].mkdir(exist_ok=True)
 
         mlooked_paths = [mlooked_path(f, params, input_type=InputTypes.IFG)
                          for f in self.ifg_paths]
@@ -469,7 +478,7 @@ class TestPrepifgOutput(UnitTestAdaptation):
 
         # verify DEM has been correctly processed
         # ignore output values as resampling has already been tested for phase
-        exp_dem_path = join(self.params[C.OUT_DIR], 'dem.tif')
+        exp_dem_path = join(self.params[C.GEOMETRY_DIR], 'dem.tif')
         self.assertTrue(exists(exp_dem_path))
         orignal_dem = DEM(SML_TEST_DEM_TIF)
         orignal_dem.open()
@@ -590,6 +599,11 @@ class TestSameSizeTests(UnitTestAdaptation):
         ]
         out_dir = tempfile.mkdtemp()
         cls.params = common.min_params(out_dir)
+        cls.params[C.GEOMETRY_DIR] = Path(cls.params[C.OUT_DIR]).joinpath(C.GEOMETRY_DIR)
+        cls.params[C.GEOMETRY_DIR].mkdir(exist_ok=True)
+        cls.params[C.INTERFEROGRAM_DIR] = Path(cls.params[C.OUT_DIR]).joinpath(C.INTERFEROGRAM_DIR)
+        cls.params[C.INTERFEROGRAM_DIR].mkdir(exist_ok=True)
+
 
     # TODO: check output files for same extents?
     # TODO: make prepifg dir readonly to test output to temp dir
@@ -621,6 +635,11 @@ class TestSameSizeTests(UnitTestAdaptation):
         params[C.IFG_LKSX] = xlooks
         params[C.IFG_LKSY] = ylooks
         params[C.IFG_CROP_OPT] = ALREADY_SAME_SIZE
+        params[C.GEOMETRY_DIR] = Path(params[C.OUT_DIR]).joinpath(C.GEOMETRY_DIR)
+        params[C.GEOMETRY_DIR].mkdir(exist_ok=True)
+        params[C.INTERFEROGRAM_DIR] = Path(params[C.OUT_DIR]).joinpath(C.INTERFEROGRAM_DIR)
+        params[C.INTERFEROGRAM_DIR].mkdir(exist_ok=True)
+
         prepare_ifgs(ifg_data_paths, ALREADY_SAME_SIZE, xlooks, ylooks, self.headers, params)
         looks_paths = [mlooked_path(d, params, input_type=InputTypes.IFG) for d in ifg_data_paths]
         mlooked = [Ifg(i) for i in looks_paths]
