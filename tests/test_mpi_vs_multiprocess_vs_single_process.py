@@ -33,7 +33,9 @@ from tests.common import (
     manipulate_test_conf,
     MEXICO_CROPA_CONF,
     PY37GDAL304,
+    PY37GDAL302,
     PYTHON3P8,
+    PYTHON3P7
 )
 
 
@@ -85,7 +87,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(not PYTHON3P8, reason="Only run in one CI env")
+@pytest.mark.skipif(not PYTHON3P7, reason="Only run in one CI env")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     """
     Tests proving single/multiprocess/mpi produce same output
@@ -94,8 +96,11 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     if np.random.rand() > 0.1:  # skip 90% of tests randomly
         pytest.skip("Randomly skipping as part of 85 percent")
         if gamma_conf == MEXICO_CROPA_CONF:  # skip cropA conf 95% time
-            if np.random.rand() > 0.5:
+            if np.random.rand() > 0.5 or PY37GDAL302:
                 pytest.skip('skipped in mexicoA')
+        else:
+            if PY37GDAL304:
+                pytest.skip('skipped in gamma')
 
     print("\n\n")
     print("===x==="*10)
@@ -331,7 +336,7 @@ def create_mpi_files():
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(not PY37GDAL304, reason="Only run in one CI env")
+@pytest.mark.skipif(not PYTHON3P8, reason="Only run in one CI env")
 def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_conf, create_mpi_files, parallel):
     """
     Checks performed:
