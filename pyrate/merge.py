@@ -303,8 +303,10 @@ def __save_merged_files(ifgs_dict, params, array, out_type, index=None, savenpy=
     if out_type in los_projection_out_types:  # apply LOS projection for these outputs
         incidence_path = Path(Configuration.geometry_files(params)['incidence_angle'])
         if incidence_path.exists():  # We can do LOS projection
-            if params[C.LOS_PROJECTION] != ifc.LINE_OF_SIGHT:
-                log.info(f"Projecting {out_type} into {ifc.LOS_PROJECTION_OPTION[params[C.LOS_PROJECTION]]} {out_type}")
+            if params[C.LOS_PROJECTION] == ifc.LINE_OF_SIGHT:
+                log.info(f"Retaining Line-of-sight signal projection for file {dest}")
+            elif params[C.LOS_PROJECTION] != ifc.LINE_OF_SIGHT:
+                log.info(f"Projecting Line-of-sight signal into {ifc.LOS_PROJECTION_OPTION[params[C.LOS_PROJECTION]]} for file {dest}")
             incidence = shared.Geometry(incidence_path)
             incidence.open()
             array /= los_projection_divisors[params[C.LOS_PROJECTION]](incidence.data)

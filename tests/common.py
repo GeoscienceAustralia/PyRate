@@ -189,7 +189,8 @@ def assert_tifs_equal(tif1, tif2):
             try:
                 assert md_sds[k] == md_mds[k]
             except AssertionError:
-                assert pytest.approx(float(md_sds[k])) == float(md_mds[k])
+                print(k, md_sds[k], md_mds[k])
+                assert pytest.approx(float(md_sds[k]), 1e-4) == float(md_mds[k])
 
     d1 = mds.ReadAsArray()
     d2 = sds.ReadAsArray()
