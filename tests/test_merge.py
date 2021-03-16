@@ -30,7 +30,7 @@ import numpy as np
 import pyrate.constants as C
 import pyrate.core.ifgconstants as ifc
 from pyrate.merge import create_png_and_kml_from_tif, los_projection_out_types
-from pyrate.merge import _merge_stack, _merge_linrate, _merge_timeseries
+from pyrate.merge import _merge_stack, _merge_linrate, _merge_timeseries, los_projection_divisors
 from pyrate.core.shared import DEM
 from pyrate.core.ifgconstants import LOS_PROJECTION_OPTION
 from pyrate.configuration import Configuration, write_config_file
@@ -57,6 +57,28 @@ def create_pre_merge_output():
 
     params = Configuration(output_conf).__dict__
     return params
+
+
+def test_los_conversion_divisors():
+    """
+    Unit test to check the LOS conversions for specific incidence angles
+    """
+    inc = [0, 30, 45, 90] # incidence angles in degrees
+
+    # Test pseudo-vertical
+    res = [los_projection_divisors[ifc.PSEUDO_VERTICAL](np.radians(x)) for x in inc]
+    exp = [1.0, 0.8660254037844387, 0.7071067811865476, 6.123233995736766e-17]
+    np.testing.assert_almost_equal(res, exp, decimal=6)
+
+    # Test pseudo-horizontal
+    res = [los_projection_divisors[ifc.PSEUDO_HORIZONTAL](np.radians(x)) for x in inc]
+    exp = [0.0, 0.49999999999999994, 0.7071067811865475, 1.0]
+    np.testing.assert_almost_equal(res, exp, decimal=6)
+
+    # Test line-of-sight
+    res = [los_projection_divisors[ifc.LINE_OF_SIGHT](np.radians(x)) for x in inc]
+    exp = [1.0, 1.0, 1.0, 1.0]
+    np.testing.assert_almost_equal(res, exp, decimal=1)
 
 
 @pytest.mark.mpi
