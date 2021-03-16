@@ -1,4 +1,4 @@
-GDAL
+GDAL==3.0.4
 joblib==1.0.0
 mpi4py==3.0.3
 networkx==2.5

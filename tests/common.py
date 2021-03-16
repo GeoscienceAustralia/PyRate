@@ -608,15 +608,12 @@ def manipulate_test_conf(conf_file, temp_obs_dir: Path):
     params[C.OUT_DIR] = outdir.as_posix()
     params[C.TEMP_MLOOKED_DIR] = outdir.joinpath(C.TEMP_MLOOKED_DIR).as_posix()
     params[C.DEM_FILE] = temp_obs_dir.joinpath(Path(params[C.DEM_FILE]).name).as_posix()
-    params[C.DEM_HEADER_FILE] = temp_obs_dir.joinpath(
-        Path(params[C.DEM_HEADER_FILE]).name).as_posix()
-    params[C.HDR_FILE_LIST] = temp_obs_dir.joinpath(
-        Path(params[C.HDR_FILE_LIST]).name).as_posix()
+    params[C.DEM_HEADER_FILE] = temp_obs_dir.joinpath(Path(params[C.DEM_HEADER_FILE]).name).as_posix()
+    params[C.HDR_FILE_LIST] = temp_obs_dir.joinpath(Path(params[C.HDR_FILE_LIST]).name).as_posix()
     params[C.SLC_DIR] = temp_obs_dir.as_posix()
-    params[C.IFG_FILE_LIST] = temp_obs_dir.joinpath(
-        Path(params[C.IFG_FILE_LIST]).name).as_posix()
+    params[C.IFG_FILE_LIST] = temp_obs_dir.joinpath(Path(params[C.IFG_FILE_LIST]).name).as_posix()
     params[C.COH_FILE_DIR] = temp_obs_dir.as_posix()
-    params[C.TMPDIR] = outdir.joinpath(Path(params[C.TMPDIR]).name).as_posix()
+    params[C.TMPDIR] = outdir.joinpath(C.TMPDIR).as_posix()
     params[C.COHERENCE_DIR] = outdir.joinpath(C.COHERENCE_DIR).as_posix()
     params[C.GEOMETRY_DIR] = outdir.joinpath(C.GEOMETRY_DIR).as_posix()
     params[C.APS_ERROR_DIR] = outdir.joinpath(C.APS_ERROR_DIR).as_posix()
