@@ -272,8 +272,8 @@ out_type_md_dict = {
 los_projection_out_types = {'tsincr', 'tscuml', 'linear_rate', 'stack_rate'}
 los_projection_divisors = {
     ifc.LINE_OF_SIGHT: lambda data: 1,
-    ifc.PSEUDO_VERTICAL: lambda data: np.sin(data),
-    ifc.PSEUDO_HORIZONTAL: lambda data: np.cos(data)
+    ifc.PSEUDO_VERTICAL: lambda data: np.cos(data),
+    ifc.PSEUDO_HORIZONTAL: lambda data: np.sin(data)
 }
 
 
