@@ -116,6 +116,6 @@ fcbr = fig.colorbar(im, orientation='horizontal')
 fcbr.set_label('LOS Displacement [mm]')
 ani = animation.ArtistAnimation(fig, ims, interval=500, blit=False)
 #plt.show()
-file = path + 'tscuml_animation.gif'
+file = path + '/tscuml_animation.gif'
 ani.save(file, writer='imagemagick', fps=10, dpi=100)
 print('Animation saved to ' + file)
