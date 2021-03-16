@@ -34,7 +34,7 @@ from pyrate.merge import _merge_stack, _merge_linrate, _merge_timeseries
 from pyrate.core.shared import DEM
 from pyrate.core.ifgconstants import LOS_PROJECTION_OPTION
 from pyrate.configuration import Configuration, write_config_file
-from tests.common import manipulate_test_conf, PY37GDAL304, MEXICO_CROPA_CONF, assert_same_files_produced
+from tests.common import manipulate_test_conf, PY37GDAL302, MEXICO_CROPA_CONF, assert_same_files_produced
 
 
 @pytest.fixture(params=list(LOS_PROJECTION_OPTION.keys()))
@@ -59,6 +59,9 @@ def create_pre_merge_output():
     return params
 
 
+@pytest.mark.mpi
+@pytest.mark.slow
+# @pytest.mark.skipif(not PY37GDAL302, reason="Only run in one CI env")
 def test_los_conversion_comparison(create_pre_merge_output):
     """
     compare outputs in each of the los projection types
@@ -77,11 +80,8 @@ def test_los_conversion_comparison(create_pre_merge_output):
         k_dir.mkdir(exist_ok=True)
 
         for out_type in los_projection_out_types:
-            print(out_type)
-            print(len(list(Path(params[C.OUT_DIR]).glob(out_type + '*.tif'))))
             for tif in Path(params[C.OUT_DIR]).glob(out_type + '*.tif'):
-                print(tif)
-                shutil.move(tif, k_dir)
+                shutil.move(tif, k_dir.joinpath(tif.name))
         all_dirs[k] = k_dir
 
     los_proj_dir = all_dirs[ifc.LINE_OF_SIGHT]
@@ -97,8 +97,8 @@ def test_los_conversion_comparison(create_pre_merge_output):
         ds_hor.open()
         non_nans_indices = ~np.isnan(ds.data)
         # assert division by sine and cosine always yields larger components in vertical and horizontal directions
-        assert np.all(np.abs(ds.data[non_nans_indices]) <= np.abs(ds_ver.data[non_nans_indices]))
-        assert np.all(np.abs(ds.data[non_nans_indices]) <= np.abs(ds_hor.data[non_nans_indices]))
+        assert np.all(np.abs(ds.data[non_nans_indices]) < np.abs(ds_ver.data[non_nans_indices]))
+        assert np.all(np.abs(ds.data[non_nans_indices]) < np.abs(ds_hor.data[non_nans_indices]))
         ds_md = ds.dataset.GetMetadata()
         assert ds_md.pop(C.LOS_PROJECTION.upper()) == ifc.LOS_PROJECTION_OPTION[ifc.LINE_OF_SIGHT]
         ds_ver_md = ds_ver.dataset.GetMetadata()
@@ -111,7 +111,7 @@ def test_los_conversion_comparison(create_pre_merge_output):
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(not PY37GDAL304, reason="Only run in one CI env")
+@pytest.mark.skipif(not PY37GDAL302, reason="Only run in one CI env")
 def test_file_creation(create_pre_merge_output, los_projection):
     params = create_pre_merge_output
     params[C.LOS_PROJECTION] = los_projection
