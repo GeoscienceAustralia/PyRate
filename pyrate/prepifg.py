@@ -107,6 +107,7 @@ def __calc_coherence_stats(params, ifg_path):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
             arr = stat_func(phase_data, axis=0)
+        arr[arr==0.0] = np.nan # convert exact zeros (no-data) to NaN
         dest = coh_stats[out_type]
         __save_geom_files(ifg_path, dest, arr, out_type)
 
