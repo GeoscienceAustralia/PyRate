@@ -38,8 +38,8 @@ else:
 
 requirements = []
 for r in requirements_lines:
-    if r == 'GDAL':
-        requirements.append(r + '=={GDAL_VERSION}'.format(GDAL_VERSION=GDAL_VERSION))
+    if r.startswith('GDAL'):
+        requirements.append('GDAL' + '=={GDAL_VERSION}'.format(GDAL_VERSION=GDAL_VERSION))
     elif r.startswith('mpi4py'):
         if run(args=['which', 'mpirun']).returncode == 0:
             requirements.append(r)
