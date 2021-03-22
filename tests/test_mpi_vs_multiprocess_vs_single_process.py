@@ -50,7 +50,7 @@ def local_crop(request):
 
 
 @pytest.fixture()
-def modified_config(tempdir, get_lks=1, get_crop=1, orbfit_lks=3, orbfit_method=2, orbfit_degrees=2, ref_est_method=1):
+def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfit_degrees, ref_est_method):
     def modify_params(conf_file, parallel_vs_serial, output_conf_file):
         tdir = Path(tempdir())
         params = manipulate_test_conf(conf_file, tdir)
@@ -87,20 +87,20 @@ def modified_config(tempdir, get_lks=1, get_crop=1, orbfit_lks=3, orbfit_method=
 
 @pytest.mark.mpi
 @pytest.mark.slow
-# @pytest.mark.skipif(not PYTHON3P7, reason="Only run in one CI env")
+@pytest.mark.skipif(not PYTHON3P7, reason="Only run in one CI env")
 def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     """
     Tests proving single/multiprocess/mpi produce same output
     """
     gamma_conf = gamma_or_mexicoa_conf
-    # if np.random.rand() > 0.1:  # skip 90% of tests randomly
-    #     pytest.skip("Randomly skipping as part of 85 percent")
-    #     if gamma_conf == MEXICO_CROPA_CONF:  # skip cropA conf 95% time
-    #         if np.random.rand() > 0.5 or PY37GDAL302:
-    #             pytest.skip('skipped in mexicoA')
-    #     else:
-    #         if PY37GDAL304:
-    #             pytest.skip('skipped in gamma')
+    if np.random.rand() > 0.1:  # skip 90% of tests randomly
+        pytest.skip("Randomly skipping as part of 85 percent")
+        if gamma_conf == MEXICO_CROPA_CONF:  # skip cropA conf 95% time
+            if np.random.rand() > 0.5 or PY37GDAL302:
+                pytest.skip('skip mexicoA configs')
+        else:
+            if PY37GDAL304:
+                pytest.skip('skip gamma configs')
 
     print("\n\n")
     print("===x==="*10)
