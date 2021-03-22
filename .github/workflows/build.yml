@@ -94,12 +94,12 @@ jobs:
         if: env.PYTHONVERSION != '3.9'
         run: |
           pip install -r requirements-dev.txt -r requirements-test.txt
-          pytest tests/ -m "slow"
+          pytest tests/ -k test_pipeline_parallel_vs_mpi -m "slow"
           mpirun -n 3 pytest tests/test_shared.py -k test_tiles_split -s
           pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/ -m "not slow"
       - name: Test Pyrate in Python ${{ matrix.python-version }} without MPI
         if: env.PYTHONVERSION == '3.9'
         run: |
           pip install -r requirements-test.txt
-          pytest tests/ -m "not mpi and slow"
+          pytest tests/ -k test_pipeline_parallel_vs_mpi -m "not mpi and slow" -s -x
           pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/ -m "not slow and not mpi"
