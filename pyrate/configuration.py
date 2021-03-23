@@ -260,6 +260,10 @@ class Configuration:
         self.interferogram_dir = Path(self.outdir).joinpath(C.INTERFEROGRAM_DIR)
         self.interferogram_dir.mkdir(parents=True, exist_ok=True)
 
+        # create DEM error dir
+        self.dem_error_dir = Path(self.outdir).joinpath(DEM_ERROR_DIR)
+        self.dem_error_dir.mkdir(parents=True, exist_ok=True)
+
         # create aps error dir
         self.aps_error_dir = Path(self.outdir).joinpath(C.APS_ERROR_DIR)
         self.aps_error_dir.mkdir(parents=True, exist_ok=True)
