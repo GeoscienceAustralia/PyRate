@@ -182,16 +182,7 @@ def assert_tifs_equal(tif1, tif2):
     md_mds = mds.GetMetadata()
     md_sds = sds.GetMetadata()
     # meta data equal
-    try:
-        assert md_mds == md_sds
-    except AssertionError:
-        for k in md_sds.keys():
-            try:
-                assert md_sds[k] == md_mds[k]
-            except AssertionError:
-                print(k, md_sds[k], md_mds[k])
-                assert pytest.approx(float(md_sds[k]), 1e-4) == float(md_mds[k])
-
+    assert md_mds == md_sds
     d1 = mds.ReadAsArray()
     d2 = sds.ReadAsArray()
     # phase equal

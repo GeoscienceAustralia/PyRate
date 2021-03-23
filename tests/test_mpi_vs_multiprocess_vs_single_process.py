@@ -18,7 +18,6 @@ This Python module contains regression tests for comparing output from serial,
 parallel and MPI PyRate runs.
 """
 import shutil
-import os
 import pytest
 from pathlib import Path
 from subprocess import check_call, CalledProcessError, run
@@ -107,27 +106,27 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
 
     mpi_conf, params = modified_config(gamma_conf, 0, 'mpi_conf.conf')
 
-    check_call(f"mpirun -n 2 pyrate conv2tif -f {mpi_conf}", shell=True, env=os.environ)
+    check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
 
-    check_call(f"mpirun -n 2 pyrate prepifg -f {mpi_conf}", shell=True, env=os.environ)
+    check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
 
     try:
-        run(f"mpirun -n 2 pyrate correct -f {mpi_conf}", shell=True, check=True, env=os.environ)
-        run(f"mpirun -n 2 pyrate timeseries -f {mpi_conf}", shell=True, check=True, env=os.environ)
-        run(f"mpirun -n 2 pyrate stack -f {mpi_conf}", shell=True, check=True, env=os.environ)
+        run(f"mpirun -n 3 pyrate correct -f {mpi_conf}", shell=True, check=True)
+        run(f"mpirun -n 3 pyrate timeseries -f {mpi_conf}", shell=True, check=True)
+        run(f"mpirun -n 3 pirate stack -f {mpi_conf}", shell=True, check=True)
     except CalledProcessError as e:
         print(e)
         pytest.skip("Skipping as part of correction error")
 
-    check_call(f"mpirun -n 2 pyrate merge -f {mpi_conf}", shell=True, env=os.environ)
+    check_call(f"mpirun -n 3 pyrate merge -f {mpi_conf}", shell=True)
 
     mr_conf, params_m = modified_config(gamma_conf, 1, 'multiprocess_conf.conf')
 
-    check_call(f"pyrate workflow -f {mr_conf}", shell=True, env=os.environ)
+    check_call(f"pyrate workflow -f {mr_conf}", shell=True)
 
     sr_conf, params_s = modified_config(gamma_conf, 0, 'singleprocess_conf.conf')
 
-    check_call(f"pyrate workflow -f {sr_conf}", shell=True, env=os.environ)
+    check_call(f"pyrate workflow -f {sr_conf}", shell=True)
 
     # convert2tif tests, 17 interferograms
     if not gamma_conf == MEXICO_CROPA_CONF:
@@ -318,17 +317,17 @@ def create_mpi_files():
 
         mpi_conf, params = modified_config_short(gamma_conf, 0, 'mpi_conf.conf', 1)
 
-        check_call(f"mpirun -n 2 pyrate conv2tif -f {mpi_conf}", shell=True)
-        check_call(f"mpirun -n 2 pyrate prepifg -f {mpi_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
 
         try:
-            check_call(f"mpirun -n 2 pyrate correct -f {mpi_conf}", shell=True)
-            check_call(f"mpirun -n 2 pyrate timeseries -f {mpi_conf}", shell=True)
-            check_call(f"mpirun -n 2 pyrate stack -f {mpi_conf}", shell=True)
+            check_call(f"mpirun -n 3 pyrate correct -f {mpi_conf}", shell=True)
+            check_call(f"mpirun -n 3 pyrate timeseries -f {mpi_conf}", shell=True)
+            check_call(f"mpirun -n 3 pyrate stack -f {mpi_conf}", shell=True)
         except CalledProcessError as c:
             print(c)
             pytest.skip("Skipping as we encountered a process error during CI")
-        check_call(f"mpirun -n 2 pyrate merge -f {mpi_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate merge -f {mpi_conf}", shell=True)
         return params
 
     return _create
