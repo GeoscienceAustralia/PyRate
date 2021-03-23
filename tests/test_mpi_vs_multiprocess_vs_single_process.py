@@ -92,9 +92,9 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     Tests proving single/multiprocess/mpi produce same output
     """
     gamma_conf = gamma_or_mexicoa_conf
-    if np.random.rand() > 0.1:  # skip 90% of tests randomly
-        pytest.skip("Randomly skipping as part of 85 percent")
-        if gamma_conf == MEXICO_CROPA_CONF:  # skip cropA conf 95% time
+    if np.random.rand() > 0.2:  # skip 80% of tests randomly
+        pytest.skip("Randomly skipping as part of 80 percent")
+        if gamma_conf == MEXICO_CROPA_CONF:  # skip cropA conf 90% time
             if np.random.rand() > 0.5 or PY37GDAL302:
                 pytest.skip('skip mexicoA configs')
         else:
@@ -107,9 +107,7 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     mpi_conf, params = modified_config(gamma_conf, 0, 'mpi_conf.conf')
 
     check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
-
     check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
-
     try:
         run(f"mpirun -n 3 pyrate correct -f {mpi_conf}", shell=True, check=True)
         run(f"mpirun -n 3 pyrate timeseries -f {mpi_conf}", shell=True, check=True)
