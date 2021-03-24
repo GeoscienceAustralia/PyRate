@@ -124,8 +124,8 @@ class TestLOSConversion:
             ds_hor.open()
             non_nans_indices = ~np.isnan(ds.data)
             # assert division by sine and cosine always yields larger components in vertical and horizontal directions
-            assert np.all(np.abs(ds.data[non_nans_indices]) < np.abs(ds_ver.data[non_nans_indices]))
-            assert np.all(np.abs(ds.data[non_nans_indices]) < np.abs(ds_hor.data[non_nans_indices]))
+            assert np.all(np.abs(ds.data[non_nans_indices]) <= np.abs(ds_ver.data[non_nans_indices]))
+            assert np.all(np.abs(ds.data[non_nans_indices]) <= np.abs(ds_hor.data[non_nans_indices]))
             ds_md = ds.dataset.GetMetadata()
             assert ds_md.pop(C.LOS_PROJECTION.upper()) == ifc.LOS_PROJECTION_OPTION[ifc.LINE_OF_SIGHT]
             ds_ver_md = ds_ver.dataset.GetMetadata()
