@@ -300,4 +300,4 @@ GEOMETRY_DIR = 'geometry_dir'
 
 
 # temp constants
-DISABLE_PHASE_CLOSURE = True
+DISABLE_PHASE_CLOSURE = False
