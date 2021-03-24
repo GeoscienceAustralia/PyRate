@@ -183,7 +183,6 @@ def assert_tifs_equal(tif1, tif2):
     md_sds = sds.GetMetadata()
     # meta data equal
     assert md_mds == md_sds
-
     d1 = mds.ReadAsArray()
     d2 = sds.ReadAsArray()
     # phase equal
@@ -613,6 +612,7 @@ def manipulate_test_conf(conf_file, temp_obs_dir: Path):
     params[C.ORB_ERROR_DIR] = outdir.joinpath(C.ORB_ERROR_DIR).as_posix()
     params[C.PHASE_CLOSURE_DIR] = outdir.joinpath(C.PHASE_CLOSURE_DIR).as_posix()
     params[C.DEM_ERROR_DIR] = outdir.joinpath(C.DEM_ERROR_DIR).as_posix()
+    params[C.INTERFEROGRAM_DIR] = outdir.joinpath(C.INTERFEROGRAM_DIR).as_posix()
 
     return params
 

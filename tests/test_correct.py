@@ -36,11 +36,13 @@ def test_unsupported_process_steps_raises(gamma_conf):
 
 
 def test_supported_process_steps_dont_raise(gamma_params):
-    supported_stpes = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar']
+    supported_stpes = ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar', 'demerror', 'phase_closure']
     assert all([s in gamma_params['correct'] for s in supported_stpes])
     correct.__validate_correct_steps(params=gamma_params)
 
 
+@pytest.mark.slow
+@pytest.mark.skipif(not common.PYTHON3P9, reason="Only run in one CI env")
 def test_process_treats_prepif_outputs_readonly(gamma_conf, tempdir, coh_mask):
     from pyrate.configuration import Configuration
     tdir = Path(tempdir())
@@ -51,18 +53,18 @@ def test_process_treats_prepif_outputs_readonly(gamma_conf, tempdir, coh_mask):
     write_config_file(params=params, output_conf_file=output_conf)
     params = Configuration(output_conf).__dict__
     conv2tif.main(params)
-    tifs = list(Path(params[C.OUT_DIR]).glob('*_unw.tif'))
+    tifs = list(Path(params[C.INTERFEROGRAM_DIR]).glob('*_unw.tif'))
     assert len(tifs) == 17
 
     if params[C.COH_FILE_LIST] is not None:
-        coh_tifs = list(Path(params[C.OUT_DIR]).glob('*_cc.tif'))
+        coh_tifs = list(Path(params[C.COHERENCE_DIR]).glob('*_cc.tif'))
         assert len(coh_tifs) == 17
 
     params = Configuration(output_conf).__dict__
     prepifg.main(params)
-    cropped_coh = list(Path(params[C.OUT_DIR]).glob('*_coh.tif'))
-    cropped_ifgs = list(Path(params[C.OUT_DIR]).glob('*_ifg.tif'))
-    dem_ifgs = list(Path(params[C.OUT_DIR]).glob('*_dem.tif'))
+    cropped_coh = list(Path(params[C.COHERENCE_DIR]).glob('*_coh.tif'))
+    cropped_ifgs = list(Path(params[C.INTERFEROGRAM_DIR]).glob('*_ifg.tif'))
+    dem_ifgs = list(Path(params[C.GEOMETRY_DIR]).glob('*_dem.tif'))
 
     if params[C.COH_FILE_LIST] is not None:  # 17 + 1 dem + 17 coh files
         assert len(cropped_coh) + len(cropped_ifgs) + len(dem_ifgs) == 35

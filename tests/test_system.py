@@ -32,7 +32,7 @@ from tests.common import MEXICO_CROPA_CONF, PY37GDAL302
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(not PY37GDAL302, reason="Only run in python 3.8")
+@pytest.mark.skipif(not PY37GDAL302, reason="Only run in one CI env")
 def test_workflow(system_conf):
     """check the handlers are working as expected"""
     check_call(f"mpirun -n 3 pyrate conv2tif -f {system_conf}", shell=True)

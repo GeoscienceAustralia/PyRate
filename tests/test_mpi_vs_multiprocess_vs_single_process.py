@@ -32,7 +32,9 @@ from tests.common import (
     manipulate_test_conf,
     MEXICO_CROPA_CONF,
     PY37GDAL304,
+    PY37GDAL302,
     PYTHON3P8,
+    PYTHON3P7
 )
 
 
@@ -103,7 +105,6 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
 
     check_call(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}", shell=True)
     check_call(f"mpirun -n 3 pyrate prepifg -f {mpi_conf}", shell=True)
-
     try:
         run(f"mpirun -n 3 pyrate correct -f {mpi_conf}", shell=True, check=True)
         run(f"mpirun -n 3 pyrate timeseries -f {mpi_conf}", shell=True, check=True)
@@ -124,30 +125,41 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
 
     # convert2tif tests, 17 interferograms
     if not gamma_conf == MEXICO_CROPA_CONF:
-        assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
-            C.OUT_DIR], "*_unw.tif", 17)
+        assert_same_files_produced(params[C.INTERFEROGRAM_DIR],
+                                   params_m[C.INTERFEROGRAM_DIR], params_s[C.INTERFEROGRAM_DIR], "*_unw.tif", 17)
+        # dem
+        assert_same_files_produced(params[C.GEOMETRY_DIR],
+                                   params_m[C.GEOMETRY_DIR], params_s[C.GEOMETRY_DIR], "*_dem.tif", 1)
         # if coherence masking, comprare coh files were converted
         if params[C.COH_FILE_LIST] is not None:
-            assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
-                C.OUT_DIR], "*_cc.tif", 17)
+            assert_same_files_produced(params[C.COHERENCE_DIR], params_m[C.COHERENCE_DIR], params_s[C.COHERENCE_DIR],
+                                       "*_cc.tif", 17)
             print("coherence files compared")
 
-    if params[C.COH_FILE_LIST] is not None:
-        no_of_files = 61 if gamma_conf == MEXICO_CROPA_CONF else 35
-    else:
-        # 17 ifgs + 1 dem + 17 mlooked coh files
-        no_of_files = 31 if gamma_conf == MEXICO_CROPA_CONF else 18
+    # prepifg checks
+    num_of_ifgs = 30 if gamma_conf == MEXICO_CROPA_CONF else 17
+    num_of_coh = 30 if gamma_conf == MEXICO_CROPA_CONF else 17
 
+    # check geom files
     if params[C.DEMERROR]:
         # check files required by dem error correction are produced
         assert_same_files_produced(
             params[C.GEOMETRY_DIR], params_m[C.GEOMETRY_DIR], params_s[C.GEOMETRY_DIR],
-            [ft + '.tif' for ft in C.GEOMETRY_OUTPUT_TYPES],
-            6
+            [ft + '.tif' for ft in C.GEOMETRY_OUTPUT_TYPES] + ['*dem.tif'],
+            7 if gamma_or_mexicoa_conf == MEXICO_CROPA_CONF else 8
         )
 
-    assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[C.OUT_DIR],
-                               ["*_ifg.tif", "*_coh.tif", "dem.tif"], no_of_files)
+    # ifgs
+    assert_same_files_produced(params[C.INTERFEROGRAM_DIR], params_m[C.INTERFEROGRAM_DIR],
+                               params_s[C.INTERFEROGRAM_DIR], ["*_ifg.tif"], num_of_ifgs)
+
+    # coherence
+    assert_same_files_produced(params[C.COHERENCE_DIR], params_m[C.COHERENCE_DIR],
+                               params_s[C.COHERENCE_DIR], ["*_coh.tif"], num_of_coh)
+
+    # coherence stats
+    assert_same_files_produced(params[C.COHERENCE_DIR], params_m[C.COHERENCE_DIR],
+                               params_s[C.COHERENCE_DIR], ["coh_*.tif"], 3)
 
     num_files = 30 if gamma_conf == MEXICO_CROPA_CONF else 17
     # cf.TEMP_MLOOKED_DIR will contain the temp files that can be potentially deleted later
@@ -210,12 +222,6 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
         assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
             C.OUT_DIR], "tsincr*.tif", 12)
         
-    if params[C.COH_FILE_LIST] is not None:
-        assert_same_files_produced(
-            params[C.COHERENCE_DIR], params_m[C.COHERENCE_DIR], params_s[C.COHERENCE_DIR],
-            "coh*.tif", 3
-        )
-
     print("==========================xxx===========================")
 
     shutil.rmtree(params[C.OBS_DIR])
@@ -347,19 +353,18 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     check_call(f"pyrate workflow -f {sr_conf}", shell=True)
 
     # convert2tif tests, 17 interferograms
-    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "*_unw.tif", 17)
+    assert_two_dirs_equal(params[C.INTERFEROGRAM_DIR], params_p[C.INTERFEROGRAM_DIR], "*_unw.tif", 17)
 
     # if coherence masking, compare coh files were converted
     if params[C.COH_FILE_LIST] is not None:
-        assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "*_cc.tif", 17)
+        assert_two_dirs_equal(params[C.COHERENCE_DIR], params_p[C.COHERENCE_DIR], "*_cc.tif", 17)
         print("coherence files compared")
+    assert_two_dirs_equal(params[C.INTERFEROGRAM_DIR], params_p[C.INTERFEROGRAM_DIR], ["*_ifg.tif"], 17)
 
-    # prepifg + correct steps that overwrite tifs test
-    # 17 mlooked ifgs + 1 dem + 17 mlooked coherence files
-    if params[C.COH_FILE_LIST] is not None:
-        assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], ["*_ifg.tif", "*_coh.tif", 'dem.tif'], 35)
-    else:
-        assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], ["*_ifg.tif", 'dem.tif'], 18)
+    # one original dem, another multilooked dem
+    assert_two_dirs_equal(params[C.GEOMETRY_DIR], params_p[C.GEOMETRY_DIR], ['*dem.tif'], 2)
+    assert_two_dirs_equal(params[C.GEOMETRY_DIR], params_p[C.GEOMETRY_DIR],
+                          [t + "*.tif" for t in C.GEOMETRY_OUTPUT_TYPES], 6)  # 2 dems, 6 geom
 
     assert_two_dirs_equal(params[C.TEMP_MLOOKED_DIR], params_p[C.TEMP_MLOOKED_DIR], "*_ifg.tif", 17)
 

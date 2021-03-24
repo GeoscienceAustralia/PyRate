@@ -101,7 +101,7 @@ def _process_dem_error_per_tile(tile: Tile, params: dict) -> None:
     geom_az = Geometry(rdc_az_file)
     rdc_rg_file = geom_files['rdc_range']
     geom_rg = Geometry(rdc_rg_file)
-    dem_file = join(params[C.OUT_DIR], 'dem.tif')
+    dem_file = params[C.DEM_FILE_PATH].sampled_path
     dem = DEM(dem_file)
     preread_ifgs = params[C.PREREAD_IFGS]
     threshold = params[C.DE_PTHR]

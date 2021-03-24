@@ -75,11 +75,11 @@ class TestLOSConversion:
         output_conf_file = tdir.joinpath('conf.cfg')
         output_conf = tdir.joinpath(output_conf_file)
         write_config_file(params=params, output_conf_file=output_conf)
-        check_call(f"mpirun -n 2 pyrate conv2tif -f {output_conf}", shell=True, env=os.environ)
-        check_call(f"mpirun -n 2 pyrate prepifg -f {output_conf}", shell=True, env=os.environ)
-        check_call(f"mpirun -n 2 pyrate correct -f {output_conf}", shell=True, env=os.environ)
-        check_call(f"mpirun -n 2 pyrate timeseries -f {output_conf}", shell=True, env=os.environ)
-        check_call(f"mpirun -n 2 pyrate stack -f {output_conf}", shell=True, env=os.environ)
+        check_call(f"mpirun -n 3 pyrate conv2tif -f {output_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate prepifg -f {output_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate correct -f {output_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate timeseries -f {output_conf}", shell=True)
+        check_call(f"mpirun -n 3 pyrate stack -f {output_conf}", shell=True)
 
         params = Configuration(output_conf).__dict__
         cls.params = params

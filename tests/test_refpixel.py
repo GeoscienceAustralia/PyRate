@@ -382,7 +382,7 @@ class TestLegacyEqualityTestMultiprocessParallel:
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(not PY37GDAL304, reason="Only run in python 3.8")
+@pytest.mark.skipif(not PY37GDAL304, reason="Only run in one CI env")
 def test_error_msg_refpixel_out_of_bounds(tempdir, gamma_conf):
     "check correct latitude/longitude refpixel error is raised when specified refpixel is out of bounds"
     for x, (refx, refy) in zip(['longitude', 'latitude', 'longitude and latitude'],
@@ -393,11 +393,13 @@ def test_error_msg_refpixel_out_of_bounds(tempdir, gamma_conf):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif(not PY37GDAL304, reason="Only run in python 3.8")
+@pytest.mark.skipif(not PY37GDAL304, reason="Only run in one CI env")
 def test_gamma_ref_pixel_search_vs_lat_lon(tempdir, gamma_conf):
     params_1, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=-1, refy=-1)
     params_2, _ = _get_mlooked_files(gamma_conf, Path(tempdir()), refx=150.941666654, refy=-34.218333314)
-    assert_two_dirs_equal(params_1[C.OUT_DIR], params_2[C.OUT_DIR], ["*_ifg.tif", '*_coh.tif', 'dem.tif'], 35)
+    assert_two_dirs_equal(params_1[C.COHERENCE_DIR], params_2[C.COHERENCE_DIR], ['*_coh.tif', '*_cc.tif'], 34)
+    assert_two_dirs_equal(params_1[C.INTERFEROGRAM_DIR], params_2[C.INTERFEROGRAM_DIR], ["*_ifg.tif", '*_unw.tif'], 34)
+    assert_two_dirs_equal(params_1[C.GEOMETRY_DIR], params_2[C.GEOMETRY_DIR], ["*.tif"], 8)
 
 
 def _get_mlooked_files(gamma_conf, tdir, refx, refy):

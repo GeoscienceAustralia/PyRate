@@ -75,6 +75,11 @@ class InputTypes(Enum):
     LT = 'lt'
     DEM = 'dem'
     HEADER = 'header'
+    dir_map = {
+        IFG: C.INTERFEROGRAM_DIR,
+        COH: C.COHERENCE_DIR,
+        DEM: C.GEOMETRY_DIR,
+    }
 
 
 def joblib_log_level(level: str) -> int:
@@ -819,12 +824,14 @@ def _is_baseline(hdr):
     return (ifc.PYRATE_WAVELENGTH_METRES in hdr) and \
            (hdr[ifc.INPUT_TYPE] == InputTypes.BASE if ifc.INPUT_TYPE in hdr else False)
 
+
 def _is_lookuptable(hdr):
     """
     Convenience function to determine if file is lookup table file
     """
     return (ifc.PYRATE_WAVELENGTH_METRES in hdr) and \
            (hdr[ifc.INPUT_TYPE] == InputTypes.LT if ifc.INPUT_TYPE in hdr else False)
+
 
 def _is_incidence(hdr):
     """

@@ -44,12 +44,12 @@ def test_files_are_same(tempdir, get_config):
     gamma_params = __workflow(gamma_params, gamma_tdir)
 
     # conv2tif output equal
-    __assert_same_files_produced(roipac_params[C.OUT_DIR], gamma_params[C.OUT_DIR], "*_unw.tif", 17)
+    __assert_same_files_produced(roipac_params[C.INTERFEROGRAM_DIR], gamma_params[C.INTERFEROGRAM_DIR], "*_unw.tif", 17)
 
     # prepifg output equal
-    __assert_same_files_produced(roipac_params[C.OUT_DIR], gamma_params[C.OUT_DIR], f"*_ifg.tif", 17)
+    __assert_same_files_produced(roipac_params[C.INTERFEROGRAM_DIR], gamma_params[C.INTERFEROGRAM_DIR], f"*_ifg.tif", 17)
 
-    __assert_same_files_produced(roipac_params[C.OUT_DIR], gamma_params[C.OUT_DIR], "dem.tif", 1)
+    __assert_same_files_produced(roipac_params[C.GEOMETRY_DIR], gamma_params[C.GEOMETRY_DIR], "dem.tif", 1)
 
     # clean up
     shutil.rmtree(roipac_params[C.OBS_DIR])
@@ -65,8 +65,7 @@ def __workflow(params, tdir):
     params[C.OUT_DIR] = outdir.as_posix()
 
     params[C.DEM_FILE] = tdir.joinpath(Path(params[C.DEM_FILE]).name).as_posix()
-    params[C.DEM_HEADER_FILE] = tdir.joinpath(Path(params[
-                                                                      C.DEM_HEADER_FILE]).name).as_posix()
+    params[C.DEM_HEADER_FILE] = tdir.joinpath(Path(params[C.DEM_HEADER_FILE]).name).as_posix()
     params[C.HDR_FILE_LIST] = tdir.joinpath(Path(params[C.HDR_FILE_LIST]).name).as_posix()
     params[C.SLC_DIR] = tdir.as_posix()
     params[C.IFG_FILE_LIST] = tdir.joinpath(Path(params[C.IFG_FILE_LIST]).name).as_posix()

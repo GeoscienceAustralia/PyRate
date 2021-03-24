@@ -315,8 +315,8 @@ def parallel_ifgs(gamma_conf):
     conv2tif.main(params_p)
     prepifg.main(params_p)
 
-    parallel_df = list(Path(tdir).joinpath('out').glob(ifg_glob_suffix))
-    parallel_coh_files = list(Path(tdir).joinpath('out').glob(coh_glob_suffix))
+    parallel_df = list(Path(params_p[C.INTERFEROGRAM_DIR]).glob(ifg_glob_suffix))
+    parallel_coh_files = list(Path(params_p[C.COHERENCE_DIR]).glob(coh_glob_suffix))
 
     p_ifgs = small_data_setup(datafiles=parallel_df + parallel_coh_files)
     yield p_ifgs
@@ -341,8 +341,8 @@ def series_ifgs(gamma_conf):
 
     prepifg.main(params_s)
 
-    serial_ifgs = list(Path(tdir).joinpath('out').glob(ifg_glob_suffix))
-    coh_files = list(Path(tdir).joinpath('out').glob(coh_glob_suffix))
+    serial_ifgs = list(Path(params_s[C.INTERFEROGRAM_DIR]).glob(ifg_glob_suffix))
+    coh_files = list(Path(params_s[C.COHERENCE_DIR]).glob(coh_glob_suffix))
 
     s_ifgs = small_data_setup(datafiles=serial_ifgs + coh_files)
     yield s_ifgs

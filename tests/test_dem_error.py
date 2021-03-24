@@ -44,7 +44,7 @@ class TestPyRateGammaBperp:
         rdc_rg_file = geom_files['rdc_range']
         geom_rg = Geometry(rdc_rg_file)
         cls.rg = geom_rg.data
-        dem_file = join(cls.params[C.OUT_DIR], 'dem.tif')
+        dem_file = join(cls.params[C.GEOMETRY_DIR], 'dem.tif')
         dem_data = DEM(dem_file)
         cls.dem = dem_data.data
         # calc bperp using pyrate funcs
