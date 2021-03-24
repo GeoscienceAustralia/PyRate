@@ -113,7 +113,8 @@ class TestLOSConversion:
         los_proj_dir = all_dirs[ifc.LINE_OF_SIGHT]
         pseudo_ver = all_dirs[ifc.PSEUDO_VERTICAL]
         pseudo_hor = all_dirs[ifc.PSEUDO_HORIZONTAL]
-        assert len(list(los_proj_dir.glob('*.tif'))) == 26  # 12 tsincr, 12 tscuml + 1 stack rate + 1 linear rate
+        num_files = 24 if params[C.PHASE_CLOSURE] else 26  # phase closure removes 1 interferogram
+        assert len(list(los_proj_dir.glob('*.tif'))) == num_files  # 12 tsincr, 12 tscuml + 1 stack rate + 1 linear rate
         for tif in los_proj_dir.glob('*.tif'):
             ds = DEM(tif)
             ds_ver = DEM(pseudo_ver.joinpath(tif.name))

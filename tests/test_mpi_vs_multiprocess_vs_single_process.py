@@ -213,9 +213,13 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
     assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
         C.OUT_DIR], "linear_*.npy", 5)
 
-    if params[C.PHASE_CLOSURE]:
+    if params[C.PHASE_CLOSURE]:  # only in cropA
         __check_equality_of_phase_closure_outputs(mpi_conf, sr_conf)
         __check_equality_of_phase_closure_outputs(mpi_conf, mr_conf)
+        assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
+            C.OUT_DIR], "tscuml*.tif", 11)  # phase closure removes one tif
+        assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
+            C.OUT_DIR], "tsincr*.tif", 11)
     else:
         assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
             C.OUT_DIR], "tscuml*.tif", 12)
