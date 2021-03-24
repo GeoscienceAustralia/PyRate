@@ -58,7 +58,7 @@ def coherence_masking(input_gdal_dataset: Dataset, coh_file_path: str,
     # update metadata
     input_gdal_dataset.GetRasterBand(1).SetNoDataValue(ndv)
     input_gdal_dataset.FlushCache()  # write on the disc
-    log.debug(f"Masking ifg using file {coh_file_path} and coherence threshold: {coh_thr}")
+    log.info(f"Masking ifg using file {coh_file_path} and coherence threshold: {coh_thr}")
 
 
 def world_to_pixel(geo_transform, x, y):
@@ -246,7 +246,7 @@ def crop_resample_average(
                                  crs=wkt, geotransform=gt, creation_opts=creation_opts)
 
     if out_driver_type != 'MEM':
-        log.debug(f"Writing geotiff: {output_file}")
+        log.info(f"Writing geotiff: {output_file}")
         shared.write_geotiff(resampled_average, out_ds, np.nan)
     else:
         out_ds.GetRasterBand(1).WriteArray(resampled_average)
