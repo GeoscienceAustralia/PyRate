@@ -71,7 +71,7 @@ def test_los_conversion_divisors():
 
 @pytest.mark.mpi
 @pytest.mark.slow
-# @pytest.mark.skipif(not PY37GDAL302, reason="Only run in one CI env")
+@pytest.mark.skipif(not PY37GDAL302, reason="Only run in one CI env")
 class TestLOSConversion:
     @classmethod
     def setup_class(cls):
