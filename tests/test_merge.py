@@ -42,6 +42,11 @@ def los_projection(request):
     return request.param
 
 
+@pytest.fixture(params=[-1, 1])
+def signal_polarity(request):
+    return request.param
+
+
 def test_los_conversion_divisors():
     """
     Unit test to check the LOS conversions for specific incidence angles
@@ -66,7 +71,7 @@ def test_los_conversion_divisors():
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif(not PY37GDAL302, reason="Only run in one CI env")
+# @pytest.mark.skipif(not PY37GDAL302, reason="Only run in one CI env")
 class TestLOSConversion:
     @classmethod
     def setup_class(cls):
@@ -83,10 +88,11 @@ class TestLOSConversion:
 
         params = Configuration(output_conf).__dict__
         cls.params = params
+        cls.tdir = tdir
 
     @classmethod
     def teardown_class(cls):
-        shutil.rmtree(cls.params[C.OUT_DIR], ignore_errors=True)
+        shutil.rmtree(cls.tdir, ignore_errors=True)
 
     def test_los_conversion_comparison(self):
         """
@@ -96,54 +102,74 @@ class TestLOSConversion:
         """
         params = self.params
         all_dirs = {}
+        params[C.SIGNAL_POLARITY] = -1
         for k in LOS_PROJECTION_OPTION.keys():
             params[C.LOS_PROJECTION] = k
-            _merge_stack(params)
-            _merge_linrate(params)
-            _merge_timeseries(params, 'tscuml')
-            _merge_timeseries(params, 'tsincr')
             k_dir = Path(params[C.OUT_DIR]).joinpath(ifc.LOS_PROJECTION_OPTION[k])
             k_dir.mkdir(exist_ok=True)
-
-            for out_type in los_projection_out_types:
-                for tif in Path(params[C.OUT_DIR]).glob(out_type + '*.tif'):
-                    shutil.move(tif, k_dir.joinpath(tif.name))
             all_dirs[k] = k_dir
+            self.run_with_new_params(k_dir, params)
+
+        signal_dir = Path(params[C.OUT_DIR]).joinpath('signal_polatiry_dir')
+        signal_dir.mkdir(exist_ok=True)
+        all_dirs[C.SIGNAL_POLARITY] = signal_dir
+
+        params[C.SIGNAL_POLARITY] = 1
+        self.run_with_new_params(signal_dir, params)
 
         los_proj_dir = all_dirs[ifc.LINE_OF_SIGHT]
         pseudo_ver = all_dirs[ifc.PSEUDO_VERTICAL]
         pseudo_hor = all_dirs[ifc.PSEUDO_HORIZONTAL]
+        signal_polarity_reverserd_pseudo_hor = all_dirs[C.SIGNAL_POLARITY]
+
         assert len(list(los_proj_dir.glob('*.tif'))) == 26  # 12 tsincr, 12 tscuml + 1 stack rate + 1 linear rate
         for tif in los_proj_dir.glob('*.tif'):
             ds = DEM(tif)
             ds_ver = DEM(pseudo_ver.joinpath(tif.name))
             ds_hor = DEM(pseudo_hor.joinpath(tif.name))
+            ds_hor_sig = DEM(signal_polarity_reverserd_pseudo_hor.joinpath(tif.name))
             ds.open()
             ds_ver.open()
             ds_hor.open()
+            ds_hor_sig.open()
+
             non_nans_indices = ~np.isnan(ds.data)
             # assert division by sine and cosine always yields larger components in vertical and horizontal directions
             assert np.all(np.abs(ds.data[non_nans_indices]) < np.abs(ds_ver.data[non_nans_indices]))
             assert np.all(np.abs(ds.data[non_nans_indices]) < np.abs(ds_hor.data[non_nans_indices]))
+            assert np.all(np.abs(ds.data[non_nans_indices]) < np.abs(ds_hor_sig.data[non_nans_indices]))
+            assert np.all(ds_hor.data[non_nans_indices] == -ds_hor_sig.data[non_nans_indices])
             ds_md = ds.dataset.GetMetadata()
             assert ds_md.pop(C.LOS_PROJECTION.upper()) == ifc.LOS_PROJECTION_OPTION[ifc.LINE_OF_SIGHT]
             ds_ver_md = ds_ver.dataset.GetMetadata()
             assert ds_ver_md.pop(C.LOS_PROJECTION.upper()) == ifc.LOS_PROJECTION_OPTION[ifc.PSEUDO_VERTICAL]
             assert ds_md == ds_ver_md
             ds_hor_md = ds_hor.dataset.GetMetadata()
+            ds_hor_sig_md = ds_hor_sig.dataset.GetMetadata()
+            assert ds_hor_sig_md == ds_hor_md
             assert ds_hor_md.pop(C.LOS_PROJECTION.upper()) == ifc.LOS_PROJECTION_OPTION[ifc.PSEUDO_HORIZONTAL]
             assert ds_md == ds_hor_md
+            ds_hor_sig_md = ds_hor_sig.dataset.GetMetadata()
+            assert ds_hor_sig_md.pop(C.LOS_PROJECTION.upper()) == ifc.LOS_PROJECTION_OPTION[ifc.PSEUDO_HORIZONTAL]
+            assert ds_md == ds_hor_sig_md
+
+    def run_with_new_params(self, k_dir, params):
+        _merge_stack(params)
+        _merge_linrate(params)
+        _merge_timeseries(params, 'tscuml')
+        _merge_timeseries(params, 'tsincr')
+
+        for out_type in los_projection_out_types:
+            for tif in Path(params[C.OUT_DIR]).glob(out_type + '*.tif'):
+                shutil.move(tif, k_dir.joinpath(tif.name))
 
     def test_file_creation(self, los_projection):
         params = self.params
         params[C.LOS_PROJECTION] = los_projection
-        try:
-            _merge_stack(params)
-            _merge_linrate(params)
-            _merge_timeseries(params, 'tscuml')
-            _merge_timeseries(params, 'tsincr')
-        except RuntimeError:
-            return
+        _merge_stack(params)
+        _merge_linrate(params)
+        _merge_timeseries(params, 'tscuml')
+        _merge_timeseries(params, 'tsincr')
         # check if color map is created
         for ot in ['stack_rate', 'stack_error', 'linear_rate', 'linear_error', 'linear_rsquared']:
             create_png_and_kml_from_tif(params[C.OUT_DIR], output_type=ot)

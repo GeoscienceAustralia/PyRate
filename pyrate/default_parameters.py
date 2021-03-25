@@ -517,6 +517,14 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": [2, 1, 0],
         "Required": False
     },
+    "signal_polarity": {
+        "DataType": int,
+        "DefaultValue": -1,
+        "MinValue": -1,
+        "MaxValue": 1,
+        "PossibleValues": [1, -1],
+        "Required": False
+    },
     "velerror_nsig": {
         "DataType": int,
         "DefaultValue": 2,

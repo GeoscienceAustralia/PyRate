@@ -130,6 +130,9 @@ IFG_YFIRST = 'ifgyfirst'
 #: FLOAT; Maximum latitude for cropping with method 3
 IFG_YLAST = 'ifgylast'
 
+# sign convention for phase data
+SIGNAL_POLARITY = 'signal_polarity'
+
 # reference pixel parameters
 #: INT; Longitude (decimal degrees) of reference pixel, or if left blank a search will be performed
 REFX = 'refx'

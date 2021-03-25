@@ -310,7 +310,7 @@ def __save_merged_files(ifgs_dict, params, array, out_type, index=None, savenpy=
                          f"{ifc.LOS_PROJECTION_OPTION[params[C.LOS_PROJECTION]]} for file {dest}")
             incidence = shared.Geometry(incidence_path)
             incidence.open()
-            array /= los_projection_divisors[params[C.LOS_PROJECTION]](incidence.data)
+            array /= los_projection_divisors[params[C.LOS_PROJECTION]](incidence.data) * params[C.SIGNAL_POLARITY]
             md[C.LOS_PROJECTION.upper()] = ifc.LOS_PROJECTION_OPTION[params[C.LOS_PROJECTION]]
 
     shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
