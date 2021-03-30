@@ -120,14 +120,14 @@ class TestLOSConversion:
         los_proj_dir = all_dirs[ifc.LINE_OF_SIGHT]
         pseudo_ver = all_dirs[ifc.PSEUDO_VERTICAL]
         pseudo_hor = all_dirs[ifc.PSEUDO_HORIZONTAL]
-        signal_polarity_reverserd_pseudo_hor = all_dirs[C.SIGNAL_POLARITY]
+        signal_polarity_reversed_pseudo_hor = all_dirs[C.SIGNAL_POLARITY]
 
         assert len(list(los_proj_dir.glob('*.tif'))) == 26  # 12 tsincr, 12 tscuml + 1 stack rate + 1 linear rate
         for tif in los_proj_dir.glob('*.tif'):
             ds = DEM(tif)
             ds_ver = DEM(pseudo_ver.joinpath(tif.name))
             ds_hor = DEM(pseudo_hor.joinpath(tif.name))
-            ds_hor_sig = DEM(signal_polarity_reverserd_pseudo_hor.joinpath(tif.name))
+            ds_hor_sig = DEM(signal_polarity_reversed_pseudo_hor.joinpath(tif.name))
             ds.open()
             ds_ver.open()
             ds_hor.open()
@@ -144,13 +144,14 @@ class TestLOSConversion:
             ds_ver_md = ds_ver.dataset.GetMetadata()
             assert ds_ver_md.pop(C.LOS_PROJECTION.upper()) == ifc.LOS_PROJECTION_OPTION[ifc.PSEUDO_VERTICAL]
             assert ds_md == ds_ver_md
+            assert ds_md.pop(C.SIGNAL_POLARITY.upper()) == '-1'
             ds_hor_md = ds_hor.dataset.GetMetadata()
             ds_hor_sig_md = ds_hor_sig.dataset.GetMetadata()
+            assert ds_hor_sig_md.pop(C.SIGNAL_POLARITY.upper()) != ds_hor_md.pop(C.SIGNAL_POLARITY.upper())
             assert ds_hor_sig_md == ds_hor_md
             assert ds_hor_md.pop(C.LOS_PROJECTION.upper()) == ifc.LOS_PROJECTION_OPTION[ifc.PSEUDO_HORIZONTAL]
-            assert ds_md == ds_hor_md
-            ds_hor_sig_md = ds_hor_sig.dataset.GetMetadata()
             assert ds_hor_sig_md.pop(C.LOS_PROJECTION.upper()) == ifc.LOS_PROJECTION_OPTION[ifc.PSEUDO_HORIZONTAL]
+            assert ds_md == ds_hor_md
             assert ds_md == ds_hor_sig_md
 
     def run_with_new_params(self, k_dir, params):
