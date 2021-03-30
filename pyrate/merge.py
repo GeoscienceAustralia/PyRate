@@ -39,6 +39,13 @@ def main(params: dict) -> None:
     PyRate merge main function. Assembles product tiles in to
     single geotiff files
     """
+    if params[C.SIGNAL_POLARITY] == 1:
+        log.info(f"Saving output products with the same sign convention as input data")
+    elif params[C.SIGNAL_POLARITY] == -1:
+        log.info(f"Saving output products with reversed sign convention compared to the input data")
+    else:
+        log.warning(f"Check the value of signal_polarity parameter")
+
     out_types = []
     stfile = join(params[C.TMPDIR], 'stack_rate_0.npy')
     if exists(stfile):
