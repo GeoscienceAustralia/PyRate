@@ -39,14 +39,14 @@ def main(params: dict) -> None:
     PyRate merge main function. Assembles product tiles in to
     single geotiff files
     """
-    out_types = []
-    stfile = join(params[C.TMPDIR], 'stack_rate_0.npy')
-    if exists(stfile):
-        # setup paths
-        mpiops.run_once(_merge_stack, params)
-        out_types += ['stack_rate', 'stack_error']
+    if params[C.SIGNAL_POLARITY] == 1:
+        log.info(f"Saving output products with the same sign convention as input data")
+    elif params[C.SIGNAL_POLARITY] == -1:
+        log.info(f"Saving output products with reversed sign convention compared to the input data")
     else:
-        log.warning('Not merging stack products; {} does not exist'.format(stfile))
+        log.warning(f"Check the value of signal_polarity parameter")
+
+    out_types = []
 
     tsfile = join(params[C.TMPDIR], 'tscuml_0.npy')
     if exists(tsfile):
@@ -59,6 +59,14 @@ def main(params: dict) -> None:
             _merge_timeseries(params, 'tsincr')
     else:
         log.warning('Not merging time series products; {} does not exist'.format(tsfile))
+
+    stfile = join(params[C.TMPDIR], 'stack_rate_0.npy')
+    if exists(stfile):
+        # setup paths
+        mpiops.run_once(_merge_stack, params)
+        out_types += ['stack_rate', 'stack_error']
+    else:
+        log.warning('Not merging stack products; {} does not exist'.format(stfile))
 
     if len(out_types) > 0:
         process_out_types = mpiops.array_split(out_types)
@@ -83,6 +91,7 @@ def _merge_stack(params: dict) -> None:
 
     # mask pixels according to threshold
     if params[C.LR_MAXSIG] > 0:
+        log.info(f"Masking stack_rate and stack_error maps where error is greater than {params[C.LR_MAXSIG]} millimetres")
         rate, error = stack.mask_rate(rate, error, params[C.LR_MAXSIG])
     else:
         log.info('Skipping stack product masking (maxsig = 0)')
@@ -269,6 +278,7 @@ out_type_md_dict = {
     'tscuml': ifc.CUML
 }
 
+error_out_types = {'linear_error', 'stack_error'}
 los_projection_out_types = {'tsincr', 'tscuml', 'linear_rate', 'stack_rate'}
 los_projection_divisors = {
     ifc.LINE_OF_SIGHT: lambda data: 1,
@@ -300,7 +310,7 @@ def __save_merged_files(ifgs_dict, params, array, out_type, index=None, savenpy=
 
     md[ifc.DATA_TYPE] = out_type_md_dict[out_type]
 
-    if out_type in los_projection_out_types:  # apply LOS projection for these outputs
+    if out_type in los_projection_out_types:  # apply LOS projection and sign conversion for these outputs
         incidence_path = Path(Configuration.geometry_files(params)['incidence_angle'])
         if incidence_path.exists():  # We can do LOS projection
             if params[C.LOS_PROJECTION] == ifc.LINE_OF_SIGHT:
@@ -310,12 +320,25 @@ def __save_merged_files(ifgs_dict, params, array, out_type, index=None, savenpy=
                          f"{ifc.LOS_PROJECTION_OPTION[params[C.LOS_PROJECTION]]} for file {dest}")
             incidence = shared.Geometry(incidence_path)
             incidence.open()
-            array /= los_projection_divisors[params[C.LOS_PROJECTION]](incidence.data)
+            array /= los_projection_divisors[params[C.LOS_PROJECTION]](incidence.data) * params[C.SIGNAL_POLARITY]
             md[C.LOS_PROJECTION.upper()] = ifc.LOS_PROJECTION_OPTION[params[C.LOS_PROJECTION]]
+            md[C.SIGNAL_POLARITY.upper()] = params[C.SIGNAL_POLARITY]
+
+    if out_type in error_out_types:  # add n-sigma value to error file metadata
+        # TODO: move the multiplication of nsigma and error data here?
+        md[C.VELERROR_NSIG.upper()] = params[C.VELERROR_NSIG]
+        log.info(f"Saving file {dest} with {params[C.VELERROR_NSIG]}-sigma uncertainties")
 
     shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
-    if C.LOS_PROJECTION.upper() in md:   # clear the extra metadata so it does not mess up other images
+
+    # clear the extra metadata so it does not mess up other images
+    if C.LOS_PROJECTION.upper() in md:
         md.pop(C.LOS_PROJECTION.upper())
+    if C.SIGNAL_POLARITY.upper() in md:
+        md.pop(C.SIGNAL_POLARITY.upper())
+    if C.VELERROR_NSIG.upper() in md:
+        md.pop(C.VELERROR_NSIG.upper())
+
     if savenpy:
         np.save(file=npy_file, arr=array)
 

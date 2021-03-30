@@ -409,7 +409,7 @@ class TestLinearRateArray:
         # make a deep copy of the params dict to avoid changing
         # state for other tests if this one fails
         params = deepcopy(self.params)
-        params["velerror_nsig"] = 2
+        params[C.VELERROR_NSIG] = 2
         _, _, _, e, _ = linear_rate_array(self.tscuml, self.ifgs, params)
         assert_array_almost_equal(self.error*2, e, 1e-20)
 

@@ -114,7 +114,7 @@ class TestLegacyEquality:
         params[C.TEMP_MLOOKED_DIR] = os.path.join(params[C.OUT_DIR], C.TEMP_MLOOKED_DIR)
 
         # force error maps to 1-sigma to match legacy
-        params["velerror_nsig"] = 1
+        params[C.VELERROR_NSIG] = 1
         conv2tif.main(params)
         prepifg.main(params)
 
