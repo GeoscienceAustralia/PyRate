@@ -130,9 +130,6 @@ IFG_YFIRST = 'ifgyfirst'
 #: FLOAT; Maximum latitude for cropping with method 3
 IFG_YLAST = 'ifgylast'
 
-# sign convention for phase data
-SIGNAL_POLARITY = 'signal_polarity'
-
 # reference pixel parameters
 #: INT; Longitude (decimal degrees) of reference pixel, or if left blank a search will be performed
 REFX = 'refx'
@@ -274,10 +271,11 @@ ORB_DEGREE_NAMES = {PLANAR: 'PLANAR',
                     QUADRATIC: 'QUADRATIC',
                     PART_CUBIC: 'PART CUBIC'}
 
-
 # geometry outputs
 GEOMETRY_OUTPUT_TYPES = ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle', 'range_dist']
 
+# sign convention for phase data
+SIGNAL_POLARITY = 'signal_polarity'
 
 # LOS projection
 LOS_PROJECTION = 'los_projection'

@@ -307,7 +307,7 @@ def __save_merged_files(ifgs_dict, params, array, out_type, index=None, savenpy=
 
     md[ifc.DATA_TYPE] = out_type_md_dict[out_type]
 
-    if out_type in los_projection_out_types:  # apply LOS projection for these outputs
+    if out_type in los_projection_out_types:  # apply LOS projection and sign conversion for these outputs
         incidence_path = Path(Configuration.geometry_files(params)['incidence_angle'])
         if incidence_path.exists():  # We can do LOS projection
             if params[C.LOS_PROJECTION] == ifc.LINE_OF_SIGHT:
@@ -319,10 +319,15 @@ def __save_merged_files(ifgs_dict, params, array, out_type, index=None, savenpy=
             incidence.open()
             array /= los_projection_divisors[params[C.LOS_PROJECTION]](incidence.data) * params[C.SIGNAL_POLARITY]
             md[C.LOS_PROJECTION.upper()] = ifc.LOS_PROJECTION_OPTION[params[C.LOS_PROJECTION]]
+            md[C.SIGNAL_POLARITY.upper()] = params[C.SIGNAL_POLARITY]
 
     shared.write_output_geotiff(md, gt, wkt, array, dest, np.nan)
-    if C.LOS_PROJECTION.upper() in md:   # clear the extra metadata so it does not mess up other images
+    # clear the extra metadata so it does not mess up other images
+    if C.LOS_PROJECTION.upper() in md:
         md.pop(C.LOS_PROJECTION.upper())
+    if C.SIGNAL_POLARITY.upper() in md:
+        md.pop(C.SIGNAL_POLARITY.upper())
+
     if savenpy:
         np.save(file=npy_file, arr=array)
 
