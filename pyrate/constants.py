@@ -298,6 +298,3 @@ COHERENCE_DIR = 'coherence_dir'
 INTERFEROGRAM_DIR = 'interferogram_dir'
 GEOMETRY_DIR = 'geometry_dir'
 
-
-# temp constants
-DISABLE_PHASE_CLOSURE = False
