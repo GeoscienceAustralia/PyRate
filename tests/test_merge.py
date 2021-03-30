@@ -110,7 +110,7 @@ class TestLOSConversion:
             all_dirs[k] = k_dir
             self.run_with_new_params(k_dir, params)
 
-        signal_dir = Path(params[C.OUT_DIR]).joinpath('signal_polatiry_dir')
+        signal_dir = Path(params[C.OUT_DIR]).joinpath('signal_polarity_dir')
         signal_dir.mkdir(exist_ok=True)
         all_dirs[C.SIGNAL_POLARITY] = signal_dir
 

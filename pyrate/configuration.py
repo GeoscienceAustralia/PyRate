@@ -65,7 +65,7 @@ def validate_parameter_value(input_name, input_value, min_value=None, max_value=
         if input_value not in possible_values:  # pragma: no cover
             raise ValueError(
                 "Invalid value for " + str(input_name) + " supplied: " + str(
-                    input_value) + ". Provide a value from: " + str(possible_values) + ".")
+                    input_value) + ". Provide one of these values: " + str(possible_values) + ".")
     return True
 
 
