@@ -57,7 +57,7 @@ def stack_rate_array(ifgs, params, vcmt, mst=None):
         for j in range(cols):
             rate[i, j], error[i, j], samples[i, j] = stack_rate_pixel(obs[:, i, j], mst[:, i, j], vcmt, span, nsig, pthresh)
 
-    return rate, params["velerror_nsig"]*error, samples
+    return rate, params[C.VELERROR_NSIG]*error, samples
 
 def mask_rate(rate, error, maxsig):
     """
@@ -73,7 +73,6 @@ def mask_rate(rate, error, maxsig):
     :return: error: Masked error (standard deviation) map
     :rtype: ndarray
     """
-    log.info('Masking stack rate and error maps where sigma is greater than {} millimetres'.format(maxsig))
     # initialise mask array with existing NaNs
     mask = ~isnan(error)
     # original Nan count

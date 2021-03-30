@@ -280,6 +280,9 @@ SIGNAL_POLARITY = 'signal_polarity'
 # LOS projection
 LOS_PROJECTION = 'los_projection'
 
+# Number of sigma to report velocity error
+VELERROR_NSIG = 'velerror_nsig'
+
 # dir for temp files
 TMPDIR = 'tmpdir'
 
