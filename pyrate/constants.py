@@ -271,13 +271,17 @@ ORB_DEGREE_NAMES = {PLANAR: 'PLANAR',
                     QUADRATIC: 'QUADRATIC',
                     PART_CUBIC: 'PART CUBIC'}
 
-
 # geometry outputs
 GEOMETRY_OUTPUT_TYPES = ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle', 'range_dist']
 
+# sign convention for phase data
+SIGNAL_POLARITY = 'signal_polarity'
 
 # LOS projection
 LOS_PROJECTION = 'los_projection'
+
+# Number of sigma to report velocity error
+VELERROR_NSIG = 'velerror_nsig'
 
 # dir for temp files
 TMPDIR = 'tmpdir'
