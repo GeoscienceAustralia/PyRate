@@ -38,7 +38,7 @@ def test_discard_loops_containing_max_ifg_count(geotiffs):
 def retain_loops(tifs):
     sorted_loops = sort_loops_based_on_weights_and_date(tifs)
     params = {
-        C.MAX_LOOPS_IN_IFG: 2,
+        C.MAX_LOOPS_PER_IFG: 2,
         C.MAX_LOOP_LENGTH: 3
     }
     retained_loops_meeting_max_loop_criteria = [sl for sl in sorted_loops
@@ -47,7 +47,7 @@ def retain_loops(tifs):
           f"{len(retained_loops_meeting_max_loop_criteria)} loops are retained"
     print(msg)
     retained_loops = discard_loops_containing_max_ifg_count(retained_loops_meeting_max_loop_criteria, params)
-    msg = f"After applying MAX_LOOPS_IN_IFG={params[C.MAX_LOOPS_IN_IFG]} criteria, " \
+    msg = f"After applying MAX_LOOPS_PER_IFG={params[C.MAX_LOOPS_PER_IFG]} criteria, " \
           f"{len(retained_loops)} loops are retained"
     print(msg)
     return retained_loops

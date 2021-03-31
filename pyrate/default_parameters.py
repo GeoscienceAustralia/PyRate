@@ -412,7 +412,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": [0, 1],
         "Required": False
     },
-    "max_loops_in_ifg": {
+    "max_loops_per_ifg": {
         "DataType": int,
         "DefaultValue": 2,
         "MinValue": 1,

@@ -159,19 +159,19 @@ def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) ->
 
     :param loops: list of loops
     :param params: params dict
-    :return: selected loops satisfying MAX_LOOPS_IN_IFG criteria
+    :return: selected loops satisfying MAX_LOOPS_PER_IFG criteria
     """
     selected_loops = []
     ifg_counter = defaultdict(int)
     for loop in loops:
         edge_appearances = np.array([ifg_counter[e] for e in loop.edges])
-        if not np.all(edge_appearances > params[C.MAX_LOOPS_IN_IFG]):
+        if not np.all(edge_appearances > params[C.MAX_LOOPS_PER_IFG]):
             selected_loops.append(loop)
             for e in loop.edges:
                 ifg_counter[e] += 1
         else:
-            log.debug(f"Loop {loop.loop} is ignored due to all it's ifgs already seen "
-                      f"{params[C.MAX_LOOPS_IN_IFG]} times or more")
+            log.debug(f"Loop {loop.loop} ignored: all constituent ifgs have been in a loop "
+                      f"{params[C.MAX_LOOPS_PER_IFG]} times or more")
     return selected_loops
 
 
@@ -208,7 +208,7 @@ def wrap_closure_check(ifg_files: List[str], config: Configuration) -> \
                                      retained_loops_meeting_max_loop_criteria, params)
     ifgs_with_loops = mpiops.run_once(__drop_ifgs_if_not_part_of_any_loop, ifg_files, retained_loops, params)
 
-    msg = f"After applying MAX_LOOPS_IN_IFG = {params[C.MAX_LOOPS_IN_IFG]} criteria, " \
+    msg = f"After applying MAX_LOOPS_PER_IFG = {params[C.MAX_LOOPS_PER_IFG]} criteria, " \
           f"{len(retained_loops)} loops are retained"
     if len(retained_loops) < 1:
         return None
