@@ -135,7 +135,7 @@ def filter_to_closure_checked_ifgs(config, interactive_plot=True) -> \
     log.info(f"Performing closure check on original set of {len(ifg_files)} ifgs")
 
     while True:  # iterate till ifgs/loops are stable
-        rets = wrap_closure_check(ifg_files, config)
+        rets = wrap_closure_check(config)
         if rets is None:
             return
         new_ifg_files, closure, ifgs_breach_count, num_occurences_each_ifg, loops = rets
@@ -175,7 +175,7 @@ def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) ->
     return selected_loops
 
 
-def wrap_closure_check(ifg_files: List[str], config: Configuration) -> \
+def wrap_closure_check(config: Configuration) -> \
         Tuple[
             List[str],
             NDArray[(Any, Any), Float32],
@@ -191,21 +191,16 @@ def wrap_closure_check(ifg_files: List[str], config: Configuration) -> \
     For return variables see docstring in `sum_phase_closures`.
     """
     params = config.__dict__
+    ifg_files = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
     ifg_files.sort()
-    sorted_signed_loops = mpiops.run_once(sort_loops_based_on_weights_and_date, ifg_files)
+    sorted_signed_loops = mpiops.run_once(sort_loops_based_on_weights_and_date, params)
     log.info(f"Total number of possible closure loops is {len(sorted_signed_loops)}")
-    retained_loops_meeting_max_loop_criteria = [sl for sl in sorted_signed_loops
-                                                if len(sl) <= params[C.MAX_LOOP_LENGTH]]
-    msg = f"After applying MAX_LOOP_LENGTH = {params[C.MAX_LOOP_LENGTH]} criteria, " \
-          f"{len(retained_loops_meeting_max_loop_criteria)} loops are retained"
 
-    if len(retained_loops_meeting_max_loop_criteria) < 1:
+    if len(sorted_signed_loops) < 1:
         return None
-    else:
-        log.info(msg)
 
     retained_loops = mpiops.run_once(discard_loops_containing_max_ifg_count,
-                                     retained_loops_meeting_max_loop_criteria, params)
+                                     sorted_signed_loops, params)
     ifgs_with_loops = mpiops.run_once(__drop_ifgs_if_not_part_of_any_loop, ifg_files, retained_loops, params)
 
     msg = f"After applying MAX_LOOPS_PER_IFG = {params[C.MAX_LOOPS_PER_IFG]} criteria, " \
