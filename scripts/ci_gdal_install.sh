@@ -28,8 +28,6 @@ GDALOPTS="  --with-geos \
             --without-kakadu \
             --without-mrsid \
             --without-jp2mrsid \
-            --without-bsb \
-            --without-grib \
             --without-mysql \
             --without-ingres \
             --without-xerces \
@@ -72,6 +70,14 @@ if [ "$GDALVERSION" = "master" ]; then
         make -s -j 2
         make install
     fi
+
+#export LDFLAGS="-L${INSTALL_DIR}/lib -Wl,-rpath,${INSTALL_DIR}/lib"
+#./configure \
+#                --prefix="${INSTALL_DIR}" \
+#                --with-proj="${INSTALL_DIR}"
+#
+#I'm not sure if it matters, but I also set CMAKE_INSTALL_RPATH=$INSTALL_DIR when I build proj.
+
 
 else
     case "$GDALVERSION" in
