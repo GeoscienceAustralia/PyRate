@@ -24,6 +24,8 @@ from pyrate.core.phase_closure.mst_closure import (
     __add_signs_and_weights_to_loops, sort_loops_based_on_weights_and_date, WeightedLoop,
     __find_signed_closed_loops
 )
+import pyrate.constants as C
+from tests.phase_closure.common import IfgDummy
 
 GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
 
@@ -38,7 +40,7 @@ def geotiffs():
 @pytest.fixture
 def all_loops(geotiffs):
     edges = __setup_edges(geotiffs)
-    loops = __find_closed_loops(edges)
+    loops = __find_closed_loops(edges, max_loop_length=100)
     assert len(loops) == 541
     return loops
 
@@ -79,7 +81,12 @@ def test_associate_ifgs_with_loops(signed_loops, geotiffs):
 
 
 def test_sort_loops_based_on_weights_and_date(geotiffs):
-    weighted_loops = sort_loops_based_on_weights_and_date(geotiffs)
+    ifg_files = [IfgDummy(ifg_path) for ifg_path in geotiffs]
+    params = {
+        C.INTERFEROGRAM_FILES: ifg_files,
+        C.MAX_LOOP_LENGTH: 100
+    }
+    weighted_loops = sort_loops_based_on_weights_and_date(params)
     assert len(weighted_loops) == 541
     # order
     weights = [w.weight for w in weighted_loops]
@@ -95,14 +102,16 @@ def test_sort_loops_based_on_weights_and_date(geotiffs):
             assert np.all(tds >= 0)  # assert all dates are increasing for same weights
 
 
-def test_add_signs_and_weights_to_loops(geotiffs):
+def test_add_signs_and_weights_to_loops(closure_params):
+    geotiffs = closure_params["geotiffs"]
+
     """also tests find_signed_closed_loops"""
     all_edges = __setup_edges(geotiffs)
-    all_loops = __find_closed_loops(all_edges)
+    all_loops = __find_closed_loops(all_edges, max_loop_length=closure_params[C.MAX_LOOP_LENGTH])
     loops1 = __add_signs_and_weights_to_loops(all_loops, all_edges)
 
     all_edges = __setup_edges(geotiffs)
-    all_loops = __find_closed_loops(all_edges)
+    all_loops = __find_closed_loops(all_edges, closure_params[C.MAX_LOOP_LENGTH])
     loops2 = __add_signs_and_weights_to_loops(all_loops, all_edges)
 
     compare_loops(loops1, loops2)
@@ -120,13 +129,13 @@ def compare_loops(loops1, loops2):
     assert i == 540
 
 
-def test_find_signed_closed_loops(geotiffs):
-    loops1 = __find_signed_closed_loops(geotiffs)
-    loops2 = __find_signed_closed_loops(geotiffs)
+def test_find_signed_closed_loops(closure_params):
+    loops1 = __find_signed_closed_loops(closure_params)
+    loops2 = __find_signed_closed_loops(closure_params)
     compare_loops(loops1, loops2)
 
 
-def test_sort_loops_based_on_weights_and_date_2(geotiffs):
-    sorted_loops1 = sort_loops_based_on_weights_and_date(geotiffs)
-    sorted_loops2 = sort_loops_based_on_weights_and_date(geotiffs)
+def test_sort_loops_based_on_weights_and_date_2(closure_params):
+    sorted_loops1 = sort_loops_based_on_weights_and_date(closure_params)
+    sorted_loops2 = sort_loops_based_on_weights_and_date(closure_params)
     compare_loops(sorted_loops1, sorted_loops2)
