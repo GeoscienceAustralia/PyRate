@@ -167,5 +167,5 @@ def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, crea
 
     print("==========================xxx===========================")
 
-    shutil.rmtree(params[C.OBS_DIR])
-    shutil.rmtree(params_p[C.OBS_DIR])
+    shutil.rmtree(params[C.WORKING_DIR])
+    shutil.rmtree(params_p[C.WORKING_DIR])

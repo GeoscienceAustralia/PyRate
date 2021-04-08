@@ -340,14 +340,14 @@ class TestWriteUnw:
         shared.mkdir_p(gamma_params[C.OUT_DIR])
         from copy import deepcopy
         cls.params = deepcopy(gamma_params)
-        cls.params[C.OBS_DIR] = common.SML_TEST_GAMMA
+        cls.params[C.WORKING_DIR] = common.SML_TEST_GAMMA
         cls.params[C.PROCESSOR] = 1  # gamma
         cls.params[C.PARALLEL] = 0
         cls.params[C.REF_EST_METHOD] = 1
         cls.params[C.DEM_FILE] = common.SML_TEST_DEM_GAMMA
         cls.params[C.BASE_FILE_LIST] = common.SML_TEST_GAMMA
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
-        cls.base_unw_paths = tests.common.original_ifg_paths(cls.params[C.IFG_FILE_LIST], cls.params[C.OBS_DIR])
+        cls.base_unw_paths = tests.common.original_ifg_paths(cls.params[C.IFG_FILE_LIST], cls.params[C.WORKING_DIR])
         cls.base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
 
         # dest_paths are tifs that have been geotif converted and multilooked

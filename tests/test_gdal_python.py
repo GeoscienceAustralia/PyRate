@@ -438,7 +438,7 @@ def test_coherence_files_not_converted():
 
 def test_small_data_coherence(gamma_or_mexicoa_conf):
     temp_obs_dir = Path(tempfile.mkdtemp())
-    params = common.manipulate_test_conf(conf_file=gamma_or_mexicoa_conf, temp_obs_dir=temp_obs_dir)
+    params = common.manipulate_test_conf(conf_file=gamma_or_mexicoa_conf, work_dir=temp_obs_dir)
 
     params[c.COH_MASK] = 1
 

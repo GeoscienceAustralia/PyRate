@@ -841,12 +841,12 @@ class TestOneIncidenceOrElevationMap(UnitTestAdaptation):
     def teardown_class(cls):
         params = Configuration(cls.conf_file).__dict__
         shutil.rmtree(cls.base_dir)
-        common.remove_tifs(params[C.OBS_DIR])
+        common.remove_tifs(params[C.WORKING_DIR])
 
     def make_input_files(self, inc='', ele=''):
         with open(self.conf_file, 'w') as conf:
             conf.write('{}: {}\n'.format(C.NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(C.OBS_DIR, common.SML_TEST_GAMMA))
+            conf.write('{}: {}\n'.format(C.WORKING_DIR, common.SML_TEST_GAMMA))
             conf.write('{}: {}\n'.format(C.OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(C.IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(C.BASE_FILE_LIST, self.baseListFile))

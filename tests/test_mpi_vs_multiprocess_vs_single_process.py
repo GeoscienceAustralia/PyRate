@@ -224,9 +224,9 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
         
     print("==========================xxx===========================")
 
-    shutil.rmtree(params[C.OBS_DIR])
-    shutil.rmtree(params_m[C.OBS_DIR])
-    shutil.rmtree(params_s[C.OBS_DIR])
+    shutil.rmtree(params[C.WORKING_DIR])
+    shutil.rmtree(params_m[C.WORKING_DIR])
+    shutil.rmtree(params_s[C.WORKING_DIR])
 
 
 def __check_equality_of_phase_closure_outputs(mpi_conf, sr_conf):
@@ -397,5 +397,5 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
 
     print("==========================xxx===========================")
 
-    shutil.rmtree(params[C.OBS_DIR])
-    shutil.rmtree(params_p[C.OBS_DIR])
+    shutil.rmtree(params[C.WORKING_DIR])
+    shutil.rmtree(params_p[C.WORKING_DIR])

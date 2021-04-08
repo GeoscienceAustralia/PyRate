@@ -247,7 +247,7 @@ class TestParallelPyRate:
         cls.rate_p, cls.error_p, cls.samples_p = \
             [common.reconstruct_stack_rate(ifgs[0].shape, tiles, params[C.TMPDIR], t) for t in rate_types]
         
-        common.remove_tifs(params[C.OBS_DIR])
+        common.remove_tifs(params[C.WORKING_DIR])
 
         # now create the non parallel version
         cls.tif_dir_s = Path(tempfile.mkdtemp())

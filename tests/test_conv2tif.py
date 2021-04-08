@@ -37,9 +37,9 @@ def test_dem_and_incidence_not_converted(gamma_params):
     gp_copy[C.DEM_FILE] = None
     gp_copy[C.APS_INCIDENCE_MAP] = None
     conv2tif.main(gp_copy)
-    inc_tif = glob.glob(os.path.join(gp_copy[C.OBS_DIR], '*inc.tif'))
+    inc_tif = glob.glob(os.path.join(gp_copy[C.WORKING_DIR], '*inc.tif'))
     assert len(inc_tif) == 0
-    dem_tif = glob.glob(os.path.join(gp_copy[C.OBS_DIR], '*dem.tif'))
+    dem_tif = glob.glob(os.path.join(gp_copy[C.WORKING_DIR], '*dem.tif'))
     assert len(dem_tif) == 0
 
 

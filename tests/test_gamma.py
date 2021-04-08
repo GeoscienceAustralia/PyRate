@@ -34,7 +34,7 @@ from pyrate.core import shared, gamma
 from pyrate import prepifg, conv2tif
 from pyrate.core.shared import write_fullres_geotiff, GeotiffException
 import pyrate.constants as C
-from pyrate.constants import PYRATEPATH, IFG_FILE_LIST, PROCESSOR, OBS_DIR, OUT_DIR, DEM_HEADER_FILE, SLC_DIR, \
+from pyrate.constants import PYRATEPATH, IFG_FILE_LIST, PROCESSOR, WORKING_DIR, OUT_DIR, DEM_HEADER_FILE, SLC_DIR, \
     NO_DATA_VALUE, BASE_FILE_LIST
 
 from tests.common import manipulate_test_conf
@@ -71,7 +71,7 @@ class TestGammaCommandLineTests:
         with open(self.confFile, 'w') as conf:
             conf.write('{}: {}\n'.format(DEM_HEADER_FILE, self.hdr))
             conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
+            conf.write('{}: {}\n'.format(WORKING_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(BASE_FILE_LIST, self.baseListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '1'))

@@ -52,14 +52,14 @@ def test_files_are_same(tempdir, get_config):
     __assert_same_files_produced(roipac_params[C.GEOMETRY_DIR], gamma_params[C.GEOMETRY_DIR], "dem.tif", 1)
 
     # clean up
-    shutil.rmtree(roipac_params[C.OBS_DIR])
-    shutil.rmtree(gamma_params[C.OBS_DIR])
+    shutil.rmtree(roipac_params[C.WORKING_DIR])
+    shutil.rmtree(gamma_params[C.WORKING_DIR])
 
 
 def __workflow(params, tdir):
-    copytree(params[C.OBS_DIR], tdir)
+    copytree(params[C.WORKING_DIR], tdir)
     # manipulate params
-    params[C.OBS_DIR] = tdir.as_posix()
+    params[C.WORKING_DIR] = tdir.as_posix()
     outdir = tdir.joinpath('out')
     outdir.mkdir(exist_ok=True)
     params[C.OUT_DIR] = outdir.as_posix()

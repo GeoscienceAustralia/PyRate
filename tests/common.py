@@ -576,34 +576,34 @@ def assert_same_files_produced(dir1, dir2, dir3, ext, num_files=None):
     assert_two_dirs_equal(dir1, dir3, ext, num_files)
 
 
-def manipulate_test_conf(conf_file, temp_obs_dir: Path):
+def manipulate_test_conf(conf_file, work_dir: Path):
     params = Configuration(conf_file).__dict__
     if conf_file == MEXICO_CROPA_CONF:
-        copytree(MEXICO_CROPA_DIR, temp_obs_dir)
-        copytree(MEXICO_CROPA_DIR_HEADERS, temp_obs_dir)
-        copytree(MEXICO_CROPA_DIR_GEOMETRY, temp_obs_dir)
-        copytree(MEXICO_CROPA_DIR_DEM_ERROR, temp_obs_dir)
-        shutil.copy2(params[C.IFG_FILE_LIST], temp_obs_dir)
-        shutil.copy2(params[C.HDR_FILE_LIST], temp_obs_dir)
-        shutil.copy2(params[C.COH_FILE_LIST], temp_obs_dir)
-        shutil.copy2(params[C.BASE_FILE_LIST], temp_obs_dir)
+        copytree(MEXICO_CROPA_DIR, work_dir)
+        copytree(MEXICO_CROPA_DIR_HEADERS, work_dir)
+        copytree(MEXICO_CROPA_DIR_GEOMETRY, work_dir)
+        copytree(MEXICO_CROPA_DIR_DEM_ERROR, work_dir)
+        shutil.copy2(params[C.IFG_FILE_LIST], work_dir)
+        shutil.copy2(params[C.HDR_FILE_LIST], work_dir)
+        shutil.copy2(params[C.COH_FILE_LIST], work_dir)
+        shutil.copy2(params[C.BASE_FILE_LIST], work_dir)
         for m_path in params[C.INTERFEROGRAM_FILES]:
-            m_path.converted_path = temp_obs_dir.joinpath(Path(m_path.converted_path).name).as_posix()
+            m_path.converted_path = work_dir.joinpath(Path(m_path.converted_path).name).as_posix()
     else:  # legacy unit test data
-        copytree(params[C.OBS_DIR], temp_obs_dir)
+        copytree(params[C.WORKING_DIR], work_dir)
 
-    params[C.OBS_DIR] = temp_obs_dir.as_posix()
+    params[C.WORKING_DIR] = work_dir.as_posix()
     # manipulate params
-    outdir = temp_obs_dir.joinpath('out')
+    outdir = work_dir.joinpath('out')
     outdir.mkdir(exist_ok=True)
     params[C.OUT_DIR] = outdir.as_posix()
     params[C.TEMP_MLOOKED_DIR] = outdir.joinpath(C.TEMP_MLOOKED_DIR).as_posix()
-    params[C.DEM_FILE] = temp_obs_dir.joinpath(Path(params[C.DEM_FILE]).name).as_posix()
-    params[C.DEM_HEADER_FILE] = temp_obs_dir.joinpath(Path(params[C.DEM_HEADER_FILE]).name).as_posix()
-    params[C.HDR_FILE_LIST] = temp_obs_dir.joinpath(Path(params[C.HDR_FILE_LIST]).name).as_posix()
-    params[C.SLC_DIR] = temp_obs_dir.as_posix()
-    params[C.IFG_FILE_LIST] = temp_obs_dir.joinpath(Path(params[C.IFG_FILE_LIST]).name).as_posix()
-    params[C.COH_FILE_DIR] = temp_obs_dir.as_posix()
+    params[C.DEM_FILE] = work_dir.joinpath(Path(params[C.DEM_FILE]).name).as_posix()
+    params[C.DEM_HEADER_FILE] = work_dir.joinpath(Path(params[C.DEM_HEADER_FILE]).name).as_posix()
+    params[C.HDR_FILE_LIST] = work_dir.joinpath(Path(params[C.HDR_FILE_LIST]).name).as_posix()
+    params[C.SLC_DIR] = work_dir.as_posix()
+    params[C.IFG_FILE_LIST] = work_dir.joinpath(Path(params[C.IFG_FILE_LIST]).name).as_posix()
+    params[C.COH_FILE_DIR] = work_dir.as_posix()
     params[C.TMPDIR] = outdir.joinpath(C.TMPDIR).as_posix()
     params[C.COHERENCE_DIR] = outdir.joinpath(C.COHERENCE_DIR).as_posix()
     params[C.GEOMETRY_DIR] = outdir.joinpath(C.GEOMETRY_DIR).as_posix()
