@@ -21,6 +21,7 @@ from datetime import date
 import networkx as nx
 from pyrate.core.shared import dem_or_ifg
 import pyrate.constants as C
+from pyrate.core.logger import pyratelogger as log
 
 Edge = namedtuple('Edge', ['first', 'second'])
 
@@ -83,17 +84,19 @@ class WeightedLoop:
         return [Edge(swe.first, swe.edge.second) for swe in self.loop]
 
 
-def __discard_cycles_with_same_members(simple_cycles: List[List[date]]) -> List[List[date]]:
-    seen_sc_sets = set()
-    filtered_sc = []
-    for sc in simple_cycles:
-        loop = sc[:]
-        sc.sort()
-        sc = tuple(sc)
-        if sc not in seen_sc_sets:
-            seen_sc_sets.add(sc)
-            filtered_sc.append(loop)
-    return filtered_sc
+def __discard_cycles_with_same_members(cycles: List[List[date]]) -> List[List[date]]:
+    log.debug(f"Discarding loops that contain the same set of edges as another loop")
+    seen_cycle_sets = set()
+    filtered_cycles = []
+    for c in cycles:
+        loop = c[:]
+        c.sort()
+        c = tuple(c)
+        if c not in seen_cycle_sets:
+            seen_cycle_sets.add(c)
+            filtered_cycles.append(loop)
+    log.debug(f"Number of remaining loops is {len(filtered_cycles)}")
+    return filtered_cycles
 
 
 def __find_closed_loops(edges: List[Edge], max_loop_length: int) -> List[List[date]]:
@@ -101,16 +104,20 @@ def __find_closed_loops(edges: List[Edge], max_loop_length: int) -> List[List[da
     edges = [(we.first, we.second) for we in edges]
     g.add_edges_from(edges)
     dg = nx.DiGraph(g)
-    simple_cycles = nx.simple_cycles(dg)  # will have all edges
-    simple_cycles = [scc for scc in simple_cycles
+    log.debug(f"Evaluating all possible loops using NetworkX simple_cycles function")
+    simple_cycles = nx.simple_cycles(dg)  # yields a generator that determines all possible cycles
+    log.debug(f"Total number of possible loops is {len(list(simple_cycles))}")
+    log.debug(f"Discarding loops with less than 3 edges and more than {max_loop_length} edges")
+    loop_subset = [scc for scc in simple_cycles
                      if
-                     (len(scc) > 2)  # discard edges
+                     (len(scc) > 2)  # three or more edges reqd for closed loop
                      and
                      (len(scc) <= max_loop_length)  # discard loops exceeding max loop length
                      ]
+    log.debug(f"Number of remaining loops is {len(loop_subset)}")
 
     # also discard loops when the loop members are the same
-    return __discard_cycles_with_same_members(simple_cycles)
+    return __discard_cycles_with_same_members(loop_subset)
 
 
 def __add_signs_and_weights_to_loops(loops: List[List[date]], available_edges: List[Edge]) -> List[WeightedLoop]:
