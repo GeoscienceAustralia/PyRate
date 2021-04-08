@@ -53,7 +53,7 @@ jobs:
         with:
           path: |
             /home/runner/gdalinstall
-          key: ${{ runner.os }}-GDAL-${{ matrix.GDALVERSION }}-proj-${{ matrix.PROJVERSION }}
+          key: ${{ runner.os }}-cache-GDAL-${{ matrix.GDALVERSION }}-proj-${{ matrix.PROJVERSION }}
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
