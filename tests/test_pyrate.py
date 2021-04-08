@@ -213,10 +213,9 @@ class TestParallelPyRate:
 
         from pyrate.configuration import Configuration
         # change the required params
-        # params[cf.OBS_DIR] = common.SML_TEST_GAMMA
         params[C.PROCESSES] = 4
         params[C.PROCESSOR] = 1  # gamma
-        params[C.IFG_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
+        params[C.IFG_FILE_LIST] = os.path.join(common.GAMMA_SML_TEST_DIR, 'ifms_17')
         params[C.PARALLEL] = 1
         params[C.APS_CORRECTION] = 0
         params[C.REFX], params[C.REFY] = -1, -1
@@ -254,7 +253,7 @@ class TestParallelPyRate:
         params = manipulate_test_conf(gamma_conf, cls.tif_dir_s)
         params[C.PROCESSES] = 4
         params[C.PROCESSOR] = 1  # gamma
-        params[C.IFG_FILE_LIST] = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
+        params[C.IFG_FILE_LIST] = os.path.join(common.GAMMA_SML_TEST_DIR, 'ifms_17')
         params[C.PARALLEL] = 0
         params[C.APS_CORRECTION] = 0
         params[C.REFX], params[C.REFY] = -1, -1

@@ -834,8 +834,8 @@ class TestOneIncidenceOrElevationMap(UnitTestAdaptation):
     def setup_class(cls):
         cls.base_dir = tempfile.mkdtemp()
         cls.conf_file = tempfile.mktemp(suffix='.conf', dir=cls.base_dir)
-        cls.ifgListFile = os.path.join(common.SML_TEST_GAMMA, 'ifms_17')
-        cls.baseListFile = os.path.join(common.SML_TEST_GAMMA, 'baseline_17')
+        cls.ifgListFile = os.path.join(common.GAMMA_SML_TEST_DIR, 'ifms_17')
+        cls.baseListFile = os.path.join(common.GAMMA_SML_TEST_DIR, 'baseline_17')
 
     @classmethod
     def teardown_class(cls):
@@ -846,14 +846,14 @@ class TestOneIncidenceOrElevationMap(UnitTestAdaptation):
     def make_input_files(self, inc='', ele=''):
         with open(self.conf_file, 'w') as conf:
             conf.write('{}: {}\n'.format(C.NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(C.WORKING_DIR, common.SML_TEST_GAMMA))
+            conf.write('{}: {}\n'.format(C.WORKING_DIR, common.GAMMA_SML_TEST_DIR))
             conf.write('{}: {}\n'.format(C.OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(C.IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(C.BASE_FILE_LIST, self.baseListFile))
             conf.write('{}: {}\n'.format(C.PROCESSOR, '1'))
             conf.write('{}: {}\n'.format(
                 C.DEM_HEADER_FILE, os.path.join(
-                    common.SML_TEST_GAMMA, '20060619_utm_dem.par')))
+                    common.GAMMA_SML_TEST_DIR, '20060619_utm_dem.par')))
             conf.write('{}: {}\n'.format(C.IFG_LKSX, '1'))
             conf.write('{}: {}\n'.format(C.IFG_LKSY, '1'))
             conf.write('{}: {}\n'.format(C.IFG_CROP_OPT, '1'))
@@ -884,11 +884,6 @@ class TestOneIncidenceOrElevationMap(UnitTestAdaptation):
         # test dem geotiff created
         demtif = glob.glob(os.path.join(params[C.OUT_DIR], '*_dem.tif'))
         self.assertEqual(1, len(demtif))
-        # elevation/incidence file
-        # not computing anymore
-        # ele = glob.glob(os.path.join(params[cf.OBS_DIR],
-        #                              '*utm_{ele}.tif'.format(ele=ele)))[0]
-        # self.assertTrue(os.path.exists(ele))
         # mlooked tifs
         mlooked_tifs = glob.glob(os.path.join(self.base_dir, '*_ifg.tif'))
         mlooked_tifs.append(os.path.join(self.base_dir, 'dem.tif'))

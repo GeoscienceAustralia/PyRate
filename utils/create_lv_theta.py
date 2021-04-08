@@ -26,11 +26,11 @@ from osgeo import gdal
 from pyrate.core import shared, ifgconstants as ifc, gamma
 from tests import common
 
-elevation_file = os.path.join(common.SML_TEST_GAMMA,
+elevation_file = os.path.join(common.GAMMA_SML_TEST_DIR,
                               os.path.splitext(common.SML_TEST_DEM_GAMMA)[0]
                               + '.lv_theta')
 
-inc_file = os.path.join(common.SML_TEST_GAMMA,
+inc_file = os.path.join(common.GAMMA_SML_TEST_DIR,
                         os.path.splitext(common.SML_TEST_DEM_GAMMA)[0]
                         + '.inc')
 
@@ -42,7 +42,7 @@ dem_header_file = common.SML_TEST_DEM_HDR_GAMMA
 dem_header = gamma.parse_dem_header(dem_header_file)
 
 header = gamma.parse_epoch_header(
-    os.path.join(common.SML_TEST_GAMMA, '20060828_slc.par'))
+    os.path.join(common.GAMMA_SML_TEST_DIR, '20060828_slc.par'))
 
 
 incidence_angle = header[ifc.PYRATE_INCIDENCE_DEGREES]

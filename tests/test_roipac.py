@@ -29,7 +29,7 @@ from pyrate.core import roipac
 from pyrate.core.shared import GeotiffException
 from pyrate.core.shared import write_fullres_geotiff
 from tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
-from tests.common import SML_TEST_DEM_DIR, SML_TEST_OBS, TEMPDIR, UnitTestAdaptation
+from tests.common import SML_TEST_DEM_DIR, ROIPAC_SML_TEST_DIR, TEMPDIR, UnitTestAdaptation
 from tests.common import SML_TEST_DEM_ROIPAC, SML_TEST_DEM_HDR
 
 gdal.UseExceptions()
@@ -40,7 +40,7 @@ if not exists(HEADERS_TEST_DIR):
     sys.exit("ERROR: Missing the 'headers' data for unittests\n")
 
 # constants
-SHORT_HEADER_PATH = join(SML_TEST_OBS, 'geo_060619-061002.unw.rsc')
+SHORT_HEADER_PATH = join(ROIPAC_SML_TEST_DIR, 'geo_060619-061002.unw.rsc')
 FULL_HEADER_PATH = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
 
 

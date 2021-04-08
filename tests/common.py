@@ -26,7 +26,7 @@ import itertools
 import tempfile
 from decimal import Decimal
 import pytest
-from typing import Iterable
+from typing import Iterable, Union
 from os.path import join
 from subprocess import check_output, run
 from pathlib import Path
@@ -62,41 +62,45 @@ TEMPDIR = tempfile.gettempdir()
 TESTDIR = join(PYRATEPATH, 'tests')
 BASE_TEST = join(PYRATEPATH, "tests", "test_data")
 SML_TEST_DIR = join(BASE_TEST, "small_test")
-SML_TEST_OBS = join(SML_TEST_DIR, 'roipac_obs')  # roipac processed unws
+ROIPAC_SML_TEST_DIR = join(SML_TEST_DIR, 'roipac_obs')  # roipac processed unws
 SML_TEST_OUT = join(SML_TEST_DIR, 'out')
 SML_TEST_TIF = join(SML_TEST_DIR, 'tif')
-SML_TEST_GAMMA = join(SML_TEST_DIR, 'gamma_obs')  # gamma processed unws
-SML_TEST_ROIPAC = join(SML_TEST_DIR, 'roipac_obs')  # gamma processed unws
+GAMMA_SML_TEST_DIR = join(SML_TEST_DIR, 'gamma_obs')  # gamma processed unws
 SML_TEST_CONF = join(SML_TEST_DIR, 'conf')
 SML_TEST_LINRATE = join(SML_TEST_DIR, 'linrate')
-SML_TEST_GAMMA_HEADER_LIST = join(SML_TEST_GAMMA, 'headers')
-SML_TEST_ROIPAC_HEADER_LIST = join(SML_TEST_ROIPAC, 'headers')
+SML_TEST_GAMMA_HEADER_LIST = join(GAMMA_SML_TEST_DIR, 'headers')
+SML_TEST_ROIPAC_HEADER_LIST = join(ROIPAC_SML_TEST_DIR, 'headers')
 
 SML_TEST_DEM_DIR = join(SML_TEST_DIR, 'dem')
 SML_TEST_LEGACY_PREPIFG_DIR = join(SML_TEST_DIR, 'prepifg_output')
 SML_TEST_LEGACY_ORBITAL_DIR = join(SML_TEST_DIR, 'orbital_error_correction')
-SML_TEST_DEM_ROIPAC = join(SML_TEST_OBS, 'roipac_test_trimmed.dem')
-SML_TEST_DEM_GAMMA = join(SML_TEST_GAMMA, '20060619_utm.dem')
-SML_TEST_INCIDENCE = join(SML_TEST_GAMMA, '20060619_utm.inc')
-SML_TEST_ELEVATION = join(SML_TEST_GAMMA, '20060619_utm.lv_theta')
-SML_TEST_DEM_HDR_GAMMA = join(SML_TEST_GAMMA, '20060619_utm_dem.par')
-SML_TEST_DEM_HDR = join(SML_TEST_OBS, 'roipac_test_trimmed.dem.rsc')
+SML_TEST_DEM_ROIPAC = join(ROIPAC_SML_TEST_DIR, 'roipac_test_trimmed.dem')
+SML_TEST_DEM_GAMMA = join(GAMMA_SML_TEST_DIR, '20060619_utm.dem')
+SML_TEST_INCIDENCE = join(GAMMA_SML_TEST_DIR, '20060619_utm.inc')
+SML_TEST_ELEVATION = join(GAMMA_SML_TEST_DIR, '20060619_utm.lv_theta')
+SML_TEST_DEM_HDR_GAMMA = join(GAMMA_SML_TEST_DIR, '20060619_utm_dem.par')
+SML_TEST_DEM_HDR = join(ROIPAC_SML_TEST_DIR, 'roipac_test_trimmed.dem.rsc')
 SML_TEST_DEM_TIF = join(SML_TEST_DEM_DIR, 'roipac_test_trimmed.tif')
 
 SML_TEST_COH_DIR = join(SML_TEST_DIR, 'coherence')
 SML_TEST_COH_LIST = join(SML_TEST_COH_DIR, 'coherence_17')
 
-SML_TEST_BASE_LIST = join(SML_TEST_GAMMA, 'baseline_17')
+SML_TEST_BASE_LIST = join(GAMMA_SML_TEST_DIR, 'baseline_17')
 
-SML_TEST_LT_FILE = join(SML_TEST_GAMMA, 'cropped_lookup_table.lt')
+SML_TEST_LT_FILE = join(GAMMA_SML_TEST_DIR, 'cropped_lookup_table.lt')
 
 TEST_CONF_ROIPAC = join(SML_TEST_CONF, 'pyrate_roipac_test.conf')
 TEST_CONF_GAMMA = join(SML_TEST_CONF, 'pyrate_gamma_test.conf')
 
-ROIPAC_SYSTEM_CONF = PYRATEPATH.joinpath("tests", "test_data", "system", "roipac", "input_parameters.conf")
-GAMMA_SYSTEM_CONF = PYRATEPATH.joinpath("tests", "test_data", "system", "gamma", "input_parameters.conf")
-GEOTIF_SYSTEM_CONF = PYRATEPATH.joinpath("tests", "test_data", "system", "geotiff", "input_parameters.conf")
+system_test_dir = PYRATEPATH.joinpath("tests", "test_data", "system")
+ROIPAC_SYSTEM_FILES = system_test_dir.joinpath("roipac")
+ROIPAC_SYSTEM_CONF = ROIPAC_SYSTEM_FILES.joinpath("input_parameters.conf")
 
+GAMMA_SYSTEM_FILES = system_test_dir.joinpath("gamma")
+GAMMA_SYSTEM_CONF = GAMMA_SYSTEM_FILES.joinpath("input_parameters.conf")
+
+GEOTIF_SYSTEM_FILES = system_test_dir.joinpath("geotiff")
+GEOTIF_SYSTEM_CONF = GEOTIF_SYSTEM_FILES.joinpath("input_parameters.conf")
 
 PREP_TEST_DIR = join(BASE_TEST, 'prepifg')
 PREP_TEST_OBS = join(PREP_TEST_DIR, 'obs')
@@ -227,13 +231,13 @@ def small_ifg_file_list(datafiles=None):
 def small_data_roipac_unws():
     """Returns unw file list before prepifg operation
     input phase data is in radians; these ifgs are in radians - not converted to mm"""
-    return glob.glob(join(SML_TEST_OBS, "*.unw"))
+    return glob.glob(join(ROIPAC_SML_TEST_DIR, "*.unw"))
 
 
 def small_data_setup_gamma_unws():
     """Returns unw file list before prepifg operation
     input phase data is in radians; these ifgs are in radians - not converted to mm"""
-    return glob.glob(join(SML_TEST_GAMMA, "*.unw"))
+    return glob.glob(join(GAMMA_SML_TEST_DIR, "*.unw"))
 
 
 def small5_ifgs():
@@ -481,7 +485,7 @@ def write_stackrate_numpy_files(error, rate, samples, params):
     np.save(file=samples_file, arr=samples)
 
 
-def copytree(src, dst, symlinks=False, ignore=None):
+def copytree(src: Union[str, bytes, os.PathLike], dst: Union[str, bytes, os.PathLike], symlinks=False, ignore=None):
     # pylint: disable=line-too-long
     """
     Copy entire contents of src directory into dst directory.
@@ -576,6 +580,16 @@ def assert_same_files_produced(dir1, dir2, dir3, ext, num_files=None):
     assert_two_dirs_equal(dir1, dir3, ext, num_files)
 
 
+working_dirs = {
+    GAMMA_SYSTEM_CONF: GAMMA_SYSTEM_FILES,
+    ROIPAC_SYSTEM_CONF: ROIPAC_SYSTEM_FILES,
+    GEOTIF_SYSTEM_CONF: GEOTIF_SYSTEM_FILES,
+    Path(TEST_CONF_ROIPAC).name: ROIPAC_SML_TEST_DIR,
+    Path(TEST_CONF_GAMMA).name: GAMMA_SML_TEST_DIR
+}
+
+
+
 def manipulate_test_conf(conf_file, work_dir: Path):
     params = Configuration(conf_file).__dict__
     if conf_file == MEXICO_CROPA_CONF:
@@ -590,6 +604,7 @@ def manipulate_test_conf(conf_file, work_dir: Path):
         for m_path in params[C.INTERFEROGRAM_FILES]:
             m_path.converted_path = work_dir.joinpath(Path(m_path.converted_path).name).as_posix()
     else:  # legacy unit test data
+        params[C.WORKING_DIR] = working_dirs[Path(conf_file).name]
         copytree(params[C.WORKING_DIR], work_dir)
 
     params[C.WORKING_DIR] = work_dir.as_posix()
@@ -677,16 +692,16 @@ def sub_process_run(cmd, *args, **kwargs):
     return run(cmd, *args, shell=True, check=True, **kwargs)
 
 
-def original_ifg_paths(ifglist_path, obs_dir):
+def original_ifg_paths(ifglist_path, working_dir):
     """
     Returns sequence of paths to files in given ifglist file.
 
     Args:
         ifglist_path: Absolute path to interferogram file list.
-        obs_dir: Absolute path to observations directory.
+        working_dir: Absolute path to observations directory.
 
     Returns:
         list: List of full paths to interferogram files.
     """
     ifglist = parse_namelist(ifglist_path)
-    return [os.path.join(obs_dir, p) for p in ifglist]
+    return [os.path.join(working_dir, p) for p in ifglist]

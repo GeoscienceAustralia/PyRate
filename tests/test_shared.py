@@ -154,7 +154,7 @@ class TestIfgIOTests:
 
     def setup_method(self):
         self.ifg = Ifg(join(SML_TEST_TIF, 'geo_070709-070813_unw.tif'))
-        self.header = join(common.SML_TEST_OBS, 'geo_070709-070813_unw.rsc')
+        self.header = join(common.ROIPAC_SML_TEST_DIR, 'geo_070709-070813_unw.rsc')
 
     def test_open(self):
         assert self.ifg.dataset is None
@@ -340,12 +340,12 @@ class TestWriteUnw:
         shared.mkdir_p(gamma_params[C.OUT_DIR])
         from copy import deepcopy
         cls.params = deepcopy(gamma_params)
-        cls.params[C.WORKING_DIR] = common.SML_TEST_GAMMA
+        cls.params[C.WORKING_DIR] = common.GAMMA_SML_TEST_DIR
         cls.params[C.PROCESSOR] = 1  # gamma
         cls.params[C.PARALLEL] = 0
         cls.params[C.REF_EST_METHOD] = 1
         cls.params[C.DEM_FILE] = common.SML_TEST_DEM_GAMMA
-        cls.params[C.BASE_FILE_LIST] = common.SML_TEST_GAMMA
+        cls.params[C.BASE_FILE_LIST] = common.GAMMA_SML_TEST_DIR
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
         cls.base_unw_paths = tests.common.original_ifg_paths(cls.params[C.IFG_FILE_LIST], cls.params[C.WORKING_DIR])
         cls.base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
@@ -378,11 +378,11 @@ class TestWriteUnw:
         dem_header = gamma.parse_dem_header(dem_header_file)
 
         header = gamma.parse_epoch_header(
-            os.path.join(common.SML_TEST_GAMMA, '20060828_slc.par'))
+            os.path.join(common.GAMMA_SML_TEST_DIR, '20060828_slc.par'))
         header.update(dem_header)
              
         base_header = gamma.parse_baseline_header(
-            os.path.join(common.SML_TEST_GAMMA, '20060828-20061211_base.par'))
+            os.path.join(common.GAMMA_SML_TEST_DIR, '20060828-20061211_base.par'))
         header.update(base_header)
                 
         # insert some dummy data so we are the dem in write_fullres_geotiff is not

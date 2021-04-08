@@ -29,7 +29,7 @@ import pyrate.constants as C
 from pyrate.core.shared import Ifg, DEM
 from pyrate.core import ifgconstants as ifc
 from pyrate import conv2tif, prepifg, configuration
-from tests.common import manipulate_test_conf
+from tests.common import manipulate_test_conf, GAMMA_SML_TEST_DIR
 
 
 def test_dem_and_incidence_not_converted(gamma_params):
@@ -37,9 +37,9 @@ def test_dem_and_incidence_not_converted(gamma_params):
     gp_copy[C.DEM_FILE] = None
     gp_copy[C.APS_INCIDENCE_MAP] = None
     conv2tif.main(gp_copy)
-    inc_tif = glob.glob(os.path.join(gp_copy[C.WORKING_DIR], '*inc.tif'))
+    inc_tif = glob.glob(os.path.join(GAMMA_SML_TEST_DIR, '*inc.tif'))
     assert len(inc_tif) == 0
-    dem_tif = glob.glob(os.path.join(gp_copy[C.WORKING_DIR], '*dem.tif'))
+    dem_tif = glob.glob(os.path.join(GAMMA_SML_TEST_DIR, '*dem.tif'))
     assert len(dem_tif) == 0
 
 

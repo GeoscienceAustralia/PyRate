@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from pyrate.constants import twelve_digits_pattern, sixteen_digits_pattern
 from pyrate.configuration import parse_namelist
-from tests.common import IFMS16, SML_TEST_GAMMA
+from tests.common import IFMS16, GAMMA_SML_TEST_DIR
 
 
 @pytest.fixture
@@ -13,7 +13,7 @@ def six_digits_filenames():
 
 @pytest.fixture
 def eight_digits_filenames():
-    files = list(parse_namelist(Path(SML_TEST_GAMMA).joinpath('ifms_17').as_posix()))
+    files = list(parse_namelist(Path(GAMMA_SML_TEST_DIR).joinpath('ifms_17').as_posix()))
     return files
 
 
