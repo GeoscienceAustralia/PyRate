@@ -105,15 +105,15 @@ def __find_closed_loops(edges: List[Edge], max_loop_length: int) -> List[List[da
     g.add_edges_from(edges)
     dg = nx.DiGraph(g)
     log.debug(f"Evaluating all possible loops using NetworkX simple_cycles function")
-    simple_cycles = nx.simple_cycles(dg)  # yields a generator that determines all possible cycles
-    log.debug(f"Total number of possible loops is {len(list(simple_cycles))}")
+    simple_cycles = list(nx.simple_cycles(dg))
+    log.debug(f"Total number of possible loops is {len(simple_cycles)}")
     log.debug(f"Discarding loops with less than 3 edges and more than {max_loop_length} edges")
     loop_subset = [scc for scc in simple_cycles
-                     if
-                     (len(scc) > 2)  # three or more edges reqd for closed loop
-                     and
-                     (len(scc) <= max_loop_length)  # discard loops exceeding max loop length
-                     ]
+                   if
+                   (len(scc) > 2)  # three or more edges reqd for closed loop
+                   and
+                   (len(scc) <= max_loop_length)  # discard loops exceeding max loop length
+                   ]
     log.debug(f"Number of remaining loops is {len(loop_subset)}")
 
     # also discard loops when the loop members are the same

@@ -25,7 +25,7 @@ from pyrate.core.mpiops import size, rank, run_once
 
 
 pyratelogger = logging.getLogger(__name__)
-formatter = logging.Formatter("%(asctime)s %(module)s %(lineno)d %(process)d %(levelname)s " + str(rank) + "/" + str(
+formatter = logging.Formatter("%(asctime)s %(module)s:%(lineno)d %(process)d %(levelname)s " + str(rank) + "/" + str(
     size-1)+" %(message)s", "%H:%M:%S")
 
 
