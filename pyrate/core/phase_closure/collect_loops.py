@@ -1,4 +1,5 @@
 from typing import List
+from pyrate.core.logger import pyratelogger as log
 
 
 def dfs(graph, marked, n, vert, start, count, path, all_loops):
@@ -37,8 +38,10 @@ def dfs(graph, marked, n, vert, start, count, path, all_loops):
     return count
 
 
-def find_cycles(graph, n):
+def find_cycles(graph, loop_length):
     """Counts cycles of length N in an undirected and connected graph"""
+
+    log.info(f"finding loops of length {loop_length}")
     V = graph.shape[0]
     all_loops = []
 
@@ -47,14 +50,14 @@ def find_cycles(graph, n):
 
     # Searching for cycle by using v-n+1 vertices
     count = 0
-    for i in range(V - (n - 1)):
-        count = dfs(graph, marked, n - 1, i, i, count, [i], all_loops)
+    for i in range(V - (loop_length - 1)):
+        count = dfs(graph, marked, loop_length - 1, i, i, count, [i], all_loops)
 
         # ith vertex is marked as visited and will not be visited again.
         marked[i] = True
-    print('count of loops: ', len(all_loops), count)
     deduped_loops = __dedupe_loops(all_loops)
-    return count/2, deduped_loops
+    log.info(f"found {count//2} loops of length {loop_length}")
+    return count//2, deduped_loops
 
 
 def __dedupe_loops(simple_cycles: List[List]) -> List:
@@ -65,13 +68,8 @@ def __dedupe_loops(simple_cycles: List[List]) -> List:
             loop = sc[:]
             sc.sort()
             sc = tuple(sc)
-            print('tuple: ', sc)
-            print(seen_sc_sets)
             if sc not in seen_sc_sets:
                 seen_sc_sets.add(sc)
-                print(sc, 'adding:', loop)
                 filtered_sc.append(loop)
-            else:
-                print(sc, 'not adding:', loop)
 
         return filtered_sc

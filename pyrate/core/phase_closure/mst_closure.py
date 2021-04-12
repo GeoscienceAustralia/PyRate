@@ -18,9 +18,11 @@
 from collections import namedtuple
 from typing import List, Union
 from datetime import date
+import numpy as np
 import networkx as nx
 from pyrate.core.shared import dem_or_ifg
 import pyrate.constants as C
+from pyrate.core.phase_closure.collect_loops import find_cycles
 from pyrate.core.logger import pyratelogger as log
 
 Edge = namedtuple('Edge', ['first', 'second'])
@@ -84,40 +86,34 @@ class WeightedLoop:
         return [Edge(swe.first, swe.edge.second) for swe in self.loop]
 
 
-def __discard_cycles_with_same_members(cycles: List[List[date]]) -> List[List[date]]:
-    log.debug(f"Discarding loops that contain the same set of edges as another loop")
-    seen_cycle_sets = set()
-    filtered_cycles = []
-    for c in cycles:
-        loop = c[:]
-        c.sort()
-        c = tuple(c)
-        if c not in seen_cycle_sets:
-            seen_cycle_sets.add(c)
-            filtered_cycles.append(loop)
-    log.debug(f"Number of remaining loops is {len(filtered_cycles)}")
-    return filtered_cycles
-
-
 def __find_closed_loops(edges: List[Edge], max_loop_length: int) -> List[List[date]]:
     g = nx.Graph()
     edges = [(we.first, we.second) for we in edges]
     g.add_edges_from(edges)
-    dg = nx.DiGraph(g)
-    log.debug(f"Evaluating all possible loops using NetworkX simple_cycles function")
-    simple_cycles = list(nx.simple_cycles(dg))
-    log.debug(f"Total number of possible loops is {len(simple_cycles)}")
-    log.debug(f"Discarding loops with less than 3 edges and more than {max_loop_length} edges")
-    loop_subset = [scc for scc in simple_cycles
-                   if
-                   (len(scc) > 2)  # three or more edges reqd for closed loop
-                   and
-                   (len(scc) <= max_loop_length)  # discard loops exceeding max loop length
-                   ]
-    log.debug(f"Number of remaining loops is {len(loop_subset)}")
+    A = nx.adjacency_matrix(g)
+    graph = np.asarray(A.todense())
 
-    # also discard loops when the loop members are the same
-    return __discard_cycles_with_same_members(loop_subset)
+    no_cycles = 0
+    loops = []
+
+    log.info(f"Finding loops using DFS")
+    for n in range(3, max_loop_length + 1):
+        no_cyles_, loops_ = find_cycles(graph=graph, loop_length=n)
+        no_cycles += no_cyles_
+        loops.extend(loops_)
+
+    node_list = g.nodes()
+    node_list_dict = {i: n for i, n in enumerate(node_list)}
+    loop_subset = []
+    for l in loops:
+        loop = []
+        for ll in l:
+            loop.append(node_list_dict[ll])
+        loop_subset.append(loop)
+
+    log.debug(f"Total number of loops is {len(loop_subset)}")
+
+    return loop_subset
 
 
 def __add_signs_and_weights_to_loops(loops: List[List[date]], available_edges: List[Edge]) -> List[WeightedLoop]:
