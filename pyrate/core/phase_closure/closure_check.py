@@ -194,7 +194,8 @@ def wrap_closure_check(config: Configuration) -> \
     ifg_files = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
     ifg_files.sort()
     sorted_signed_loops = mpiops.run_once(sort_loops_based_on_weights_and_date, params)
-    log.info(f"Total number of possible closure loops is {len(sorted_signed_loops)}")
+    log.info(f"Total number of selected closed loops with up to MAX_LOOP_LENGTH = "
+             f"{params[C.MAX_LOOP_LENGTH]} edges is {len(sorted_signed_loops)}")
 
     if len(sorted_signed_loops) < 1:
         return None
