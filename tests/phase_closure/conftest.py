@@ -1,6 +1,8 @@
+from pathlib import Path
 import pytest
 from pyrate import constants as C
 from tests.phase_closure.common import IfgDummy
+from tests.common import MEXICO_CROPA_DIR
 
 
 @pytest.fixture()
@@ -12,3 +14,10 @@ def closure_params(geotiffs):
         'geotiffs': geotiffs
     }
     return params
+
+
+@pytest.fixture()
+def cropa_geotifs():
+    tifs = [u.as_posix() for u in Path(MEXICO_CROPA_DIR).glob('*_unw.tif')]
+    tifs.sort()
+    return tifs

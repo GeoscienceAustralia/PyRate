@@ -61,15 +61,15 @@ def find_cycles(graph, loop_length):
 
 
 def __dedupe_loops(simple_cycles: List[List]) -> List:
-        """ also discard loops when the loop members are the same"""
-        seen_sc_sets = set()
-        filtered_sc = []
-        for sc in simple_cycles:
-            loop = sc[:]
-            sc.sort()
-            sc = tuple(sc)
-            if sc not in seen_sc_sets:
-                seen_sc_sets.add(sc)
-                filtered_sc.append(loop)
-
-        return filtered_sc
+    """ also discard loops when the loop members are the same"""
+    seen_sc_sets = set()
+    filtered_sc = []
+    for sc in simple_cycles:
+        loop = sc[:]
+        sc.sort()
+        sc = tuple(sc)
+        if sc not in seen_sc_sets:
+            seen_sc_sets.add(sc)
+            filtered_sc.append(loop)
+    log.info(f"after dedupe number of remaining loops {len(filtered_sc)}")
+    return filtered_sc

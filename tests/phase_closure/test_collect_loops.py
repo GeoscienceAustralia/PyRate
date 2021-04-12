@@ -1,5 +1,9 @@
+from typing import List
+from datetime import date
 import numpy as np
-from pyrate.core.phase_closure.collect_loops import find_cycles
+import networkx as nx
+from pyrate.core.phase_closure.mst_closure import Edge, __setup_edges, __find_closed_loops
+from pyrate.core.phase_closure.collect_loops import find_cycles, __dedupe_loops
 
 
 def test_collect_loops():
@@ -17,3 +21,38 @@ def test_collect_loops():
     count, all_loops = find_cycles(graph, n)
     assert count == 3
     np.testing.assert_array_equal(all_loops, [[0, 1, 2, 3], [0, 1, 4, 3], [1, 2, 3, 4]])
+
+
+def __find_closed_loops_nx(edges: List[Edge], max_loop_length: int) -> List[List[date]]:
+    g = nx.Graph()
+    edges = [(we.first, we.second) for we in edges]
+    g.add_edges_from(edges)
+    dg = nx.DiGraph(g)
+    print(f"Evaluating all possible loops using NetworkX simple_cycles function")
+    simple_cycles = list(nx.simple_cycles(dg))
+    print(f"Total number of possible loops is {len(simple_cycles)}")
+    print(f"Discarding loops with less than 3 edges and more than {max_loop_length} edges")
+    loop_subset = [scc for scc in simple_cycles
+                   if
+                   (len(scc) > 2)  # three or more edges reqd for closed loop
+                   and
+                   (len(scc) <= max_loop_length)  # discard loops exceeding max loop length
+                   ]
+    print(f"Number of remaining loops is {len(loop_subset)}")
+
+    # also discard loops when the loop members are the same
+    return __dedupe_loops(loop_subset)
+
+
+def test_collect_loops_vs_networkx(cropa_geotifs):
+    cropa_geotifs.sort()
+    available_edges = __setup_edges(cropa_geotifs)
+    for n in [3, 4, 5]:
+        networkx_loops = __find_closed_loops_nx(available_edges, max_loop_length=n)
+        networkx_loops = [sorted(l) for l in networkx_loops]
+        networkx_set = {tuple(l) for l in networkx_loops}
+        our_loops = __find_closed_loops(available_edges, max_loop_length=n)
+        our_loops = [sorted(l) for l in our_loops]
+        our_set = {tuple(l) for l in our_loops}
+        for s in networkx_set:
+            assert s in our_set
