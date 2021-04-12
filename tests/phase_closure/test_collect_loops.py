@@ -54,5 +54,4 @@ def test_collect_loops_vs_networkx(cropa_geotifs):
         our_loops = __find_closed_loops(available_edges, max_loop_length=n)
         our_loops = [sorted(l) for l in our_loops]
         our_set = {tuple(l) for l in our_loops}
-        for s in networkx_set:
-            assert s in our_set
+        assert networkx_set == our_set
