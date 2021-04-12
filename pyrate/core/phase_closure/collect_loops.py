@@ -2,9 +2,10 @@ from typing import List
 from pyrate.core.logger import pyratelogger as log
 
 
-def dfs(graph, marked, n, vert, start, count, path, all_loops):
+def dfs(graph, marked, n, vert, start, count, loop, all_loops):
     """
     Python Program to count cycles of length n in a given graph. Number of vertices V
+    This is an adaptation of https://www.geeksforgeeks.org/print-all-the-cycles-in-an-undirected-graph/
     """
     V = graph.shape[0]
 
@@ -20,7 +21,7 @@ def dfs(graph, marked, n, vert, start, count, path, all_loops):
         # Check if vertex vert can end with vertex start
         if graph[vert][start] == 1:
             count = count + 1
-            all_loops.append(path)
+            all_loops.append(loop)
             return count
         else:
             return count
@@ -28,7 +29,7 @@ def dfs(graph, marked, n, vert, start, count, path, all_loops):
     # For searching every possible path of length (n-1)
     for i in range(V):
         if (not marked[i]) and (graph[vert][i] == 1):
-            next_path = path[:]
+            next_path = loop[:]
             next_path.append(i)
             # DFS for searching path by decreasing length by 1
             count = dfs(graph, marked, n - 1, i, start, count, next_path, all_loops)
