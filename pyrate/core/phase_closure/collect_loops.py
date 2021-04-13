@@ -42,13 +42,17 @@ def dfs(graph, marked, n, vert, start, count, loop, all_loops):
 def find_cycles(graph, loop_length):
     """Counts cycles of length N in an undirected and connected graph"""
 
+    count, all_loops = find_all_cycled_of_length(graph, loop_length)
+    deduped_loops = __dedupe_loops(all_loops)
+    return deduped_loops
+
+
+def find_all_cycled_of_length(graph, loop_length):
     log.info(f"finding loops of length {loop_length}")
     V = graph.shape[0]
     all_loops = []
-
     # all vertex are marked un-visited initially.
     marked = [False] * V
-
     # Searching for cycle by using v-n+1 vertices
     count = 0
     for i in range(V - (loop_length - 1)):
@@ -56,13 +60,46 @@ def find_cycles(graph, loop_length):
 
         # ith vertex is marked as visited and will not be visited again.
         marked[i] = True
-    deduped_loops = __dedupe_loops(all_loops)
-    log.info(f"found {count//2} loops of length {loop_length}")
-    return count//2, deduped_loops
+    log.debug(f"Total possible number of loops of length {loop_length} is {count}")
+    return count, all_loops
 
 
 def __dedupe_loops(simple_cycles: List[List]) -> List:
-    """ also discard loops when the loop members are the same"""
+    """
+    Deduplication of loops with same members.
+
+    For example: for nodes 1, 2, 3 in the graph below
+
+        [
+            [0, 1, 1],
+            [1, 0, 1],
+            [1, 1, 0],
+        ]
+
+    Loops of length 3 are 0->1-> 2 and 0->2->1. We only retain 1 of these loops after dedupe.
+
+    Example 2:
+    For the following graph:
+            [
+                [0, 1, 1, 1],
+                [1, 0, 1, 1],
+                [1, 1, 0, 1],
+                [1, 1, 1, 0],
+            ]
+
+    Pictorially this is the network
+    1 ---------2
+    | *      * |
+    |     *    |
+    |  *    *  |
+    4----------3
+
+    Loops of length 4 are:
+        [[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 1, 3], [0, 2, 3, 1], [0, 3, 1, 2], [0, 3, 2, 1]]
+
+    After deduplication we will only retain [0, 1, 2, 3]
+
+    """
     seen_sc_sets = set()
     filtered_sc = []
     for sc in simple_cycles:
@@ -72,5 +109,5 @@ def __dedupe_loops(simple_cycles: List[List]) -> List:
         if sc not in seen_sc_sets:
             seen_sc_sets.add(sc)
             filtered_sc.append(loop)
-    log.info(f"after dedupe number of remaining loops {len(filtered_sc)}")
+    log.info(f"Selected loops after deduplication is {len(filtered_sc)}")
     return filtered_sc

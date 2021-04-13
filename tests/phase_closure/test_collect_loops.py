@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 import networkx as nx
 from pyrate.core.phase_closure.mst_closure import Edge, __setup_edges, __find_closed_loops
-from pyrate.core.phase_closure.collect_loops import find_cycles, __dedupe_loops
+from pyrate.core.phase_closure.collect_loops import find_cycles, __dedupe_loops, find_all_cycled_of_length
 
 
 def test_collect_loops():
@@ -19,9 +19,29 @@ def test_collect_loops():
     )
 
     n = 4
-    count, all_loops = find_cycles(graph, n)
-    assert count == 3
-    np.testing.assert_array_equal(all_loops, [[0, 1, 2, 3], [0, 1, 4, 3], [1, 2, 3, 4]])
+    count, all_loops = find_all_cycled_of_length(graph, n)
+    assert count == 6
+    deduped_loops = find_cycles(graph, n)
+    np.testing.assert_array_equal(deduped_loops, [[0, 1, 2, 3], [0, 1, 4, 3], [1, 2, 3, 4]])
+
+
+def test_find_all_cycled_of_length():
+    graph = np.array(
+            [
+                [0, 1, 1, 1],
+                [1, 0, 1, 1],
+                [1, 1, 0, 1],
+                [1, 1, 1, 0],
+            ]
+    )
+
+    n = 4
+    count, all_loops = find_all_cycled_of_length(graph, n)
+    assert len(all_loops) == 6
+    np.testing.assert_array_equal(all_loops, [[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 1, 3], [0, 2, 3, 1], [0, 3, 1, 2],
+                                              [0, 3, 2, 1]])
+    deduped_loops = __dedupe_loops(all_loops)
+    np.testing.assert_array_equal(deduped_loops, [all_loops[0]])
 
 
 def __find_closed_loops_nx(edges: List[Edge], max_loop_length: int) -> List[List[date]]:
@@ -58,7 +78,7 @@ def max_loop_length(available_edges):
     return max_length
 
 
-def test_collect_loops_vs_networkx(available_edges):
+def test_find_cycles_vs_networkx(available_edges):
     max_length = max_loop_length(available_edges)
 
     for n in range(max_length + 1):

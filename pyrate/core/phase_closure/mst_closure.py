@@ -98,8 +98,8 @@ def __find_closed_loops(edges: List[Edge], max_loop_length: int) -> List[List[da
 
     log.info(f"Finding loops using DFS")
     for n in range(3, max_loop_length + 1):
-        no_cyles_, loops_ = find_cycles(graph=graph, loop_length=n)
-        no_cycles += no_cyles_
+        loops_ = find_cycles(graph=graph, loop_length=n)
+        no_cycles += len(loops_)
         loops.extend(loops_)
 
     node_list = g.nodes()
