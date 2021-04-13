@@ -90,7 +90,7 @@ def __dedupe_loops(simple_cycles: List[List]) -> List:
     Pictorially this is the network
     1 ---------2
     | *      * |
-    |     *    |
+    |    *     |
     |  *    *  |
     4----------3
 

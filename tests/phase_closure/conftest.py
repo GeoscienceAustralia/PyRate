@@ -16,7 +16,7 @@ def closure_params(geotiffs):
     return params
 
 
-@pytest.fixture()
+@pytest.fixture(scope='module')
 def cropa_geotifs():
     tifs = [u.as_posix() for u in Path(MEXICO_CROPA_DIR).glob('*_unw.tif')]
     tifs.sort()

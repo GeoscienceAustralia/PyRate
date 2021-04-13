@@ -65,9 +65,8 @@ def __find_closed_loops_nx(edges: List[Edge], max_loop_length: int) -> List[List
     return __dedupe_loops(loop_subset)
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def available_edges(cropa_geotifs):
-    cropa_geotifs.sort()
     available_edges = __setup_edges(cropa_geotifs)
     return available_edges
 
