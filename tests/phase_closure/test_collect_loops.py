@@ -1,5 +1,6 @@
 from typing import List
 from datetime import date
+import pytest
 import numpy as np
 import networkx as nx
 from pyrate.core.phase_closure.mst_closure import Edge, __setup_edges, __find_closed_loops
@@ -44,10 +45,24 @@ def __find_closed_loops_nx(edges: List[Edge], max_loop_length: int) -> List[List
     return __dedupe_loops(loop_subset)
 
 
-def test_collect_loops_vs_networkx(cropa_geotifs):
+@pytest.fixture
+def available_edges(cropa_geotifs):
     cropa_geotifs.sort()
     available_edges = __setup_edges(cropa_geotifs)
-    for n in [3, 4, 5]:
+    return available_edges
+
+
+def max_loop_length(available_edges):
+    all_possible_loops = __find_closed_loops_nx(available_edges, max_loop_length=100)
+    max_length = max([len(l) for l in all_possible_loops])
+    return max_length
+
+
+def test_collect_loops_vs_networkx(available_edges):
+    max_length = max_loop_length(available_edges)
+
+    for n in range(max_length + 1):
+        print(f'====checking for max_loop_length {n}=====')
         networkx_loops = __find_closed_loops_nx(available_edges, max_loop_length=n)
         networkx_loops = [sorted(l) for l in networkx_loops]
         networkx_set = {tuple(l) for l in networkx_loops}

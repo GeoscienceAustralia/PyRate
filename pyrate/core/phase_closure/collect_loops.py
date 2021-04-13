@@ -20,7 +20,7 @@ def dfs(graph, marked, n, vert, start, count, loop, all_loops):
 
         # Check if vertex vert can end with vertex start
         if graph[vert][start] == 1:
-            count = count + 1
+            count += 1
             all_loops.append(loop)
             return count
         else:
