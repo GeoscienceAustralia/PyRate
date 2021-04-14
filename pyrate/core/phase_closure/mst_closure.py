@@ -22,7 +22,7 @@ import numpy as np
 import networkx as nx
 from pyrate.core.shared import dem_or_ifg
 import pyrate.constants as C
-from pyrate.core.phase_closure.collect_loops import find_cycles
+from pyrate.core.phase_closure.collect_loops import count_loops, dedupe_loops
 from pyrate.core.logger import pyratelogger as log
 
 Edge = namedtuple('Edge', ['first', 'second'])
@@ -93,13 +93,14 @@ def __find_closed_loops(edges: List[Edge], max_loop_length: int) -> List[List[da
     A = nx.adjacency_matrix(g)
     graph = np.asarray(A.todense())
 
-    no_cycles = 0
+#    num_loops = 0
     loops = []
 
-    log.info(f"Finding loops using DFS")
     for n in range(3, max_loop_length + 1):
-        loops_ = find_cycles(graph=graph, loop_length=n)
-        no_cycles += len(loops_)
+        log.debug(f"Counting loops of length {n} using Depth First Search")
+        _ , all_loops = count_loops(graph=graph, loop_length=n)
+        loops_ = dedupe_loops(all_loops)
+#        num_loops += len(loops_)
         loops.extend(loops_)
 
     node_list = g.nodes()
