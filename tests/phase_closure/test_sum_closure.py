@@ -100,13 +100,18 @@ def test_mpi_vs_single_process(modified_config):
 
     # closure
     np.testing.assert_array_almost_equal(np.abs(m_closure), np.abs(s_closure))
+    np.testing.assert_array_almost_equal(np.abs(m_closure), np.abs(p_closure))
 
     # num_occurrences_each_ifg
     m_num_occurrences_each_ifg = np.load(m_config.closure().num_occurences_each_ifg, allow_pickle=True)
     s_num_occurrences_each_ifg = np.load(s_config.closure().num_occurences_each_ifg, allow_pickle=True)
+    p_num_occurrences_each_ifg = np.load(p_config.closure().num_occurences_each_ifg, allow_pickle=True)
     np.testing.assert_array_equal(m_num_occurrences_each_ifg, s_num_occurrences_each_ifg)
+    np.testing.assert_array_equal(m_num_occurrences_each_ifg, p_num_occurrences_each_ifg)
 
     # check ps
     m_ifgs_breach_count = np.load(m_config.closure().ifgs_breach_count)
     s_ifgs_breach_count = np.load(s_config.closure().ifgs_breach_count)
+    p_ifgs_breach_count = np.load(p_config.closure().ifgs_breach_count)
     np.testing.assert_array_equal(m_ifgs_breach_count, s_ifgs_breach_count)
+    np.testing.assert_array_equal(m_ifgs_breach_count, p_ifgs_breach_count)

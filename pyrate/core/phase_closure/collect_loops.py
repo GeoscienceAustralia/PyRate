@@ -56,8 +56,8 @@ def dfs(graph, marked, n, vert, start, count, loop, all_loops):
     return count
 
 
-def count_loops(graph, loop_length):
-    """Counts loops of defined length in an undirected and connected graph"""
+def find_loops(graph, loop_length):
+    """Counts and collects loops of a defined length in an undirected and connected graph"""
     V = graph.shape[0]
     all_loops = []
     # all vertex are marked un-visited initially.

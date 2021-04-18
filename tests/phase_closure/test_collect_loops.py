@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 import networkx as nx
 from pyrate.core.phase_closure.mst_closure import Edge, __setup_edges, __find_closed_loops
-from pyrate.core.phase_closure.collect_loops import dedupe_loops, count_loops
+from pyrate.core.phase_closure.collect_loops import dedupe_loops, find_loops
 
 
 def test_collect_loops():
@@ -19,7 +19,7 @@ def test_collect_loops():
     )
 
     n = 4
-    count, all_loops = count_loops(graph, n)
+    count, all_loops = find_loops(graph, n)
     assert count == 6
     deduped_loops = dedupe_loops(all_loops)
     np.testing.assert_array_equal(deduped_loops, [[0, 1, 2, 3], [0, 1, 4, 3], [1, 2, 3, 4]])
@@ -36,7 +36,7 @@ def test_count_loops():
     )
 
     n = 4
-    count, all_loops = count_loops(graph, n)
+    count, all_loops = find_loops(graph, n)
     assert len(all_loops) == 6
     np.testing.assert_array_equal(all_loops, [[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 1, 3], [0, 2, 3, 1], [0, 3, 1, 2],
                                               [0, 3, 2, 1]])
