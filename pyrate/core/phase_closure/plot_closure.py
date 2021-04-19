@@ -15,18 +15,15 @@
 #   limitations under the License.
 
 
-from pathlib import Path
 from typing import List
 import numpy as np
 
-import pyrate.constants as C
 from pyrate.core.phase_closure.mst_closure import WeightedLoop
 from pyrate.core.logger import pyratelogger as log
+from pyrate.configuration import Configuration
 
-# norm = mpl.colors.Normalize(vmin=-PI/2, vmax=PI/2)
 
-
-def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], params, thr: float):
+def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], config: Configuration, thr: float):
     thr = thr * np.pi
     try:
         import matplotlib.pyplot as plt
@@ -66,9 +63,6 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], params, thr: fl
                 break
             tot_plots += 1
 
-    # ax = fig.add_subplot(plt_rows, plt_cols, tot_plots+1)
-    # fig.colorbar(mpl.cm.ScalarMappable(cmap=cmap), cax=ax, orientation='horizontal', label='radians')
-
-    closure_plot_file = Path(params[C.OUT_DIR]).joinpath(f'closure_loops.png')
+    closure_plot_file = config.closure().closure_loops_png
     plt.savefig(closure_plot_file)
     log.info(f'{n_loops} closure loops plotted in {closure_plot_file}')

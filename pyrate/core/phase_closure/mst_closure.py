@@ -18,8 +18,12 @@
 from collections import namedtuple
 from typing import List, Union
 from datetime import date
+import numpy as np
 import networkx as nx
 from pyrate.core.shared import dem_or_ifg
+import pyrate.constants as C
+from pyrate.core.phase_closure.collect_loops import find_loops, dedupe_loops
+from pyrate.core.logger import pyratelogger as log
 
 Edge = namedtuple('Edge', ['first', 'second'])
 
@@ -82,29 +86,33 @@ class WeightedLoop:
         return [Edge(swe.first, swe.edge.second) for swe in self.loop]
 
 
-def __discard_cycles_with_same_members(simple_cycles: List[List[date]]) -> List[List[date]]:
-    seen_sc_sets = set()
-    filtered_sc = []
-    for sc in simple_cycles:
-        loop = sc[:]
-        sc.sort()
-        sc = tuple(sc)
-        if sc not in seen_sc_sets:
-            seen_sc_sets.add(sc)
-            filtered_sc.append(loop)
-    return filtered_sc
-
-
-def __find_closed_loops(edges: List[Edge]) -> List[List[date]]:
+def __find_closed_loops(edges: List[Edge], max_loop_length: int) -> List[List[date]]:
     g = nx.Graph()
     edges = [(we.first, we.second) for we in edges]
     g.add_edges_from(edges)
-    dg = nx.DiGraph(g)
-    simple_cycles = nx.simple_cycles(dg)  # will have all edges
-    simple_cycles = [scc for scc in simple_cycles if len(scc) > 2]  # discard edges
+    A = nx.adjacency_matrix(g)
+    graph = np.asarray(A.todense())
 
-    # also discard loops when the loop members are the same
-    return __discard_cycles_with_same_members(simple_cycles)
+    loops = []
+
+    for n in range(3, max_loop_length + 1):
+        log.debug(f"Counting loops of length {n} using Depth First Search")
+        _, all_loops = find_loops(graph=graph, loop_length=n)
+        loops_ = dedupe_loops(all_loops)
+        loops.extend(loops_)
+
+    node_list = g.nodes()
+    node_list_dict = {i: n for i, n in enumerate(node_list)}
+    loop_subset = []
+    for l in loops:
+        loop = []
+        for ll in l:
+            loop.append(node_list_dict[ll])
+        loop_subset.append(loop)
+
+    log.debug(f"Total number of loops is {len(loop_subset)}")
+
+    return loop_subset
 
 
 def __add_signs_and_weights_to_loops(loops: List[List[date]], available_edges: List[Edge]) -> List[WeightedLoop]:
@@ -149,19 +157,21 @@ def __setup_edges(ifg_files: List[str]) -> List[Edge]:
     return [Edge(i.first, i.second) for i in ifgs]
 
 
-def __find_signed_closed_loops(ifg_files: List[str]) -> List[WeightedLoop]:
+def __find_signed_closed_loops(params: dict) -> List[WeightedLoop]:
+    ifg_files = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
+    ifg_files.sort()
     available_edges = __setup_edges(ifg_files)
-    all_loops = __find_closed_loops(available_edges)  # find loops with weights
+    all_loops = __find_closed_loops(available_edges, max_loop_length=params[C.MAX_LOOP_LENGTH])  # find loops with weights
     signed_weighted_loops = __add_signs_and_weights_to_loops(all_loops, available_edges)
     return signed_weighted_loops
 
 
-def sort_loops_based_on_weights_and_date(ifg_files: List[str]) -> List[WeightedLoop]:
+def sort_loops_based_on_weights_and_date(params: dict) -> List[WeightedLoop]:
     """
-    :param ifg_files: list of ifg files
+    :param params: dict of params
     :return: list of sorted, signed, and weighted loops
     """
-    signed_weighted_loops = __find_signed_closed_loops(ifg_files)
+    signed_weighted_loops = __find_signed_closed_loops(params)
     # sort based on weights and dates
     signed_weighted_loops.sort(key=lambda x: [x.weight, x.primary_dates, x.secondary_dates])
     return signed_weighted_loops

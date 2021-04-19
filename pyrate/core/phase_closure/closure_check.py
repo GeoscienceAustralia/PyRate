@@ -135,13 +135,13 @@ def filter_to_closure_checked_ifgs(config, interactive_plot=True) -> \
     log.info(f"Performing closure check on original set of {len(ifg_files)} ifgs")
 
     while True:  # iterate till ifgs/loops are stable
-        rets = wrap_closure_check(ifg_files, config)
+        rets = wrap_closure_check(config)
         if rets is None:
             return
         new_ifg_files, closure, ifgs_breach_count, num_occurences_each_ifg, loops = rets
         if interactive_plot:
             if mpiops.rank == 0:
-                plot_closure(closure=closure, loops=loops, params=params, thr=params[C.LARGE_DEV_THR])
+                plot_closure(closure=closure, loops=loops, config=config, thr=params[C.LARGE_DEV_THR])
         if len(ifg_files) == len(new_ifg_files):
             break
         else:
@@ -159,23 +159,23 @@ def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) ->
 
     :param loops: list of loops
     :param params: params dict
-    :return: selected loops satisfying MAX_LOOPS_IN_IFG criteria
+    :return: selected loops satisfying MAX_LOOPS_PER_IFG criteria
     """
     selected_loops = []
     ifg_counter = defaultdict(int)
     for loop in loops:
         edge_appearances = np.array([ifg_counter[e] for e in loop.edges])
-        if not np.all(edge_appearances > params[C.MAX_LOOPS_IN_IFG]):
+        if not np.all(edge_appearances > params[C.MAX_LOOPS_PER_IFG]):
             selected_loops.append(loop)
             for e in loop.edges:
                 ifg_counter[e] += 1
         else:
-            log.debug(f"Loop {loop.loop} is ignored due to all it's ifgs already seen "
-                      f"{params[C.MAX_LOOPS_IN_IFG]} times or more")
+            log.debug(f"Loop {loop.loop} ignored: all constituent ifgs have been in a loop "
+                      f"{params[C.MAX_LOOPS_PER_IFG]} times or more")
     return selected_loops
 
 
-def wrap_closure_check(ifg_files: List[str], config: Configuration) -> \
+def wrap_closure_check(config: Configuration) -> \
         Tuple[
             List[str],
             NDArray[(Any, Any), Float32],
@@ -191,24 +191,20 @@ def wrap_closure_check(ifg_files: List[str], config: Configuration) -> \
     For return variables see docstring in `sum_phase_closures`.
     """
     params = config.__dict__
+    ifg_files = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
     ifg_files.sort()
-    sorted_signed_loops = mpiops.run_once(sort_loops_based_on_weights_and_date, ifg_files)
-    log.info(f"Total number of possible closure loops is {len(sorted_signed_loops)}")
-    retained_loops_meeting_max_loop_criteria = [sl for sl in sorted_signed_loops
-                                                if len(sl) <= params[C.MAX_LOOP_LENGTH]]
-    msg = f"After applying MAX_LOOP_LENGTH = {params[C.MAX_LOOP_LENGTH]} criteria, " \
-          f"{len(retained_loops_meeting_max_loop_criteria)} loops are retained"
+    sorted_signed_loops = mpiops.run_once(sort_loops_based_on_weights_and_date, params)
+    log.info(f"Total number of selected closed loops with up to MAX_LOOP_LENGTH = "
+             f"{params[C.MAX_LOOP_LENGTH]} edges is {len(sorted_signed_loops)}")
 
-    if len(retained_loops_meeting_max_loop_criteria) < 1:
+    if len(sorted_signed_loops) < 1:
         return None
-    else:
-        log.info(msg)
 
     retained_loops = mpiops.run_once(discard_loops_containing_max_ifg_count,
-                                     retained_loops_meeting_max_loop_criteria, params)
+                                     sorted_signed_loops, params)
     ifgs_with_loops = mpiops.run_once(__drop_ifgs_if_not_part_of_any_loop, ifg_files, retained_loops, params)
 
-    msg = f"After applying MAX_LOOPS_IN_IFG = {params[C.MAX_LOOPS_IN_IFG]} criteria, " \
+    msg = f"After applying MAX_LOOPS_PER_IFG = {params[C.MAX_LOOPS_PER_IFG]} criteria, " \
           f"{len(retained_loops)} loops are retained"
     if len(retained_loops) < 1:
         return None

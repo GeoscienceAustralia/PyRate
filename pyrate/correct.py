@@ -145,10 +145,6 @@ def _update_params_with_tiles(params: dict) -> None:
 
 def update_params_with_closure_checked_ifg_list(params: dict, config: Configuration):
 
-    if params[C.PHASE_CLOSURE] and C.DISABLE_PHASE_CLOSURE:
-        log.warn("Phase closure is not supported at the moment! We are working hard to enable this feature!")
-        return
-
     if not params[C.PHASE_CLOSURE]:
         log.info("Phase closure correction is not required!")
         return
@@ -156,7 +152,7 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
     ifg_files, ifgs_breach_count, num_occurences_each_ifg = filter_to_closure_checked_ifgs(config)
     if ifg_files is None:
         import sys
-        sys.exit("Zero loops are returned after phase clouser calcs!!! \n"
+        sys.exit("Zero loops are returned after phase closure calcs!!! \n"
                  "Check your phase closure configuration!")
 
     def _filter_to_closure_checked_multiple_paths(multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:

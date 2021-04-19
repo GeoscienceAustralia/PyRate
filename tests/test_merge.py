@@ -120,9 +120,10 @@ class TestLOSConversion:
         los_proj_dir = all_dirs[ifc.LINE_OF_SIGHT]
         pseudo_ver = all_dirs[ifc.PSEUDO_VERTICAL]
         pseudo_hor = all_dirs[ifc.PSEUDO_HORIZONTAL]
+        num_files = 24 if params[C.PHASE_CLOSURE] else 26  # phase closure removes 1 interferogram
+        assert len(list(los_proj_dir.glob('*.tif'))) == num_files  # 12 tsincr, 12 tscuml + 1 stack rate + 1 linear rate
         signal_polarity_reversed_pseudo_hor = all_dirs[C.SIGNAL_POLARITY]
 
-        assert len(list(los_proj_dir.glob('*.tif'))) == 26  # 12 tsincr, 12 tscuml + 1 stack rate + 1 linear rate
         for tif in los_proj_dir.glob('*.tif'):
             ds = DEM(tif)
             ds_ver = DEM(pseudo_ver.joinpath(tif.name))
@@ -135,9 +136,9 @@ class TestLOSConversion:
 
             non_nans_indices = ~np.isnan(ds.data)
             # assert division by sine and cosine always yields larger components in vertical and horizontal directions
-            assert np.all(np.abs(ds.data[non_nans_indices]) < np.abs(ds_ver.data[non_nans_indices]))
-            assert np.all(np.abs(ds.data[non_nans_indices]) < np.abs(ds_hor.data[non_nans_indices]))
-            assert np.all(np.abs(ds.data[non_nans_indices]) < np.abs(ds_hor_sig.data[non_nans_indices]))
+            assert np.all(np.abs(ds.data[non_nans_indices]) <= np.abs(ds_ver.data[non_nans_indices]))
+            assert np.all(np.abs(ds.data[non_nans_indices]) <= np.abs(ds_hor.data[non_nans_indices]))
+            assert np.all(np.abs(ds.data[non_nans_indices]) <= np.abs(ds_hor_sig.data[non_nans_indices]))
             assert np.all(ds_hor.data[non_nans_indices] == -ds_hor_sig.data[non_nans_indices])
             ds_md = ds.dataset.GetMetadata()
             assert ds_md.pop(C.LOS_PROJECTION.upper()) == ifc.LOS_PROJECTION_OPTION[ifc.LINE_OF_SIGHT]

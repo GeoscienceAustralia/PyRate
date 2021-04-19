@@ -41,7 +41,7 @@ steps = ['orbfit',  'refphase',  'phase_closure']
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif((not PLOT) or C.DISABLE_PHASE_CLOSURE,
+@pytest.mark.skipif((not PLOT),
                     reason='skipped as plotting packages are missing')
 def test_plot_closure(mexico_cropa_params):
     config = Configuration(MEXICO_CROPA_CONF)
@@ -62,6 +62,6 @@ def test_plot_closure(mexico_cropa_params):
         else:
             correct.correct_steps[step](params)
 
-    closure_plot_file = Path(params[C.OUT_DIR]).joinpath('closure_loops.png')
+    closure_plot_file = config.closure().closure_loops_png
     assert closure_plot_file.exists()
     shutil.rmtree(params[C.OUT_DIR], ignore_errors=True)
