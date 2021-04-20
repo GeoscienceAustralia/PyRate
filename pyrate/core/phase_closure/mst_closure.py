@@ -96,9 +96,10 @@ def __find_closed_loops(edges: List[Edge], max_loop_length: int) -> List[List[da
     loops = []
 
     for n in range(3, max_loop_length + 1):
-        log.debug(f"Counting loops of length {n} using Depth First Search")
+        log.debug(f"Searching for loops of length {n} using Depth First Search")
         _, all_loops = find_loops(graph=graph, loop_length=n)
         loops_ = dedupe_loops(all_loops)
+        log.debug(f"Selected number of loops of length {n} after deduplication is {len(loops_)}")
         loops.extend(loops_)
 
     node_list = g.nodes()

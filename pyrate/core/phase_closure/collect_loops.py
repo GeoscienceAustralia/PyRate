@@ -118,5 +118,4 @@ def dedupe_loops(loops: List[List]) -> List:
         if l not in seen_sets:
             seen_sets.add(l)
             filtered.append(loop)
-    log.debug(f"Selected number of loops after deduplication is {len(filtered)}")
     return filtered

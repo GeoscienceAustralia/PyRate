@@ -148,7 +148,6 @@ def iterative_closure_check(config, interactive_plot=True) -> \
         else:
             i += 1
             ifg_files = new_ifg_files  # exit condition could be some other check like number_of_loops
-            # TODO: update params with new ifg_files here
 
     mpiops.comm.barrier()
 
@@ -184,8 +183,7 @@ def wrap_closure_check(config: Configuration) -> \
             NDArray[(Any, Any), Float32],
             NDArray[(Any, Any, Any), UInt16],
             NDArray[(Any,), UInt16],
-            List[WeightedLoop]] \
-        :
+            List[WeightedLoop]]:
     """
     This wrapper function returns the closure check outputs for a single iteration of closure check.
 
@@ -225,4 +223,13 @@ def wrap_closure_check(config: Configuration) -> \
 
     selected_ifg_files = mpiops.run_once(__drop_ifgs_exceeding_threshold,
                                          ifgs_with_loops, ifgs_breach_count, num_occurences_each_ifg, params)
+
+    def __update_ifg_list_in_params(selected_ifg_files: List[str], params):
+        retained_m_paths = []
+        for m_path in params[C.INTERFEROGRAM_FILES]:
+            if m_path.tmp_sampled_path in selected_ifg_files:
+                retained_m_paths.append(m_path)
+        params[C.INTERFEROGRAM_FILES] = retained_m_paths
+
+    __update_ifg_list_in_params(selected_ifg_files, params)
     return selected_ifg_files, closure, ifgs_breach_count, num_occurences_each_ifg, retained_loops
