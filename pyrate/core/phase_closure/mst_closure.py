@@ -160,6 +160,7 @@ def __setup_edges(ifg_files: List[str]) -> List[Edge]:
 def __find_signed_closed_loops(params: dict) -> List[WeightedLoop]:
     ifg_files = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
     ifg_files.sort()
+    log.debug(f"The number of ifgs in the list is {len(ifg_files)}")
     available_edges = __setup_edges(ifg_files)
     all_loops = __find_closed_loops(available_edges, max_loop_length=params[C.MAX_LOOP_LENGTH])  # find loops with weights
     signed_weighted_loops = __add_signs_and_weights_to_loops(all_loops, available_edges)

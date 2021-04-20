@@ -22,6 +22,7 @@ import os
 from pathlib import Path
 import pickle as cp
 from typing import List
+import sys
 
 import pyrate.constants as C
 from pyrate.core import (shared, algorithm, mpiops)
@@ -30,7 +31,7 @@ from pyrate.core.covariance import maxvar_vcm_calc_wrapper
 from pyrate.core.mst import mst_calc_wrapper
 from pyrate.core.orbital import orb_fit_calc_wrapper
 from pyrate.core.dem_error import dem_error_calc_wrapper
-from pyrate.core.phase_closure.closure_check import filter_to_closure_checked_ifgs, detect_pix_with_unwrapping_errors
+from pyrate.core.phase_closure.closure_check import iterative_closure_check, detect_pix_with_unwrapping_errors
 from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.shared import PrereadIfg, get_tiles, mpi_vs_multiprocess_logging, join_dicts
@@ -149,11 +150,10 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
         log.info("Phase closure correction is not required!")
         return
 
-    ifg_files, ifgs_breach_count, num_occurences_each_ifg = filter_to_closure_checked_ifgs(config)
+    ifg_files, ifgs_breach_count, num_occurences_each_ifg = iterative_closure_check(config)
     if ifg_files is None:
-        import sys
         sys.exit("Zero loops are returned after phase closure calcs!!! \n"
-                 "Check your phase closure configuration!")
+                 "Check your interferogram network configuration.")
 
     def _filter_to_closure_checked_multiple_paths(multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
         filtered_multi_paths = []
