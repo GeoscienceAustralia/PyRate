@@ -50,9 +50,7 @@ def update_params_due_to_ifg_selection(config):
     return params
 
 
-
 def main():
-
     start_time = time.time()
 
     parser = argparse.ArgumentParser(prog='pyrate', description=CLI_DESCRIPTION, add_help=True,
@@ -64,45 +62,33 @@ def main():
     subparsers.required = True
 
     parser_conv2tif = subparsers.add_parser('conv2tif', help='<Optional> Convert interferograms to geotiff.',
-        add_help=True)
-    parser_conv2tif.add_argument('-f', '--config_file', action="store", type=str, default=None,
-                                 help="Pass configuration file", required=True)
+                                            add_help=True)
 
     parser_prepifg = subparsers.add_parser(
         'prepifg', help='Perform multilooking, cropping and coherence masking to interferogram geotiffs.',
         add_help=True)
-    parser_prepifg.add_argument('-f', '--config_file', action="store", type=str, default=None,
-                                help="Pass configuration file", required=True)
 
     parser_correct = subparsers.add_parser(
         'correct', help='Calculate and apply corrections to interferogram phase data.',
         add_help=True)
-    parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
-                                help="Pass configuration file", required=True)
 
-    parser_correct = subparsers.add_parser(
-        'timeseries', help='<Optional> Timeseries inversion of interferogram phase data.',
-        add_help=True)
-    parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
-                                help="Pass configuration file", required=True)
+    parser_ts = subparsers.add_parser(
+        'timeseries', help='<Optional> Timeseries inversion of interferogram phase data.', add_help=True
+    )
 
-    parser_correct = subparsers.add_parser(
-        'stack', help='<Optional> Stacking of interferogram phase data.',
-        add_help=True)
-    parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
-                                help="Pass configuration file", required=True)
+    parser_stack = subparsers.add_parser('stack', help='<Optional> Stacking of interferogram phase data.',
+                                         add_help=True)
 
     parser_merge = subparsers.add_parser(
         'merge', help="Reassemble computed tiles and save as geotiffs.",
         add_help=True)
-    parser_merge.add_argument('-f', '--config_file', action="store", type=str, default=None,
-                              help="Pass configuration file", required=False)
 
     parser_workflow = subparsers.add_parser(
         'workflow', help="<Optional> Sequentially run all the PyRate processing steps.",
         add_help=True)
-    parser_workflow.add_argument('-f', '--config_file', action="store", type=str, default=None,
-                                 help="Pass configuration file", required=False)
+    for p in [parser_conv2tif, parser_prepifg, parser_correct, parser_merge, parser_ts, parser_stack, parser_workflow]:
+        p.add_argument('-f', '--config_file', action="store", type=str, default=None,
+                       help="Pass configuration file", required=False)
 
     args = parser.parse_args()
 
@@ -187,4 +173,3 @@ def stack(config: Configuration) -> None:
 
 if __name__ == "__main__":
     main()
-
