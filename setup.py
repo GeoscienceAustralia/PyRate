@@ -129,6 +129,7 @@ setup(
     },
     scripts=[
         'scripts/gdal_calc_local.py',
+        'scripts/plot_ifgs.py',
         ],
     entry_points={
           'console_scripts': [
