@@ -24,7 +24,6 @@ from pathlib import Path
 import numpy as np
 import pyrate.constants as C
 from pyrate.core.logger import pyratelogger as log, configure_stage_log
-from pyrate.core import mpiops
 from pyrate.core.shared import Ifg, InputTypes
 from pyrate.configuration import Configuration
 
@@ -49,9 +48,13 @@ def main():
 
     args = parser.parse_args()
 
-    params = mpiops.run_once(_params_from_conf, args.config_file)
+    params = _params_from_conf(args.config_file)
 
     configure_stage_log(args.verbosity, 'plot_ifgs', Path(params[C.OUT_DIR]).joinpath('pyrate.log.').as_posix())
+
+    if args.verbosity:
+        log.setLevel(args.verbosity)
+        log.info("Verbosity set to " + str(args.verbosity) + ".")
 
     log.info("Plotting interferograms")
     log.info("Arguments supplied at command line: ")
@@ -91,7 +94,7 @@ def main():
             ifg.open()
             im = ax.imshow(ifg.phase_data, cmap=cmap)
             text = ax.set_title(Path(ifg.data_path).stem)
-            text.set_fontsize(min(20, int(num_ifgs/3)))
+            text.set_fontsize(min(20, int(num_ifgs/2)))
 
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="5%", pad=0.05)
@@ -100,7 +103,9 @@ def main():
                 break
             tot_plots += 1
 
-    plt.show()
+    f_name = 'ifg-phase-plot.png'
+    plt.savefig(f_name)
+    log.info(f'Ifg phase data is plotted in {Path(f_name).as_posix()}')
 
 
 if __name__ == "__main__":
