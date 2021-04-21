@@ -23,7 +23,6 @@ from argparse import RawTextHelpFormatter
 from pathlib import Path
 import numpy as np
 import pyrate.constants as C
-from pyrate.constants import CLI_DESCRIPTION
 from pyrate.core.logger import pyratelogger as log, configure_stage_log
 from pyrate.core import mpiops
 from pyrate.core.shared import Ifg, InputTypes
@@ -39,27 +38,24 @@ def _params_from_conf(config_file):
 
 def main():
 
-    parser = argparse.ArgumentParser(prog='pyrate', description=CLI_DESCRIPTION, add_help=True,
+    parser = argparse.ArgumentParser(prog='plot_ifgs', description="Python script to plot interferograms",
+                                     add_help=True,
                                      formatter_class=RawTextHelpFormatter)
     parser.add_argument('-v', '--verbosity', type=str, default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
                         help="Increase output verbosity")
 
-    subparsers = parser.add_subparsers(dest='command')
-    subparsers.required = True
-
-    parser_plot = subparsers.add_parser('plot_ifgs', help='Plot interferogram.', add_help=True)
-    parser_plot.add_argument('-f', '--config_file', action="store", type=str, default=None,
-                                help="Pass configuration file", required=True)
+    parser.add_argument('-f', '--config_file', action="store", type=str, default=None,
+                        help="Pass configuration file", required=True)
 
     args = parser.parse_args()
 
     params = mpiops.run_once(_params_from_conf, args.config_file)
 
-    configure_stage_log(args.verbosity, args.command, Path(params[C.OUT_DIR]).joinpath('pyrate.log.').as_posix())
+    configure_stage_log(args.verbosity, 'plot_ifgs', Path(params[C.OUT_DIR]).joinpath('pyrate.log.').as_posix())
 
-    log.debug("Plotting")
-    log.debug("Arguments supplied at command line: ")
-    log.debug(args)
+    log.info("Plotting interferograms")
+    log.info("Arguments supplied at command line: ")
+    log.info(args)
 
     try:
         import matplotlib.pyplot as plt
