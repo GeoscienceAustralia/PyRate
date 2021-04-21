@@ -129,11 +129,11 @@ setup(
     },
     scripts=[
         'scripts/gdal_calc_local.py',
-        'scripts/plot_ifgs.py',
         ],
     entry_points={
           'console_scripts': [
-              'pyrate = pyrate.main:main'
+              'pyrate = pyrate.main:main',
+              'plot_ifgs = scripts.plot_ifgs:main',
           ]
       },
     setup_requires=setup_requirements,
