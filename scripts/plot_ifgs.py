@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2020 Geoscience Australia
+#   Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-This Python module defines executable run configuration for the PyRate software
+This Python module plots the input interferograms to the PyRate software
 """
 
 import os
@@ -26,13 +26,7 @@ import pyrate.constants as C
 from pyrate.core.logger import pyratelogger as log, configure_stage_log
 from pyrate.core.shared import Ifg, InputTypes
 from pyrate.configuration import Configuration
-
-
-def _params_from_conf(config_file):
-    config_file = os.path.abspath(config_file)
-    config = Configuration(config_file)
-    params = config.__dict__
-    return params
+from pyrate.main import _params_from_conf
 
 
 def main():
@@ -56,9 +50,8 @@ def main():
         log.setLevel(args.verbosity)
         log.info("Verbosity set to " + str(args.verbosity) + ".")
 
-    log.info("Plotting interferograms")
-    log.info("Arguments supplied at command line: ")
-    log.info(args)
+    log.debug("Arguments supplied at command line: ")
+    log.debug(args)
 
     try:
         import matplotlib.pyplot as plt
@@ -73,6 +66,7 @@ def main():
 
     ifgs = params[C.INTERFEROGRAM_FILES]
     num_ifgs = len(ifgs)
+    log.info(f'Plotting {num_ifgs} interferograms')
 
     plt_rows = np.int(np.sqrt(num_ifgs))
     plt_cols = num_ifgs//plt_rows
