@@ -24,7 +24,7 @@ from pathlib import Path
 import numpy as np
 import pyrate.constants as C
 from pyrate.core.logger import pyratelogger as log, configure_stage_log
-from pyrate.core.shared import Ifg, InputTypes
+from pyrate.core.shared import DEM, InputTypes
 from pyrate.configuration import Configuration
 
 
@@ -88,11 +88,11 @@ def main():
             ifg_num = plt_cols * p_r + p_c
             m_path = ifgs[ifg_num]
             if m_path.input_type == InputTypes.IFG:
-                ifg = Ifg(ifgs[ifg_num].converted_path)
+                ifg = DEM(ifgs[ifg_num].converted_path)
             else:
                 raise AttributeError("Can only plot tifs")
             ifg.open()
-            im = ax.imshow(ifg.phase_data, cmap=cmap)
+            im = ax.imshow(ifg.data, cmap=cmap)
             text = ax.set_title(Path(ifg.data_path).stem)
             text.set_fontsize(min(20, int(num_ifgs/2)))
 
