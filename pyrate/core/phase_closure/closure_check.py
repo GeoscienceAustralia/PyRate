@@ -22,7 +22,7 @@ import numpy as np
 import pyrate.constants as C
 from pyrate.core import mpiops
 from pyrate.core.phase_closure.mst_closure import sort_loops_based_on_weights_and_date, WeightedLoop, Edge
-from pyrate.configuration import Configuration
+from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.core.phase_closure.sum_closure import sum_phase_closures
 from pyrate.core.phase_closure.plot_closure import plot_closure
 from pyrate.core.shared import Ifg
@@ -224,12 +224,14 @@ def wrap_closure_check(config: Configuration) -> \
     selected_ifg_files = mpiops.run_once(__drop_ifgs_exceeding_threshold,
                                          ifgs_with_loops, ifgs_breach_count, num_occurences_each_ifg, params)
 
-    def __update_ifg_list_in_params(selected_ifg_files: List[str], params):
-        retained_m_paths = []
-        for m_path in params[C.INTERFEROGRAM_FILES]:
-            if m_path.tmp_sampled_path in selected_ifg_files:
-                retained_m_paths.append(m_path)
-        params[C.INTERFEROGRAM_FILES] = retained_m_paths
-
-    __update_ifg_list_in_params(selected_ifg_files, params)
+    params[C.INTERFEROGRAM_FILES] = \
+        mpiops.run_once(update_ifg_list_in_params, selected_ifg_files, params[C.INTERFEROGRAM_FILES])
     return selected_ifg_files, closure, ifgs_breach_count, num_occurences_each_ifg, retained_loops
+
+
+def update_ifg_list_in_params(ifg_files: List[str], multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
+        filtered_multi_paths = []
+        for m_p in multi_paths:
+            if m_p.tmp_sampled_path in ifg_files:
+                filtered_multi_paths.append(m_p)
+        return filtered_multi_paths
