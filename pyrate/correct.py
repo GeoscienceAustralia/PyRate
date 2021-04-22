@@ -31,7 +31,8 @@ from pyrate.core.covariance import maxvar_vcm_calc_wrapper
 from pyrate.core.mst import mst_calc_wrapper
 from pyrate.core.orbital import orb_fit_calc_wrapper
 from pyrate.core.dem_error import dem_error_calc_wrapper
-from pyrate.core.phase_closure.closure_check import iterative_closure_check, detect_pix_with_unwrapping_errors
+from pyrate.core.phase_closure.closure_check import iterative_closure_check, detect_pix_with_unwrapping_errors, \
+    update_ifg_list_in_params
 from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.shared import PrereadIfg, get_tiles, mpi_vs_multiprocess_logging, join_dicts
@@ -155,15 +156,8 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
         sys.exit("Zero loops are returned after phase closure calcs!!! \n"
                  "Check your interferogram network configuration.")
 
-    def _filter_to_closure_checked_multiple_paths(multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
-        filtered_multi_paths = []
-        for m_p in multi_paths:
-            if m_p.tmp_sampled_path in ifg_files:
-                filtered_multi_paths.append(m_p)
-        return filtered_multi_paths
-
     params[C.INTERFEROGRAM_FILES] = \
-        mpiops.run_once(_filter_to_closure_checked_multiple_paths, params[C.INTERFEROGRAM_FILES])
+        mpiops.run_once(update_ifg_list_in_params, ifg_files, params[C.INTERFEROGRAM_FILES])
 
     if mpiops.rank == 0:
         with open(config.phase_closure_filtered_ifgs_list(params), 'w') as f:
