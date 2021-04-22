@@ -96,6 +96,7 @@ def main():
             if tot_plots == num_ifgs:
                 break
             tot_plots += 1
+            ifg.close()
 
     f_name = 'ifg-phase-plot.png'
     plt.savefig(f_name)
