@@ -99,6 +99,7 @@ def main():
                 if (fig_plots == ifgs_per_plot) or (tot_plots == num_ifgs):
                     plt.savefig(f_name.format(fig_no))
                     log.info(f'Ifg phase data is plotted in {Path(f_name.format(fig_no)).as_posix()}')
+                    plt.close(fig)
                     break
             if tot_plots == num_ifgs:
                 break
