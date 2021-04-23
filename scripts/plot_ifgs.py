@@ -20,6 +20,7 @@ This Python module plots the input interferograms to the PyRate software
 import argparse
 from argparse import RawTextHelpFormatter
 from pathlib import Path
+import math
 import numpy as np
 import pyrate.constants as C
 from pyrate.core.logger import pyratelogger as log, configure_stage_log
@@ -30,7 +31,6 @@ from pyrate.main import _params_from_conf
 try:
     import matplotlib.pyplot as plt
     import matplotlib as mpl
-    from matplotlib import figure
     from mpl_toolkits.axes_grid1 import make_axes_locatable
     cmap = mpl.cm.Spectral
 except ImportError as e:
@@ -51,6 +51,8 @@ def main():
     parser.add_argument('-f', '--config_file', action="store", type=str, default=None,
                         help="Pass configuration file", required=True)
 
+    parser.add_argument('-n', '--ifgs_per_plot', type=int, default=50, help='number of ifgs per plot', required=False)
+
     args = parser.parse_args()
 
     params = _params_from_conf(args.config_file)
@@ -68,27 +70,38 @@ def main():
     num_ifgs = len(ifgs)
     log.info(f'Plotting {num_ifgs} interferograms')
 
-    plt_rows = np.int(np.sqrt(num_ifgs))
-    plt_cols = num_ifgs//plt_rows
-    if num_ifgs % plt_rows:
-        plt_cols += 1
-    fig = figure.Figure(figsize=(12*plt_rows, 8*plt_cols))
+    ifgs_per_plot = args.ifgs_per_plot
 
-    tot_plots = 1
-    for p_r in range(plt_rows):
-        for p_c in range(plt_cols):
-            ax = fig.add_subplot(plt_rows, plt_cols, tot_plots)
-            ifg_num = plt_cols * p_r + p_c
-            m_path = ifgs[ifg_num]
-            __plot_ifg(m_path, cmap, ax, num_ifgs)
-            log.info(f'Plotted {tot_plots} interferograms')
+    plt_rows = np.int(np.sqrt(ifgs_per_plot))
+    plt_cols = ifgs_per_plot//plt_rows
+
+    if ifgs_per_plot % plt_rows:
+        plt_cols += 1
+
+    tot_plots = 0
+    num_of_figs = math.ceil(num_ifgs / ifgs_per_plot)
+
+    f_name = 'ifg-phase-plot-{}.png'
+    fig_no = 0
+    for i in range(num_of_figs):
+        fig_no += 1
+        fig = plt.figure(figsize=(12*plt_rows, 8*plt_cols))
+        fig_plots = 0
+        for p_r in range(plt_rows):
+            for p_c in range(plt_cols):
+                ax = fig.add_subplot(plt_rows, plt_cols, fig_plots + 1)
+                ifg_num = plt_cols * p_r + p_c
+                m_path = ifgs[ifg_num]
+                __plot_ifg(m_path, cmap, ax, num_ifgs)
+                tot_plots += 1
+                fig_plots += 1
+                log.info(f'Plotted {tot_plots} interferograms')
+                if (fig_plots == ifgs_per_plot) or (tot_plots == num_ifgs):
+                    plt.savefig(f_name.format(fig_no))
+                    log.info(f'Ifg phase data is plotted in {Path(f_name.format(fig_no)).as_posix()}')
+                    break
             if tot_plots == num_ifgs:
                 break
-            tot_plots += 1
-
-    f_name = 'ifg-phase-plot.png'
-    plt.savefig(f_name)
-    log.info(f'Ifg phase data is plotted in {Path(f_name).as_posix()}')
 
 
 def __plot_ifg(m_path, cmap, ax, num_ifgs):
