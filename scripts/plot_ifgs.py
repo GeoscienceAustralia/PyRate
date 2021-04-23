@@ -17,7 +17,6 @@
 This Python module plots the input interferograms to the PyRate software
 """
 
-import os
 import argparse
 from argparse import RawTextHelpFormatter
 from pathlib import Path
@@ -25,8 +24,19 @@ import numpy as np
 import pyrate.constants as C
 from pyrate.core.logger import pyratelogger as log, configure_stage_log
 from pyrate.core.shared import DEM, InputTypes
-from pyrate.configuration import Configuration
 from pyrate.main import _params_from_conf
+
+
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib as mpl
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+    cmap = mpl.cm.Spectral
+except ImportError as e:
+    log.warn(ImportError(e))
+    log.warn("Required plotting packages are not found in environment. "
+             "Please install matplotlib in your environment to continue plotting!!!")
+    raise ImportError(e)
 
 
 def main():
@@ -53,17 +63,6 @@ def main():
     log.debug("Arguments supplied at command line: ")
     log.debug(args)
 
-    try:
-        import matplotlib.pyplot as plt
-        import matplotlib as mpl
-        from mpl_toolkits.axes_grid1 import make_axes_locatable
-        cmap = mpl.cm.Spectral
-    except ImportError as e:
-        log.warn(ImportError(e))
-        log.warn("Required plotting packages are not found in environment. "
-                 "Please install matplotlib in your environment to continue plotting!!!")
-        return
-
     ifgs = params[C.INTERFEROGRAM_FILES]
     num_ifgs = len(ifgs)
     log.info(f'Plotting {num_ifgs} interferograms')
@@ -81,26 +80,29 @@ def main():
             ax = fig.add_subplot(plt_rows, plt_cols, tot_plots)
             ifg_num = plt_cols * p_r + p_c
             m_path = ifgs[ifg_num]
-            if m_path.input_type == InputTypes.IFG:
-                ifg = DEM(ifgs[ifg_num].converted_path)
-            else:
-                raise AttributeError("Can only plot tifs")
-            ifg.open()
-            im = ax.imshow(ifg.data, cmap=cmap)
-            text = ax.set_title(Path(ifg.data_path).stem)
-            text.set_fontsize(min(20, int(num_ifgs/2)))
-
-            divider = make_axes_locatable(ax)
-            cax = divider.append_axes("right", size="5%", pad=0.05)
-            plt.colorbar(im, cax=cax)
+            __plot_ifg(m_path, cmap, ax, num_ifgs)
             if tot_plots == num_ifgs:
                 break
             tot_plots += 1
-            ifg.close()
 
     f_name = 'ifg-phase-plot.png'
     plt.savefig(f_name)
     log.info(f'Ifg phase data is plotted in {Path(f_name).as_posix()}')
+
+
+def __plot_ifg(m_path, cmap, ax, num_ifgs):
+    if m_path.input_type == InputTypes.IFG:
+        ifg = DEM(m_path.converted_path)
+    else:
+        raise AttributeError("Can only plot tifs")
+    ifg.open()
+    im = ax.imshow(ifg.data, cmap=cmap)
+    text = ax.set_title(Path(ifg.data_path).stem)
+    text.set_fontsize(min(20, int(num_ifgs / 2)))
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    plt.colorbar(im, cax=cax)
+    ifg.close()
 
 
 if __name__ == "__main__":
