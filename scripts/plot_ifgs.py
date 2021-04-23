@@ -30,6 +30,7 @@ from pyrate.main import _params_from_conf
 try:
     import matplotlib.pyplot as plt
     import matplotlib as mpl
+    from matplotlib import figure
     from mpl_toolkits.axes_grid1 import make_axes_locatable
     cmap = mpl.cm.Spectral
 except ImportError as e:
@@ -71,8 +72,7 @@ def main():
     plt_cols = num_ifgs//plt_rows
     if num_ifgs % plt_rows:
         plt_cols += 1
-
-    fig = plt.figure(figsize=(12*plt_rows, 8*plt_cols))
+    fig = figure.Figure(figsize=(12*plt_rows, 8*plt_cols))
 
     tot_plots = 1
     for p_r in range(plt_rows):
@@ -81,6 +81,7 @@ def main():
             ifg_num = plt_cols * p_r + p_c
             m_path = ifgs[ifg_num]
             __plot_ifg(m_path, cmap, ax, num_ifgs)
+            log.info(f'Plotted {tot_plots} interferograms')
             if tot_plots == num_ifgs:
                 break
             tot_plots += 1
