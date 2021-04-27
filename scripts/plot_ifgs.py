@@ -24,7 +24,7 @@ import math
 import numpy as np
 import pyrate.constants as C
 from pyrate.core.logger import pyratelogger as log, configure_stage_log
-from pyrate.core.shared import DEM, InputTypes
+from pyrate.core.shared import Ifg, InputTypes
 from pyrate.main import _params_from_conf
 
 
@@ -33,6 +33,7 @@ try:
     import matplotlib as mpl
     from mpl_toolkits.axes_grid1 import make_axes_locatable
     cmap = mpl.cm.Spectral
+    cmap.set_bad(color='grey')
 except ImportError as e:
     log.warn(ImportError(e))
     log.warn("Required plotting packages are not found in environment. "
@@ -92,13 +93,14 @@ def main():
                 ax = fig.add_subplot(plt_rows, plt_cols, fig_plots + 1)
                 ifg_num = plt_cols * p_r + p_c
                 m_path = ifgs[ifg_num]
+                log.info(f'Plotting {m_path.sampled_path}')
                 __plot_ifg(m_path, cmap, ax, num_ifgs)
                 tot_plots += 1
                 fig_plots += 1
-                log.info(f'Plotted {tot_plots} interferograms')
+                log.debug(f'Plotted interferogram #{tot_plots}')
                 if (fig_plots == ifgs_per_plot) or (tot_plots == num_ifgs):
-                    plt.savefig(f_name.format(fig_no))
-                    log.info(f'Ifg phase data is plotted in {Path(f_name.format(fig_no)).as_posix()}')
+                    plt.savefig(f_name.format(fig_no), dpi=50)
+                    log.info(f'{fig_plots} interferograms plotted in {Path(f_name.format(fig_no)).as_posix()}')
                     plt.close(fig)
                     break
             if tot_plots == num_ifgs:
@@ -107,11 +109,11 @@ def main():
 
 def __plot_ifg(m_path, cmap, ax, num_ifgs):
     if m_path.input_type == InputTypes.IFG:
-        ifg = DEM(m_path.converted_path)
+        ifg = Ifg(m_path.sampled_path)
     else:
         raise AttributeError("Can only plot tifs")
     ifg.open()
-    im = ax.imshow(ifg.data, cmap=cmap)
+    im = ax.imshow(ifg.phase_data, cmap=cmap)
     text = ax.set_title(Path(ifg.data_path).stem)
     text.set_fontsize(min(20, int(num_ifgs / 2)))
     divider = make_axes_locatable(ax)
