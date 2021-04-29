@@ -92,7 +92,7 @@ class TestGammaToGeoTiff:
         hdr_paths = [join(GAMMA_TEST_DIR, f) for f in filenames]
         hdrs = [gamma.parse_epoch_header(p) for p in hdr_paths]
         dem_hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
-        base_hdr_path = join(GAMMA_TEST_DIR, '20090713-20090817_base.par')
+        base_hdr_path = join(GAMMA_TEST_DIR, '20160114-20160126_base.par')
         cls.DEM_HDR = gamma.parse_dem_header(dem_hdr_path)
         cls.BASE_HDR = gamma.parse_baseline_header(base_hdr_path)
         cls.COMBINED = gamma.combine_headers(*hdrs, dem_hdr=cls.DEM_HDR, base_hdr=cls.BASE_HDR)
@@ -245,7 +245,7 @@ class TestHeaderCombination:
         self.err = gamma.GammaException
         dem_hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
         self.dh = gamma.parse_dem_header(dem_hdr_path)
-        base_hdr_path = join(GAMMA_TEST_DIR, '20090713-20090817_base.par')
+        base_hdr_path = join(GAMMA_TEST_DIR, '20160114-20160126_base.par')
         self.bh = gamma.parse_baseline_header(base_hdr_path)
 
     @staticmethod
@@ -363,3 +363,57 @@ def test_meta_data_exists(series_ifgs, parallel_ifgs):
         assert (s.meta_data[ifc.DATA_TYPE] == ifc.MULTILOOKED) or \
                (s.meta_data[ifc.DATA_TYPE] == ifc.MULTILOOKED_COH)
     assert i + 1 == 34
+
+
+class TestGammaBaselineRead:
+    """Tests the reading of initial and precise baselines"""
+
+    def setup_method(self):
+        self.init = join(GAMMA_TEST_DIR, '20160114-20160126_base_init.par')
+        self.prec = join(GAMMA_TEST_DIR, '20160114-20160126_base.par')
+
+
+    def test_prec_baseline_read(self):
+        """Test that the Precise baseline values are being read"""
+        exp_i = {'BASELINE_T': -0.0000026, 'BASELINE_C': -103.7427072,
+                 'BASELINE_N': 2.8130731, 'BASELINE_RATE_T': 0.0,
+                 'BASELINE_RATE_C': -0.0173538,
+                 'BASELINE_RATE_N': -0.0055098}
+
+        exp_p = {'BASELINE_T': 0.0, 'BASELINE_C': -103.8364725,
+                 'BASELINE_N': 2.8055662, 'BASELINE_RATE_T': 0.0,
+                 'BASELINE_RATE_C': -0.0182215,
+                 'BASELINE_RATE_N': -0.0065402}
+
+        prec = gamma.parse_baseline_header(self.prec)
+        # Precise values are read
+        assert prec != exp_i
+        assert prec == exp_p
+
+        init = gamma.parse_baseline_header(self.init)
+        # Initial values are ignored
+        assert init != exp_i
+        assert init != exp_p
+
+
+    def test_init_baseline_read(self):
+        """Test that the Initial baseline values are being read"""
+        exp_i = {'BASELINE_T': 0.6529765, 'BASELINE_C': -103.9065694,
+                 'BASELINE_N': 2.9253896, 'BASELINE_RATE_T': 0.0,
+                 'BASELINE_RATE_C': -0.0231786,
+                 'BASELINE_RATE_N': -0.0038703}
+
+        exp_p = {'BASELINE_T': 0.0, 'BASELINE_C': 0.0,
+                 'BASELINE_N': 0.0, 'BASELINE_RATE_T': 0.0,
+                 'BASELINE_RATE_C': 0.0, 'BASELINE_RATE_N': 0.0}
+
+        prec = gamma.parse_baseline_header(self.prec)
+        # Precise values are ignored
+        assert prec != exp_i
+        assert prec != exp_p
+
+        init = gamma.parse_baseline_header(self.init)
+        # Initial values are read
+        assert init == exp_i
+        assert init != exp_p
+
