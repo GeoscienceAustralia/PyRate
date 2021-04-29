@@ -58,7 +58,8 @@ GAMMA_NEAR_RANGE = 'near_range_slc'
 GAMMA_SAR_EARTH = 'sar_to_earth_center'
 GAMMA_SEMI_MAJOR_AXIS = 'earth_semi_major_axis'
 GAMMA_SEMI_MINOR_AXIS = 'earth_semi_minor_axis'
-# TODO add option to use initial baseline if precision baseline was not calculated in GAMMA
+GAMMA_INITIAL_BASELINE = 'initial_baseline(TCN)'
+GAMMA_INITIAL_BASELINE_RATE = 'initial_baseline_rate'
 GAMMA_PRECISION_BASELINE = 'precision_baseline(TCN)'
 GAMMA_PRECISION_BASELINE_RATE = 'precision_baseline_rate'
 RADIANS = 'RADIANS'
@@ -226,29 +227,48 @@ def parse_dem_header(path):
     return subset
 
 
-def parse_baseline_header(path):
-    """20060828-20061211_utm_cc.tif
-    Returns dictionary of Baseline metadata required for PyRate
+def parse_baseline_header(path: str) -> dict:
+    """
+    Returns dictionary of Baseline metadata required for PyRate.
+    Will read the Precise baseline estimate, if available,
+    otherwise will read the Initial baseline estimate.
 
-    :param str path: `Full path to Gamma *base.par file`
+    :param path: `Full path to Gamma *base.par file`
 
-    :return: subset: subset of full metadata
-    :rtype: dict
+    :return: bdict: Dictionary of baseline values
     """
     lookup = _parse_header(path)
 
-    subset = {}
     # baseline vector (along Track, aCross track, Normal to the track)
-    baseline_tcn = lookup[GAMMA_PRECISION_BASELINE]
-    subset[ifc.PYRATE_BASELINE_T] = float(baseline_tcn[0])
-    subset[ifc.PYRATE_BASELINE_C] = float(baseline_tcn[1])
-    subset[ifc.PYRATE_BASELINE_N] = float(baseline_tcn[2])
-    baseline_rate_tcn = lookup[GAMMA_PRECISION_BASELINE_RATE]
-    subset[ifc.PYRATE_BASELINE_RATE_T] = float(baseline_rate_tcn[0])
-    subset[ifc.PYRATE_BASELINE_RATE_C] = float(baseline_rate_tcn[1])
-    subset[ifc.PYRATE_BASELINE_RATE_N] = float(baseline_rate_tcn[2])
+    initial_tcn = lookup[GAMMA_INITIAL_BASELINE]
+    initial_rate_tcn = lookup[GAMMA_INITIAL_BASELINE_RATE]
+    precise_tcn = lookup[GAMMA_PRECISION_BASELINE]
+    precise_rate_tcn = lookup[GAMMA_PRECISION_BASELINE_RATE]
+    
+    if float(precise_tcn[0]) == 0.0 and float(precise_tcn[1]) == 0.0 and float(precise_tcn[2]) == 0.0:
+        bdict = __extract_baseline_vals(initial_tcn, initial_rate_tcn)
+        log.debug('Reading Initial GAMMA baseline values')
+    else:
+        bdict = __extract_baseline_vals(precise_tcn, precise_rate_tcn)
+        log.debug('Reading Precise GAMMA baseline values')
 
-    return subset
+    print(bdict)
+
+    return bdict
+
+
+def __extract_baseline_vals(baseline, baseline_rate):
+    """Extract and return a dict of baseline vals"""
+    vals = {}
+
+    vals[ifc.PYRATE_BASELINE_T] = float(baseline[0])
+    vals[ifc.PYRATE_BASELINE_C] = float(baseline[1])
+    vals[ifc.PYRATE_BASELINE_N] = float(baseline[2])
+    vals[ifc.PYRATE_BASELINE_RATE_T] = float(baseline_rate[0])
+    vals[ifc.PYRATE_BASELINE_RATE_C] = float(baseline_rate[1])
+    vals[ifc.PYRATE_BASELINE_RATE_N] = float(baseline_rate[2])
+
+    return vals
 
 
 def _frequency_to_wavelength(freq):
