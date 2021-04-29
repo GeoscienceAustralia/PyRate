@@ -68,6 +68,8 @@ def main():
     log.debug(args)
 
     ifgs = params[C.INTERFEROGRAM_FILES]
+    nan_convert = params[C.NAN_CONVERSION]
+    nodataval = params[C.NO_DATA_VALUE]
     num_ifgs = len(ifgs)
     log.info(f'Plotting {num_ifgs} interferograms')
 
@@ -94,7 +96,7 @@ def main():
                 ifg_num = plt_cols * p_r + p_c
                 m_path = ifgs[ifg_num]
                 log.info(f'Plotting {m_path.sampled_path}')
-                __plot_ifg(m_path, cmap, ax, num_ifgs)
+                __plot_ifg(m_path, cmap, ax, num_ifgs, nan_convert, nodataval)
                 tot_plots += 1
                 fig_plots += 1
                 log.debug(f'Plotted interferogram #{tot_plots}')
@@ -107,15 +109,20 @@ def main():
                 break
 
 
-def __plot_ifg(m_path, cmap, ax, num_ifgs):
+def __plot_ifg(m_path, cmap, ax, num_ifgs, nan_convert=None, nodataval=None):
     if m_path.input_type == InputTypes.IFG:
         ifg = Ifg(m_path.sampled_path)
     else:
         raise AttributeError("Can only plot tifs")
     ifg.open()
+    if nan_convert: # change nodata values to NaN for display
+        ifg.nodata_value = nodataval
+        ifg.convert_to_nans()
+
     im = ax.imshow(ifg.phase_data, cmap=cmap)
     text = ax.set_title(Path(ifg.data_path).stem)
-    text.set_fontsize(min(20, int(num_ifgs / 2)))
+    text.set_fontsize(20)
+#    text.set_fontsize(min(20, int(num_ifgs / 2)))
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
     plt.colorbar(im, cax=cax)
