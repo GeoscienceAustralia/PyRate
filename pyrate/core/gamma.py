@@ -233,42 +233,39 @@ def parse_baseline_header(path: str) -> dict:
     Will read the Precise baseline estimate, if available,
     otherwise will read the Initial baseline estimate.
 
-    :param path: `Full path to Gamma *base.par file`
+    :param path: Full path to Gamma *base.par file
 
     :return: bdict: Dictionary of baseline values
     """
-    lookup = _parse_header(path)
+    lookup = _parse_header(path)  # read file contents in to a dict
+
+    # split the initial and precise baselines
+    initial = lookup[GAMMA_INITIAL_BASELINE]
+    initial_rate = lookup[GAMMA_INITIAL_BASELINE_RATE]
+    precise = lookup[GAMMA_PRECISION_BASELINE]
+    precise_rate = lookup[GAMMA_PRECISION_BASELINE_RATE]
+
+    # read the precise baseline if all components are non-zero
+    # otherwise read the initial baseline
+    if float(precise[0]) == 0.0 and float(precise[1]) == 0.0 and float(precise[2]) == 0.0:
+        log.debug('Reading Initial GAMMA baseline values')
+        baseline, baseline_rate = initial, initial_rate
+    else:
+        log.debug('Reading Precise GAMMA baseline values')
+        baseline, baseline_rate = precise, precise_rate
+
+    # Extract and return a dict of baseline values
+    bdict = {}
 
     # baseline vector (along Track, aCross track, Normal to the track)
-    initial_tcn = lookup[GAMMA_INITIAL_BASELINE]
-    initial_rate_tcn = lookup[GAMMA_INITIAL_BASELINE_RATE]
-    precise_tcn = lookup[GAMMA_PRECISION_BASELINE]
-    precise_rate_tcn = lookup[GAMMA_PRECISION_BASELINE_RATE]
-    
-    if float(precise_tcn[0]) == 0.0 and float(precise_tcn[1]) == 0.0 and float(precise_tcn[2]) == 0.0:
-        bdict = __extract_baseline_vals(initial_tcn, initial_rate_tcn)
-        log.debug('Reading Initial GAMMA baseline values')
-    else:
-        bdict = __extract_baseline_vals(precise_tcn, precise_rate_tcn)
-        log.debug('Reading Precise GAMMA baseline values')
-
-    print(bdict)
+    bdict[ifc.PYRATE_BASELINE_T] = float(baseline[0])
+    bdict[ifc.PYRATE_BASELINE_C] = float(baseline[1])
+    bdict[ifc.PYRATE_BASELINE_N] = float(baseline[2])
+    bdict[ifc.PYRATE_BASELINE_RATE_T] = float(baseline_rate[0])
+    bdict[ifc.PYRATE_BASELINE_RATE_C] = float(baseline_rate[1])
+    bdict[ifc.PYRATE_BASELINE_RATE_N] = float(baseline_rate[2])
 
     return bdict
-
-
-def __extract_baseline_vals(baseline, baseline_rate):
-    """Extract and return a dict of baseline vals"""
-    vals = {}
-
-    vals[ifc.PYRATE_BASELINE_T] = float(baseline[0])
-    vals[ifc.PYRATE_BASELINE_C] = float(baseline[1])
-    vals[ifc.PYRATE_BASELINE_N] = float(baseline[2])
-    vals[ifc.PYRATE_BASELINE_RATE_T] = float(baseline_rate[0])
-    vals[ifc.PYRATE_BASELINE_RATE_C] = float(baseline_rate[1])
-    vals[ifc.PYRATE_BASELINE_RATE_N] = float(baseline_rate[2])
-
-    return vals
 
 
 def _frequency_to_wavelength(freq):
