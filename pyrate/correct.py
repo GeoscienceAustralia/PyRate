@@ -35,7 +35,8 @@ from pyrate.core.phase_closure.closure_check import iterative_closure_check, det
     update_ifg_list_in_params
 from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
-from pyrate.core.shared import PrereadIfg, get_tiles, mpi_vs_multiprocess_logging, join_dicts
+from pyrate.core.shared import PrereadIfg, Ifg, get_tiles, mpi_vs_multiprocess_logging, join_dicts, \
+        nan_and_mm_convert
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration, MultiplePaths, ConfigException
 
@@ -60,7 +61,9 @@ def _create_ifg_dict(params):
     ifgs_dict = {}
     process_tifs = mpiops.array_split(dest_tifs)
     for d in process_tifs:
-        ifg = shared._prep_ifg(d.sampled_path, params)
+        ifg = Ifg(d.sampled_path)
+        ifg.open()
+        nan_and_mm_convert(ifg, params)
         ifgs_dict[d.tmp_sampled_path] = PrereadIfg(
             path=d.sampled_path,
             tmp_path=d.tmp_sampled_path,
