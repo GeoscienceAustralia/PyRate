@@ -369,9 +369,10 @@ class TestGammaBaselineRead:
     """Tests the reading of initial and precise baselines"""
 
     def setup_method(self):
-        self.init = join(GAMMA_TEST_DIR, '20160114-20160126_base_init.par')
-        self.prec = join(GAMMA_TEST_DIR, '20160114-20160126_base.par')
-
+        init_path = join(GAMMA_TEST_DIR, '20160114-20160126_base_init.par')
+        self.init = gamma.parse_baseline_header(init_path)
+        prec_path = join(GAMMA_TEST_DIR, '20160114-20160126_base.par')
+        self.prec = gamma.parse_baseline_header(prec_path)
 
     def test_prec_baseline_read(self):
         """Test that the Precise baseline values are being read"""
@@ -385,15 +386,13 @@ class TestGammaBaselineRead:
                  'BASELINE_RATE_C': -0.0182215,
                  'BASELINE_RATE_N': -0.0065402}
 
-        prec = gamma.parse_baseline_header(self.prec)
         # Precise values are read
-        assert prec != exp_i
-        assert prec == exp_p
+        assert self.prec != exp_i
+        assert self.prec == exp_p
 
-        init = gamma.parse_baseline_header(self.init)
         # Initial values are ignored
-        assert init != exp_i
-        assert init != exp_p
+        assert self.init != exp_i
+        assert self.init != exp_p
 
 
     def test_init_baseline_read(self):
@@ -407,13 +406,11 @@ class TestGammaBaselineRead:
                  'BASELINE_N': 0.0, 'BASELINE_RATE_T': 0.0,
                  'BASELINE_RATE_C': 0.0, 'BASELINE_RATE_N': 0.0}
 
-        prec = gamma.parse_baseline_header(self.prec)
         # Precise values are ignored
-        assert prec != exp_i
-        assert prec != exp_p
+        assert self.prec != exp_i
+        assert self.prec != exp_p
 
-        init = gamma.parse_baseline_header(self.init)
         # Initial values are read
-        assert init == exp_i
-        assert init != exp_p
+        assert self.init == exp_i
+        assert self.init != exp_p
 
