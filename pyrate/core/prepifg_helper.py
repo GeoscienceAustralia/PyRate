@@ -30,8 +30,7 @@ from decimal import Decimal
 from typing import List, Tuple, Union
 from numpy import array, nan, isnan, nanmean, float32, zeros, sum as nsum
 
-from pyrate.constants import sixteen_digits_pattern, COHERENCE_FILE_PATHS, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY, \
-    COH_FILE_DIR
+from pyrate.constants import sixteen_digits_pattern, COHERENCE_FILE_PATHS, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY
 from pyrate.configuration import ConfigException
 from pyrate.core.gdal_python import crop_resample_average
 from pyrate.core.shared import dem_or_ifg, Ifg, DEM
@@ -418,7 +417,7 @@ def coherence_paths_for(path: str, params: dict, tif=False) -> str:
         coh_file_paths = [f.unwrapped_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.unwrapped_path]
 
     if len(coh_file_paths) > 1:
-        raise ConfigException(f"'{COH_FILE_DIR}': found more than one coherence "
+        raise ConfigException(f"found more than one coherence "
                               f"file for '{path}'. There must be only one "
                               f"coherence file per interferogram. Found {coh_file_paths}.")
     return coh_file_paths[0]

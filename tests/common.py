@@ -618,7 +618,6 @@ def manipulate_test_conf(conf_file, work_dir: Path):
     params[C.HDR_FILE_LIST] = work_dir.joinpath(Path(params[C.HDR_FILE_LIST]).name).as_posix()
     params[C.SLC_DIR] = work_dir.as_posix()
     params[C.IFG_FILE_LIST] = work_dir.joinpath(Path(params[C.IFG_FILE_LIST]).name).as_posix()
-    params[C.COH_FILE_DIR] = work_dir.as_posix()
     params[C.TMPDIR] = outdir.joinpath(C.TMPDIR).as_posix()
     params[C.COHERENCE_DIR] = outdir.joinpath(C.COHERENCE_DIR).as_posix()
     params[C.GEOMETRY_DIR] = outdir.joinpath(C.GEOMETRY_DIR).as_posix()

@@ -158,8 +158,7 @@ TILES = 'tiles'
 COH_MASK = 'cohmask'
 #: FLOAT; Coherence threshold for masking
 COH_THRESH = 'cohthresh'
-#: STR; Directory containing coherence files
-COH_FILE_DIR = 'cohfiledir'
+
 #: STR; Name of the file list containing the pool of available coherence files
 COH_FILE_LIST = 'cohfilelist'
 

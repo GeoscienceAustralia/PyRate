@@ -70,7 +70,6 @@ def __workflow(params, tdir):
     params[C.HDR_FILE_LIST] = tdir.joinpath(Path(params[C.HDR_FILE_LIST]).name).as_posix()
     params[C.SLC_DIR] = tdir.as_posix()
     params[C.IFG_FILE_LIST] = tdir.joinpath(Path(params[C.IFG_FILE_LIST]).name).as_posix()
-    params[C.COH_FILE_DIR] = tdir.as_posix()
     params[C.TMPDIR] = tdir.joinpath(Path(params[C.TMPDIR]).name).as_posix()
     output_conf = tdir.joinpath('roipac_temp.conf')
     pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
