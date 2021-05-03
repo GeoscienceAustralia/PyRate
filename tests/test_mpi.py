@@ -44,7 +44,6 @@ def test_vcm_legacy_vs_mpi(mpisync, tempdir, roipac_or_gamma_conf):
     LEGACY_VCM_DIR = os.path.join(SML_TEST_DIR, 'vcm')
     legacy_vcm = np.genfromtxt(os.path.join(LEGACY_VCM_DIR, 'vcmt.csv'), delimiter=',')
     tmpdir = Path(mpiops.run_once(tempdir))
-    mpiops.run_once(common.copytree, params[C.WORKING_DIR], tmpdir)
     params[C.OUT_DIR] = tmpdir.joinpath('out')
     params[C.PARALLEL] = 0
     output_conf = Path(tmpdir).joinpath('conf.cfg')

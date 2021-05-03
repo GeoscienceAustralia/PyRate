@@ -589,7 +589,6 @@ working_dirs = {
 }
 
 
-
 def manipulate_test_conf(conf_file, work_dir: Path):
     params = Configuration(conf_file).__dict__
     if conf_file == MEXICO_CROPA_CONF:

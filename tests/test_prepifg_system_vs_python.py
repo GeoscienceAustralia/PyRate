@@ -166,6 +166,5 @@ def test_prepifg_largetifs_vs_python(modified_config_largetifs, gamma_conf, crea
     assert_two_dirs_equal(params[C.GEOMETRY_DIR], params_p[C.GEOMETRY_DIR], "dem.tif", 1)
 
     print("==========================xxx===========================")
-
-    shutil.rmtree(params[C.WORKING_DIR])
-    shutil.rmtree(params_p[C.WORKING_DIR])
+    shutil.rmtree(params[C.OUT_DIR])
+    shutil.rmtree(params_p[C.OUT_DIR])
