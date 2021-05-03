@@ -67,7 +67,7 @@ _Phase closure_ correction has the following main functionalities:
    _closure_check.drop_ifgs_exceeding_threshold_.
    
 4. Steps 1-3 are repeated until a stable list of interferograms are returned (see  
-   _closure_check.filter_to_closure_checked_ifgs_).
+   _closure_check.iterative_closure_check).
    
 5. Once a stable list of interferograms is found, in _correct.py_, write a new ifglist in the working directory, 
    update params, and use the updated ifglist for further PyRate processing.

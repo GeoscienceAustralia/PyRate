@@ -1254,23 +1254,6 @@ class PrereadIfg:
         self.metadata = metadata
 
 
-def _prep_ifg(ifg_path, params):
-    """
-    Wrapper for reading an interferogram file and creating an Ifg object
-
-    :param str ifg_path: Interferogram file path
-    :param dict params: Dictionary of configuration parameters
-
-    :return: ifg: Interferogram class instance
-    :rtype: xxxx (eg flaot)
-    """
-    # Only used in pyrate.scripts.run_pyrate?
-    ifg = Ifg(ifg_path)
-    ifg.open()
-    nan_and_mm_convert(ifg, params)
-    return ifg
-
-
 def save_numpy_phase(ifg_paths, params):
     """
     Save interferogram phase data as numpy array file on disk.

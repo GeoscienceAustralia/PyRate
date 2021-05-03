@@ -22,7 +22,7 @@ import numpy as np
 import pyrate.constants as C
 from pyrate.core import mpiops
 from pyrate.core.phase_closure.mst_closure import sort_loops_based_on_weights_and_date, WeightedLoop, Edge
-from pyrate.configuration import Configuration
+from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.core.phase_closure.sum_closure import sum_phase_closures
 from pyrate.core.phase_closure.plot_closure import plot_closure
 from pyrate.core.shared import Ifg
@@ -122,19 +122,20 @@ def __drop_ifgs_exceeding_threshold(orig_ifg_files: List[str], ifgs_breach_count
     return selected_ifg_files
 
 
-def filter_to_closure_checked_ifgs(config, interactive_plot=True) -> \
+def iterative_closure_check(config, interactive_plot=True) -> \
         Tuple[List[str], NDArray[(Any, Any, Any), UInt16], NDArray[(Any,), UInt16]]:
     """
-    This function iterates to a stable list of interferogram files!
+    This function iterates the closure check until a stable list of interferogram files is returned.
     :param config: Configuration class instance
     :param interactive_plot: bool, whether to plot sum closures of loops
     :return: stable list of ifg files, their ifgs_breach_count, and number of occurrences of ifgs in loops
     """
     params = config.__dict__
     ifg_files = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
-    log.info(f"Performing closure check on original set of {len(ifg_files)} ifgs")
+    i = 1  # iteration counter
 
     while True:  # iterate till ifgs/loops are stable
+        log.info(f"Closure check iteration #{i}: working on {len(ifg_files)} ifgs")
         rets = wrap_closure_check(config)
         if rets is None:
             return
@@ -145,11 +146,12 @@ def filter_to_closure_checked_ifgs(config, interactive_plot=True) -> \
         if len(ifg_files) == len(new_ifg_files):
             break
         else:
+            i += 1
             ifg_files = new_ifg_files  # exit condition could be some other check like number_of_loops
 
     mpiops.comm.barrier()
 
-    log.info(f"After closure check {len(ifg_files)} ifgs are retained")
+    log.info(f"Stable list of ifgs achieved after iteration #{i}. {len(ifg_files)} ifgs are retained")
     return ifg_files, ifgs_breach_count, num_occurences_each_ifg
 
 
@@ -181,18 +183,17 @@ def wrap_closure_check(config: Configuration) -> \
             NDArray[(Any, Any), Float32],
             NDArray[(Any, Any, Any), UInt16],
             NDArray[(Any,), UInt16],
-            List[WeightedLoop]] \
-        :
+            List[WeightedLoop]]:
     """
-    This wrapper function returning the closure check outputs of a single run of closure check.
+    This wrapper function returns the closure check outputs for a single iteration of closure check.
 
-    :param ifg_files: list of ifg files
     :param config: Configuration class instance
     For return variables see docstring in `sum_phase_closures`.
     """
     params = config.__dict__
     ifg_files = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
     ifg_files.sort()
+    log.debug(f"The number of ifgs in the list is {len(ifg_files)}")
     sorted_signed_loops = mpiops.run_once(sort_loops_based_on_weights_and_date, params)
     log.info(f"Total number of selected closed loops with up to MAX_LOOP_LENGTH = "
              f"{params[C.MAX_LOOP_LENGTH]} edges is {len(sorted_signed_loops)}")
@@ -222,4 +223,15 @@ def wrap_closure_check(config: Configuration) -> \
 
     selected_ifg_files = mpiops.run_once(__drop_ifgs_exceeding_threshold,
                                          ifgs_with_loops, ifgs_breach_count, num_occurences_each_ifg, params)
+
+    params[C.INTERFEROGRAM_FILES] = \
+        mpiops.run_once(update_ifg_list_in_params, selected_ifg_files, params[C.INTERFEROGRAM_FILES])
     return selected_ifg_files, closure, ifgs_breach_count, num_occurences_each_ifg, retained_loops
+
+
+def update_ifg_list_in_params(ifg_files: List[str], multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
+        filtered_multi_paths = []
+        for m_p in multi_paths:
+            if m_p.tmp_sampled_path in ifg_files:
+                filtered_multi_paths.append(m_p)
+        return filtered_multi_paths
