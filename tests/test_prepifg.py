@@ -858,7 +858,6 @@ class TestOneIncidenceOrElevationMap(UnitTestAdaptation):
             conf.write('{}: {}\n'.format(C.IFG_LKSY, '1'))
             conf.write('{}: {}\n'.format(C.IFG_CROP_OPT, '1'))
             conf.write('{}: {}\n'.format(C.NO_DATA_AVERAGING_THRESHOLD, '0.5'))
-            conf.write('{}: {}\n'.format(C.SLC_DIR, ''))
             conf.write('{}: {}\n'.format(C.HDR_FILE_LIST,
                                          common.SML_TEST_GAMMA_HEADER_LIST))
             conf.write('{}: {}\n'.format(C.DEM_FILE, common.SML_TEST_DEM_GAMMA))

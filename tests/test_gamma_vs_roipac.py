@@ -68,7 +68,6 @@ def __workflow(params, tdir):
     params[C.DEM_FILE] = tdir.joinpath(Path(params[C.DEM_FILE]).name).as_posix()
     params[C.DEM_HEADER_FILE] = tdir.joinpath(Path(params[C.DEM_HEADER_FILE]).name).as_posix()
     params[C.HDR_FILE_LIST] = tdir.joinpath(Path(params[C.HDR_FILE_LIST]).name).as_posix()
-    params[C.SLC_DIR] = tdir.as_posix()
     params[C.IFG_FILE_LIST] = tdir.joinpath(Path(params[C.IFG_FILE_LIST]).name).as_posix()
     params[C.TMPDIR] = tdir.joinpath(Path(params[C.TMPDIR]).name).as_posix()
     output_conf = tdir.joinpath('roipac_temp.conf')

@@ -459,7 +459,7 @@ def get_header_paths(input_file, slc_file_list):
     Function that matches input GAMMA file names with GAMMA header file names
 
     :param str input_file: input GAMMA image file.
-    :param str slc_dir: GAMMA SLC header file directory
+    :param slc_file_list: file listing the pool of available header files (GAMMA: *slc.par, ROI_PAC: *.rsc)
     :return: list of matching header files
     :rtype: list
     """

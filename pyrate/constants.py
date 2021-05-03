@@ -90,8 +90,7 @@ OUT_DIR = 'outdir'
 DEM_FILE = 'demfile'
 #: STR; Name of the DEM header file
 DEM_HEADER_FILE = 'demHeaderFile'
-#: STR; Name of directory containing GAMMA SLC header files
-SLC_DIR = 'slcFileDir'
+
 #: STR; Name of the file list containing the pool of available header files
 HDR_FILE_LIST = 'hdrfilelist'
 
