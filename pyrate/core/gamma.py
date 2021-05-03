@@ -245,8 +245,8 @@ def parse_baseline_header(path: str) -> dict:
     precise = lookup[GAMMA_PRECISION_BASELINE]
     precise_rate = lookup[GAMMA_PRECISION_BASELINE_RATE]
 
-    # read the precise baseline if all components are non-zero
-    # otherwise read the initial baseline
+    # read the initial baseline if all precise components are zero
+    # (indicates that the precise baseline estimation was not ran in GAMMA workflow)
     if float(precise[0]) == 0.0 and float(precise[1]) == 0.0 and float(precise[2]) == 0.0:
         log.debug('Reading Initial GAMMA baseline values')
         baseline, baseline_rate = initial, initial_rate
