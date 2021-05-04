@@ -71,7 +71,7 @@ def main(params: dict) -> None:
     if len(out_types) > 0:
         process_out_types = mpiops.array_split(out_types)
         for out_type in process_out_types:
-            create_png_and_kml_from_tif(params[C.OUT_DIR], output_type=out_type)
+            create_png_and_kml_from_tif(params[C.VELOCITY_DIR], output_type=out_type)
     else:
         log.warning('Exiting: no products to merge')
 
@@ -292,20 +292,22 @@ def __save_merged_files(ifgs_dict, params, array, out_type, index=None, savenpy=
     Convenience function to save PyRate geotiff and numpy array files
     """
     outdir = params[C.OUT_DIR]
+    ts_dir = params[C.TIMESERIES_DIR]
+    vel_dir = params[C.VELOCITY_DIR]
     log.debug('Saving PyRate outputs {}'.format(out_type))
     gt, md, wkt = ifgs_dict['gt'], ifgs_dict['md'], ifgs_dict['wkt']
     epochlist = ifgs_dict['epochlist']
 
     if out_type in ('tsincr', 'tscuml'):
         epoch = epochlist.dates[index + 1]
-        dest = join(outdir, out_type + "_" + str(epoch) + ".tif")
-        npy_file = join(outdir, out_type + "_" + str(epoch) + ".npy")
+        dest = join(ts_dir, out_type + "_" + str(epoch) + ".tif")
+        npy_file = join(ts_dir, out_type + "_" + str(epoch) + ".npy")
         # sequence position; first time slice is #0
         md['SEQUENCE_POSITION'] = index + 1
         md[ifc.EPOCH_DATE] = epoch
     else:
-        dest = join(outdir, out_type + ".tif")
-        npy_file = join(outdir, out_type + '.npy')
+        dest = join(vel_dir, out_type + ".tif")
+        npy_file = join(vel_dir, out_type + '.npy')
         md[ifc.EPOCH_DATE] = [d.strftime('%Y-%m-%d') for d in epochlist.dates]
 
     md[ifc.DATA_TYPE] = out_type_md_dict[out_type]
