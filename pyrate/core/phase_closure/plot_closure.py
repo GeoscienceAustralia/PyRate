@@ -56,7 +56,8 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop],
             title = ',\n'.join([repr(l) for l in loop.loop])
             im = ax.imshow(data, vmin=-thr, vmax=thr, cmap=cmap)
             text = ax.set_title(title)
-            text.set_fontsize(min(20, int(n_loops/3)))
+            text.set_fontsize(20)
+            #text.set_fontsize(min(20, int(n_loops/3)))
 
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="5%", pad=0.05)
