@@ -225,14 +225,21 @@ def __wrap_closure_check(config: Configuration) -> \
     selected_ifg_files = mpiops.run_once(__drop_ifgs_exceeding_threshold,
                                          ifgs_with_loops, ifgs_breach_count, num_occurences_each_ifg, params)
 
+    # update the ifg list in the parameters dictionary
     params[C.INTERFEROGRAM_FILES] = \
-        mpiops.run_once(update_ifg_list_in_params, selected_ifg_files, params[C.INTERFEROGRAM_FILES])
+        mpiops.run_once(update_ifg_list, selected_ifg_files, params[C.INTERFEROGRAM_FILES])
     return selected_ifg_files, closure, ifgs_breach_count, num_occurences_each_ifg, retained_loops
 
-
-def update_ifg_list_in_params(ifg_files: List[str], multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
-        filtered_multi_paths = []
-        for m_p in multi_paths:
-            if m_p.tmp_sampled_path in ifg_files:
-                filtered_multi_paths.append(m_p)
-        return filtered_multi_paths
+# TODO: Consider whether this helper function is better homed in a generic module and used more widely
+def update_ifg_list(ifg_files: List[str], multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
+    """
+    Function to extract full paths for a subsetted list of interferograms
+    :param ifg_files: list of interferograms to subset
+    :param multi_paths: list of full paths for list of original interferograms
+    :return: filtered_multi_paths: list of full paths for the subset
+    """
+    filtered_multi_paths = []
+    for m_p in multi_paths:
+        if m_p.tmp_sampled_path in ifg_files:
+            filtered_multi_paths.append(m_p)
+    return filtered_multi_paths

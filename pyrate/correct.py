@@ -32,7 +32,7 @@ from pyrate.core.mst import mst_calc_wrapper
 from pyrate.core.orbital import orb_fit_calc_wrapper
 from pyrate.core.dem_error import dem_error_calc_wrapper
 from pyrate.core.phase_closure.closure_check import iterative_closure_check, detect_pix_with_unwrapping_errors, \
-    update_ifg_list_in_params
+    update_ifg_list
 from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.shared import PrereadIfg, Ifg, get_tiles, mpi_vs_multiprocess_logging, join_dicts, \
@@ -169,7 +169,7 @@ def phase_closure_wrapper(params: dict, config: Configuration) -> dict:
 
     # update params with closure checked ifg list
     params[C.INTERFEROGRAM_FILES] = \
-        mpiops.run_once(update_ifg_list_in_params, ifg_files, params[C.INTERFEROGRAM_FILES])
+        mpiops.run_once(update_ifg_list, ifg_files, params[C.INTERFEROGRAM_FILES])
 
     if mpiops.rank == 0:
         with open(config.phase_closure_filtered_ifgs_list(params), 'w') as f:
