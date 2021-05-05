@@ -136,7 +136,7 @@ def iterative_closure_check(config, interactive_plot=True) -> \
 
     while True:  # iterate till ifgs/loops are stable
         log.info(f"Closure check iteration #{i}: working on {len(ifg_files)} ifgs")
-        rets = wrap_closure_check(config)
+        rets = __wrap_closure_check(config)
         if rets is None:
             return
         new_ifg_files, closure, ifgs_breach_count, num_occurences_each_ifg, loops = rets
@@ -178,7 +178,7 @@ def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) ->
     return selected_loops
 
 
-def wrap_closure_check(config: Configuration) -> \
+def __wrap_closure_check(config: Configuration) -> \
         Tuple[
             List[str],
             NDArray[(Any, Any), Float32],

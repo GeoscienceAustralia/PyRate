@@ -148,7 +148,15 @@ def _update_params_with_tiles(params: dict) -> None:
     params[C.TILES] = tiles
 
 
-def update_params_with_closure_checked_ifg_list(params: dict, config: Configuration):
+def phase_closure_wrapper(params: dict, config: Configuration) -> dict:
+    """
+    This wrapper will run the iterative phase closure check to return a stable
+    list of checked interferograms, and then mask pixels in interferograms that
+    exceed the unwrapping error threshold.
+    :param params: Dictionary of PyRate configuration parameters. 
+    :param config: Configuration class instance.
+    :return: params: Updated dictionary of PyRate configuration parameters.
+    """
 
     if not params[C.PHASE_CLOSURE]:
         log.info("Phase closure correction is not required!")
@@ -159,6 +167,7 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
         sys.exit("Zero loops are returned after phase closure calcs!!! \n"
                  "Check your interferogram network configuration.")
 
+    # update params with closure checked ifg list
     params[C.INTERFEROGRAM_FILES] = \
         mpiops.run_once(update_ifg_list_in_params, ifg_files, params[C.INTERFEROGRAM_FILES])
 
@@ -179,7 +188,7 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
 correct_steps = {
     'orbfit': orb_fit_calc_wrapper,
     'refphase': ref_phase_est_wrapper,
-    'phase_closure': update_params_with_closure_checked_ifg_list,
+    'phase_closure': phase_closure_wrapper,
     'demerror': dem_error_calc_wrapper,
     'mst': mst_calc_wrapper,
     'apscorrect': wrap_spatio_temporal_filter,
