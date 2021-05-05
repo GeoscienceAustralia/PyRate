@@ -29,11 +29,12 @@ from pyrate.core.shared import Ifg
 from pyrate.core.logger import pyratelogger as log
 
 
-def detect_pix_with_unwrapping_errors(ifgs_breach_count: NDArray[(Any, Any, Any), UInt16],
+def mask_pixels_with_unwrapping_errors(ifgs_breach_count: NDArray[(Any, Any, Any), UInt16],
                                      num_occurrences_each_ifg: NDArray[(Any,), UInt16],
                                      params: dict) -> NDArray[(Any, Any), UInt16]:
     """
-    Find pixels in the phase data exceeding the PHS_UNW_ERR_THR, and assign nans to those pixels in all ifgs
+    Find pixels in the phase data exceeding the PHS_UNW_ERR_THR, and mask
+    (assign nans) to those pixels in all ifgs
     :param ifgs_breach_count: unwrapping issues at pixels in all loops
     :param num_occurrences_each_ifg:  frequency of ifgs appearing in all loops
     :param params: params dict

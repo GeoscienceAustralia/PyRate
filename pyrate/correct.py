@@ -31,7 +31,7 @@ from pyrate.core.covariance import maxvar_vcm_calc_wrapper
 from pyrate.core.mst import mst_calc_wrapper
 from pyrate.core.orbital import orb_fit_calc_wrapper
 from pyrate.core.dem_error import dem_error_calc_wrapper
-from pyrate.core.phase_closure.closure_check import iterative_closure_check, detect_pix_with_unwrapping_errors, \
+from pyrate.core.phase_closure.closure_check import iterative_closure_check, mask_pixels_with_unwrapping_errors, \
     update_ifg_list
 from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
@@ -176,9 +176,9 @@ def phase_closure_wrapper(params: dict, config: Configuration) -> dict:
             lines = [p.converted_path + '\n' for p in params[C.INTERFEROGRAM_FILES]]
             f.writelines(lines)
 
-    # insert nans where phase unwrap threshold is breached
+    # mask ifgs with nans where phase unwrap threshold is breached
     if mpiops.rank == 0:
-        detect_pix_with_unwrapping_errors(ifgs_breach_count, num_occurences_each_ifg, params)
+        mask_pixels_with_unwrapping_errors(ifgs_breach_count, num_occurences_each_ifg, params)
 
     _create_ifg_dict(params)
 
