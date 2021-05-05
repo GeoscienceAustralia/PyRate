@@ -195,36 +195,36 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
         C.TMPDIR], "stack_samples_*.npy", params['notiles'])
 
     # compare merge step
-    assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
-        C.OUT_DIR], "stack*.tif", 3)
-    assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
-        C.OUT_DIR], "stack*.kml", 2)
-    assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
-        C.OUT_DIR], "stack*.png", 2)
-    assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
-        C.OUT_DIR], "stack*.npy", 3)
+    assert_same_files_produced(params[C.VELOCITY_DIR], params_m[C.VELOCITY_DIR], params_s[
+        C.VELOCITY_DIR], "stack*.tif", 3)
+    assert_same_files_produced(params[C.VELOCITY_DIR], params_m[C.VELOCITY_DIR], params_s[
+        C.VELOCITY_DIR], "stack*.kml", 2)
+    assert_same_files_produced(params[C.VELOCITY_DIR], params_m[C.VELOCITY_DIR], params_s[
+        C.VELOCITY_DIR], "stack*.png", 2)
+    assert_same_files_produced(params[C.VELOCITY_DIR], params_m[C.VELOCITY_DIR], params_s[
+        C.VELOCITY_DIR], "stack*.npy", 3)
     
-    assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
-        C.OUT_DIR], "linear_*.tif", 5)
-    assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
-        C.OUT_DIR], "linear_*.kml", 3)
-    assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
-        C.OUT_DIR], "linear_*.png", 3)
-    assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
-        C.OUT_DIR], "linear_*.npy", 5)
+    assert_same_files_produced(params[C.VELOCITY_DIR], params_m[C.VELOCITY_DIR], params_s[
+        C.VELOCITY_DIR], "linear_*.tif", 5)
+    assert_same_files_produced(params[C.VELOCITY_DIR], params_m[C.VELOCITY_DIR], params_s[
+        C.VELOCITY_DIR], "linear_*.kml", 3)
+    assert_same_files_produced(params[C.VELOCITY_DIR], params_m[C.VELOCITY_DIR], params_s[
+        C.VELOCITY_DIR], "linear_*.png", 3)
+    assert_same_files_produced(params[C.VELOCITY_DIR], params_m[C.VELOCITY_DIR], params_s[
+        C.VELOCITY_DIR], "linear_*.npy", 5)
 
     if params[C.PHASE_CLOSURE]:  # only in cropA
         __check_equality_of_phase_closure_outputs(mpi_conf, sr_conf)
         __check_equality_of_phase_closure_outputs(mpi_conf, mr_conf)
-        assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
-            C.OUT_DIR], "tscuml*.tif", 11)  # phase closure removes one tif
-        assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
-            C.OUT_DIR], "tsincr*.tif", 11)
+        assert_same_files_produced(params[C.TIMESERIES_DIR], params_m[C.TIMESERIES_DIR], params_s[
+            C.TIMESERIES_DIR], "tscuml*.tif", 11)  # phase closure removes one tif
+        assert_same_files_produced(params[C.TIMESERIES_DIR], params_m[C.TIMESERIES_DIR], params_s[
+            C.TIMESERIES_DIR], "tsincr*.tif", 11)
     else:
-        assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
-            C.OUT_DIR], "tscuml*.tif", 12)
-        assert_same_files_produced(params[C.OUT_DIR], params_m[C.OUT_DIR], params_s[
-            C.OUT_DIR], "tsincr*.tif", 12)
+        assert_same_files_produced(params[C.TIMESERIES_DIR], params_m[C.TIMESERIES_DIR], params_s[
+            C.TIMESERIES_DIR], "tscuml*.tif", 12)
+        assert_same_files_produced(params[C.TIMESERIES_DIR], params_m[C.TIMESERIES_DIR], params_s[
+            C.TIMESERIES_DIR], "tsincr*.tif", 12)
         
     print("==========================xxx===========================")
 
@@ -384,17 +384,20 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
     assert_two_dirs_equal(params[C.TMPDIR], params_p[C.TMPDIR], "stack_samples_*.npy", params['notiles'])
 
     # compare merge step
-    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "stack*.tif", 3)
-    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "stack*.kml", 2)
-    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "stack*.png", 2)
-    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "stack*.npy", 3)
+    assert_two_dirs_equal(params[C.VELOCITY_DIR], params_p[C.VELOCITY_DIR], "stack*.tif", 3)
+    assert_two_dirs_equal(params[C.VELOCITY_DIR], params_p[C.VELOCITY_DIR], "stack*.kml", 2)
+    assert_two_dirs_equal(params[C.VELOCITY_DIR], params_p[C.VELOCITY_DIR], "stack*.png", 2)
+    assert_two_dirs_equal(params[C.VELOCITY_DIR], params_p[C.VELOCITY_DIR], "stack*.npy", 3)
 
-    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "linear*.tif", 5)
-    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "linear*.kml", 3)
-    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "linear*.png", 3)
-    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "linear*.npy", 5)
+    assert_two_dirs_equal(params[C.VELOCITY_DIR], params_p[C.VELOCITY_DIR], "linear*.tif", 5)
+    assert_two_dirs_equal(params[C.VELOCITY_DIR], params_p[C.VELOCITY_DIR], "linear*.kml", 3)
+    assert_two_dirs_equal(params[C.VELOCITY_DIR], params_p[C.VELOCITY_DIR], "linear*.png", 3)
+    assert_two_dirs_equal(params[C.VELOCITY_DIR], params_p[C.VELOCITY_DIR], "linear*.npy", 5)
 
-    assert_two_dirs_equal(params[C.OUT_DIR], params_p[C.OUT_DIR], "tscuml*.tif")
+    assert_two_dirs_equal(params[C.TIMESERIES_DIR], params_p[C.TIMESERIES_DIR], "tscuml*.tif")
+    assert_two_dirs_equal(params[C.TIMESERIES_DIR], params_p[C.TIMESERIES_DIR], "tsincr*.tif")
+    assert_two_dirs_equal(params[C.TIMESERIES_DIR], params_p[C.TIMESERIES_DIR], "tscuml*.npy")
+    assert_two_dirs_equal(params[C.TIMESERIES_DIR], params_p[C.TIMESERIES_DIR], "tsincr*.npy")
 
     print("==========================xxx===========================")
 
