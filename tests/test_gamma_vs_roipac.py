@@ -28,7 +28,8 @@ from pyrate.core.shared import DEM
 from pyrate.core import ifgconstants as ifc
 from pyrate.core.prepifg_helper import _is_number
 from pyrate import prepifg, conv2tif, configuration
-from tests.common import SML_TEST_DIR, small_data_setup, copytree, TEST_CONF_ROIPAC, TEST_CONF_GAMMA, working_dirs
+from tests.common import SML_TEST_DIR, small_data_setup, copytree, TEST_CONF_ROIPAC, TEST_CONF_GAMMA, working_dirs, \
+    WORKING_DIR
 
 
 SMLNEY_GAMMA_TEST = os.path.join(SML_TEST_DIR, "gamma_obs")
@@ -37,12 +38,12 @@ SMLNEY_GAMMA_TEST = os.path.join(SML_TEST_DIR, "gamma_obs")
 def test_files_are_same(tempdir, get_config):
     roipac_params = get_config(TEST_CONF_ROIPAC)
     roipac_tdir = Path(tempdir())
-    roipac_params[C.WORKING_DIR] = working_dirs[Path(TEST_CONF_ROIPAC).name]
+    roipac_params[WORKING_DIR] = working_dirs[Path(TEST_CONF_ROIPAC).name]
     roipac_params = __workflow(roipac_params, roipac_tdir)
 
     gamma_params = get_config(TEST_CONF_GAMMA)
     gamma_tdir = Path(tempdir())
-    gamma_params[C.WORKING_DIR] = working_dirs[Path(TEST_CONF_GAMMA).name]
+    gamma_params[WORKING_DIR] = working_dirs[Path(TEST_CONF_GAMMA).name]
     gamma_params = __workflow(gamma_params, gamma_tdir)
 
     # conv2tif output equal
@@ -54,12 +55,12 @@ def test_files_are_same(tempdir, get_config):
     __assert_same_files_produced(roipac_params[C.GEOMETRY_DIR], gamma_params[C.GEOMETRY_DIR], "dem.tif", 1)
 
     # clean up
-    shutil.rmtree(roipac_params[C.WORKING_DIR])
-    shutil.rmtree(gamma_params[C.WORKING_DIR])
+    shutil.rmtree(roipac_params[WORKING_DIR])
+    shutil.rmtree(gamma_params[WORKING_DIR])
 
 
 def __workflow(params, tdir):
-    copytree(params[C.WORKING_DIR], tdir)
+    copytree(params[WORKING_DIR], tdir)
     # manipulate params
     outdir = tdir.joinpath('out')
     outdir.mkdir(exist_ok=True)
@@ -75,7 +76,7 @@ def __workflow(params, tdir):
     params = configuration.Configuration(output_conf).__dict__
     conv2tif.main(params)
     prepifg.main(params)
-    params[C.WORKING_DIR] = tdir.as_posix()
+    params[WORKING_DIR] = tdir.as_posix()
     return params
 
 

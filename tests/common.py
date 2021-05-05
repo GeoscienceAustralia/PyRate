@@ -117,6 +117,9 @@ MEXICO_CROPA_DIR_HEADERS = join(BASE_TEST, "cropA", "headers")
 MEXICO_CROPA_DIR_DEM_ERROR = join(BASE_TEST, "cropA", "dem_error_result")
 MEXICO_CROPA_CONF = PYRATEPATH.joinpath("tests", "test_data", "cropA", "pyrate_mexico_cropa.conf")
 
+#: STR; Name of directory containing input interferograms for certian tests
+WORKING_DIR = 'working_dir'
+
 # small dummy ifg list to limit overall # of ifgs
 IFMS5 = """geo_060828-061211_unw.tif
 geo_061106-061211_unw.tif
@@ -603,10 +606,10 @@ def manipulate_test_conf(conf_file, work_dir: Path):
         for m_path in params[C.INTERFEROGRAM_FILES]:
             m_path.converted_path = work_dir.joinpath(Path(m_path.converted_path).name).as_posix()
     else:  # legacy unit test data
-        params[C.WORKING_DIR] = working_dirs[Path(conf_file).name]
-        copytree(params[C.WORKING_DIR], work_dir)
+        params[WORKING_DIR] = working_dirs[Path(conf_file).name]
+        copytree(params[WORKING_DIR], work_dir)
 
-    params[C.WORKING_DIR] = work_dir.as_posix()
+    params[WORKING_DIR] = work_dir.as_posix()
     # manipulate params
     outdir = work_dir.joinpath('out')
     outdir.mkdir(exist_ok=True)
