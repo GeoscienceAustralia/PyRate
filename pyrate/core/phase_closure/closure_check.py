@@ -142,7 +142,8 @@ def iterative_closure_check(config, interactive_plot=True) -> \
         new_ifg_files, closure, ifgs_breach_count, num_occurences_each_ifg, loops = rets
         if interactive_plot:
             if mpiops.rank == 0:
-                plot_closure(closure=closure, loops=loops, config=config, thr=params[C.LARGE_DEV_THR])
+                plot_closure(closure=closure, loops=loops, config=config, 
+                                thr=params[C.LARGE_DEV_THR], iteration=i)
         if len(ifg_files) == len(new_ifg_files):
             break
         else:
