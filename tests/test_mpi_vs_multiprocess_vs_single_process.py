@@ -34,7 +34,8 @@ from tests.common import (
     PY37GDAL304,
     PY37GDAL302,
     PYTHON3P8,
-    PYTHON3P7
+    PYTHON3P7,
+    WORKING_DIR
 )
 
 
@@ -228,9 +229,9 @@ def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
         
     print("==========================xxx===========================")
 
-    shutil.rmtree(params[C.WORKING_DIR])
-    shutil.rmtree(params_m[C.WORKING_DIR])
-    shutil.rmtree(params_s[C.WORKING_DIR])
+    shutil.rmtree(params[WORKING_DIR])
+    shutil.rmtree(params_m[WORKING_DIR])
+    shutil.rmtree(params_s[WORKING_DIR])
 
 
 def __check_equality_of_phase_closure_outputs(mpi_conf, sr_conf):
@@ -398,5 +399,5 @@ def test_stack_and_ts_mpi_vs_parallel_vs_serial(modified_config_short, gamma_con
 
     print("==========================xxx===========================")
 
-    shutil.rmtree(params[C.WORKING_DIR])
-    shutil.rmtree(params_p[C.WORKING_DIR])
+    shutil.rmtree(params[WORKING_DIR])
+    shutil.rmtree(params_p[WORKING_DIR])

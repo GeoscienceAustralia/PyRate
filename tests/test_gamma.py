@@ -34,12 +34,12 @@ from pyrate.core import shared, gamma
 from pyrate import prepifg, conv2tif
 from pyrate.core.shared import write_fullres_geotiff, GeotiffException
 import pyrate.constants as C
-from pyrate.constants import PYRATEPATH, IFG_FILE_LIST, PROCESSOR, WORKING_DIR, OUT_DIR, DEM_HEADER_FILE, \
+from pyrate.constants import PYRATEPATH, IFG_FILE_LIST, PROCESSOR, OUT_DIR, DEM_HEADER_FILE, \
     NO_DATA_VALUE, BASE_FILE_LIST
 
 from tests.common import manipulate_test_conf
 from pyrate.configuration import Configuration
-from tests.common import GAMMA_TEST_DIR
+from tests.common import GAMMA_TEST_DIR, WORKING_DIR
 from tests.common import TEMPDIR
 from tests.common import small_data_setup
 

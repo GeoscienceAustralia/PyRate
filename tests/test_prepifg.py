@@ -47,7 +47,7 @@ from pyrate.configuration import Configuration, MultiplePaths
 from pyrate import conv2tif, prepifg
 
 from tests import common
-from tests.common import SML_TEST_LEGACY_PREPIFG_DIR, PY37GDAL302, BASE_TEST
+from tests.common import SML_TEST_LEGACY_PREPIFG_DIR, PY37GDAL302, BASE_TEST, WORKING_DIR
 from tests.common import PREP_TEST_TIF, PREP_TEST_OBS, MEXICO_CROPA_CONF, assert_two_dirs_equal
 from tests.common import SML_TEST_DEM_TIF, SML_TEST_DEM_HDR, manipulate_test_conf, UnitTestAdaptation
 
@@ -841,12 +841,12 @@ class TestOneIncidenceOrElevationMap(UnitTestAdaptation):
     def teardown_class(cls):
         params = Configuration(cls.conf_file).__dict__
         shutil.rmtree(cls.base_dir)
-        common.remove_tifs(params[C.WORKING_DIR])
+        common.remove_tifs(params[WORKING_DIR])
 
     def make_input_files(self, inc='', ele=''):
         with open(self.conf_file, 'w') as conf:
             conf.write('{}: {}\n'.format(C.NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(C.WORKING_DIR, common.GAMMA_SML_TEST_DIR))
+            conf.write('{}: {}\n'.format(WORKING_DIR, common.GAMMA_SML_TEST_DIR))
             conf.write('{}: {}\n'.format(C.OUT_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(C.IFG_FILE_LIST, self.ifgListFile))
             conf.write('{}: {}\n'.format(C.BASE_FILE_LIST, self.baseListFile))

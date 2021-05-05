@@ -82,8 +82,7 @@ LOG_LEVEL = 'INFO'
 IFG_FILE_LIST = 'ifgfilelist'
 #: (0/1/2); The interferogram processor used (0==ROIPAC, 1==GAMMA, 2: GEOTIF)
 PROCESSOR = 'processor'
-#: STR; Name of directory containing input interferograms.
-WORKING_DIR = 'working_dir'
+
 #: STR; Name of directory for saving output products
 OUT_DIR = 'outdir'
 #: STR; Name of Digital Elevation Model file
