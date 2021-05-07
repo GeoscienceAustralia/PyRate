@@ -31,8 +31,8 @@ from pyrate.core.covariance import maxvar_vcm_calc_wrapper
 from pyrate.core.mst import mst_calc_wrapper
 from pyrate.core.orbital import orb_fit_calc_wrapper
 from pyrate.core.dem_error import dem_error_calc_wrapper
-from pyrate.core.phase_closure.closure_check import iterative_closure_check, detect_pix_with_unwrapping_errors, \
-    update_ifg_list_in_params
+from pyrate.core.phase_closure.closure_check import iterative_closure_check, mask_pixels_with_unwrapping_errors, \
+    update_ifg_list
 from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.shared import PrereadIfg, Ifg, get_tiles, mpi_vs_multiprocess_logging, join_dicts, \
@@ -148,7 +148,15 @@ def _update_params_with_tiles(params: dict) -> None:
     params[C.TILES] = tiles
 
 
-def update_params_with_closure_checked_ifg_list(params: dict, config: Configuration):
+def phase_closure_wrapper(params: dict, config: Configuration) -> dict:
+    """
+    This wrapper will run the iterative phase closure check to return a stable
+    list of checked interferograms, and then mask pixels in interferograms that
+    exceed the unwrapping error threshold.
+    :param params: Dictionary of PyRate configuration parameters. 
+    :param config: Configuration class instance.
+    :return: params: Updated dictionary of PyRate configuration parameters.
+    """
 
     if not params[C.PHASE_CLOSURE]:
         log.info("Phase closure correction is not required!")
@@ -159,17 +167,18 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
         sys.exit("Zero loops are returned after phase closure calcs!!! \n"
                  "Check your interferogram network configuration.")
 
+    # update params with closure checked ifg list
     params[C.INTERFEROGRAM_FILES] = \
-        mpiops.run_once(update_ifg_list_in_params, ifg_files, params[C.INTERFEROGRAM_FILES])
+        mpiops.run_once(update_ifg_list, ifg_files, params[C.INTERFEROGRAM_FILES])
 
     if mpiops.rank == 0:
         with open(config.phase_closure_filtered_ifgs_list(params), 'w') as f:
             lines = [p.converted_path + '\n' for p in params[C.INTERFEROGRAM_FILES]]
             f.writelines(lines)
 
-    # insert nans where phase unwrap threshold is breached
+    # mask ifgs with nans where phase unwrap threshold is breached
     if mpiops.rank == 0:
-        detect_pix_with_unwrapping_errors(ifgs_breach_count, num_occurences_each_ifg, params)
+        mask_pixels_with_unwrapping_errors(ifgs_breach_count, num_occurences_each_ifg, params)
 
     _create_ifg_dict(params)
 
@@ -179,7 +188,7 @@ def update_params_with_closure_checked_ifg_list(params: dict, config: Configurat
 correct_steps = {
     'orbfit': orb_fit_calc_wrapper,
     'refphase': ref_phase_est_wrapper,
-    'phase_closure': update_params_with_closure_checked_ifg_list,
+    'phase_closure': phase_closure_wrapper,
     'demerror': dem_error_calc_wrapper,
     'mst': mst_calc_wrapper,
     'apscorrect': wrap_spatio_temporal_filter,

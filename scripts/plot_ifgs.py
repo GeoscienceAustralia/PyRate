@@ -49,6 +49,9 @@ def main():
     parser.add_argument('-v', '--verbosity', type=str, default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
                         help="Increase output verbosity")
 
+    parser.add_argument('-d', '--directory', action="store", type=str, default=None,
+                        help="Pass path to directory containing ifgs", required=True)
+
     parser.add_argument('-f', '--config_file', action="store", type=str, default=None,
                         help="Pass configuration file", required=True)
 
@@ -67,11 +70,14 @@ def main():
     log.debug("Arguments supplied at command line: ")
     log.debug(args)
 
-    ifgs = params[C.INTERFEROGRAM_FILES]
-    nan_convert = params[C.NAN_CONVERSION]
-    nodataval = params[C.NO_DATA_VALUE]
+    ifgs = sorted(list(Path(args.directory).glob('*_ifg.tif')))
+
     num_ifgs = len(ifgs)
-    log.info(f'Plotting {num_ifgs} interferograms')
+    if num_ifgs == 0:
+        log.warning(f'No interferograms with extension *_ifg.tif were found in {args.directory}')
+        return
+
+    log.info(f'Plotting {num_ifgs} interferograms found in {args.directory}')
 
     ifgs_per_plot = args.ifgs_per_plot
 
@@ -84,7 +90,6 @@ def main():
     tot_plots = 0
     num_of_figs = math.ceil(num_ifgs / ifgs_per_plot)
 
-    f_name = 'ifg-phase-plot-{}.png'
     fig_no = 0
     for i in range(num_of_figs):
         fig_no += 1
@@ -94,27 +99,31 @@ def main():
             for p_c in range(plt_cols):
                 ax = fig.add_subplot(plt_rows, plt_cols, fig_plots + 1)
                 ifg_num = plt_cols * p_r + p_c
-                m_path = ifgs[ifg_num]
-                log.info(f'Plotting {m_path.sampled_path}')
-                __plot_ifg(m_path, cmap, ax, num_ifgs, nan_convert, nodataval)
+                file = ifgs[ifg_num]
+                log.info(f'Plotting {file}')
+                __plot_ifg(file, cmap, ax, num_ifgs,
+                            nan_convert=params[C.NAN_CONVERSION],
+                            nodataval=params[C.NO_DATA_VALUE])
                 tot_plots += 1
                 fig_plots += 1
                 log.debug(f'Plotted interferogram #{tot_plots}')
                 if (fig_plots == ifgs_per_plot) or (tot_plots == num_ifgs):
-                    plt.savefig(f_name.format(fig_no), dpi=50)
-                    log.info(f'{fig_plots} interferograms plotted in {Path(f_name.format(fig_no)).as_posix()}')
+                    f_name = Path(args.directory).joinpath('ifg-phase-plot-' + str(fig_no) + '.png').as_posix()
+                    plt.savefig(f_name, dpi=50)
+                    log.info(f'{fig_plots} interferograms plotted in {f_name}')
                     plt.close(fig)
                     break
             if tot_plots == num_ifgs:
                 break
 
 
-def __plot_ifg(m_path, cmap, ax, num_ifgs, nan_convert=None, nodataval=None):
-    if m_path.input_type == InputTypes.IFG:
-        ifg = Ifg(m_path.sampled_path)
-    else:
-        raise AttributeError("Can only plot tifs")
-    ifg.open()
+def __plot_ifg(file, cmap, ax, num_ifgs, nan_convert=None, nodataval=None):
+    try:
+        ifg = Ifg(file)
+        ifg.open()
+    except:
+        raise AttributeError(f'Cannot open interferogram geotiff: {file}')
+
     if nan_convert: # change nodata values to NaN for display
         ifg.nodata_value = nodataval
         ifg.convert_to_nans()

@@ -29,43 +29,29 @@ from pyrate.core.shared import Ifg
 from pyrate.core.logger import pyratelogger as log
 
 
-def detect_pix_with_unwrapping_errors(ifgs_breach_count: NDArray[(Any, Any, Any), UInt16],
-                                     num_occurrences_each_ifg: NDArray[(Any,), UInt16],
-                                     params: dict) -> NDArray[(Any, Any), UInt16]:
+def mask_pixels_with_unwrapping_errors(ifgs_breach_count: NDArray[(Any, Any, Any), UInt16],
+                                       num_occurrences_each_ifg: NDArray[(Any,), UInt16],
+                                       params: dict) -> None:
     """
-    Find pixels in the phase data exceeding the PHS_UNW_ERR_THR, and assign nans to those pixels in all ifgs
+    Find pixels in the phase data that breach large_dev_thr, and mask
+    (assign nans) to those pixels in those ifgs.
     :param ifgs_breach_count: unwrapping issues at pixels in all loops
     :param num_occurrences_each_ifg:  frequency of ifgs appearing in all loops
     :param params: params dict
-    :return: pix_unwrap_error: number of ifgs with unwrapping errors at each pixel
     """
-    nrows, ncols, n_ifgs = ifgs_breach_count.shape
-    pix_unwrap_error = np.zeros(shape=(nrows, ncols), dtype=np.uint16)
-    for i in range(n_ifgs):
-        pix_idx = ifgs_breach_count[:, :, i] == num_occurrences_each_ifg[i]
-        pix_unwrap_error[pix_idx] += 1  # number of IFGs with unwrapping errors per pixel
-
-    # Pixels with unwrapping errors in one or more SBAS IFGs will be marked.
-    # mark_ix = pix_unwrap_error > 0  # don't need to output this
-
-    nan_index = pix_unwrap_error >= params[C.PHS_UNW_ERR_THR]
-
     log.debug("Updating phase data of retained ifgs")
 
     for i, m_p in enumerate(params[C.INTERFEROGRAM_FILES]):
+        pix_index = ifgs_breach_count[:, :, i] == num_occurrences_each_ifg[i]
         ifg = Ifg(m_p.tmp_sampled_path)
         ifg.open()
         ifg.nodata_value = params[C.NO_DATA_VALUE]
         ifg.convert_to_nans()
-        ifg.phase_data[nan_index] = np.nan
+        ifg.phase_data[pix_index] = np.nan
         ifg.write_modified_phase()
 
     log.info(f"Updated phase data of {i + 1} retained ifgs after phase closure")
-
-    # log.info(f'Of {nrows * ncols} pixels, {np.sum(~keep_ix)} '
-    #          f'have phase unwrapping error in {PHS_UNW_ERR_THR} or more pixels')
-    # can move mark_ix an keep_ix in wrapper if at all required
-    return pix_unwrap_error
+    return None
 
 
 def __drop_ifgs_if_not_part_of_any_loop(ifg_files: List[str], loops: List[WeightedLoop], params: dict) -> List[str]:
@@ -136,13 +122,14 @@ def iterative_closure_check(config, interactive_plot=True) -> \
 
     while True:  # iterate till ifgs/loops are stable
         log.info(f"Closure check iteration #{i}: working on {len(ifg_files)} ifgs")
-        rets = wrap_closure_check(config)
+        rets = __wrap_closure_check(config)
         if rets is None:
             return
         new_ifg_files, closure, ifgs_breach_count, num_occurences_each_ifg, loops = rets
         if interactive_plot:
             if mpiops.rank == 0:
-                plot_closure(closure=closure, loops=loops, config=config, thr=params[C.LARGE_DEV_THR])
+                plot_closure(closure=closure, loops=loops, config=config,
+                             thr=params[C.LARGE_DEV_THR], iteration=i)
         if len(ifg_files) == len(new_ifg_files):
             break
         else:
@@ -177,7 +164,7 @@ def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) ->
     return selected_loops
 
 
-def wrap_closure_check(config: Configuration) -> \
+def __wrap_closure_check(config: Configuration) -> \
         Tuple[
             List[str],
             NDArray[(Any, Any), Float32],
@@ -224,14 +211,22 @@ def wrap_closure_check(config: Configuration) -> \
     selected_ifg_files = mpiops.run_once(__drop_ifgs_exceeding_threshold,
                                          ifgs_with_loops, ifgs_breach_count, num_occurences_each_ifg, params)
 
+    # update the ifg list in the parameters dictionary
     params[C.INTERFEROGRAM_FILES] = \
-        mpiops.run_once(update_ifg_list_in_params, selected_ifg_files, params[C.INTERFEROGRAM_FILES])
+        mpiops.run_once(update_ifg_list, selected_ifg_files, params[C.INTERFEROGRAM_FILES])
     return selected_ifg_files, closure, ifgs_breach_count, num_occurences_each_ifg, retained_loops
 
 
-def update_ifg_list_in_params(ifg_files: List[str], multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
-        filtered_multi_paths = []
-        for m_p in multi_paths:
-            if m_p.tmp_sampled_path in ifg_files:
-                filtered_multi_paths.append(m_p)
-        return filtered_multi_paths
+# TODO: Consider whether this helper function is better homed in a generic module and used more widely
+def update_ifg_list(ifg_files: List[str], multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
+    """
+    Function to extract full paths for a subsetted list of interferograms
+    :param ifg_files: list of interferograms to subset
+    :param multi_paths: list of full paths for list of original interferograms
+    :return: filtered_multi_paths: list of full paths for the subset
+    """
+    filtered_multi_paths = []
+    for m_p in multi_paths:
+        if m_p.tmp_sampled_path in ifg_files:
+            filtered_multi_paths.append(m_p)
+    return filtered_multi_paths
