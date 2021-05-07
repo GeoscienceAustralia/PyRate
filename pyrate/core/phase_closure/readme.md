@@ -21,14 +21,12 @@ The following params are used from the pyrate config file:
 # large_dev_thr: closure threshold for each pixel in multiples of pi, e.g. 0.5 = pi/2, 1 = pi.
 # avg_ifg_err_thr: ifgs with more than this fraction of pixels above the closure threshold will be dropped.
 # loops_thr_ifg: ifgs are dropped if they do not participate in at least this many loops
-# phs_unw_err_thr: a pixel with closure above the threshold in more than this many ifgs will be flagged
 # max_loop_length: loops up to this many edges are considered for closure checks
 # subtract_median: subtract median during closure checks (1 = yes; 0 = no)
 # max_loops_per_ifg: A loop will be discarded if all ifgs in that loop have contributed already to a number of loops equal to this parameter.
 large_dev_thr:     0.5
 avg_ifg_err_thr:   0.05
 loops_thr_ifg:     2
-phs_unw_err_thr:   5
 max_loop_length:   4
 subtract_median:   1
 max_loops_per_ifg: 2
@@ -72,7 +70,5 @@ _Phase closure_ correction has the following main functionalities:
 5. Once a stable list of interferograms is found, in _correct.py_, write a new ifglist in the working directory, 
    update params, and use the updated ifglist for further PyRate processing.
    
-6. Also in _correct.py_, we detect the pixels breaching _phs_unw_err_thr_.
-
-7. Finally, we write the ifg phase data after assigning nulls to pixels breaching _phs_unw_err_thr_. 
-   _Phase closure_ correction is done at this stage.
+6. Finally, we write the ifg phase data after assigning nulls to pixels breaching large_dev_thr in all the loops the 
+   ifg appears._Phase closure_ correction is done at this stage.

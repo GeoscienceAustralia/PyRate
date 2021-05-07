@@ -388,14 +388,6 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
-    "phs_unw_err_thr": {
-        "DataType": int,
-        "DefaultValue": 5,
-        "MinValue": 1,
-        "MaxValue": None,
-        "PossibleValues": None,
-        "Required": False
-    },
     "max_loop_length": {
         "DataType": int,
         "DefaultValue": 4,

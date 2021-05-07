@@ -384,7 +384,6 @@ class Configuration:
                 self.ifgs_breach_count = closure_d.joinpath('ifgs_breach_count.npy')
                 self.num_occurences_each_ifg = closure_d.joinpath('num_occurrences_each_ifg.npy')
                 self.loops = closure_d.joinpath('loops.npy')
-                self.closure_loops_png = closure_d.joinpath('closure_loops.png')
 
         return Closure()
 

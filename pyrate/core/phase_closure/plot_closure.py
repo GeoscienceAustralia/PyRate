@@ -17,13 +17,15 @@
 
 from typing import List
 import numpy as np
+from pathlib import Path
 
 from pyrate.core.phase_closure.mst_closure import WeightedLoop
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration
 
 
-def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], config: Configuration, thr: float):
+def plot_closure(closure: np.ndarray, loops: List[WeightedLoop],
+                    config: Configuration, thr: float, iteration: int):
     thr = thr * np.pi
     try:
         import matplotlib.pyplot as plt
@@ -54,7 +56,8 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], config: Configu
             title = ',\n'.join([repr(l) for l in loop.loop])
             im = ax.imshow(data, vmin=-thr, vmax=thr, cmap=cmap)
             text = ax.set_title(title)
-            text.set_fontsize(min(20, int(n_loops/3)))
+            text.set_fontsize(20)
+            #text.set_fontsize(min(20, int(n_loops/3)))
 
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="5%", pad=0.05)
@@ -63,6 +66,6 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], config: Configu
                 break
             tot_plots += 1
 
-    closure_plot_file = config.closure().closure_loops_png
+    closure_plot_file = Path(config.phase_closure_dir).joinpath(f'closure_loops_iteration_{iteration}.png')
     plt.savefig(closure_plot_file)
     log.info(f'{n_loops} closure loops plotted in {closure_plot_file}')
