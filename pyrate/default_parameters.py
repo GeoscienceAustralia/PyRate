@@ -368,7 +368,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "DataType": float,
         "DefaultValue": 0.5,
         "MinValue": 0.01,
-        "MaxValue": 1.1,
+        "MaxValue": None,
         "PossibleValues": None,
         "Required": False
     },
@@ -376,7 +376,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "DataType": float,
         "DefaultValue": 0.05,
         "MinValue": 0.01,
-        "MaxValue": 0.5,
+        "MaxValue": 1.0,
         "PossibleValues": None,
         "Required": False
     },
@@ -384,23 +384,15 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "DataType": int,
         "DefaultValue": 2,
         "MinValue": 1,
-        "MaxValue": 20,
-        "PossibleValues": None,
-        "Required": False
-    },
-    "phs_unw_err_thr": {
-        "DataType": int,
-        "DefaultValue": 5,
-        "MinValue": 1,
-        "MaxValue": 20,
+        "MaxValue": None,
         "PossibleValues": None,
         "Required": False
     },
     "max_loop_length": {
         "DataType": int,
         "DefaultValue": 4,
-        "MinValue": 1,
-        "MaxValue": 20,
+        "MinValue": 3,
+        "MaxValue": None,
         "PossibleValues": None,
         "Required": False
     },
@@ -412,11 +404,11 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": [0, 1],
         "Required": False
     },
-    "max_loops_in_ifg": {
+    "max_loops_per_ifg": {
         "DataType": int,
         "DefaultValue": 2,
         "MinValue": 1,
-        "MaxValue": 20,
+        "MaxValue": None,
         "PossibleValues": None,
         "Required": False
     },

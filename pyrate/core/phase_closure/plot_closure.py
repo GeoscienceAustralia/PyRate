@@ -15,18 +15,17 @@
 #   limitations under the License.
 
 
-from pathlib import Path
 from typing import List
 import numpy as np
+from pathlib import Path
 
-import pyrate.constants as C
 from pyrate.core.phase_closure.mst_closure import WeightedLoop
 from pyrate.core.logger import pyratelogger as log
+from pyrate.configuration import Configuration
 
-# norm = mpl.colors.Normalize(vmin=-PI/2, vmax=PI/2)
 
-
-def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], params, thr: float):
+def plot_closure(closure: np.ndarray, loops: List[WeightedLoop],
+                    config: Configuration, thr: float, iteration: int):
     thr = thr * np.pi
     try:
         import matplotlib.pyplot as plt
@@ -57,7 +56,8 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], params, thr: fl
             title = ',\n'.join([repr(l) for l in loop.loop])
             im = ax.imshow(data, vmin=-thr, vmax=thr, cmap=cmap)
             text = ax.set_title(title)
-            text.set_fontsize(min(20, int(n_loops/3)))
+            text.set_fontsize(20)
+            #text.set_fontsize(min(20, int(n_loops/3)))
 
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="5%", pad=0.05)
@@ -66,9 +66,6 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop], params, thr: fl
                 break
             tot_plots += 1
 
-    # ax = fig.add_subplot(plt_rows, plt_cols, tot_plots+1)
-    # fig.colorbar(mpl.cm.ScalarMappable(cmap=cmap), cax=ax, orientation='horizontal', label='radians')
-
-    closure_plot_file = Path(params[C.OUT_DIR]).joinpath(f'closure_loops.png')
+    closure_plot_file = Path(config.phase_closure_dir).joinpath(f'closure_loops_iteration_{iteration}.png')
     plt.savefig(closure_plot_file)
     log.info(f'{n_loops} closure loops plotted in {closure_plot_file}')

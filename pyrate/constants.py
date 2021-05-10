@@ -186,10 +186,9 @@ PHASE_CLOSURE = 'phase_closure'
 LARGE_DEV_THR = 'large_dev_thr'
 AVG_IFG_ERR_THR = 'avg_ifg_err_thr'
 LOOPS_THR_IFG = 'loops_thr_ifg'
-PHS_UNW_ERR_THR = 'phs_unw_err_thr'
 MAX_LOOP_LENGTH = 'max_loop_length'
 SUBTRACT_MEDIAN = 'subtract_median'
-MAX_LOOPS_IN_IFG = 'max_loops_in_ifg'
+MAX_LOOPS_PER_IFG = 'max_loops_per_ifg'
 
 # orbital error correction/parameters
 #: BOOL (1/0); Perform orbital error correction (1: yes, 0: no)
@@ -302,6 +301,3 @@ COHERENCE_DIR = 'coherence_dir'
 INTERFEROGRAM_DIR = 'interferogram_dir'
 GEOMETRY_DIR = 'geometry_dir'
 
-
-# temp constants
-DISABLE_PHASE_CLOSURE = True

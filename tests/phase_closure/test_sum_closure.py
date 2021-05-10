@@ -61,7 +61,7 @@ def modified_config(tempdir, get_lks=1, get_crop=1, orbfit_lks=2, orbfit_method=
 
 @pytest.mark.mpi
 @pytest.mark.slow
-@pytest.mark.skipif((not PY37GDAL302) or C.DISABLE_PHASE_CLOSURE, reason="Only run in one CI env")
+@pytest.mark.skipif((not PY37GDAL302), reason="Only run in one CI env")
 def test_mpi_vs_single_process(modified_config):
     mpi_conf, m_params = modified_config(MEXICO_CROPA_CONF, 0, 'mpi_conf.conf')
     sub_process_run(f"mpirun -n 3 pyrate conv2tif -f {mpi_conf}")
@@ -100,13 +100,18 @@ def test_mpi_vs_single_process(modified_config):
 
     # closure
     np.testing.assert_array_almost_equal(np.abs(m_closure), np.abs(s_closure))
+    np.testing.assert_array_almost_equal(np.abs(m_closure), np.abs(p_closure))
 
     # num_occurrences_each_ifg
     m_num_occurrences_each_ifg = np.load(m_config.closure().num_occurences_each_ifg, allow_pickle=True)
     s_num_occurrences_each_ifg = np.load(s_config.closure().num_occurences_each_ifg, allow_pickle=True)
+    p_num_occurrences_each_ifg = np.load(p_config.closure().num_occurences_each_ifg, allow_pickle=True)
     np.testing.assert_array_equal(m_num_occurrences_each_ifg, s_num_occurrences_each_ifg)
+    np.testing.assert_array_equal(m_num_occurrences_each_ifg, p_num_occurrences_each_ifg)
 
     # check ps
     m_ifgs_breach_count = np.load(m_config.closure().ifgs_breach_count)
     s_ifgs_breach_count = np.load(s_config.closure().ifgs_breach_count)
+    p_ifgs_breach_count = np.load(p_config.closure().ifgs_breach_count)
     np.testing.assert_array_equal(m_ifgs_breach_count, s_ifgs_breach_count)
+    np.testing.assert_array_equal(m_ifgs_breach_count, p_ifgs_breach_count)

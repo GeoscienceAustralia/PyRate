@@ -28,8 +28,6 @@ GDALOPTS="  --with-geos \
             --without-kakadu \
             --without-mrsid \
             --without-jp2mrsid \
-            --without-bsb \
-            --without-grib \
             --without-mysql \
             --without-ingres \
             --without-xerces \
@@ -72,7 +70,6 @@ if [ "$GDALVERSION" = "master" ]; then
         make -s -j 2
         make install
     fi
-
 else
     case "$GDALVERSION" in
         3*)
