@@ -162,7 +162,8 @@ class TestLOSConversion:
         _merge_timeseries(params, 'tsincr')
 
         for out_type in los_projection_out_types:
-            for tif in Path(params[C.OUT_DIR]).glob(out_type + '*.tif'):
+            for tif in itertools.chain(Path(params[C.VELOCITY_DIR]).glob(out_type + '*.tif'),
+                                       Path(params[C.TIMESERIES_DIR]).glob(out_type + '*.tif')):
                 shutil.move(tif, k_dir.joinpath(tif.name))
 
     def test_file_creation(self, los_projection):
@@ -174,20 +175,20 @@ class TestLOSConversion:
         _merge_timeseries(params, 'tsincr')
         # check if color map is created
         for ot in ['stack_rate', 'stack_error', 'linear_rate', 'linear_error', 'linear_rsquared']:
-            create_png_and_kml_from_tif(params[C.OUT_DIR], output_type=ot)
-            output_color_map_path = os.path.join(params[C.OUT_DIR], f"colourmap_{ot}.txt")
+            create_png_and_kml_from_tif(params[C.VELOCITY_DIR], output_type=ot)
+            output_color_map_path = os.path.join(params[C.VELOCITY_DIR], f"colourmap_{ot}.txt")
             assert Path(output_color_map_path).exists(), "Output color map file not found at: " + output_color_map_path
 
         # check if merged files are created
         for _type, ot in itertools.product(['stack_rate', 'stack_error', 'linear_rate',
                                             'linear_error', 'linear_rsquared'], ['.tif', '.png', '.kml']):
-            output_image_path = os.path.join(params[C.OUT_DIR], _type + ot)
+            output_image_path = os.path.join(params[C.VELOCITY_DIR], _type + ot)
             print(f"checking {output_image_path}")
             assert Path(output_image_path).exists(), f"Output {ot} file not found at {output_image_path}"
 
         # check los_projection metadata
         for out_type in los_projection_out_types:
-            for tif in Path(params[C.OUT_DIR]).glob(out_type + '*.tif'):
+            for tif in Path(params[C.TIMESERIES_DIR]).glob(out_type + '*.tif'):
                 self.__check_md(los_projection, tif.as_posix())
 
     @staticmethod

@@ -35,7 +35,7 @@ else:
     print(f"Looking for PyRate products in: {path}")
 
 # ----- Reading linear velocity file --------------------------------
-with rasterio.open(os.path.join(path, 'linear_rate.tif')) as src2:
+with rasterio.open(os.path.join(path, 'velocity_dir', 'linear_rate.tif')) as src2:
     vel = src2.read()
     bounds2 = src2.bounds
     x_coord2 = np.linspace(bounds2[0], bounds2[2], src2.width)
@@ -56,7 +56,7 @@ latitude = vs.coords['lat']
 
 # ------ Masking the velocity file using linear sample --------------
 # # linear resample *tif file and mask out velocity
-src3 = rasterio.open(os.path.join(path, 'linear_samples.tif'))
+src3 = rasterio.open(os.path.join(path, 'velocity_dir', 'linear_samples.tif'))
 lsample = src3.read()
 lsamp_val = lsample[0,:,:]
 [mask_x,mask_y] = np.where((lsamp_val >= (len(imdates_dt)-2)))

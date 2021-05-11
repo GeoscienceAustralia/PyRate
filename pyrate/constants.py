@@ -297,4 +297,6 @@ TEMP_MLOOKED_DIR = 'temp_mlooked_dir'
 COHERENCE_DIR = 'coherence_dir'
 INTERFEROGRAM_DIR = 'interferogram_dir'
 GEOMETRY_DIR = 'geometry_dir'
+TIMESERIES_DIR = 'timeseries_dir'
+VELOCITY_DIR = 'velocity_dir'
 

@@ -62,10 +62,10 @@ def readtif(tifname: str):
 ###############################
 
 # reading velocity data from linear_rate product
-vel, x_coord, y_coord, md = readtif(os.path.join(path, 'linear_rate.tif'))
+vel, x_coord, y_coord, md = readtif(os.path.join(path, 'velocity_dir', 'linear_rate.tif'))
 
 # read regression intercept from linear_intercept product
-intercept, _, _, _ = readtif(os.path.join(path, 'linear_intercept.tif'))
+intercept, _, _, _ = readtif(os.path.join(path, 'velocity_dir', 'linear_intercept.tif'))
 
 # convert time series dates from metadata string to list of strings
 date_str = re.findall(r'\'(.+?)\'', md['EPOCH_DATE'])
@@ -87,7 +87,7 @@ tscuml = np.zeros((len(date_str), vel.shape[1], vel.shape[2]))
 
 # reading tscuml*tif files and add to tscuml variable
 for i, d in enumerate(date_str[1:]):
-    data, x_coord, y_coord, _ = readtif(os.path.join(path, 'tscuml_' + d + '.tif'))
+    data, x_coord, y_coord, _ = readtif(os.path.join(path, 'timeseries_dir', 'tscuml_' + d + '.tif'))
     tscuml[i+1, :, :] = np.squeeze(data, axis=(0,))
 
 # make tscuml xarray
@@ -158,9 +158,9 @@ mapdict_unit = {}
 names = ['Velocity', 'Error', 'R squared']
 units = ['mm/yr', 'mm/yr', '']
 
-velfile = os.path.join(path, 'linear_rate.tif')
-Errfile = os.path.join(path, 'linear_error.tif')
-Rsqrfile = os.path.join(path, 'linear_rsquared.tif')
+velfile = os.path.join(path, 'velocity_dir', 'linear_rate.tif')
+Errfile = os.path.join(path, 'velocity_dir', 'linear_error.tif')
+Rsqrfile = os.path.join(path, 'velocity_dir', 'linear_rsquared.tif')
 files = [velfile, Errfile, Rsqrfile]
 
 for i, name in enumerate(names):

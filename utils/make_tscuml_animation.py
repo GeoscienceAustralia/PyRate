@@ -36,7 +36,7 @@ else:
 #################################
 
 # Reading velocity data
-with rasterio.open(os.path.join(path, 'linear_rate.tif')) as src2:
+with rasterio.open(os.path.join(path, 'velocity_dir', 'linear_rate.tif')) as src2:
     vel = src2.read()
     bounds2 = src2.bounds
     x_coord2 = np.linspace(bounds2[0], bounds2[2], src2.width)
@@ -62,7 +62,7 @@ tscuml = np.zeros((len(date_str), vel.shape[1], vel.shape[2])) # commented Chand
 print('Reading tscuml files:')
 for i, d in enumerate(date_str[1:]):
     print(i+1, 'tscuml_' + d + '.tif')
-    with rasterio.open(os.path.join(path, 'tscuml_' + d + '.tif')) as src:
+    with rasterio.open(os.path.join(path, 'timeseries_dir', 'tscuml_' + d + '.tif')) as src:
         data = src.read()
         bounds = src.bounds
         x_coord = np.linspace(bounds[0], bounds[2], src.width)
@@ -116,6 +116,6 @@ fcbr = fig.colorbar(im, orientation='horizontal')
 fcbr.set_label('LOS Displacement [mm]')
 ani = animation.ArtistAnimation(fig, ims, interval=500, blit=False)
 #plt.show()
-file = path + '/tscuml_animation.gif'
+file = path + '/timeseries_dir/' +'tscuml_animation.gif'
 ani.save(file, writer='imagemagick', fps=10, dpi=100)
 print('Animation saved to ' + file)

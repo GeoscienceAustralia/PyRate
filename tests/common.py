@@ -628,6 +628,8 @@ def manipulate_test_conf(conf_file, work_dir: Path):
     params[C.PHASE_CLOSURE_DIR] = outdir.joinpath(C.PHASE_CLOSURE_DIR).as_posix()
     params[C.DEM_ERROR_DIR] = outdir.joinpath(C.DEM_ERROR_DIR).as_posix()
     params[C.INTERFEROGRAM_DIR] = outdir.joinpath(C.INTERFEROGRAM_DIR).as_posix()
+    params[C.VELOCITY_DIR] = outdir.joinpath(C.VELOCITY_DIR).as_posix()
+    params[C.TIMESERIES_DIR] = outdir.joinpath(C.TIMESERIES_DIR).as_posix()
 
     return params
 

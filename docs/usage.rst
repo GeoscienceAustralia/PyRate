@@ -320,7 +320,7 @@ geotiff files containing the final time series, linear rate and stacking product
 ``merge`` will also re-assemble tiles that were generated during the previous
 steps. Tiling is discussed in the :ref:`parallel_label` section below.
 After running the ``merge`` step, several geotiff products will appear in the
-``outdir`` directory.
+``<outdir>/velocity_dir`` and ``<outdir>/timeseries_dir`` directories.
 
 
 ``workflow``: Run the full PyRate workflow

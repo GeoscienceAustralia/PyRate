@@ -281,6 +281,12 @@ class Configuration:
         self.geometry_dir = Path(self.outdir).joinpath(C.GEOMETRY_DIR)
         self.geometry_dir.mkdir(parents=True, exist_ok=True)
 
+        self.timeseries_dir = Path(self.outdir).joinpath(C.TIMESERIES_DIR)
+        self.timeseries_dir.mkdir(parents=True, exist_ok=True)
+
+        self.velocity_dir = Path(self.outdir).joinpath(C.VELOCITY_DIR)
+        self.velocity_dir.mkdir(parents=True, exist_ok=True)
+
         # create temp multilooked files dir
         self.temp_mlooked_dir = Path(self.outdir).joinpath(TEMP_MLOOKED_DIR)
         self.temp_mlooked_dir.mkdir(parents=True, exist_ok=True)
