@@ -177,7 +177,10 @@ def _update_phase_and_metadata(ifgs, ref_phs):
     """
     def __inner(ifg, ref_ph):
         ifg.open()
-        ifg.phase_data -= ref_ph + 1e-20 # add 1e-20 to avoid 0.0 vals being converted to NaN later
+        # add 1e-20 to avoid 0.0 values being converted to NaN downstream (Github issue #310)
+        # TODO: implement a more robust way of avoiding this issue, e.g. using numpy masked
+        #       arrays to mark invalid pixel values rather than directly changing values to NaN
+        ifg.phase_data -= ref_ph + 1e-20
         ifg.meta_data[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
         ifg.write_modified_phase()
         log.debug(f"Reference phase corrected for {ifg.data_path}")
