@@ -73,11 +73,12 @@ def main(params):
         C.IFG_XLAST], params[C.IFG_YLAST])
     xlooks, ylooks, crop = transform_params(params)
     ifgs = [prepifg_helper.dem_or_ifg(p.converted_path) for p in ifg_paths]
-    for ifg in ifgs:
-        ifg.open()
     exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks, user_exts=user_exts)
 
-    transform = ifgs[0].dataset.GetGeoTransform()
+    ifg0 = ifgs[0]
+    ifg0.open()
+
+    transform = ifg0.dataset.GetGeoTransform()
 
     process_ifgs_paths = np.array_split(ifg_paths, mpiops.size)[mpiops.rank]
     do_prepifg(process_ifgs_paths, exts, params)
@@ -94,6 +95,7 @@ def main(params):
     else:
         log.info("Skipping coherence file statistics computation.")
     log.info("Finished 'prepifg' step")
+    ifg0.close()
 
 
 def __calc_coherence_stats(params, ifg_path):
