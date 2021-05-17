@@ -66,9 +66,6 @@ def est_ref_phase_patch_median(ifg_paths, params, refpx, refpy):
                                verbose=joblib_log_level(C.LOG_LEVEL))(
                 delayed(_est_ref_phs_patch_median)(p, half_chip_size, refpx, refpy, thresh)
                 for p in phase_data)
-
-#            for n, ifg in enumerate(ifgs):
-#                ifg.phase_data -= ref_phs[n]
         else:
             ref_phs = np.zeros(len(ifgs))
             for n, ifg in enumerate(ifgs):
@@ -145,8 +142,6 @@ def est_ref_phase_ifg_median(ifg_paths, params):
             ref_phs = Parallel(n_jobs=params[C.PROCESSES], verbose=joblib_log_level(C.LOG_LEVEL))(
                 delayed(_est_ref_phs_ifg_median)(p.phase_data, comp) for p in proc_ifgs
             )
-#            for n, ifg in enumerate(proc_ifgs):
-#                ifg.phase_data -= ref_phs[n]
         else:
             log.info("Calculating ref phase")
             ref_phs = np.zeros(len(proc_ifgs))
