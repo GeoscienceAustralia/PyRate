@@ -76,10 +76,6 @@ def get_analysis_extent(crop_opt: int, rasters: List[Union[Ifg, DEM]], xlooks: i
             if not all([_is_number(z) for z in user_exts]):
                 raise PreprocessError('Custom extents must be 4 numbers')
 
-    for raster in rasters:
-        if not raster.is_open:
-            raster.open()
-
     _check_looks(xlooks, ylooks)
     _check_resolution(rasters)
 

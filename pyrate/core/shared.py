@@ -1404,6 +1404,7 @@ def dem_or_ifg(data_path: str) -> Union[Ifg, DEM]:
         return Ifg(data_path)
     else:
         return DEM(data_path)
+    ds = None  # close the dataset
 
 
 def join_dicts(dicts: List[dict]) -> dict:

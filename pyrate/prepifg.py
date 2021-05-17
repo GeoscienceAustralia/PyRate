@@ -73,6 +73,8 @@ def main(params):
         C.IFG_XLAST], params[C.IFG_YLAST])
     xlooks, ylooks, crop = transform_params(params)
     ifgs = [prepifg_helper.dem_or_ifg(p.converted_path) for p in ifg_paths]
+    for ifg in ifgs:
+        ifg.open()
     exts = prepifg_helper.get_analysis_extent(crop, ifgs, xlooks, ylooks, user_exts=user_exts)
 
     transform = ifgs[0].dataset.GetGeoTransform()
