@@ -22,7 +22,8 @@ from typing import List
 from joblib import Parallel, delayed
 import numpy as np
 
-from pyrate.core import ifgconstants as ifc, config as cf, mpiops, shared
+import pyrate.constants as C
+from pyrate.core import ifgconstants as ifc, shared
 from pyrate.core.shared import joblib_log_level, nanmedian, Ifg
 from pyrate.core import mpiops
 from pyrate.configuration import Configuration
@@ -45,9 +46,9 @@ def est_ref_phase_patch_median(ifg_paths, params, refpx, refpy):
     :rtype: ndarray
     :return: ifgs: Reference phase data is removed interferograms in place
     """
-    half_chip_size = int(np.floor(params[cf.REF_CHIP_SIZE] / 2.0))
+    half_chip_size = int(np.floor(params[C.REF_CHIP_SIZE] / 2.0))
     chipsize = 2 * half_chip_size + 1
-    thresh = chipsize * chipsize * params[cf.REF_MIN_FRAC]
+    thresh = chipsize * chipsize * params[C.REF_MIN_FRAC]
 
     def _inner(ifg_paths):
         if isinstance(ifg_paths[0], Ifg):
@@ -60,14 +61,11 @@ def est_ref_phase_patch_median(ifg_paths, params, refpx, refpy):
                 ifg.open(readonly=False)
 
         phase_data = [i.phase_data for i in ifgs]
-        if params[cf.PARALLEL]:
-            ref_phs = Parallel(n_jobs=params[cf.PROCESSES],
-                               verbose=joblib_log_level(cf.LOG_LEVEL))(
+        if params[C.PARALLEL]:
+            ref_phs = Parallel(n_jobs=params[C.PROCESSES],
+                               verbose=joblib_log_level(C.LOG_LEVEL))(
                 delayed(_est_ref_phs_patch_median)(p, half_chip_size, refpx, refpy, thresh)
                 for p in phase_data)
-
-            for n, ifg in enumerate(ifgs):
-                ifg.phase_data -= ref_phs[n]
         else:
             ref_phs = np.zeros(len(ifgs))
             for n, ifg in enumerate(ifgs):
@@ -139,13 +137,11 @@ def est_ref_phase_ifg_median(ifg_paths, params):
         comp = np.isnan(phase_data_sum)
         comp = np.ravel(comp, order='F')
 
-        if params[cf.PARALLEL]:
+        if params[C.PARALLEL]:
             log.info("Calculating ref phase using multiprocessing")
-            ref_phs = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
+            ref_phs = Parallel(n_jobs=params[C.PROCESSES], verbose=joblib_log_level(C.LOG_LEVEL))(
                 delayed(_est_ref_phs_ifg_median)(p.phase_data, comp) for p in proc_ifgs
             )
-            for n, ifg in enumerate(proc_ifgs):
-                ifg.phase_data -= ref_phs[n]
         else:
             log.info("Calculating ref phase")
             ref_phs = np.zeros(len(proc_ifgs))
@@ -155,16 +151,10 @@ def est_ref_phase_ifg_median(ifg_paths, params):
         return ref_phs
 
     process_ifg_paths = mpiops.array_split(ifg_paths)
-    ifg_phase_data_sum = mpiops.comm.allreduce(_process_phase_sum(process_ifg_paths), mpiops.sum0_op)
+    ifg_phase_data_sum = mpiops.comm.allreduce(_process_phase_sum(process_ifg_paths), mpiops.sum_op)
     ref_phs = _inner(process_ifg_paths, ifg_phase_data_sum)
 
     return ref_phs
-
-
-def _update_phase_metadata(ifg):
-    ifg.meta_data[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
-    ifg.write_modified_phase()
-    log.debug(f"Reference phase corrected for {ifg.data_path}")
 
 
 def _est_ref_phs_ifg_median(phase_data, comp):
@@ -177,14 +167,21 @@ def _est_ref_phs_ifg_median(phase_data, comp):
 
 
 def _update_phase_and_metadata(ifgs, ref_phs):
-
+    """
+    Function that applies the reference phase correction and updates ifg metadata
+    """
     def __inner(ifg, ref_ph):
         ifg.open()
-        ifg.phase_data -= ref_ph
+        # add 1e-20 to avoid 0.0 values being converted to NaN downstream (Github issue #310)
+        # TODO: implement a more robust way of avoiding this issue, e.g. using numpy masked
+        #       arrays to mark invalid pixel values rather than directly changing values to NaN
+        ifg.phase_data -= ref_ph + 1e-20
         ifg.meta_data[ifc.PYRATE_REF_PHASE] = ifc.REF_PHASE_REMOVED
         ifg.write_modified_phase()
         log.debug(f"Reference phase corrected for {ifg.data_path}")
         ifg.close()
+
+    log.info("Correcting ifgs by subtracting reference phase")
     for i, rp in zip(mpiops.array_split(ifgs), mpiops.array_split(ref_phs)):
         __inner(i, rp)
 
@@ -200,8 +197,8 @@ def ref_phase_est_wrapper(params):
     """
     Wrapper for reference phase estimation.
     """
-    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
-    refpx, refpy = params[cf.REFX_FOUND], params[cf.REFY_FOUND]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
+    refpx, refpy = params[C.REFX_FOUND], params[C.REFY_FOUND]
     if len(ifg_paths) < 2:
         raise ReferencePhaseError(
             "At least two interferograms required for reference phase correction ({len_ifg_paths} "
@@ -210,34 +207,37 @@ def ref_phase_est_wrapper(params):
 
     # this is not going to be true as we now start with fresh multilooked ifg copies - remove?
     if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_REF_PHASE):
-        log.debug('Finished reference phase correction')
+        log.warning('Reference phase correction already applied to ifgs; returning')
         return
 
     ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
     # Save reference phase numpy arrays to disk.
     ref_phs_file = Configuration.ref_phs_file(params)
 
+    # If ref phase file exists on disk, then reuse - subtract ref_phase from ifgs and return
     if ref_phs_file.exists():
         ref_phs = np.load(ref_phs_file)
         _update_phase_and_metadata(ifgs, ref_phs)
         shared.save_numpy_phase(ifg_paths, params)
         return ref_phs, ifgs
 
-    if params[cf.REF_EST_METHOD] == 1:
+    # determine the reference phase for each ifg
+    if params[C.REF_EST_METHOD] == 1:
         log.info("Calculating reference phase as median of interferogram")
         ref_phs = est_ref_phase_ifg_median(ifg_paths, params)
-    elif params[cf.REF_EST_METHOD] == 2:
+    elif params[C.REF_EST_METHOD] == 2:
         log.info('Calculating reference phase in a patch surrounding pixel (x, y): ({}, {})'.format(refpx, refpy))
         ref_phs = est_ref_phase_patch_median(ifg_paths, params, refpx, refpy)
     else:
         raise ReferencePhaseError("No such option, set parameter 'refest' to '1' or '2'.")
 
+    # gather all reference phases from distributed processes and save to disk
     if mpiops.rank == MAIN_PROCESS:
         collected_ref_phs = np.zeros(len(ifg_paths), dtype=np.float64)
-        process_indices = mpiops.array_split(range(len(ifg_paths)))
+        process_indices = mpiops.array_split(range(len(ifg_paths))).astype(np.uint16)
         collected_ref_phs[process_indices] = ref_phs
         for r in range(1, mpiops.size):
-            process_indices = mpiops.array_split(range(len(ifg_paths)), r)
+            process_indices = mpiops.array_split(range(len(ifg_paths)), r).astype(np.uint16)
             this_process_ref_phs = np.zeros(shape=len(process_indices),
                                             dtype=np.float64)
             mpiops.comm.Recv(this_process_ref_phs, source=r, tag=r)
@@ -249,14 +249,13 @@ def ref_phase_est_wrapper(params):
 
     mpiops.comm.Bcast(collected_ref_phs, root=0)
 
+    # subtract ref_phase from ifgs
     _update_phase_and_metadata(ifgs, collected_ref_phs)
-
-    log.debug('Finished reference phase correction')
 
     mpiops.comm.barrier()
     shared.save_numpy_phase(ifg_paths, params)
 
-    log.debug("Reference phase computed!")
+    log.debug("Finished reference phase correction")
 
     # Preserve old return value so tests don't break.
     return ref_phs, ifgs

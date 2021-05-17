@@ -21,22 +21,75 @@ This Python module contains MPI convenience functions for PyRate
 import logging
 import pickle
 from typing import Callable, Any, Iterable
-from mpi4py import MPI
 import numpy as np
 
-log = logging.getLogger(__name__)
-# We're having trouble with the MPI pickling and 64bit integers
-MPI.pickle.__init__(pickle.dumps, pickle.loads)
 
-# module-level MPI 'world' object representing all connected nodes
-comm = MPI.COMM_WORLD
+"""For MPI compatibility"""
+try:
+    from mpi4py import MPI
+    MPI_INSTALLED = True
+    # # We're having trouble with the MPI pickling and 64bit integers
+    # MPI.pickle.__init__(pickle.dumps, pickle.loads)
 
-# int: the total number of nodes in the MPI world
-size = comm.Get_size()
+    # module-level MPI 'world' object representing all connected nodes
+    comm = MPI.COMM_WORLD
 
-# int: the index (from zero) of this node in the MPI world. Also known as
-# the rank of the node.
-rank = comm.Get_rank()
+    # int: the total number of nodes in the MPI world
+    size = comm.Get_size()
+
+    # int: the index (from zero) of this node in the MPI world. Also known as
+    # the rank of the node.
+    rank = comm.Get_rank()
+except ImportError:
+    MPI_INSTALLED = False
+    size = 1
+    rank = 0
+
+    class comm:
+        """
+        the mpi simulators that are used in a non-mpi environment
+        """
+
+        @staticmethod
+        def barrier():
+            pass
+
+        @staticmethod
+        def reduce(arr, op, root=0):
+            return op(arr)
+
+        @staticmethod
+        def Get_size():
+            return 1
+
+        @staticmethod
+        def allgather(* args):
+            return args
+
+        @staticmethod
+        def gather(* args, **kwargs):
+            return args
+
+        @staticmethod
+        def allreduce(arr, op):
+            return op(arr)
+
+        @staticmethod
+        def Bcast(arr, root=0):
+            return
+
+        @staticmethod
+        def bcast(arr, root=0):
+            return arr
+
+
+class MPIException(Exception):
+    pass
+
+
+def validate_mpi():
+    if not MPI_INSTALLED:
+        raise MPIException("MPI needs to be installed in order to use this module")
 
 
 def run_once(f: Callable, *args, **kwargs) -> Any:
@@ -51,12 +104,15 @@ def run_once(f: Callable, *args, **kwargs) -> Any:
     :return: The value returned by f.
     :rtype: unknown
     """
-    if rank == 0:
-        f_result = f(*args, **kwargs)
+    if MPI_INSTALLED:
+        if rank == 0:
+            f_result = f(*args, **kwargs)
+        else:
+            f_result = None
+        result = comm.bcast(f_result, root=0)
+        return result
     else:
-        f_result = None
-    result = comm.bcast(f_result, root=0)
-    return result
+        return f(*args, **kwargs)
 
 
 def array_split(arr: Iterable, process: int = None) -> Iterable:
@@ -70,12 +126,26 @@ def array_split(arr: Iterable, process: int = None) -> Iterable:
     :return List corresponding to array members in a process.
     :rtype: list
     """
-    r = process if process else rank
-    return np.array_split(arr, size)[r]
+    if MPI_INSTALLED:
+        r = process if process else rank
+        return np.array_split(np.array(arr, dtype=object), size)[r]
+    else:
+        return np.array(arr)
 
 
-def sum_axis_0(x, y, dtype):
+def sum_vars(x, y, dtype):
     s = np.sum([x, y], axis=0)
     return s
 
-sum0_op = MPI.Op.Create(sum_axis_0, commute=True)
+
+def sum_axis_0(x, y, dtype):
+    s = np.sum(np.stack((x, y)), axis=0)
+    return s
+
+
+if MPI_INSTALLED:
+    sum_op = MPI.Op.Create(sum_vars, commute=True)
+    sum0_op = MPI.Op.Create(sum_axis_0, commute=True)
+else:
+    sum_op = lambda arr: np.sum(np.expand_dims(arr, 0), axis=0)
+    sum0_op = lambda arr: np.sum(np.stack(np.expand_dims(arr, 0), axis=0), axis=0)

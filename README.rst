@@ -4,8 +4,8 @@
 Python tool for InSAR Rate and Time-series Estimation
 =====================================================
 
-.. image:: https://travis-ci.org/GeoscienceAustralia/PyRate.svg?branch=master
-   :target: https://travis-ci.org/GeoscienceAustralia/PyRate
+.. image:: https://github.com/GeoscienceAustralia/PyRate/workflows/PyRate%20CI/badge.svg?branch=master
+   :target: https://github.com/GeoscienceAustralia/PyRate/actions
 .. image:: https://codecov.io/gh/GeoscienceAustralia/PyRate/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/GeoscienceAustralia/PyRate
 .. image:: https://img.shields.io/badge/License-Apache%202.0-blue.svg
@@ -24,11 +24,11 @@ Dependencies
 
 The following system dependencies are required by PyRate:
 
-- `Python <https://www.python.org/downloads/>`_, versions 3.6, 3.7 or 3.8.
+- `Python <https://www.python.org/downloads/>`_, versions 3.6, 3.7, 3.8 or 3.9.
 - `GDAL <https://gdal.org/download.html>`_, versions 3.0.2 or 3.0.4
 - `Open MPI <https://www.open-mpi.org/software/ompi/v4.0/>`_, versions 2.1.6, 3.0.4, 3.1.4 or 4.0.2
 
-The versions of each package stated above have been tested to work.
+The versions of each package stated above have been tested to work using `GitHub Actions <https://github.com/GeoscienceAustralia/PyRate/actions>`_ continuous integration testing.
 
 Python dependencies for PyRate are::
 

@@ -52,7 +52,7 @@ def gen_color_file(input_file):
 
     dem = DEM(input_file)
     dem.open()
-    phase_data = dem.height_band.ReadAsArray()
+    phase_data = dem._band.ReadAsArray()
 
     max_ph = np.nanmax(phase_data)
     min_ph = np.nanmin(phase_data)

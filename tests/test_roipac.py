@@ -17,9 +17,7 @@
 This Python module contains tests for the roipac.py PyRate module.
 """
 import os
-import shutil
 import sys
-import tempfile
 from datetime import date
 from os.path import exists, join
 
@@ -27,21 +25,11 @@ from numpy.testing import assert_array_almost_equal
 from osgeo import gdal
 
 import pyrate.core.ifgconstants as ifc
-from pyrate.core import shared, roipac
-from pyrate.core.config import (
-    INPUT_IFG_PROJECTION,
-    NO_DATA_VALUE,
-    OBS_DIR,
-    OUT_DIR,
-    IFG_FILE_LIST,
-    PROCESSOR,
-    DEM_HEADER_FILE
-)
-# from pyrate.scripts.conv2tif import main as roipacMain
+from pyrate.core import roipac
 from pyrate.core.shared import GeotiffException
 from pyrate.core.shared import write_fullres_geotiff
 from tests.common import HEADERS_TEST_DIR, PREP_TEST_OBS, PREP_TEST_TIF
-from tests.common import SML_TEST_DEM_DIR, SML_TEST_OBS, TEMPDIR, UnitTestAdaptation
+from tests.common import SML_TEST_DEM_DIR, ROIPAC_SML_TEST_DIR, TEMPDIR, UnitTestAdaptation
 from tests.common import SML_TEST_DEM_ROIPAC, SML_TEST_DEM_HDR
 
 gdal.UseExceptions()
@@ -52,7 +40,7 @@ if not exists(HEADERS_TEST_DIR):
     sys.exit("ERROR: Missing the 'headers' data for unittests\n")
 
 # constants
-SHORT_HEADER_PATH = join(SML_TEST_OBS, 'geo_060619-061002.unw.rsc')
+SHORT_HEADER_PATH = join(ROIPAC_SML_TEST_DIR, 'geo_060619-061002.unw.rsc')
 FULL_HEADER_PATH = join(HEADERS_TEST_DIR, "geo_060619-060828.unw.rsc")
 
 
@@ -133,15 +121,6 @@ class TestRoipacToGeoTiff(UnitTestAdaptation):
         hdrs[ifc.DATA_TYPE] = ifc.ORIG
         self.dest = os.path.join(TEMPDIR, 'tmp_roipac_ifg2.tif')
         data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
-        self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs, data_path, self.dest, 0)
-
-    def test_mismatching_cell_resolution(self):
-        hdrs = self.HDRS.copy()
-        hdrs[ifc.PYRATE_X_STEP] = 0.1 # fake a mismatch
-        hdrs[ifc.PYRATE_DATUM] = 'WGS84'
-        data_path = join(PREP_TEST_OBS, 'geo_060619-061002.unw')
-        self.dest = os.path.join(TEMPDIR, 'fake')
-
         self.assertRaises(GeotiffException, write_fullres_geotiff, hdrs, data_path, self.dest, 0)
 
     def compare_rasters(self, ds, exp_ds):

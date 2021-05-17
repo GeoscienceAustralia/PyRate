@@ -27,17 +27,15 @@ import numpy as np
 from scipy.fftpack import fft2, ifft2, fftshift
 from scipy.optimize import fmin
 
-from pyrate.core import shared, ifgconstants as ifc, config as cf, mpiops
+import pyrate.constants as C
+from pyrate.core import shared, ifgconstants as ifc, mpiops
 from pyrate.core.shared import PrereadIfg, Ifg
 from pyrate.core.algorithm import first_second_ids
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration
 
 # pylint: disable=too-many-arguments
-# distance division factor of 1000 converts to km and is needed to match legacy output
-
 MAIN_PROCESS = 0
-DISTFACT = 1000
 
 
 def _pendiffexp(alphamod, cvdav):
@@ -170,9 +168,9 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
 
     # pick the smallest axis to determine circle search radius
     if (ifg.x_centre * ifg.x_size) < (ifg.y_centre * ifg.y_size):
-        maxdist = (ifg.x_centre+1) * ifg.x_size / DISTFACT
+        maxdist = (ifg.x_centre+1) * ifg.x_size / ifc.METRE_PER_KM
     else:
-        maxdist = (ifg.y_centre+1) * ifg.y_size / DISTFACT
+        maxdist = (ifg.y_centre+1) * ifg.y_size / ifc.METRE_PER_KM
 
     # filter out data where the of lag distance is greater than maxdist
     # r_dist = array([e for e in rorig if e <= maxdist]) #
@@ -184,11 +182,11 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
     # optionally save acg vs dist observations to disk
     if save_acg:
         _save_cvd_data(acg, r_dist[indices_to_keep],
-                       ifg.data_path, params[cf.TMPDIR])
+                       ifg.data_path, params[C.TMPDIR])
 
     if calc_alpha:
         # bin width for collecting data
-        bin_width = max(ifg.x_size, ifg.y_size) * 2 / DISTFACT  # km
+        bin_width = max(ifg.x_size, ifg.y_size) * 2 / ifc.METRE_PER_KM  # km
         r_dist = r_dist[indices_to_keep]  # km
         # classify values of r_dist according to bin number
         rbin = ceil(r_dist / bin_width).astype(int)
@@ -236,7 +234,7 @@ class RDist():
                                              self.ifg.x_size) ** 2 +
                                             ((yy - self.ifg.y_centre) *
                                              self.ifg.y_size) ** 2),
-                                    DISTFACT)  # km
+                                    ifc.METRE_PER_KM)  # km
             self.r_dist = reshape(self.r_dist, size, order='F')
             self.r_dist = self.r_dist[:int(ceil(size / 2.0)) + self.nrows]
 
@@ -330,8 +328,8 @@ def maxvar_vcm_calc_wrapper(params):
     """
     MPI wrapper for maxvar and vcmt computation
     """
-    preread_ifgs = params[cf.PREREAD_IFGS]
-    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+    preread_ifgs = params[C.PREREAD_IFGS]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
     log.info('Calculating the temporal variance-covariance matrix')
 
     def _get_r_dist(ifg_path):
@@ -355,6 +353,6 @@ def maxvar_vcm_calc_wrapper(params):
 
     vcmt = mpiops.run_once(get_vcmt, preread_ifgs, maxvar)
     log.debug("Finished maxvar and vcm calc!")
-    params[cf.MAXVAR], params[cf.VCMT] = maxvar, vcmt
+    params[C.MAXVAR], params[C.VCMT] = maxvar, vcmt
     np.save(Configuration.vcmt_path(params), arr=vcmt)
     return maxvar, vcmt

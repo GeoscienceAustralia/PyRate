@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2020 Geoscience Australia
+#   Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ This Python module contains tests for the shared.py PyRate module.
 import os
 import shutil
 import sys
+import random
+import string
 import tempfile
 import pytest
 from pathlib import Path
@@ -32,13 +34,16 @@ from numpy.testing import assert_array_equal
 from osgeo import gdal
 from osgeo.gdal import Open, Dataset, UseExceptions
 
-from tests.common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR
-from pyrate.core import shared, ifgconstants as ifc, config as cf, prepifg_helper, gamma
+import pyrate.constants as C
+import tests.common
+from tests.common import SML_TEST_TIF, SML_TEST_DEM_TIF, TEMPDIR, WORKING_DIR
+from pyrate.core import shared, ifgconstants as ifc, gamma
 from pyrate.core.shared import dem_or_ifg
+from pyrate.core import mpiops
 from pyrate import prepifg, conv2tif
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.core.shared import Ifg, DEM, RasterException
-from pyrate.core.shared import cell_size, _utm_zone
+from pyrate.core.shared import cell_size, _utm_zone, tiles_split
 
 from tests import common
 
@@ -149,7 +154,7 @@ class TestIfgIOTests:
 
     def setup_method(self):
         self.ifg = Ifg(join(SML_TEST_TIF, 'geo_070709-070813_unw.tif'))
-        self.header = join(common.SML_TEST_OBS, 'geo_070709-070813_unw.rsc')
+        self.header = join(common.ROIPAC_SML_TEST_DIR, 'geo_070709-070813_unw.rsc')
 
     def test_open(self):
         assert self.ifg.dataset is None
@@ -316,14 +321,13 @@ class TestDEMTests:
         with pytest.raises(RasterException):
             self.ras.open()
 
-    def test_band_fails_with_unopened_raster(self):
-        # test accessing bands with open and unopened datasets
-        with pytest.raises(RasterException):
-            self.ras.height_band
+    # def test_band_fails_with_unopened_raster(self):  # now opening if not open
+    #     # test accessing bands with open and unopened datasets
+    #     with pytest.raises(RasterException):
+    #         self.ras.band
 
     def test_band_read_with_open_raster(self):
-        self.ras.open()
-        data = self.ras.height_band.ReadAsArray()
+        data = self.ras.band.ReadAsArray()
         assert data.shape == (72, 47)
 
 
@@ -333,25 +337,28 @@ class TestWriteUnw:
     @pytest.fixture(autouse=True)
     def setup_class(cls, gamma_params):
         # change the required params
-        shutil.rmtree(gamma_params[cf.OUT_DIR])  # start with a clean directory
-        shared.mkdir_p(gamma_params[cf.OUT_DIR])
-        cls.params = gamma_params
-        cls.params[cf.OBS_DIR] = common.SML_TEST_GAMMA
-        cls.params[cf.PROCESSOR] = 1  # gamma
-        cls.params[cf.PARALLEL] = 0
-        cls.params[cf.REF_EST_METHOD] = 1
-        cls.params[cf.DEM_FILE] = common.SML_TEST_DEM_GAMMA
-        cls.params[cf.BASE_FILE_LIST] = common.SML_TEST_GAMMA
+        shared.mkdir_p(gamma_params[C.OUT_DIR])
+        from copy import deepcopy
+        cls.params = deepcopy(gamma_params)
+        cls.params[WORKING_DIR] = common.GAMMA_SML_TEST_DIR
+        cls.params[C.PROCESSOR] = 1  # gamma
+        cls.params[C.PARALLEL] = 0
+        cls.params[C.REF_EST_METHOD] = 1
+        cls.params[C.DEM_FILE] = common.SML_TEST_DEM_GAMMA
+        cls.params[C.BASE_FILE_LIST] = common.GAMMA_SML_TEST_DIR
         # base_unw_paths need to be geotiffed and multilooked by run_prepifg
-        cls.base_unw_paths = cf.original_ifg_paths(cls.params[cf.IFG_FILE_LIST], cls.params[cf.OBS_DIR])
+        cls.base_unw_paths = tests.common.original_ifg_paths(cls.params[C.IFG_FILE_LIST], cls.params[WORKING_DIR])
         cls.base_unw_paths.append(common.SML_TEST_DEM_GAMMA)
 
         # dest_paths are tifs that have been geotif converted and multilooked
         conv2tif.main(cls.params)
         prepifg.main(cls.params)
 
-        cls.dest_paths = [Path(cls.params[cf.OUT_DIR]).joinpath(Path(c.sampled_path).name).as_posix()
-                          for c in cls.params[cf.INTERFEROGRAM_FILES][:-2]]
+        cls.dest_paths = [Path(cls.params[C.INTERFEROGRAM_DIR]).joinpath(Path(c.sampled_path).name).as_posix()
+                          for c in gamma_params[C.INTERFEROGRAM_FILES]]
+        cls.dest_paths += [Path(cls.params[C.COHERENCE_DIR]).joinpath(Path(c.sampled_path).name).as_posix()
+                          for c in gamma_params[C.COHERENCE_FILE_PATHS]]
+
         cls.ifgs = [dem_or_ifg(i) for i in cls.dest_paths]
         for i in cls.ifgs:
             i.open()
@@ -371,11 +378,11 @@ class TestWriteUnw:
         dem_header = gamma.parse_dem_header(dem_header_file)
 
         header = gamma.parse_epoch_header(
-            os.path.join(common.SML_TEST_GAMMA, '20060828_slc.par'))
+            os.path.join(common.GAMMA_SML_TEST_DIR, '20060828_slc.par'))
         header.update(dem_header)
              
         base_header = gamma.parse_baseline_header(
-            os.path.join(common.SML_TEST_GAMMA, '20060828-20061211_base.par'))
+            os.path.join(common.GAMMA_SML_TEST_DIR, '20060828-20061211_base.par'))
         header.update(base_header)
                 
         # insert some dummy data so we are the dem in write_fullres_geotiff is not
@@ -417,7 +424,7 @@ class TestWriteUnw:
         # Convert back to .unw
         dest_unws = []
         for g in set(geotiffs):
-            dest_unw = os.path.join(self.params[cf.OUT_DIR], Path(g).stem + '.unw')
+            dest_unw = os.path.join(self.params[C.OUT_DIR], Path(g).stem + '.unw')
             shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw=dest_unw, ifg_proc=1)
             dest_unws.append(dest_unw)
 
@@ -432,8 +439,9 @@ class TestWriteUnw:
 
         # Ensure original multilooked geotiffs and 
         #  unw back to geotiff are the same
-        geotiffs.sort()
-        new_geotiffs.sort()
+        geotiffs.sort(key=lambda x: Path(x).name)
+        new_geotiffs.sort(key=lambda x: Path(x).name)
+
         for g, u in zip(geotiffs, new_geotiffs):
             g_ds = gdal.Open(g)
             u_gs = gdal.Open(u)
@@ -443,12 +451,12 @@ class TestWriteUnw:
 
     def test_roipac_raises(self):
         geotiffs = [os.path.join(
-            self.params[cf.OUT_DIR], os.path.basename(b).split('.')[0] + '_' 
-            + os.path.basename(b).split('.')[1] + '.tif')
+            self.params[C.OUT_DIR], os.path.basename(b).split('.')[0] + '_'
+                                                   + os.path.basename(b).split('.')[1] + '.tif')
             for b in self.base_unw_paths]
 
         for g in geotiffs[:1]:
-            dest_unw = os.path.join(self.params[cf.OUT_DIR], os.path.splitext(g)[0] + '.unw')
+            dest_unw = os.path.join(self.params[C.OUT_DIR], os.path.splitext(g)[0] + '.unw')
             with pytest.raises(NotImplementedError):
                 shared.write_unw_from_data_or_geotiff(geotif_or_data=g, dest_unw=dest_unw, ifg_proc=0)
 
@@ -496,3 +504,73 @@ class TestGeodesy:
                 assert s > 0, "size=%s" % s
                 assert s > exp_low, "size=%s" % s
                 assert s < exp_high, "size=%s" % s
+
+
+@pytest.fixture(params=[0, 1])
+def parallel(request):
+    return request.param
+
+
+def get_random_string(length):
+    letters = string.ascii_lowercase
+    result_str = ''.join(random.choice(letters) for _ in range(length))
+    return result_str
+
+
+def _data_types():
+    return {
+        'str': [get_random_string(np.random.randint(2, 10)) for _ in range(20)],
+        'int': np.arange(20),
+        'ndarray': [np.random.randint(low=0, high=10, size=(2, 3), dtype=np.uint8) for _ in range(20)]
+        }
+
+
+data_types = mpiops.run_once(_data_types)  # required otherwise differnt arrays are generated in each mpi process
+
+
+@pytest.fixture(params=list(data_types.keys()))
+def data_type(request):
+    return request.param
+
+
+def test_tiles_split(parallel, data_type):
+    params = {
+        C.TILES: data_types[data_type],
+        C.PARALLEL: parallel,
+        C.LOG_LEVEL: 'INFO',
+        'multiplier': 2,
+        C.PROCESSES: 4
+    }
+
+    def func(tile, params):
+        return tile * params['multiplier']
+
+    ret = tiles_split(func, params)
+
+    expected_ret = np.array([item*params['multiplier'] for item in data_types[data_type]], dtype=object)
+    np.testing.assert_array_equal(ret, expected_ret)
+
+
+def test_convert_to_radians():
+    import math
+    data = np.random.randint(1, 10, (4, 5))
+    wavelength = 10.5
+    ret = shared.convert_mm_to_radians(data, wavelength)
+    expected = data * (4 * math.pi) / wavelength /ifc.MM_PER_METRE
+    np.testing.assert_array_almost_equal(ret, expected)
+
+
+def test_convert_to_radians_ifg(ten_geotiffs):
+    for g in ten_geotiffs[:2]:
+        ifg = Ifg(g)
+        ifg.open()
+        md = ifg.dataset.GetMetadata()
+        assert ifc.DATA_TYPE in md
+        assert md[ifc.DATA_TYPE] == ifc.ORIG
+        assert md[ifc.DATA_UNITS] == shared.RADIANS
+        rad_data = ifg.phase_data
+        ifg.convert_to_mm()
+        assert ifg.meta_data[ifc.DATA_UNITS] == shared.MILLIMETRES
+        ifg.convert_to_radians()
+        assert md[ifc.DATA_UNITS] == shared.RADIANS
+        np.testing.assert_array_almost_equal(rad_data, ifg.phase_data, decimal=4)
