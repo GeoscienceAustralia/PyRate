@@ -100,9 +100,8 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
         raise OrbitalError(msg)
 
     # Give informative log messages based on selected options
-    meth = {1:"independent", 2:"network"} # look up table for log message
-    deg = {1:"planar", 2:"quadratic", 3:"part-cubic"} # look up table for log message
-    log.info(f'Calculating {deg[degree]} orbital correction using {meth[method]} method')
+    log.info(f'Calculating {__degrees_as_string(degree)} orbital correction using '
+             f'{__methods_as_string(method)} method')
     if orbfitlksx > 1 or orbfitlksy > 1:
         log.info(f'Multi-looking interferograms for orbital correction with '
                  f'factors of X = {orbfitlksx} and Y = {orbfitlksy}')
@@ -269,7 +268,7 @@ def independent_orbital_correction(ifg_path, design_matrix, params):
     # subtract orbital error from the ifg
     original_ifg.phase_data -= orbital_correction
     # set orbfit meta tag and save phase to file
-    _save_orbital_error_corrected_phase(original_ifg)
+    _save_orbital_error_corrected_phase(original_ifg, params)
     original_ifg.close()
 
 
@@ -362,7 +361,7 @@ def __check_and_apply_orberrors_found_on_disc(ifg_paths, params):
                 ifg = i
             ifg.phase_data -= orb
             # set orbfit meta tag and save phase to file
-            _save_orbital_error_corrected_phase(ifg)
+            _save_orbital_error_corrected_phase(ifg, params)
     return all(p.exists() for p in saved_orb_err_paths)
 
 
@@ -383,18 +382,34 @@ def _remove_network_orb_error(coefs, dm, ifg, ids, offset, params):
     # save orb error on disc
     np.save(file=saved_orb_err_path, arr=orb)
     # set orbfit meta tag and save phase to file
-    _save_orbital_error_corrected_phase(ifg)
+    _save_orbital_error_corrected_phase(ifg, params)
 
 
-def _save_orbital_error_corrected_phase(ifg):
+def _save_orbital_error_corrected_phase(ifg, params):
     """
     Convenience function to update metadata and save latest phase after
     orbital fit correction
     """
     # set orbfit tags after orbital error correction
+    ifg.dataset.SetMetadataItem(ifc.PYRATE_ORB_METHOD, __methods_as_string(params[C.ORBITAL_FIT_METHOD]))
+    ifg.dataset.SetMetadataItem(ifc.PYRATE_ORB_DEG, __degrees_as_string(params[C.ORBITAL_FIT_DEGREE]))
+    ifg.dataset.SetMetadataItem(ifc.PYRATE_ORB_XLOOKS, str(params[C.ORBITAL_FIT_LOOKS_X]))
+    ifg.dataset.SetMetadataItem(ifc.PYRATE_ORB_YLOOKS, str(params[C.ORBITAL_FIT_LOOKS_Y]))
     ifg.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ifc.ORB_REMOVED)
     ifg.write_modified_phase()
     ifg.close()
+
+
+def __methods_as_string(method):
+    """Look up table to get orbital method string names"""
+    meth = {1:ifc.PYRATE_ORB_INDEPENDENT, 2:ifc.PYRATE_ORB_NETWORK}
+    return str(meth[method])
+
+
+def __degrees_as_string(degree):
+    """Look up table to get orbital degree string names"""
+    deg = {1:ifc.PYRATE_ORB_PLANAR, 2:ifc.PYRATE_ORB_QUADRATIC, 3:ifc.PYRATE_ORB_PART_CUBIC}
+    return str(deg[degree])
 
 
 # TODO: subtract reference pixel coordinate from x and y
