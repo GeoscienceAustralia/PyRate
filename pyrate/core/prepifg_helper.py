@@ -121,8 +121,7 @@ def _check_resolution(ifgs: List[Union[Ifg, DEM]]):
     for var in ['x_step', 'y_step']:
         values = []
         for i in ifgs:
-            if not i.is_open:
-                i.open()
+            i.open()
             values.append(getattr(i, var))
             i.close()
         values = array(values)
@@ -249,8 +248,7 @@ def __bounds(ifgs: List[Ifg], func: Callable) -> Tuple[float, float, float, floa
     x_lasts = []
     y_lasts = []
     for i in ifgs:
-        if not i.is_open:
-            i.open()
+        i.open()
         x_firsts.append(i.x_first)
         y_firsts.append(i.y_first)
         x_lasts.append(i.x_last)
@@ -270,8 +268,7 @@ def _get_same_bounds(ifgs: List[Ifg]) -> Tuple[float, float, float, float]:
     """
     tfs = []
     for i in ifgs:
-        if not i.is_open:
-            i.open()
+        i.open()
         tfs.append(i.dataset.GetGeoTransform())
         i.close()
 

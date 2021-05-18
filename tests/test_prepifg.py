@@ -232,8 +232,6 @@ class TestPrepifgOutput(UnitTestAdaptation):
         cls.xs = 0.000833333
         cls.ys = -cls.xs
         cls.ifgs, cls.random_dir = diff_exts_ifgs()
-        for i in cls.ifgs:
-            i.open()
         cls.ifg_paths = [i.data_path for i in cls.ifgs]
 
         cls.params = Configuration(common.TEST_CONF_ROIPAC).__dict__
@@ -922,8 +920,6 @@ def prepare_ifgs(raster_data_paths, crop_opt, xlooks, ylooks, headers, params, t
 
     # use metadata check to check whether it's a dem or ifg
     rasters = [dem_or_ifg(r) for r in raster_data_paths]
-    for r in rasters:
-        r.open()
     exts = get_analysis_extent(crop_opt, rasters, xlooks, ylooks, user_exts)
     out_paths = []
     for r, t in zip(raster_data_paths, rasters):

@@ -359,8 +359,7 @@ class TestPrePrepareIfgs:
         cls.ifgs = [shared.Ifg(p) for p in ifg_paths]
 
         for i in cls.ifgs:
-            if not i.is_open:
-                i.open(readonly=False)
+            i.open(readonly=False)
             if nan_conversion:  # nan conversion happens here in networkx mst
                 i.nodata_value = params[C.NO_DATA_VALUE]
                 i.convert_to_nans()
