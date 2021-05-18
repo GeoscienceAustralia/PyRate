@@ -230,7 +230,8 @@ def independent_orbital_correction(ifg_path, design_matrix, params):
 
     shared.nan_and_mm_convert(ifg, params)
 
-    if (params[C.ORBITAL_FIT_LOOKS_X] > 1) and (params[C.ORBITAL_FIT_LOOKS_Y] > 1):
+    # Multi-look the ifg data if either X or Y is greater than 1
+    if (params[C.ORBITAL_FIT_LOOKS_X] > 1) or (params[C.ORBITAL_FIT_LOOKS_Y] > 1):
         exts, _, _ = __extents_from_params(params)
         mlooked = _create_mlooked_dataset(multi_path, ifg.data_path, exts, params)
         ifg = Ifg(mlooked)
