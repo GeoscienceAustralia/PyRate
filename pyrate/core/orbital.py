@@ -81,18 +81,34 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
     files. The network method assumes the given ifgs have already been reduced
     to a minimum spanning tree network.
     """
-    mpiops.run_once(__orb_params_check, params)
     ifg_paths = [i.data_path for i in ifgs] if isinstance(ifgs[0], Ifg) else ifgs
+    degree = params[C.ORBITAL_FIT_DEGREE]
     method = params[C.ORBITAL_FIT_METHOD]
-    # mlooking is not necessary for independent correction in a computational sense
-    # can use multiple procesing if write_to_disc=True
+    orbfitlksx = params[C.ORBITAL_FIT_LOOKS_X]
+    orbfitlksy = params[C.ORBITAL_FIT_LOOKS_Y]
+    offset = params[C.ORBFIT_OFFSET]
+
+    # Sanity check of the orbital params
+    if type(orbfitlksx) != int or type(orbfitlksy) != int:
+        msg = f"Multi-look factors for orbital correction should be of type: int"
+        raise OrbitalError(msg)
+    if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
+        msg = "Invalid degree of %s for orbital correction" % C.ORB_DEGREE_NAMES.get(degree)
+        raise OrbitalError(msg)
+    if method not in [NETWORK_METHOD, INDEPENDENT_METHOD]:
+        msg = "Invalid method of %s for orbital correction" % C.ORB_METHOD_NAMES.get(method)
+        raise OrbitalError(msg)
+
+    # Give informative log messages based on selected options
+    meth = {1:"independent", 2:"network"} # look up table for log message
+    deg = {1:"planar", 2:"quadratic", 3:"part-cubic"} # look up table for log message
+    log.info(f'Calculating {deg[degree]} orbital correction using {meth[method]} method')
+    if orbfitlksx > 1 or orbfitlksy > 1:
+        log.info(f'Multi-looking interferograms for orbital correction with '
+                 f'factors of X = {orbfitlksx} and Y = {orbfitlksy}')
 
     if method == INDEPENDENT_METHOD:
-        log.info('Calculating orbital correction using independent method')
         ifg0 = shared.Ifg(ifg_paths[0]) if isinstance(ifg_paths[0], str) else ifg_paths[0]
-        degree = params[C.ORBITAL_FIT_DEGREE]
-        offset = params[C.ORBFIT_OFFSET]
-        # calculate forward model & morph back to 2D
         original_dm = get_design_matrix(ifg0, degree, offset)
 
         if params[C.PARALLEL]:
@@ -105,7 +121,6 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
                 independent_orbital_correction(ifg_path, design_matrix=original_dm, params=params)
 
     elif method == NETWORK_METHOD:
-        log.info('Calculating orbital correction using network method')
         # Here we do all the multilooking in one process, but in memory
         # can use multiple processes if we write data to disc during
         # remove_orbital_error step
@@ -148,28 +163,9 @@ def _create_mlooked_dataset(multi_path, ifg_path, exts, params):
     xlooks = params[C.ORBITAL_FIT_LOOKS_X]
     ylooks = params[C.ORBITAL_FIT_LOOKS_Y]
     out_path = tempfile.mktemp()
+    log.debug(f'Multi-looking {ifg_path} with factors X = {xlooks} and Y = {ylooks} for orbital correction')
     resampled_data, out_ds = prepifg_helper.prepare_ifg(ifg_path, xlooks, ylooks, exts, thresh, crop_opt, header, False, out_path)
     return out_ds
-
-
-def __orb_params_check(params):
-    """
-    Convenience function to perform orbital correction.
-    """
-    degree = params[C.ORBITAL_FIT_DEGREE]
-    method = params[C.ORBITAL_FIT_METHOD]
-    orbfitlksx = params[C.ORBITAL_FIT_LOOKS_X]
-    orbfitlksy = params[C.ORBITAL_FIT_LOOKS_Y]
-
-    if type(orbfitlksx) != int or type(orbfitlksy) != int:
-        msg = f"Multi-look factors for orbital correction should be of type: int"
-        raise OrbitalError(msg)
-    if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
-        msg = "Invalid degree of %s for orbital correction" % C.ORB_DEGREE_NAMES.get(degree)
-        raise OrbitalError(msg)
-    if method not in [NETWORK_METHOD, INDEPENDENT_METHOD]:
-        msg = "Invalid method of %s for orbital correction" % C.ORB_METHOD_NAMES.get(method)
-        raise OrbitalError(msg)
 
 
 def _validate_mlooked(mlooked, ifgs):
