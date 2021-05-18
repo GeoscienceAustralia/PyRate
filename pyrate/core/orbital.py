@@ -157,6 +157,9 @@ def __extents_from_params(params):
 
 
 def _create_mlooked_dataset(multi_path, ifg_path, exts, params):
+    '''
+    Wrapper to generate a multi-looked dataset for a single ifg
+    '''
     header = find_header(multi_path, params)
     thresh = params[C.NO_DATA_AVERAGING_THRESHOLD]
     crop_opt = prepifg_helper.ALREADY_SAME_SIZE
@@ -222,24 +225,26 @@ def independent_orbital_correction(ifg_path, design_matrix, params):
     ifg_path = ifg.data_path
     degree = params[C.ORBITAL_FIT_DEGREE]
     offset = params[C.ORBFIT_OFFSET]
+    xlooks = params[C.ORBITAL_FIT_LOOKS_X]
+    ylooks = params[C.ORBITAL_FIT_LOOKS_Y]
     multi_path = MultiplePaths(ifg_path, params)
     original_ifg = ifg  # keep a backup
-    orbfit_correction_on_disc = MultiplePaths.orb_error_path(ifg_path, params)
+    orb_on_disc = MultiplePaths.orb_error_path(ifg_path, params)
     if not ifg.is_open:
         ifg.open()
 
     shared.nan_and_mm_convert(ifg, params)
 
-    # Multi-look the ifg data if either X or Y is greater than 1
-    if (params[C.ORBITAL_FIT_LOOKS_X] > 1) or (params[C.ORBITAL_FIT_LOOKS_Y] > 1):
-        exts, _, _ = __extents_from_params(params)
-        mlooked = _create_mlooked_dataset(multi_path, ifg.data_path, exts, params)
-        ifg = Ifg(mlooked)
-
-    if orbfit_correction_on_disc.exists():
-        log.info(f'Reusing already computed orbital fit correction for {ifg_path}')
-        orbital_correction = np.load(file=orbfit_correction_on_disc)
+    if orb_on_disc.exists():
+        log.info(f'Reusing already computed orbital fit correction: {orb_on_disc}')
+        orbital_correction = np.load(file=orb_on_disc)
     else:
+        # Multi-look the ifg data if either X or Y is greater than 1
+        if (xlooks > 1) or (ylooks > 1):
+            exts, _, _ = __extents_from_params(params)
+            mlooked = _create_mlooked_dataset(multi_path, ifg.data_path, exts, params)
+            ifg = Ifg(mlooked)
+
         # vectorise, keeping NODATA
         vphase = reshape(ifg.phase_data, ifg.num_cells)
         dm = get_design_matrix(ifg, degree, offset)
@@ -254,12 +259,12 @@ def independent_orbital_correction(ifg_path, design_matrix, params):
         else:
             fullorb = np.reshape(np.dot(design_matrix, model), original_ifg.phase_data.shape)
 
-        if not orbfit_correction_on_disc.parent.exists():
-            shared.mkdir_p(orbfit_correction_on_disc.parent)
+        if not orb_on_disc.parent.exists():
+            shared.mkdir_p(orb_on_disc.parent)
         offset_removal = nanmedian(np.ravel(original_ifg.phase_data - fullorb))
         orbital_correction = fullorb - offset_removal
         # dump to disc
-        np.save(file=orbfit_correction_on_disc, arr=orbital_correction)
+        np.save(file=orb_on_disc, arr=orbital_correction)
 
     # subtract orbital error from the ifg
     original_ifg.phase_data -= orbital_correction
