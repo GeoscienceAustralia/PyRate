@@ -31,7 +31,7 @@ from joblib import Parallel, delayed
 import pyrate.constants as C
 from pyrate.core.algorithm import first_second_ids, get_all_epochs
 from pyrate.core import shared, ifgconstants as ifc, prepifg_helper, mst, mpiops
-from pyrate.core.shared import nanmedian, Ifg, InputTypes
+from pyrate.core.shared import nanmedian, Ifg, InputTypes, iterable_split
 from pyrate.core.logger import pyratelogger as log
 from pyrate.prepifg import find_header
 from pyrate.configuration import MultiplePaths
@@ -109,15 +109,7 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
     if method == INDEPENDENT_METHOD:
         ifg0 = shared.Ifg(ifg_paths[0]) if isinstance(ifg_paths[0], str) else ifg_paths[0]
         original_dm = get_design_matrix(ifg0, degree, offset)
-
-        if params[C.PARALLEL]:
-            Parallel(n_jobs=params[C.PROCESSES], verbose=50)(
-                delayed(independent_orbital_correction)(ifg_path, original_dm, params) for ifg_path in ifg_paths
-            )
-        else:
-            process_ifg_paths = mpiops.array_split(ifg_paths)
-            for ifg_path in process_ifg_paths:
-                independent_orbital_correction(ifg_path, design_matrix=original_dm, params=params)
+        iterable_split(independent_orbital_correction, ifg_paths, params, original_dm)
 
     elif method == NETWORK_METHOD:
         # Here we do all the multilooking in one process, but in memory
@@ -206,7 +198,7 @@ def _get_num_params(degree, offset=None):
     return nparams
 
 
-def independent_orbital_correction(ifg_path, design_matrix, params):
+def independent_orbital_correction(ifg_path,  params, design_matrix):
     """
     Calculates and removes an orbital error surface from a single independent
     interferogram.
