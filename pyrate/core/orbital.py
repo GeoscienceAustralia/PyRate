@@ -213,7 +213,7 @@ def independent_orbital_correction(ifg_path,  params):
     offset = params[C.ORBFIT_OFFSET]
 
     ifg0 = shared.Ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
-    design_matrix = get_design_matrix(ifg0, degree, offset)
+    design_matrix = get_design_matrix(ifg0, degree, offset, scale=None)
 
     ifg = shared.dem_or_ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
     ifg_path = ifg.data_path
@@ -403,12 +403,12 @@ def __methods_as_string(method):
 
 def __degrees_as_string(degree):
     """Look up table to get orbital degree string names"""
-    deg = {1:ifc.PYRATE_ORB_PLANAR, 2:ifc.PYRATE_ORB_QUADRATIC, 3:ifc.PYRATE_ORB_PART_CUBIC}
+    deg = {1: ifc.PYRATE_ORB_PLANAR, 2: ifc.PYRATE_ORB_QUADRATIC, 3: ifc.PYRATE_ORB_PART_CUBIC}
     return str(deg[degree])
 
 
 # TODO: subtract reference pixel coordinate from x and y
-def get_design_matrix(ifg, degree, offset, scale=100.0):
+def get_design_matrix(ifg, degree, offset, scale: Optional[float] = 100.0):
     """
     Returns orbital error design matrix with columns for model parameters.
 
