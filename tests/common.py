@@ -40,6 +40,7 @@ from pyrate.constants import PYRATEPATH
 from pyrate.core import algorithm, ifgconstants as ifc, timeseries, mst, stack
 from pyrate.core.shared import (Ifg, nan_and_mm_convert, get_geotiff_header_info,
                                 write_output_geotiff, dem_or_ifg)
+from pyrate.core import ifgconstants as ifg
 from pyrate.core import roipac
 from pyrate.configuration import Configuration, parse_namelist
 
@@ -189,7 +190,12 @@ def assert_tifs_equal(tif1, tif2):
     md_mds = mds.GetMetadata()
     md_sds = sds.GetMetadata()
     # meta data equal
-    assert md_mds == md_sds
+    for k, v in md_sds.items():
+        if k in [ifg.PYRATE_ALPHA, ifg.PYRATE_MAXVAR]:
+            assert round(eval(md_sds[k]), 1) == round(eval(md_mds[k]), 1)
+        else:
+            assert md_sds[k] == md_mds[k]
+    # assert md_mds == md_sds
     d1 = mds.ReadAsArray()
     d2 = sds.ReadAsArray()
     # phase equal
@@ -571,7 +577,7 @@ def assert_two_dirs_equal(dir1, dir2, ext, num_files=None):
     elif dir1_files[0].suffix == '.npy':
         for m_f, s_f in zip(dir1_files, dir2_files):
             assert m_f.name == s_f.name
-            np.testing.assert_array_almost_equal(np.load(m_f), np.load(s_f))
+            np.testing.assert_array_almost_equal(np.load(m_f), np.load(s_f), decimal=3)
     elif dir1_files[0].suffix in {'.kml', '.png'}:
         return
     else:

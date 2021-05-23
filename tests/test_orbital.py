@@ -64,9 +64,6 @@ NUM_COEF_LOOKUP = {
     PART_CUBIC: 6}
 
 
-
-
-
 class TestSingleDesignMatrixTests:
     """
     Tests to verify correctness of basic planar & quadratic design matrices or
