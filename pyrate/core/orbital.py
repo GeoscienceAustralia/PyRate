@@ -25,8 +25,6 @@ from numpy import empty, isnan, reshape, float32, squeeze
 from numpy import dot, vstack, zeros, meshgrid
 import numpy as np
 from numpy.linalg import pinv
-from scipy.linalg import lstsq
-from joblib import Parallel, delayed
 
 import pyrate.constants as C
 from pyrate.core.algorithm import first_second_ids, get_all_epochs
@@ -107,9 +105,7 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
                  f'factors of X = {orbfitlksx} and Y = {orbfitlksy}')
 
     if method == INDEPENDENT_METHOD:
-        ifg0 = shared.Ifg(ifg_paths[0]) if isinstance(ifg_paths[0], str) else ifg_paths[0]
-        original_dm = get_design_matrix(ifg0, degree, offset)
-        iterable_split(independent_orbital_correction, ifg_paths, params, original_dm)
+        iterable_split(independent_orbital_correction, ifg_paths, params)
 
     elif method == NETWORK_METHOD:
         # Here we do all the multilooking in one process, but in memory
@@ -198,7 +194,7 @@ def _get_num_params(degree, offset=None):
     return nparams
 
 
-def independent_orbital_correction(ifg_path,  params, design_matrix):
+def independent_orbital_correction(ifg_path,  params):
     """
     Calculates and removes an orbital error surface from a single independent
     interferogram.
@@ -212,6 +208,13 @@ def independent_orbital_correction(ifg_path,  params, design_matrix):
 
     :return: None - interferogram phase data is updated and saved to disk
     """
+    log.debug(f"Orbital correction of {ifg_path}")
+    degree = params[C.ORBITAL_FIT_DEGREE]
+    offset = params[C.ORBFIT_OFFSET]
+
+    ifg0 = shared.Ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
+    design_matrix = get_design_matrix(ifg0, degree, offset)
+
     ifg = shared.dem_or_ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
     ifg_path = ifg.data_path
     degree = params[C.ORBITAL_FIT_DEGREE]
@@ -239,11 +242,11 @@ def independent_orbital_correction(ifg_path,  params, design_matrix):
         # vectorise, keeping NODATA
         vphase = reshape(ifg.phase_data, ifg.num_cells)
         dm = get_design_matrix(ifg, degree, offset)
-
+        B = dm[~isnan(vphase)]
         # filter NaNs out before getting model
-        clean_dm = dm[~isnan(vphase)]
         data = vphase[~isnan(vphase)]
-        model = lstsq(clean_dm, data)[0]  # first arg is the model params
+
+        model = dot(pinv(B, 1e-6), data)
 
         if offset:
             fullorb = np.reshape(np.dot(design_matrix[:, :-1], model[:-1]), original_ifg.phase_data.shape)
