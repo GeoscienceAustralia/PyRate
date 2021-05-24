@@ -84,7 +84,6 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
     method = params[C.ORBITAL_FIT_METHOD]
     orbfitlksx = params[C.ORBITAL_FIT_LOOKS_X]
     orbfitlksy = params[C.ORBITAL_FIT_LOOKS_Y]
-    offset = params[C.ORBFIT_OFFSET]
 
     # Sanity check of the orbital params
     if type(orbfitlksx) != int or type(orbfitlksy) != int:
@@ -211,16 +210,16 @@ def independent_orbital_correction(ifg_path,  params):
     log.debug(f"Orbital correction of {ifg_path}")
     degree = params[C.ORBITAL_FIT_DEGREE]
     offset = params[C.ORBFIT_OFFSET]
+    xlooks = params[C.ORBITAL_FIT_LOOKS_X]
+    ylooks = params[C.ORBITAL_FIT_LOOKS_Y]
+    scale = params[C.ORBFIT_SCALE]
 
     ifg0 = shared.Ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
-    design_matrix = get_design_matrix(ifg0, degree, offset, scale=None)
+    design_matrix = get_design_matrix(ifg0, degree, offset, scale=scale)
 
     ifg = shared.dem_or_ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
     ifg_path = ifg.data_path
-    degree = params[C.ORBITAL_FIT_DEGREE]
-    offset = params[C.ORBFIT_OFFSET]
-    xlooks = params[C.ORBITAL_FIT_LOOKS_X]
-    ylooks = params[C.ORBITAL_FIT_LOOKS_Y]
+
     multi_path = MultiplePaths(ifg_path, params)
     original_ifg = ifg  # keep a backup
     orb_on_disc = MultiplePaths.orb_error_path(ifg_path, params)
@@ -241,7 +240,7 @@ def independent_orbital_correction(ifg_path,  params):
 
         # vectorise, keeping NODATA
         vphase = reshape(ifg.phase_data, ifg.num_cells)
-        dm = get_design_matrix(ifg, degree, offset)
+        dm = get_design_matrix(ifg, degree, offset, scale=scale)
         B = dm[~isnan(vphase)]
         # filter NaNs out before getting model
         data = vphase[~isnan(vphase)]

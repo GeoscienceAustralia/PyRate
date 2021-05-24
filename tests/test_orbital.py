@@ -176,9 +176,9 @@ class TestIndependentCorrection:
             ifg.y_size = 89.5
             ifg.open()
 
-    def alt_orbital_correction(self, ifg, deg, offset):
+    def alt_orbital_correction(self, ifg, deg, offset, scale):
         data = ifg.phase_data.reshape(ifg.num_cells)
-        dm = get_design_matrix(ifg, deg, offset)[~isnan(data)]
+        dm = get_design_matrix(ifg, deg, offset, scale=scale)[~isnan(data)]
         fd = data[~isnan(data)].reshape((dm.shape[0], 1))
 
         dmt = dm.T
@@ -188,26 +188,26 @@ class TestIndependentCorrection:
         # FIXME: precision
         assert_array_almost_equal(orbparams, alt_params, decimal=1)
 
-        dm2 = get_design_matrix(ifg, deg, offset)
+        dm2 = get_design_matrix(ifg, deg, offset, scale=scale)
 
         if offset:
             fullorb = np.reshape(np.dot(dm2[:, :-1], orbparams[:-1]), ifg.phase_data.shape)
         else:
             fullorb = np.reshape(np.dot(dm2, orbparams), ifg.phase_data.shape)
 
-        offset_removal = nanmedian(
-            np.reshape(ifg.phase_data - fullorb, (1, -1)))
+        offset_removal = nanmedian(np.reshape(ifg.phase_data - fullorb, (1, -1)))
         fwd_correction = fullorb - offset_removal
         # ifg.phase_data -= (fullorb - offset_removal)
         return ifg.phase_data - fwd_correction
 
     def check_correction(self, degree, method, offset, decimal=2):
         orig = array([c.phase_data.copy() for c in self.ifgs])
-        exp = [self.alt_orbital_correction(i, degree, offset) for i in self.ifgs]
+        exp = [self.alt_orbital_correction(i, degree, offset, scale=100) for i in self.ifgs]
         params = dict()
         params[C.ORBITAL_FIT_METHOD] = method
         params[C.ORBITAL_FIT_DEGREE] = degree
         params[C.ORBFIT_OFFSET] = offset
+        params[C.ORBFIT_SCALE] = 100
         params[C.PARALLEL] = False
         params[C.NO_DATA_VALUE] = 0
         params[C.NAN_CONVERSION] = False

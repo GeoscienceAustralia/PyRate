@@ -245,6 +245,9 @@ class Configuration:
         # force offset = 1 for both method options. This adds the required intercept term to the design matrix
         self.orbfitoffset = 1
 
+        # force orbfit scale = 1 for independent network correction method
+        self.orbfitscale = 1
+
         # create a temporary directory if not supplied
         if not hasattr(self, 'tmpdir'):
             self.tmpdir = Path(self.outdir).joinpath("tmpdir")

@@ -200,6 +200,7 @@ ORBITAL_FIT_LOOKS_X = 'orbfitlksx'
 ORBITAL_FIT_LOOKS_Y = 'orbfitlksy'
 #: BOOL (1/0); Add column of offset params to orbit correction design matrix (1: yes, 0: no)
 ORBFIT_OFFSET = 'orbfitoffset'
+ORBFIT_SCALE = 'orbfitscale'
 
 # Stacking parameters
 #: FLOAT; Threshold ratio between 'model minus observation' residuals and a-priori observation standard deviations for stacking estimate acceptance (otherwise remove furthest outlier and re-iterate)
