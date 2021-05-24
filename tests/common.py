@@ -193,7 +193,7 @@ def assert_tifs_equal(tif1, tif2):
     for k, v in md_sds.items():
         if k in [ifg.PYRATE_ALPHA, ifg.PYRATE_MAXVAR]:
             print(k, v, md_mds[k])
-            assert round(eval(md_sds[k]), 3) == round(eval(md_mds[k]), 3)
+            assert round(eval(md_sds[k]), 1) == round(eval(md_mds[k]), 1)
         else:
             assert md_sds[k] == md_mds[k]
     # assert md_mds == md_sds

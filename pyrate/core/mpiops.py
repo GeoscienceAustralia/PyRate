@@ -106,11 +106,19 @@ def run_once(f: Callable, *args, **kwargs) -> Any:
     """
     if MPI_INSTALLED:
         if rank == 0:
-            f_result = f(*args, **kwargs)
+            # without the try except, any error in this step hangs the other mpi threads
+            # and these processes never exit, i.e., this MPI call hangs in case process 0 errors.
+            try:
+                f_result = f(*args, **kwargs)
+            except Exception as e:
+                f_result = e
         else:
             f_result = None
         result = comm.bcast(f_result, root=0)
-        return result
+        if isinstance(result, Exception):
+            raise result
+        else:
+            return result
     else:
         return f(*args, **kwargs)
 
