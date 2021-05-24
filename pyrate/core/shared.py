@@ -1404,6 +1404,7 @@ def dem_or_ifg(data_path: str) -> Union[Ifg, DEM]:
         return Ifg(data_path)
     else:
         return DEM(data_path)
+    ds = None  # close the dataset
 
 
 def join_dicts(dicts: List[dict]) -> dict:
@@ -1417,6 +1418,12 @@ def join_dicts(dicts: List[dict]) -> dict:
 
 
 def iterable_split(func: Callable, iterable: Iterable, params: dict, *args, **kwargs) -> np.ndarray:
+    """
+    # TODO: a faster version using buffer-provider objects via the uppercase communication method
+    A faster version of iterable/tiles_split is possible when the return values from each process is of the same size
+    and will be addressed in future. In this case a buffer-provider object can be sent between processes using the
+    uppercase communication (like Gather instead of gather) methods which can be significantly faster.
+    """
     if params[C.PARALLEL]:
         ret_combined = {}
         rets = Parallel(
