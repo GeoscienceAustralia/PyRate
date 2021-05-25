@@ -1398,11 +1398,7 @@ def dem_or_ifg(data_path: str) -> Union[Ifg, DEM]:
     :return: Interferogram or DEM object from input file
     :rtype: Ifg or DEM class object
     """
-    try:
-        ds = gdal.Open(data_path)
-    except:
-        print(data_path)
-        raise
+    ds = gdal.Open(data_path)
     md = ds.GetMetadata()
     if ifc.FIRST_DATE in md:  # ifg
         return Ifg(data_path)

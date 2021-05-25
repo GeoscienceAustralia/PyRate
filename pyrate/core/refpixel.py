@@ -431,11 +431,7 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
     lat = params[C.REFY]
 
     ifg = Ifg(ifg_paths[0])
-    try:
-        ifg.open(readonly=True)
-    except:
-        print(ifg_paths[0])
-        raise
+    ifg.open(readonly=True)
     # assume all interferograms have same projection and will share the same transform
     transform = ifg.dataset.GetGeoTransform()
 

@@ -107,7 +107,7 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
         ifg = indexed_ifg.IfgPhase
         if len(ifgs_breach_count_arr):
             ifgs_breach_count_process = np.sum(np.stack(ifgs_breach_count_arr), axis=0)
-        else:  # prevents errors when an npi process receives zero loops
+        else:  # prevents errors when an mpi process receives zero loops
             ifgs_breach_count_process = np.zeros(shape=(ifg.phase_data.shape + (n_ifgs,)), dtype=np.uint16)
         ifgs_breach_count = mpiops.comm.reduce(ifgs_breach_count_process, op=mpiops.sum0_op, root=0)
 
