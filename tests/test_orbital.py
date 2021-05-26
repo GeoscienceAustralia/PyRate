@@ -87,49 +87,43 @@ class TestSingleDesignMatrixTests:
     # tests for planar model
 
     def test_create_planar_dm(self):
-        offset = False
-        act = get_design_matrix(self.m, PLANAR, offset)
+        act = get_design_matrix(self.m, PLANAR, offset=False, scale=100)
         assert act.shape == (self.m.num_cells, 2)
-        exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, offset)
+        exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, offset=False)
         assert_array_equal(act, exp)
 
     def test_create_planar_dm_offsets(self):
-        offset = True
-        act = get_design_matrix(self.m, PLANAR, offset)
+        act = get_design_matrix(self.m, PLANAR, offset=True, scale=100)
         assert act.shape == (self.m.num_cells, 3)
-        exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, offset)
+        exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, offset=True)
         assert_array_almost_equal(act, exp)
 
     # tests for quadratic model
 
     def test_create_quadratic_dm(self):
-        offset = False
-        act = get_design_matrix(self.m, QUADRATIC, offset)
+        act = get_design_matrix(self.m, QUADRATIC, offset=False, scale=100)
         assert act.shape == (self.m.num_cells, 5)
-        exp = unittest_dm(self.m, INDEPENDENT_METHOD, QUADRATIC, offset)
+        exp = unittest_dm(self.m, INDEPENDENT_METHOD, QUADRATIC, offset=False)
         assert_array_equal(act, exp)
 
     def test_create_quadratic_dm_offsets(self):
-        offset = True
-        act = get_design_matrix(self.m, QUADRATIC, offset)
+        act = get_design_matrix(self.m, QUADRATIC, offset=True, scale=100)
         assert act.shape == (self.m.num_cells, 6)
-        exp = unittest_dm(self.m, INDEPENDENT_METHOD, QUADRATIC, offset)
+        exp = unittest_dm(self.m, INDEPENDENT_METHOD, QUADRATIC, offset=True)
         assert_array_equal(act, exp)
 
     # tests for partial cubic model
 
     def test_create_partcubic_dm(self):
-        offset = False
-        act = get_design_matrix(self.m, PART_CUBIC, offset)
+        act = get_design_matrix(self.m, PART_CUBIC, offset=False, scale=100)
         assert act.shape == (self.m.num_cells, 6)
-        exp = unittest_dm(self.m, INDEPENDENT_METHOD, PART_CUBIC, offset)
+        exp = unittest_dm(self.m, INDEPENDENT_METHOD, PART_CUBIC, offset=False)
         assert_array_equal(act, exp)
 
     def test_create_partcubic_dm_offsets(self):
-        offset = True
-        act = get_design_matrix(self.m, PART_CUBIC, offset)
+        act = get_design_matrix(self.m, PART_CUBIC, offset=True, scale=100)
         assert act.shape == (self.m.num_cells, 7)
-        exp = unittest_dm(self.m, INDEPENDENT_METHOD, PART_CUBIC, offset)
+        exp = unittest_dm(self.m, INDEPENDENT_METHOD, PART_CUBIC, offset=True)
         assert_array_equal(act, exp)
 
 

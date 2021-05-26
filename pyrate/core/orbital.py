@@ -200,7 +200,7 @@ def _get_num_params(degree, offset=None):
     return nparams
 
 
-def independent_orbital_correction(ifg_path,  params):
+def independent_orbital_correction(ifg_path, params):
     """
     Calculates and removes an orbital error surface from a single independent
     interferogram.
@@ -332,11 +332,11 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
     if preread_ifgs:
         temp_ifg = Ifg(ifg_paths[0])  # ifgs here are paths
         temp_ifg.open()
-        dm = get_design_matrix(temp_ifg, degree, offset=False)
+        dm = get_design_matrix(temp_ifg, degree, offset=False, scale=100)
         temp_ifg.close()
     else:
         ifg = ifgs[0]
-        dm = get_design_matrix(ifg, degree, offset=False)
+        dm = get_design_matrix(ifg, degree, offset=False, scale=100)
 
     for i in ifg_paths:
         # open if not Ifg instance
@@ -414,15 +414,14 @@ def __degrees_as_string(degree):
 
 
 # TODO: subtract reference pixel coordinate from x and y
-def get_design_matrix(ifg, degree, offset, scale: Optional[float] = 100.0):
+def get_design_matrix(ifg, degree, offset, scale: Optional[float] = 1.0):
     """
     Returns orbital error design matrix with columns for model parameters.
 
     :param Ifg class instance ifg: interferogram to get design matrix for
     :param str degree: model to fit (PLANAR / QUADRATIC / PART_CUBIC)
     :param bool offset: True to include offset column, otherwise False.
-    :param float scale: Scale factor to divide cell size by in order to
-        improve inversion robustness
+    :param float scale: Scale factor for design matrix to improve inversion robustness
 
     :return: dm: design matrix
     :rtype: ndarray
@@ -510,7 +509,7 @@ def get_network_design_matrix(ifgs, degree, offset):
     dates = [ifg.first for ifg in ifgs] + [ifg.second for ifg in ifgs]
     ids = first_second_ids(dates)
     offset_col = nepochs * ncoef  # base offset for the offset cols
-    tmpdm = get_design_matrix(ifgs[0], degree, offset=False)
+    tmpdm = get_design_matrix(ifgs[0], degree, offset=False, scale=100)
 
     # iteratively build up sparse matrix
     for i, ifg in enumerate(ifgs):
