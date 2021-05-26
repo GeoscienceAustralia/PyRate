@@ -24,7 +24,7 @@ from pathlib import Path
 from numpy import empty, isnan, reshape, float32, squeeze
 from numpy import dot, vstack, zeros, meshgrid
 import numpy as np
-from numpy.linalg import pinv
+from numpy.linalg import pinv, cond
 
 import pyrate.constants as C
 from pyrate.core.algorithm import first_second_ids, get_all_epochs
@@ -108,10 +108,17 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
 
     elif method == NETWORK_METHOD:
         # Here we do all the multilooking in one process, but in memory
-        # can use multiple processes if we write data to disc during
+        # could use multiple processes if we write data to disc during
         # remove_orbital_error step
-        # A performance comparison should be made for saving multilooked
-        # files on disc vs in memory single process multilooking
+        # TODO: performance comparison of saving multilooked files on
+        # disc vs in-memory single-process multilooking
+        #
+        # The gdal swig bindings prevent us from doing multi-looking in parallel
+        # when using multiprocessing because the multilooked ifgs are held in
+        # memory using in-memory tifs. Parallelism using MPI is possible.
+        # TODO: Use a flag to select mpi parallel vs multiprocessing in the
+        # iterable_split function, which will use mpi but can fall back on
+        # single process based on the flag for the multiprocessing side.
         if mpiops.rank == MAIN_PROCESS:
             mlooked = __create_multilooked_datasets(params)
             _validate_mlooked(mlooked, ifg_paths)
@@ -241,10 +248,10 @@ def independent_orbital_correction(ifg_path,  params):
         # vectorise, keeping NODATA
         vphase = reshape(ifg.phase_data, ifg.num_cells)
         dm = get_design_matrix(ifg, degree, offset, scale=scale)
-        B = dm[~isnan(vphase)]
-        # filter NaNs out before getting model
-        data = vphase[~isnan(vphase)]
 
+        # filter NaNs out before inverting to get the model
+        B = dm[~isnan(vphase)]
+        data = vphase[~isnan(vphase)]
         model = dot(pinv(B, 1e-6), data)
 
         if offset:
@@ -458,6 +465,9 @@ def get_design_matrix(ifg, degree, offset, scale: Optional[float] = 100.0):
         dm[:, 5] = y
     if offset:
         dm[:, -1] = np.ones(ifg.num_cells)
+
+    # report condition number of the design matrix - L2-norm computed using SVD
+    log.debug(f'The condition number of the design matrix is {cond(dm)}')
 
     return dm
 
