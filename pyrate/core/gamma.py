@@ -464,7 +464,8 @@ def manage_headers(dem_header_file, header_paths, baseline_paths=None):
 #            baseline_header = {}
              combined_header = combine_headers(hdrs[0], hdrs[1], dem_header)
     elif len(header_paths) > 2:
-        raise GammaException('Too many parameter files given for one interferogram; there should only be two')
+        msg = f'There are too many parameter files for one interferogram; there should only be two. {len(header_paths)} parameter files have been given: {header_paths}.'
+        raise GammaException(msg)
     else:
         # probably have DEM or incidence file
         combined_header = dem_header
