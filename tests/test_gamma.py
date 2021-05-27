@@ -28,18 +28,23 @@ from numpy.testing import assert_array_almost_equal
 from osgeo import gdal
 
 import pyrate.configuration
-
 import pyrate.core.ifgconstants as ifc
-from pyrate.core import shared, gamma
+from pyrate.core import shared, config as cf, gamma
+from pyrate.core.config import (
+    DEM_HEADER_FILE,
+    NO_DATA_VALUE,
+    OBS_DIR,
+    IFG_FILE_LIST,
+    PROCESSOR,
+    OUT_DIR,
+    SLC_DIR)
 from pyrate import prepifg, conv2tif
 from pyrate.core.shared import write_fullres_geotiff, GeotiffException
-import pyrate.constants as C
-from pyrate.constants import PYRATEPATH, IFG_FILE_LIST, PROCESSOR, OUT_DIR, DEM_HEADER_FILE, \
-    NO_DATA_VALUE, BASE_FILE_LIST
+from pyrate.constants import PYRATEPATH
 
 from tests.common import manipulate_test_conf
 from pyrate.configuration import Configuration
-from tests.common import GAMMA_TEST_DIR, WORKING_DIR
+from tests.common import GAMMA_TEST_DIR
 from tests.common import TEMPDIR
 from tests.common import small_data_setup
 
@@ -56,7 +61,6 @@ class TestGammaCommandLineTests:
         temp_text = tempfile.mktemp()
         self.confFile = os.path.join(TEMPDIR,'{}/gamma_test.cfg'.format(temp_text))
         self.ifgListFile = os.path.join(TEMPDIR, '{}/gamma_ifg.list'.format(temp_text))
-        self.baseListFile = os.path.join(TEMPDIR, '{}/gamma_base.list'.format(temp_text))
         self.base_dir = os.path.dirname(self.confFile)
         shared.mkdir_p(self.base_dir)
 
@@ -71,11 +75,11 @@ class TestGammaCommandLineTests:
         with open(self.confFile, 'w') as conf:
             conf.write('{}: {}\n'.format(DEM_HEADER_FILE, self.hdr))
             conf.write('{}: {}\n'.format(NO_DATA_VALUE, '0.0'))
-            conf.write('{}: {}\n'.format(WORKING_DIR, self.base_dir))
+            conf.write('{}: {}\n'.format(OBS_DIR, self.base_dir))
             conf.write('{}: {}\n'.format(IFG_FILE_LIST, self.ifgListFile))
-            conf.write('{}: {}\n'.format(BASE_FILE_LIST, self.baseListFile))
             conf.write('{}: {}\n'.format(PROCESSOR, '1'))
             conf.write('{}: {}\n'.format(OUT_DIR, self.base_dir))
+            conf.write('{}: {}\n'.format(SLC_DIR, ''))
         with open(self.ifgListFile, 'w') as ifgl:
             ifgl.write(data)
 
@@ -91,10 +95,9 @@ class TestGammaToGeoTiff:
         hdr_paths = [join(GAMMA_TEST_DIR, f) for f in filenames]
         hdrs = [gamma.parse_epoch_header(p) for p in hdr_paths]
         dem_hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
-        base_hdr_path = join(GAMMA_TEST_DIR, '20160114-20160126_base.par')
+
         cls.DEM_HDR = gamma.parse_dem_header(dem_hdr_path)
-        cls.BASE_HDR = gamma.parse_baseline_header(base_hdr_path)
-        cls.COMBINED = gamma.combine_headers(*hdrs, dem_hdr=cls.DEM_HDR, base_hdr=cls.BASE_HDR)
+        cls.COMBINED = gamma.combine_headers(*hdrs, dem_hdr=cls.DEM_HDR)
 
     def teardown_method(self):
         if os.path.exists(self.dest):
@@ -134,7 +137,7 @@ class TestGammaToGeoTiff:
         self.compare_rasters(ds, exp_ds)
 
         md = ds.GetMetadata()
-        assert len(md) == 32 # 32 metadata items
+        assert len(md) == 11 # 11 metadata items
         assert md[ifc.FIRST_DATE] == str(date(2009, 7, 13))
         assert md[ifc.SECOND_DATE] == str(date(2009, 8, 17))
         assert md[ifc.PYRATE_TIME_SPAN] == str(35 / ifc.DAYS_PER_YEAR)
@@ -175,6 +178,16 @@ class TestGammaToGeoTiff:
         with pytest.raises(GeotiffException):
             write_fullres_geotiff(hdr, data_path, self.dest, nodata=0)
 
+class TestGammaHeaderListRaiseException:
+
+    def setup_method(self):
+        self.demHeaderString = f'{GAMMA_TEST_DIR}/dem16x20raw.dem.par'
+        self.headerList = [f'{GAMMA_TEST_DIR}/r20090713_VV.slc.par', f'{GAMMA_TEST_DIR}/r20090817_VV.slc.par', f'{GAMMA_TEST_DIR}/r20090713_VV.slc.par', f'{GAMMA_TEST_DIR}/r20090817_VV.slc.par']
+
+    def test_exception(self):
+        with pytest.raises(gamma.GammaException):
+            gamma.manage_headers(self.demHeaderString, self.headerList)
+
 
 class TestGammaHeaderParsingTests:
     'Tests conversion of GAMMA headers to Py dicts'
@@ -212,29 +225,29 @@ class TestGammaHeaderParsingTests:
 
 
 # Test data for the epoch header combination
-H0 = {ifc.FIRST_DATE: date(2009, 7, 13),
-      ifc.FIRST_TIME: time(12),
+H0 = {ifc.FIRST_DATE : date(2009, 7, 13),
+      ifc.FIRST_DATE : time(12),
       ifc.PYRATE_WAVELENGTH_METRES: 1.8,
       ifc.PYRATE_INCIDENCE_DEGREES: 35.565,
       }
 
-H1 = {ifc.FIRST_DATE: date(2009, 8, 17),
-      ifc.FIRST_TIME: time(12, 10, 10),
+H1 = {ifc.FIRST_DATE : date(2009, 8, 17),
+      ifc.FIRST_DATE : time(12, 10, 10),
       ifc.PYRATE_WAVELENGTH_METRES: 1.8,
       ifc.PYRATE_INCIDENCE_DEGREES: 35.56,
       }
 
-H1_ERR1 = {ifc.FIRST_DATE: date(2009, 8, 17),
-           ifc.FIRST_TIME: time(12),
-           ifc.PYRATE_WAVELENGTH_METRES: 2.4,
-           ifc.PYRATE_INCIDENCE_DEGREES: 35.56,
-           }
+H1_ERR1 = {ifc.FIRST_DATE : date(2009, 8, 17),
+          ifc.FIRST_DATE : time(12),
+          ifc.PYRATE_WAVELENGTH_METRES: 2.4,
+          ifc.PYRATE_INCIDENCE_DEGREES: 35.56,
+          }
 
-H1_ERR2 = {ifc.FIRST_DATE: date(2009, 8, 17),
-           ifc.FIRST_TIME: time(12),
-           ifc.PYRATE_WAVELENGTH_METRES: 1.8,
-           ifc.PYRATE_INCIDENCE_DEGREES: 35.76,
-           }
+H1_ERR2 = {ifc.FIRST_DATE : date(2009, 8, 17),
+          ifc.FIRST_DATE : time(12),
+          ifc.PYRATE_WAVELENGTH_METRES: 1.8,
+          ifc.PYRATE_INCIDENCE_DEGREES: 35.76,
+          }
 
 
 class TestHeaderCombination:
@@ -244,8 +257,6 @@ class TestHeaderCombination:
         self.err = gamma.GammaException
         dem_hdr_path = join(GAMMA_TEST_DIR, 'dem16x20raw.dem.par')
         self.dh = gamma.parse_dem_header(dem_hdr_path)
-        base_hdr_path = join(GAMMA_TEST_DIR, '20160114-20160126_base.par')
-        self.bh = gamma.parse_baseline_header(base_hdr_path)
 
     @staticmethod
     def assert_equal(arg1, arg2):
@@ -256,7 +267,7 @@ class TestHeaderCombination:
         paths = [join(GAMMA_TEST_DIR, p) for p in filenames]
         hdr0, hdr1 = [gamma.parse_epoch_header(p) for p in paths]
 
-        chdr = gamma.combine_headers(hdr0, hdr1, self.dh, self.bh)
+        chdr = gamma.combine_headers(hdr0, hdr1, self.dh)
 
         exp_timespan = (18 + 17) / ifc.DAYS_PER_YEAR
         self.assert_equal(chdr[ifc.PYRATE_TIME_SPAN], exp_timespan)
@@ -270,23 +281,23 @@ class TestHeaderCombination:
         self.assert_equal(chdr[ifc.PYRATE_WAVELENGTH_METRES], exp_wavelen)
 
     def test_fail_non_dict_header(self):
-        self.assertRaises(gamma.combine_headers, H0, '', self.dh, self.bh)
-        self.assertRaises(gamma.combine_headers, '', H0, self.dh, self.bh)
-        self.assertRaises(gamma.combine_headers, H0, H1, None, self.bh)
-        self.assertRaises(gamma.combine_headers, H0, H1, '', self.bh)
+        self.assertRaises(gamma.combine_headers, H0, '', self.dh)
+        self.assertRaises(gamma.combine_headers, '', H0, self.dh)
+        self.assertRaises(gamma.combine_headers, H0, H1, None)
+        self.assertRaises(gamma.combine_headers, H0, H1, '')
 
     def test_fail_mismatching_wavelength(self):
-        self.assertRaises(gamma.combine_headers, H0, H1_ERR1, self.dh, self.bh)
+        self.assertRaises(gamma.combine_headers, H0, H1_ERR1, self.dh)
         
     def test_fail_mismatching_incidence(self):
-        self.assertRaises(gamma.combine_headers, H0, H1_ERR2, self.dh, self.bh)
+        self.assertRaises(gamma.combine_headers, H0, H1_ERR2, self.dh)
 
     def test_fail_same_date(self):
-        self.assertRaises(gamma.combine_headers, H0, H0, self.dh, self.bh)
+        self.assertRaises(gamma.combine_headers, H0, H0, self.dh)
 
     def test_fail_bad_date_order(self):
         with pytest.raises(self.err):
-            gamma.combine_headers(H1, H0, self.dh, self.bh)
+            gamma.combine_headers(H1, H0, self.dh)
 
     def assertRaises(self, func, * args):
         with pytest.raises(self.err):
@@ -303,7 +314,7 @@ def parallel_ifgs(gamma_conf):
     tdir = Path(tempfile.mkdtemp())
 
     params_p = manipulate_test_conf(gamma_conf, tdir)
-    params_p[C.PARALLEL] = 1
+    params_p[cf.PARALLEL] = 1
 
     output_conf_file = 'conf.conf'
     output_conf = tdir.joinpath(output_conf_file)
@@ -314,11 +325,13 @@ def parallel_ifgs(gamma_conf):
     conv2tif.main(params_p)
     prepifg.main(params_p)
 
-    parallel_df = list(Path(params_p[C.INTERFEROGRAM_DIR]).glob(ifg_glob_suffix))
-    parallel_coh_files = list(Path(params_p[C.COHERENCE_DIR]).glob(coh_glob_suffix))
+    parallel_df = list(Path(tdir).joinpath('out').glob(ifg_glob_suffix))
+    parallel_coh_files = list(Path(tdir).joinpath('out').glob(coh_glob_suffix))
 
     p_ifgs = small_data_setup(datafiles=parallel_df + parallel_coh_files)
     yield p_ifgs
+
+    shutil.rmtree(params_p[cf.OBS_DIR], ignore_errors=True)
 
 
 @pytest.fixture(scope='module')
@@ -328,7 +341,7 @@ def series_ifgs(gamma_conf):
     tdir = Path(tempfile.mkdtemp())
 
     params_s = manipulate_test_conf(gamma_conf, tdir)
-    params_s[C.PARALLEL] = 0
+    params_s[cf.PARALLEL] = 0
 
     output_conf_file = 'conf.conf'
     output_conf = tdir.joinpath(output_conf_file)
@@ -340,11 +353,14 @@ def series_ifgs(gamma_conf):
 
     prepifg.main(params_s)
 
-    serial_ifgs = list(Path(params_s[C.INTERFEROGRAM_DIR]).glob(ifg_glob_suffix))
-    coh_files = list(Path(params_s[C.COHERENCE_DIR]).glob(coh_glob_suffix))
+    serial_ifgs = list(Path(tdir).joinpath('out').glob(ifg_glob_suffix))
+    coh_files = list(Path(tdir).joinpath('out').glob(coh_glob_suffix))
 
     s_ifgs = small_data_setup(datafiles=serial_ifgs + coh_files)
     yield s_ifgs
+    print('======================teardown series==========================')
+
+    shutil.rmtree(params_s[cf.OBS_DIR], ignore_errors=True)
 
 
 def test_equality(series_ifgs, parallel_ifgs):
@@ -362,54 +378,3 @@ def test_meta_data_exists(series_ifgs, parallel_ifgs):
         assert (s.meta_data[ifc.DATA_TYPE] == ifc.MULTILOOKED) or \
                (s.meta_data[ifc.DATA_TYPE] == ifc.MULTILOOKED_COH)
     assert i + 1 == 34
-
-
-class TestGammaBaselineRead:
-    """Tests the reading of initial and precise baselines"""
-
-    def setup_method(self):
-        init_path = join(GAMMA_TEST_DIR, '20160114-20160126_base_init.par')
-        self.init = gamma.parse_baseline_header(init_path)
-        prec_path = join(GAMMA_TEST_DIR, '20160114-20160126_base.par')
-        self.prec = gamma.parse_baseline_header(prec_path)
-
-    def test_prec_baseline_read(self):
-        """Test that the Precise baseline values are being read"""
-        exp_i = {'BASELINE_T': -0.0000026, 'BASELINE_C': -103.7427072,
-                 'BASELINE_N': 2.8130731, 'BASELINE_RATE_T': 0.0,
-                 'BASELINE_RATE_C': -0.0173538,
-                 'BASELINE_RATE_N': -0.0055098}
-
-        exp_p = {'BASELINE_T': 0.0, 'BASELINE_C': -103.8364725,
-                 'BASELINE_N': 2.8055662, 'BASELINE_RATE_T': 0.0,
-                 'BASELINE_RATE_C': -0.0182215,
-                 'BASELINE_RATE_N': -0.0065402}
-
-        # Precise values are read
-        assert self.prec != exp_i
-        assert self.prec == exp_p
-
-        # Initial values are ignored
-        assert self.init != exp_i
-        assert self.init != exp_p
-
-
-    def test_init_baseline_read(self):
-        """Test that the Initial baseline values are being read"""
-        exp_i = {'BASELINE_T': 0.6529765, 'BASELINE_C': -103.9065694,
-                 'BASELINE_N': 2.9253896, 'BASELINE_RATE_T': 0.0,
-                 'BASELINE_RATE_C': -0.0231786,
-                 'BASELINE_RATE_N': -0.0038703}
-
-        exp_p = {'BASELINE_T': 0.0, 'BASELINE_C': 0.0,
-                 'BASELINE_N': 0.0, 'BASELINE_RATE_T': 0.0,
-                 'BASELINE_RATE_C': 0.0, 'BASELINE_RATE_N': 0.0}
-
-        # Precise values are ignored
-        assert self.prec != exp_i
-        assert self.prec != exp_p
-
-        # Initial values are read
-        assert self.init == exp_i
-        assert self.init != exp_p
-
