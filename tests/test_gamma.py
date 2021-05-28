@@ -175,6 +175,17 @@ class TestGammaToGeoTiff:
         with pytest.raises(GeotiffException):
             write_fullres_geotiff(hdr, data_path, self.dest, nodata=0)
 
+class TestGammaHeaderListRaiseException:
+    'Test to make sure PyRate raises exception when IFG header list contains more than two files'
+
+    def setup_method(self):
+        self.demHeaderString = f'{GAMMA_TEST_DIR}/dem16x20raw.dem.par'
+        self.headerList = [f'{GAMMA_TEST_DIR}/r20090713_VV.slc.par', f'{GAMMA_TEST_DIR}/r20090817_VV.slc.par', f'{GAMMA_TEST_DIR}/r20090713_VV.slc.par', f'{GAMMA_TEST_DIR}/r20090817_VV.slc.par']
+
+    def test_exception(self):
+        with pytest.raises(gamma.GammaException):
+            gamma.manage_headers(self.demHeaderString, self.headerList)
+
 
 class TestGammaHeaderParsingTests:
     'Tests conversion of GAMMA headers to Py dicts'
