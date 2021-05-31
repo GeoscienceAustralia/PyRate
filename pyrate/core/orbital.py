@@ -79,22 +79,25 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
     files. The network method assumes the given ifgs have already been reduced
     to a minimum spanning tree network.
     """
+    def __sanity_check(degree, method, orbfitlksx, orbfitlksy):
+        # Sanity check of the orbital params
+        if type(orbfitlksx) != int or type(orbfitlksy) != int:
+            msg = f"Multi-look factors for orbital correction should be of type: int"
+            raise OrbitalError(msg)
+        if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
+            msg = "Invalid degree of %s for orbital correction" % C.ORB_DEGREE_NAMES.get(degree)
+            raise OrbitalError(msg)
+        if method not in [NETWORK_METHOD, INDEPENDENT_METHOD]:
+            msg = "Invalid method of %s for orbital correction" % C.ORB_METHOD_NAMES.get(method)
+            raise OrbitalError(msg)
+
     ifg_paths = [i.data_path for i in ifgs] if isinstance(ifgs[0], Ifg) else ifgs
     degree = params[C.ORBITAL_FIT_DEGREE]
     method = params[C.ORBITAL_FIT_METHOD]
     orbfitlksx = params[C.ORBITAL_FIT_LOOKS_X]
     orbfitlksy = params[C.ORBITAL_FIT_LOOKS_Y]
 
-    # Sanity check of the orbital params
-    if type(orbfitlksx) != int or type(orbfitlksy) != int:
-        msg = f"Multi-look factors for orbital correction should be of type: int"
-        raise OrbitalError(msg)
-    if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
-        msg = "Invalid degree of %s for orbital correction" % C.ORB_DEGREE_NAMES.get(degree)
-        raise OrbitalError(msg)
-    if method not in [NETWORK_METHOD, INDEPENDENT_METHOD]:
-        msg = "Invalid method of %s for orbital correction" % C.ORB_METHOD_NAMES.get(method)
-        raise OrbitalError(msg)
+    __sanity_check(degree, method, orbfitlksx, orbfitlksy)
 
     # Give informative log messages based on selected options
     log.info(f'Calculating {__degrees_as_string(degree)} orbital correction using '
@@ -103,28 +106,22 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
         log.info(f'Multi-looking interferograms for orbital correction with '
                  f'factors of X = {orbfitlksx} and Y = {orbfitlksy}')
 
-    if method == INDEPENDENT_METHOD:
-        iterable_split(independent_orbital_correction, ifg_paths, params)
-
-    elif method == NETWORK_METHOD:
-        # Here we do all the multilooking in one process, but in memory
-        # could use multiple processes if we write data to disc during
-        # remove_orbital_error step
-        # TODO: performance comparison of saving multilooked files on
-        # disc vs in-memory single-process multilooking
-        #
-        # The gdal swig bindings prevent us from doing multi-looking in parallel
-        # when using multiprocessing because the multilooked ifgs are held in
-        # memory using in-memory tifs. Parallelism using MPI is possible.
-        # TODO: Use a flag to select mpi parallel vs multiprocessing in the
-        # iterable_split function, which will use mpi but can fall back on
-        # single process based on the flag for the multiprocessing side.
-        if mpiops.rank == MAIN_PROCESS:
-            mlooked = __create_multilooked_datasets(params)
-            _validate_mlooked(mlooked, ifg_paths)
-            network_orbital_correction(ifg_paths, params, mlooked)
-    else:
-        raise OrbitalError("Unrecognised orbital correction method")
+    # Here we do all the multilooking in one process, but in memory
+    # could use multiple processes if we write data to disc during
+    # remove_orbital_error step
+    # TODO: performance comparison of saving multilooked files on
+    # disc vs in-memory single-process multilooking
+    #
+    # The gdal swig bindings prevent us from doing multi-looking in parallel
+    # when using multiprocessing because the multilooked ifgs are held in
+    # memory using in-memory tifs. Parallelism using MPI is possible.
+    # TODO: Use a flag to select mpi parallel vs multiprocessing in the
+    # iterable_split function, which will use mpi but can fall back on
+    # single process based on the flag for the multiprocessing side.
+    if mpiops.rank == MAIN_PROCESS:
+        mlooked = __create_multilooked_datasets(params)
+        _validate_mlooked(mlooked, ifg_paths)
+        __orbital_correction(ifg_paths, params, mlooked)
 
 
 def __create_multilooked_datasets(params):
@@ -200,88 +197,17 @@ def _get_num_params(degree, offset=None):
     return nparams
 
 
-def independent_orbital_correction(ifg_path, params):
+def __orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None):
     """
-    Calculates and removes an orbital error surface from a single independent
-    interferogram.
+    If the independent correction is selected, all ifgs are used in the model.
 
-    Warning: This will write orbital error corrected phase_data to the ifg.
-
-    :param Ifg class instance ifg: the interferogram to be corrected
-    :param str degree: model to fit (PLANAR / QUADRATIC / PART_CUBIC)
-    :param bool offset: True to calculate the model using an offset
-    :param dict params: dictionary of configuration parameters
-
-    :return: None - interferogram phase data is updated and saved to disk
-    """
-    log.debug(f"Orbital correction of {ifg_path}")
-    degree = params[C.ORBITAL_FIT_DEGREE]
-    offset = params[C.ORBFIT_OFFSET]
-    xlooks = params[C.ORBITAL_FIT_LOOKS_X]
-    ylooks = params[C.ORBITAL_FIT_LOOKS_Y]
-    scale = params[C.ORBFIT_SCALE]
-
-    ifg0 = shared.Ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
-    design_matrix = get_design_matrix(ifg0, degree, offset, scale=scale)
-
-    ifg = shared.dem_or_ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
-    ifg_path = ifg.data_path
-
-    multi_path = MultiplePaths(ifg_path, params)
-    original_ifg = ifg  # keep a backup
-    orb_on_disc = MultiplePaths.orb_error_path(ifg_path, params)
-    if not ifg.is_open:
-        ifg.open()
-
-    shared.nan_and_mm_convert(ifg, params)
-
-    if orb_on_disc.exists():
-        log.info(f'Reusing already computed orbital fit correction: {orb_on_disc}')
-        orbital_correction = np.load(file=orb_on_disc)
-    else:
-        # Multi-look the ifg data if either X or Y is greater than 1
-        if (xlooks > 1) or (ylooks > 1):
-            exts, _, _ = __extents_from_params(params)
-            mlooked = _create_mlooked_dataset(multi_path, ifg.data_path, exts, params)
-            ifg = Ifg(mlooked)
-
-        # vectorise, keeping NODATA
-        vphase = reshape(ifg.phase_data, ifg.num_cells)
-        dm = get_design_matrix(ifg, degree, offset, scale=scale)
-
-        # filter NaNs out before inverting to get the model
-        B = dm[~isnan(vphase)]
-        data = vphase[~isnan(vphase)]
-        model = dot(pinv(B, 1e-6), data)
-
-        if offset:
-            fullorb = np.reshape(np.dot(design_matrix[:, :-1], model[:-1]), original_ifg.phase_data.shape)
-        else:
-            fullorb = np.reshape(np.dot(design_matrix, model), original_ifg.phase_data.shape)
-
-        if not orb_on_disc.parent.exists():
-            shared.mkdir_p(orb_on_disc.parent)
-        offset_removal = nanmedian(np.ravel(original_ifg.phase_data - fullorb))
-        orbital_correction = fullorb - offset_removal
-        # dump to disc
-        np.save(file=orb_on_disc, arr=orbital_correction)
-
-    # subtract orbital error from the ifg
-    original_ifg.phase_data -= orbital_correction
-    # set orbfit meta tag and save phase to file
-    _save_orbital_error_corrected_phase(original_ifg, params)
-    original_ifg.close()
-
-
-def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None):
-    """
-    This algorithm implements a network inversion to determine orbital
+    If the network correction method is chosen, this algorithm implements a network inversion to determine orbital
     corrections for a set of interferograms forming a connected network.
 
     Warning: This will write orbital error corrected phase_data to the ifgs.
 
-    :param list ifg_paths: List of Ifg class objects reduced to a minimum spanning
-        tree network
+    :param list ifg_paths: List of Ifg class objects. These are reduced to a minimum spanning
+        tree network in network correction method.
     :param str degree: model to fit (PLANAR / QUADRATIC / PART_CUBIC)
     :param bool offset: True to calculate the model using offsets
     :param dict params: dictionary of configuration parameters
@@ -307,12 +233,14 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
         ifgs = ifg_paths
 
     src_ifgs = ifgs if m_ifgs is None else m_ifgs
-    src_ifgs = mst.mst_from_ifgs(src_ifgs)[3]  # use networkx mst
+    method = params[C.ORBITAL_FIT_METHOD]
+    if method == NETWORK_METHOD:
+        src_ifgs = mst.mst_from_ifgs(src_ifgs)[3]  # use networkx mst
 
     vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
     vphase = squeeze(vphase)
 
-    B = get_network_design_matrix(src_ifgs, degree, offset)
+    B = __get_design_matrix(src_ifgs, degree, offset)
 
     # filter NaNs out before getting model
     B = B[~isnan(vphase)]
@@ -345,7 +273,7 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
             i = Ifg(i)
             i.open(readonly=False)
             shared.nan_and_mm_convert(i, params)
-        _remove_network_orb_error(coefs, dm, i, ids, offset, params)
+        __remove_orb_error(coefs, dm, i, ids, offset, params)
 
 
 def __check_and_apply_orberrors_found_on_disc(ifg_paths, params):
@@ -366,7 +294,7 @@ def __check_and_apply_orberrors_found_on_disc(ifg_paths, params):
     return all(p.exists() for p in saved_orb_err_paths)
 
 
-def _remove_network_orb_error(coefs, dm, ifg, ids, offset, params):
+def __remove_orb_error(coefs, dm, ifg, ids, offset, params):
     """
     remove network orbital error from input interferograms
     """
@@ -403,7 +331,7 @@ def _save_orbital_error_corrected_phase(ifg, params):
 
 def __methods_as_string(method):
     """Look up table to get orbital method string names"""
-    meth = {1:ifc.PYRATE_ORB_INDEPENDENT, 2:ifc.PYRATE_ORB_NETWORK}
+    meth = {1: ifc.PYRATE_ORB_INDEPENDENT, 2: ifc.PYRATE_ORB_NETWORK}
     return str(meth[method])
 
 
@@ -471,7 +399,7 @@ def get_design_matrix(ifg, degree, offset, scale: Optional[float] = 1.0):
     return dm
 
 
-def get_network_design_matrix(ifgs, degree, offset):
+def __get_design_matrix(ifgs, degree, offset):
     # pylint: disable=too-many-locals
     """
     Returns larger-format design matrix for network error correction. The

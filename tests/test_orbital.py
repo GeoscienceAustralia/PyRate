@@ -38,7 +38,7 @@ from pyrate.core.algorithm import first_second_ids
 from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
     QUADRATIC, PART_CUBIC
 from pyrate.core.orbital import OrbitalError
-from pyrate.core.orbital import get_design_matrix, get_network_design_matrix, orb_fit_calc_wrapper
+from pyrate.core.orbital import get_design_matrix, __get_design_matrix, orb_fit_calc_wrapper
 from pyrate.core.orbital import _get_num_params, remove_orbital_error, network_orbital_correction
 from pyrate.core.shared import Ifg, mkdir_p
 from pyrate.core.shared import nanmedian
@@ -264,16 +264,16 @@ class TestError:
     def test_invalid_ifgs_arg(self):
         # min requirement is 1 ifg, can still subtract one epoch from the other
         with pytest.raises(OrbitalError):
-            get_network_design_matrix([], PLANAR, True)
+            __get_design_matrix([], PLANAR, True)
 
     def test_invalid_degree_arg(self):
         # test failure of a few different args for 'degree'
         for d in range(-5, 1):
             with pytest.raises(OrbitalError):
-                get_network_design_matrix(self.ifgs, d, True)
+                __get_design_matrix(self.ifgs, d, True)
         for d in range(4, 7):
             with pytest.raises(OrbitalError):
-                get_network_design_matrix(self.ifgs, d, True)
+                __get_design_matrix(self.ifgs, d, True)
 
     def test_invalid_method(self):
         # test failure of a few different args for 'method'
@@ -321,7 +321,7 @@ class TestNetworkDesignMatrixTests:
     def test_planar_network_dm(self):
         ncoef = 2
         offset = False
-        act = get_network_design_matrix(self.ifgs, PLANAR, offset)
+        act = __get_design_matrix(self.ifgs, PLANAR, offset)
         assert act.shape == (self.ncells * self.nifgs, ncoef * self.nepochs)
         assert act.ptp() != 0
         self.check_equality(ncoef, act, self.ifgs, offset)
@@ -329,7 +329,7 @@ class TestNetworkDesignMatrixTests:
     def test_planar_network_dm_offset(self):
         ncoef = 2 # NB: doesn't include offset col
         offset = True
-        act = get_network_design_matrix(self.ifgs, PLANAR, offset)
+        act = __get_design_matrix(self.ifgs, PLANAR, offset)
         assert act.shape[0] == self.ncells * self.nifgs
         assert act.shape[1] == (self.nepochs * ncoef) + self.nifgs
         assert act.ptp() != 0
@@ -338,7 +338,7 @@ class TestNetworkDesignMatrixTests:
     def test_quadratic_network_dm(self):
         ncoef = 5
         offset = False
-        act = get_network_design_matrix(self.ifgs, QUADRATIC, offset)
+        act = __get_design_matrix(self.ifgs, QUADRATIC, offset)
         assert act.shape == (self.ncells * self.nifgs, ncoef * self.nepochs)
         assert act.ptp() != 0
         self.check_equality(ncoef, act, self.ifgs, offset)
@@ -346,7 +346,7 @@ class TestNetworkDesignMatrixTests:
     def test_quadratic_network_dm_offset(self):
         ncoef = 5
         offset = True
-        act = get_network_design_matrix(self.ifgs, QUADRATIC, offset)
+        act = __get_design_matrix(self.ifgs, QUADRATIC, offset)
         assert act.shape[0] == self.ncells * self.nifgs
         assert act.shape[1] == (self.nepochs * ncoef) + self.nifgs
         assert act.ptp() != 0
@@ -355,7 +355,7 @@ class TestNetworkDesignMatrixTests:
     def test_partcubic_network_dm(self):
         ncoef = 6
         offset = False
-        act = get_network_design_matrix(self.ifgs, PART_CUBIC, offset)
+        act = __get_design_matrix(self.ifgs, PART_CUBIC, offset)
         assert act.shape == (self.ncells * self.nifgs, ncoef * self.nepochs)
         assert act.ptp() != 0
         self.check_equality(ncoef, act, self.ifgs, offset)
@@ -363,7 +363,7 @@ class TestNetworkDesignMatrixTests:
     def test_partcubic_network_dm_offset(self):
         ncoef = 6
         offset = True
-        act = get_network_design_matrix(self.ifgs, PART_CUBIC, offset)
+        act = __get_design_matrix(self.ifgs, PART_CUBIC, offset)
         assert act.shape[0] == self.ncells * self.nifgs
         assert act.shape[1] == (self.nepochs * ncoef) + self.nifgs
         assert act.ptp() != 0
@@ -415,11 +415,11 @@ def network_correction(ifgs, deg, off, ml_ifgs=None, tol=1e-6):
     if ml_ifgs:
         ml_nc = ml_ifgs[0].num_cells
         ml_data = concatenate([i.phase_data.reshape(ml_nc) for i in ml_ifgs])
-        dm = get_network_design_matrix(ml_ifgs, deg, off)[~isnan(ml_data)]
+        dm = __get_design_matrix(ml_ifgs, deg, off)[~isnan(ml_data)]
         fd = ml_data[~isnan(ml_data)].reshape((dm.shape[0], 1))
     else:
         data = concatenate([i.phase_data.reshape(ncells) for i in ifgs])
-        dm = get_network_design_matrix(ifgs, deg, off)[~isnan(data)]
+        dm = __get_design_matrix(ifgs, deg, off)[~isnan(data)]
         fd = data[~isnan(data)].reshape((dm.shape[0], 1))
 
     params = pinv(dm, tol).dot(fd)
@@ -488,7 +488,7 @@ class TestNetworkCorrectionTests:
             """Returns pseudo-inverse of the DM"""
             ncells = self.ifgs[0].num_cells
             data = concatenate([i.phase_data.reshape(ncells) for i in self.ifgs])
-            dm = get_network_design_matrix(self.ifgs, PLANAR, True)[~isnan(data)]
+            dm = __get_design_matrix(self.ifgs, PLANAR, True)[~isnan(data)]
             fd = data[~isnan(data)].reshape((dm.shape[0], 1))
             return dot(pinv(dm, self.nc_tol), fd)
 
