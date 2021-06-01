@@ -14,7 +14,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-
+import resource
 from collections import namedtuple
 from typing import List, Dict, Tuple, Any
 from nptyping import NDArray, Float32, UInt16
@@ -24,6 +24,7 @@ import pyrate.constants as C
 from pyrate.core import mpiops
 from pyrate.core.shared import Ifg, join_dicts
 from pyrate.core.phase_closure.mst_closure import Edge, WeightedLoop
+from pyrate.core.logger import pyratelogger as log
 
 IndexedIfg = namedtuple('IndexedIfg', ['index', 'IfgPhase'])
 
@@ -104,7 +105,13 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
             ifgs_breach_count_arr.append(ifgs_breach_count_l)
         closure_dict = join_dicts(mpiops.comm.gather(closure_dict, root=0))
         ifgs_breach_count_process = np.sum(np.stack(ifgs_breach_count_arr), axis=0)
+
+        total_gb = mpiops.comm.allreduce(ifgs_breach_count_process.nbytes / 1e9, op='SUM')
+        log.info("Memory usage due to ifgs_breach_count_process {:2.4f}GB of data".format(total_gb))
+
         ifgs_breach_count = mpiops.comm.reduce(ifgs_breach_count_process, op=mpiops.sum0_op, root=0)
+        total_gb = mpiops.comm.allreduce(ifgs_breach_count.nbytes / 1e9, op='SUM')
+        log.info("Memory usage due to ifgs_breach_count {:2.4f}GB of data".format(total_gb))
 
     closure, num_occurrences_each_ifg = None, None
     if mpiops.rank == 0:
