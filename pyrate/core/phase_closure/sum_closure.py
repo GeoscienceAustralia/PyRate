@@ -89,29 +89,25 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
         # for k, r in enumerate(rets):
         #     closure_dict[k], ifgs_breach_count_dict[k] = r
         # TODO: enable multiprocessing - needs pickle error fix
-        ifgs_breach_count_arr = []
+        ifgs_breach_count_process = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)), dtype=np.uint16)
         for k, weighted_loop in enumerate(loops):
             closure_dict[k], ifgs_breach_count_l = __compute_ifgs_breach_count(weighted_loop, edge_to_indexed_ifgs,
                                                                                params)
-            ifgs_breach_count_arr.append(ifgs_breach_count_l)
-        ifgs_breach_count = np.sum(np.stack(ifgs_breach_count_arr), axis=0)
+            ifgs_breach_count_process += ifgs_breach_count_l
+        ifgs_breach_count = ifgs_breach_count_process
     else:
         loops_with_index = list(enumerate(loops))
         process_loops = mpiops.array_split(loops_with_index)
-        ifgs_breach_count_arr = []
+        ifgs_breach_count_process = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)), dtype=np.uint16)
         for k, weighted_loop in process_loops:
             closure_dict[k], ifgs_breach_count_l = __compute_ifgs_breach_count(weighted_loop, edge_to_indexed_ifgs,
                                                                                params)
-            ifgs_breach_count_arr.append(ifgs_breach_count_l)
+            ifgs_breach_count_process += ifgs_breach_count_l
         closure_dict = join_dicts(mpiops.comm.gather(closure_dict, root=0))
-        ifgs_breach_count_process = np.sum(np.stack(ifgs_breach_count_arr), axis=0)
 
-        total_gb = mpiops.comm.allreduce(ifgs_breach_count_process.nbytes / 1e9, op='SUM')
+        total_gb = mpiops.comm.allreduce(ifgs_breach_count_process.nbytes / 1e9, op=mpiops.MPI.SUM)
         log.info("Memory usage due to ifgs_breach_count_process {:2.4f}GB of data".format(total_gb))
-
         ifgs_breach_count = mpiops.comm.reduce(ifgs_breach_count_process, op=mpiops.sum0_op, root=0)
-        total_gb = mpiops.comm.allreduce(ifgs_breach_count.nbytes / 1e9, op='SUM')
-        log.info("Memory usage due to ifgs_breach_count {:2.4f}GB of data".format(total_gb))
 
     closure, num_occurrences_each_ifg = None, None
     if mpiops.rank == 0:

@@ -44,6 +44,7 @@ except ImportError:
     MPI_INSTALLED = False
     size = 1
     rank = 0
+    MPI.SUM = np.sum
 
     class comm:
         """
