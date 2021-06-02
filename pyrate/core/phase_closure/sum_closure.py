@@ -26,6 +26,8 @@ from pyrate.core.shared import Ifg, join_dicts
 from pyrate.core.phase_closure.mst_closure import Edge, WeightedLoop
 from pyrate.core.logger import pyratelogger as log
 
+from mpi4py import MPI
+
 IndexedIfg = namedtuple('IndexedIfg', ['index', 'IfgPhase'])
 
 
@@ -106,7 +108,13 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
 
         total_gb = mpiops.comm.allreduce(ifgs_breach_count.nbytes / 1e9, op=mpiops.MPI.SUM)
         log.info("Memory usage due to ifgs_breach_count {:2.4f}GB of data".format(total_gb))
-        ifgs_breach_count = mpiops.comm.reduce(ifgs_breach_count, op=mpiops.sum0_op, root=0)  # global
+        log.debug(f"shape of ifgs_breach_count is {ifgs_breach_count.shape}")
+        log.debug(f"dtype of ifgs_breach_count is {ifgs_breach_count.dtype}")
+       
+        mpiops.comm.Reduce(ifgs_breach_count, ifgs_breach_count, op=MPI.SUM, root=0) 
+        log.debug(f"successfully summed phase closure breach array")
+        
+        #ifgs_breach_count = mpiops.comm.reduce(ifgs_breach_count, op=mpiops.sum0_op, root=0)  # global
 
     closure, num_occurrences_each_ifg = None, None
     if mpiops.rank == 0:
