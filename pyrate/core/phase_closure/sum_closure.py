@@ -14,7 +14,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-
+import resource
 from collections import namedtuple
 from typing import List, Dict, Tuple, Any
 from nptyping import NDArray, Float32, UInt16
@@ -24,6 +24,8 @@ import pyrate.constants as C
 from pyrate.core import mpiops
 from pyrate.core.shared import Ifg, join_dicts
 from pyrate.core.phase_closure.mst_closure import Edge, WeightedLoop
+from pyrate.core.logger import pyratelogger as log
+
 
 IndexedIfg = namedtuple('IndexedIfg', ['index', 'IfgPhase'])
 
@@ -69,9 +71,9 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
     :param ifg_files: list of ifg files
     :param loops: list of loops
     :param params: params dict
-    :return: Tuple of closure, ifgs_breach_count, num_occurrences_each_ifg
+    :return: Tuple of closure, ifgs_breach_count_process, num_occurrences_each_ifg
         closure: summed closure for each loop.
-        ifgs_breach_count: shape=(ifg.shape, n_ifgs) number of times a pixel in an ifg fails the closure
+        ifgs_breach_count_process: shape=(ifg.shape, n_ifgs) number of times a pixel in an ifg fails the closure
             check (i.e., has unwrapping error) in all loops under investigation.
         num_occurrences_each_ifg: frequency of ifg appearance in all loops.
     """
@@ -88,23 +90,36 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
         # for k, r in enumerate(rets):
         #     closure_dict[k], ifgs_breach_count_dict[k] = r
         # TODO: enable multiprocessing - needs pickle error fix
-        ifgs_breach_count_arr = []
+        ifgs_breach_count = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)), dtype=np.uint16)
         for k, weighted_loop in enumerate(loops):
             closure_dict[k], ifgs_breach_count_l = __compute_ifgs_breach_count(weighted_loop, edge_to_indexed_ifgs,
                                                                                params)
-            ifgs_breach_count_arr.append(ifgs_breach_count_l)
-        ifgs_breach_count = np.sum(np.stack(ifgs_breach_count_arr), axis=0)
+            ifgs_breach_count += ifgs_breach_count_l
     else:
         loops_with_index = list(enumerate(loops))
         process_loops = mpiops.array_split(loops_with_index)
-        ifgs_breach_count_arr = []
+        ifgs_breach_count_process = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)), dtype=np.uint16)
         for k, weighted_loop in process_loops:
             closure_dict[k], ifgs_breach_count_l = __compute_ifgs_breach_count(weighted_loop, edge_to_indexed_ifgs,
                                                                                params)
-            ifgs_breach_count_arr.append(ifgs_breach_count_l)
+            ifgs_breach_count_process += ifgs_breach_count_l  # process
         closure_dict = join_dicts(mpiops.comm.gather(closure_dict, root=0))
-        ifgs_breach_count_process = np.sum(np.stack(ifgs_breach_count_arr), axis=0)
-        ifgs_breach_count = mpiops.comm.reduce(ifgs_breach_count_process, op=mpiops.sum0_op, root=0)
+
+        total_gb = mpiops.comm.allreduce(ifgs_breach_count_process.nbytes / 1e9, op=mpiops.MPI.SUM)
+        log.info("Memory usage due to ifgs_breach_count_process {:2.4f}GB of data".format(total_gb))
+        log.debug(f"shape of ifgs_breach_count_process is {ifgs_breach_count_process.shape}")
+        log.debug(f"dtype of ifgs_breach_count_process is {ifgs_breach_count_process.dtype}")
+        if mpiops.rank == 0:
+            ifgs_breach_count = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)), dtype=np.uint16)
+        else:
+            ifgs_breach_count = None
+        if mpiops.MPI_INSTALLED:
+            mpiops.comm.Reduce([ifgs_breach_count_process, mpiops.MPI.UINT16_T],
+                               [ifgs_breach_count, mpiops.MPI.UINT16_T], op=mpiops.MPI.SUM, root=0)  # global
+        else:
+            ifgs_breach_count = mpiops.comm.reduce(ifgs_breach_count_process, op=mpiops.sum0_op, root=0)
+
+        log.debug(f"successfully summed phase closure breach array")
 
     closure, num_occurrences_each_ifg = None, None
     if mpiops.rank == 0:
