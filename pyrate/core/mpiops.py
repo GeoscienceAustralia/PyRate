@@ -45,6 +45,9 @@ except ImportError:
     size = 1
     rank = 0
 
+    class MPI:
+        SUM = np.sum
+
     class comm:
         """
         the mpi simulators that are used in a non-mpi environment

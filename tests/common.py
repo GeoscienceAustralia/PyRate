@@ -365,8 +365,7 @@ def assert_ifg_phase_equal(ifg_path1, ifg_path2):
 def prepare_ifgs_without_phase(ifg_paths, params):
     ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
-        if not i.is_open:
-            i.open(readonly=False)
+        i.open(readonly=False)
         nan_conversion = params[C.NAN_CONVERSION]
         if nan_conversion:  # nan conversion happens here in networkx mst
             # if not ifg.nan_converted:
@@ -550,8 +549,7 @@ def pre_prepare_ifgs(ifg_paths, params):
     """
     ifgs = [Ifg(p) for p in ifg_paths]
     for i in ifgs:
-        if not i.is_open:
-            i.open(readonly=False)
+        i.open(readonly=False)
         nan_and_mm_convert(i, params)
     return ifgs
 

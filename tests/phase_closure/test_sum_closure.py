@@ -99,8 +99,8 @@ def test_mpi_vs_single_process(modified_config):
         assert all(m_e == s_e for m_e, s_e in zip(m.edges, s.edges))
 
     # closure
-    np.testing.assert_array_almost_equal(np.abs(m_closure), np.abs(s_closure))
-    np.testing.assert_array_almost_equal(np.abs(m_closure), np.abs(p_closure))
+    np.testing.assert_array_almost_equal(np.abs(m_closure), np.abs(s_closure), decimal=4)
+    np.testing.assert_array_almost_equal(np.abs(m_closure), np.abs(p_closure), decimal=4)
 
     # num_occurrences_each_ifg
     m_num_occurrences_each_ifg = np.load(m_config.closure().num_occurences_each_ifg, allow_pickle=True)

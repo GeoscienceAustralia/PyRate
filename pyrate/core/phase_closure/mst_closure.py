@@ -50,7 +50,7 @@ class SignedWeightedEdge(SignedEdge):
 
 class WeightedLoop:
     """
-    Loop with weight equal to the sum of the edge weights, where edge weights are the epochs of the ifgs
+    Loop with weight equal to the sum of the edge weights, where edge weights are the ifg duration in days
     """
 
     def __init__(self, loop: List[SignedWeightedEdge]):
@@ -137,11 +137,11 @@ def __add_signs_and_weights_to_loops(loops: List[List[date]], available_edges: L
                 signed_edge = SignedEdge(edge, -1)  # in direction of ifg
             weighted_signed_edge = SignedWeightedEdge(
                 signed_edge,
-                (signed_edge.second - signed_edge.first).days
+                (signed_edge.second - signed_edge.first).days # weight in days
             )
             weighted_signed_loop.append(weighted_signed_edge)
 
-        # sort the loops by first the weight, and then minimum start date
+        # sort the loops by minimum first date, and then second date if there are ties
         weighted_signed_loop.sort(key=lambda x: (x.first, x.second, x.sign))
         weighted_loop = WeightedLoop(weighted_signed_loop)
         weighted_signed_loops.append(weighted_loop)
