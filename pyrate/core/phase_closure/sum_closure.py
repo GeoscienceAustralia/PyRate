@@ -109,8 +109,10 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
         log.info("Memory usage due to ifgs_breach_count_process {:2.4f}GB of data".format(total_gb))
         log.debug(f"shape of ifgs_breach_count_process is {ifgs_breach_count_process.shape}")
         log.debug(f"dtype of ifgs_breach_count_process is {ifgs_breach_count_process.dtype}")
-
-        ifgs_breach_count = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)), dtype=np.uint16)
+        if mpiops.rank == 0:
+            ifgs_breach_count = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)), dtype=np.uint16)
+        else:
+            ifgs_breach_count = None
         if mpiops.MPI_INSTALLED:
             mpiops.comm.Reduce([ifgs_breach_count_process, mpiops.MPI.UINT16_T],
                                [ifgs_breach_count, mpiops.MPI.UINT16_T], op=mpiops.MPI.SUM, root=0)  # global
