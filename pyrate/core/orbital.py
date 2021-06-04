@@ -234,6 +234,7 @@ def independent_orbital_correction(ifg_path, params):
         ifg.open()
 
     shared.nan_and_mm_convert(ifg, params)
+    original_phase = original_ifg.phase_data
 
     if orb_on_disc.exists():
         log.info(f'Reusing already computed orbital fit correction: {orb_on_disc}')
@@ -250,20 +251,11 @@ def independent_orbital_correction(ifg_path, params):
         dm = get_design_matrix(ifg, degree, offset, scale=scale)
 
         # filter NaNs out before inverting to get the model
-        B = dm[~isnan(vphase)]
-        data = vphase[~isnan(vphase)]
-        model = dot(pinv(B, 1e-6), data)
-
-        if offset:
-            fullorb = np.reshape(np.dot(design_matrix[:, :-1], model[:-1]), original_ifg.phase_data.shape)
-        else:
-            fullorb = np.reshape(np.dot(design_matrix, model), original_ifg.phase_data.shape)
-
+        orbital_correction = __orb_correction(design_matrix, dm, offset, original_phase, vphase)
+        # dump to disc
         if not orb_on_disc.parent.exists():
             shared.mkdir_p(orb_on_disc.parent)
-        offset_removal = nanmedian(np.ravel(original_ifg.phase_data - fullorb))
-        orbital_correction = fullorb - offset_removal
-        # dump to disc
+
         np.save(file=orb_on_disc, arr=orbital_correction)
 
     # subtract orbital error from the ifg
@@ -271,6 +263,19 @@ def independent_orbital_correction(ifg_path, params):
     # set orbfit meta tag and save phase to file
     _save_orbital_error_corrected_phase(original_ifg, params)
     original_ifg.close()
+
+
+def __orb_correction(original_dm, mlooked_dm, offset, original_phase, mlooked_phase):
+    B = mlooked_dm[~isnan(mlooked_phase)]
+    data = mlooked_phase[~isnan(mlooked_phase)]
+    model = dot(pinv(B, 1e-6), data)
+    if offset:
+        fullorb = np.reshape(np.dot(original_dm[:, :-1], model[:-1]), original_phase.shape)
+    else:
+        fullorb = np.reshape(np.dot(original_dm, model), original_phase.shape)
+    offset_removal = nanmedian(np.ravel(original_phase - fullorb))
+    orbital_correction = fullorb - offset_removal
+    return orbital_correction
 
 
 def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None):

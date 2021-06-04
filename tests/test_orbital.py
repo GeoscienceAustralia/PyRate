@@ -39,7 +39,7 @@ from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
     QUADRATIC, PART_CUBIC
 from pyrate.core.orbital import OrbitalError
 from pyrate.core.orbital import get_design_matrix, get_network_design_matrix, orb_fit_calc_wrapper
-from pyrate.core.orbital import _get_num_params, remove_orbital_error, network_orbital_correction
+from pyrate.core.orbital import _get_num_params, remove_orbital_error, network_orbital_correction, __orb_correction
 from pyrate.core.shared import Ifg, mkdir_p
 from pyrate.core.shared import nanmedian
 from pyrate.core import roipac
@@ -1021,3 +1021,28 @@ class TestOrbfitIndependentMethodWithMultilooking:
         for i in ifgs:
             i.open()
             assert i.shape == (72, 47)  # shape should not change
+
+
+def test_independent_orbital_correction():
+
+    class MIfg:
+        x_size = 1
+        y_size = 1
+        nrows = 100
+        ncols = 100
+        num_cells = nrows * ncols
+        x, y = np.meshgrid(np.arange(nrows) * x_size, np.arange(ncols) * y_size)
+        phase_data = np.zeros(shape=(nrows, ncols)) + x + y
+        is_open = False
+
+        def open(self):
+            is_open = True
+
+    ifg = MIfg()
+    original_dm = get_design_matrix(ifg, PLANAR, offset=True)
+    mlooked_dm = original_dm
+    vphase = np.reshape(ifg.phase_data, ifg.num_cells)
+    orb_corr = __orb_correction(original_dm, mlooked_dm, offset=True,
+                                original_phase=ifg.phase_data, mlooked_phase=vphase)
+
+    assert np.all(np.abs(ifg.phase_data - orb_corr)) < 5
