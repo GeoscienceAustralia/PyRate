@@ -1023,7 +1023,7 @@ class TestOrbfitIndependentMethodWithMultilooking:
             assert i.shape == (72, 47)  # shape should not change
 
 
-def test_independent_orbital_correction(orbfit_degrees):
+def test_orbital_error_is_removed_completely(orbfit_degrees):
 
     class TestIfg:
         x_size = 0.00125   # pixel size - similar to cropA
