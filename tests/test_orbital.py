@@ -1023,26 +1023,32 @@ class TestOrbfitIndependentMethodWithMultilooking:
             assert i.shape == (72, 47)  # shape should not change
 
 
-def test_independent_orbital_correction():
+def test_independent_orbital_correction(orbfit_degrees):
 
-    class MIfg:
-        x_size = 1
-        y_size = 1
+    class TestIfg:
+        x_size = 0.00125   # pixel size - similar to cropA
+        y_size = 0.00125
         nrows = 100
         ncols = 100
         num_cells = nrows * ncols
         x, y = np.meshgrid(np.arange(nrows) * x_size, np.arange(ncols) * y_size)
-        phase_data = np.zeros(shape=(nrows, ncols)) + x + y
+        phase_data = np.zeros(shape=(nrows, ncols))
+        if orbfit_degrees == PLANAR:
+            phase_data += + x + y
+        elif orbfit_degrees == QUADRATIC:
+            phase_data += x ** 2 + y ** 2 + x * y
+        else:  # part cubic
+            phase_data += x ** 2 + y ** 2 + x * y + x * (y ** 2)
+
         is_open = False
 
         def open(self):
             is_open = True
 
-    ifg = MIfg()
-    original_dm = get_design_matrix(ifg, PLANAR, offset=True)
+    ifg = TestIfg()
+    original_dm = get_design_matrix(ifg, orbfit_degrees, offset=True)
     mlooked_dm = original_dm
     vphase = np.reshape(ifg.phase_data, ifg.num_cells)
     orb_corr = __orb_correction(original_dm, mlooked_dm, offset=True,
                                 original_phase=ifg.phase_data, mlooked_phase=vphase)
-
-    assert np.all(np.abs(ifg.phase_data - orb_corr)) < 5
+    assert_array_almost_equal(ifg.phase_data, orb_corr)

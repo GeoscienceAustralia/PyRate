@@ -268,12 +268,13 @@ def independent_orbital_correction(ifg_path, params):
 def __orb_correction(original_dm, mlooked_dm, offset, original_phase, mlooked_phase):
     B = mlooked_dm[~isnan(mlooked_phase)]
     data = mlooked_phase[~isnan(mlooked_phase)]
-    model = dot(pinv(B, 1e-6), data)
+    orbparams = dot(pinv(B, 1e-6), data)
+    fullorb = np.reshape(np.dot(original_dm, orbparams), original_phase.shape)
+
     if offset:
-        fullorb = np.reshape(np.dot(original_dm[:, :-1], model[:-1]), original_phase.shape)
+        offset_removal = nanmedian(np.ravel(original_phase - fullorb))
     else:
-        fullorb = np.reshape(np.dot(original_dm, model), original_phase.shape)
-    offset_removal = nanmedian(np.ravel(original_phase - fullorb))
+        offset_removal = np.zeros_like(np.ravel(original_phase))
     orbital_correction = fullorb - offset_removal
     return orbital_correction
 
