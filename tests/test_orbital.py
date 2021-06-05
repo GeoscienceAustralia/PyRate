@@ -1036,9 +1036,9 @@ def test_orbital_error_is_removed_completely(orbfit_degrees):
         if orbfit_degrees == PLANAR:
             phase_data += + x + y
         elif orbfit_degrees == QUADRATIC:
-            phase_data += x ** 2 + y ** 2 + x * y
+            phase_data += x ** 2 + y ** 2 + x * y + x + y
         else:  # part cubic
-            phase_data += x ** 2 + y ** 2 + x * y + x * (y ** 2)
+            phase_data += x ** 2 + y ** 2 + x * y + x * (y ** 2) + x + y
 
         is_open = False
 
