@@ -160,7 +160,9 @@ def _create_mlooked_dataset(multi_path, ifg_path, exts, params):
     ylooks = params[C.ORBITAL_FIT_LOOKS_Y]
     out_path = tempfile.mktemp()
     log.debug(f'Multi-looking {ifg_path} with factors X = {xlooks} and Y = {ylooks} for orbital correction')
-    resampled_data, out_ds = prepifg_helper.prepare_ifg(ifg_path, xlooks, ylooks, exts, thresh, crop_opt, header, False, out_path)
+    resampled_data, out_ds = prepifg_helper.prepare_ifg(
+        ifg_path, xlooks, ylooks, exts, thresh, crop_opt, header, False, out_path
+    )
     return out_ds
 
 
@@ -250,7 +252,6 @@ def independent_orbital_correction(ifg_path, params):
         vphase = reshape(ifg.phase_data, ifg.num_cells)
         dm = get_design_matrix(ifg, degree, offset, scale=scale)
 
-        # filter NaNs out before inverting to get the model
         orbital_correction = __orb_correction(design_matrix, dm, offset, original_phase, vphase)
         # dump to disc
         if not orb_on_disc.parent.exists():
@@ -266,6 +267,7 @@ def independent_orbital_correction(ifg_path, params):
 
 
 def __orb_correction(original_dm, mlooked_dm, offset, original_phase, mlooked_phase):
+    # filter NaNs out before inverting to get the model
     B = mlooked_dm[~isnan(mlooked_phase)]
     data = mlooked_phase[~isnan(mlooked_phase)]
     orbparams = dot(pinv(B, 1e-6), data)
@@ -274,7 +276,7 @@ def __orb_correction(original_dm, mlooked_dm, offset, original_phase, mlooked_ph
     if offset:
         offset_removal = nanmedian(np.ravel(original_phase - fullorb))
     else:
-        offset_removal = np.zeros_like(np.ravel(original_phase))
+        offset_removal = 0
     orbital_correction = fullorb - offset_removal
     return orbital_correction
 
