@@ -98,7 +98,7 @@ def main():
         for p_r in range(plt_rows):
             for p_c in range(plt_cols):
                 ax = fig.add_subplot(plt_rows, plt_cols, fig_plots + 1)
-                ifg_num = plt_cols * p_r + p_c
+                ifg_num = plt_cols * p_r + p_c + ifgs_per_plot * i
                 file = ifgs[ifg_num]
                 log.info(f'Plotting {file}')
                 __plot_ifg(file, cmap, ax, num_ifgs,
