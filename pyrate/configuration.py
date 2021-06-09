@@ -242,9 +242,6 @@ class Configuration:
                 else:  # i.e. serial
                     self.rows, self.cols = 1, 1
 
-        # force offset = 1 for both method options. This adds the required intercept term to the design matrix
-        self.orbfitoffset = 1
-
         # force orbfit scale = 1 for independent network correction method
         self.orbfitscale = 1
 
