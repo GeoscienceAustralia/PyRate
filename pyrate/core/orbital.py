@@ -50,15 +50,15 @@ from pyrate.configuration import MultiplePaths
 # potentially a lot of memory.
 #
 # For the independent method, PyRate makes individual small design matrices and
-# corrects the Ifgs one by one. If required in the correction, the offsets
+# corrects the Ifgs one by one. If required in the correction, the intercept
 # option adds an extra column of ones to include in the inversion.
 #
-# Network method design matrices are mostly empty, and offsets are handled
+# Network method design matrices are mostly empty, and intercept terms are handled
 # differently. Individual design matrices (== independent method DMs) are
-# placed in the sparse network design matrix. Offsets are not included in the
+# placed in the sparse network design matrix. Intercept terms are not included in the
 # smaller DMs to prevent unwanted cols being inserted. This is why some funcs
-# appear to ignore the offset parameter in the networked method. Network DM
-# offsets are cols of 1s in a diagonal line on the LHS of the sparse array.
+# appear to ignore the intercept parameter in the networked method. Network DM
+# intercept terms are cols of 1s in a diagonal line on the RHS of the sparse array.
 
 MAIN_PROCESS = 0
 
@@ -180,7 +180,7 @@ def _validate_mlooked(mlooked, ifgs):
         raise OrbitalError(msg)
 
 
-def _get_num_params(degree, offset=None):
+def _get_num_params(degree, intercept=None):
     '''
     Returns number of model parameters from string parameter
     '''
@@ -196,9 +196,9 @@ def _get_num_params(degree, offset=None):
               % C.ORB_DEGREE_NAMES.get(degree)
         raise OrbitalError(msg)
 
-    # NB: independent method only, network method handles offsets separately
-    if offset:
-        nparams += 1  # eg. y = mx + offset
+    # NB: independent method only, network method handles intercept terms differently
+    if intercept:
+        nparams += 1  # eg. y = mx + c
     return nparams
 
 
@@ -210,8 +210,6 @@ def independent_orbital_correction(ifg_path, params):
     Warning: This will write orbital error corrected phase_data to the ifg.
 
     :param Ifg class instance ifg: the interferogram to be corrected
-    :param str degree: model to fit (PLANAR / QUADRATIC / PART_CUBIC)
-    :param bool offset: True to calculate the model using an offset
     :param dict params: dictionary of configuration parameters
 
     :return: None - interferogram phase data is updated and saved to disk
@@ -226,7 +224,7 @@ def independent_orbital_correction(ifg_path, params):
     ifg0 = shared.Ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
 
     # get full-resolution design matrix
-    fullres_dm = get_design_matrix(ifg0, degree, offset, scale=scale)
+    fullres_dm = get_design_matrix(ifg0, degree, intercept=True, scale=scale)
 
     ifg = shared.dem_or_ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
     ifg_path = ifg.data_path
@@ -254,10 +252,10 @@ def independent_orbital_correction(ifg_path, params):
         vphase = reshape(ifg.phase_data, ifg.num_cells)
 
         # compute design matrix for multi-looked data
-        mlooked_dm = get_design_matrix(ifg, degree, offset, scale=scale)
+        mlooked_dm = get_design_matrix(ifg, degree, intercept=True, scale=scale)
 
         # invert to obtain the correction image (forward model) at full-res
-        orbital_correction = __orb_correction(fullres_dm, mlooked_dm, offset, fullres_phase, vphase)
+        orbital_correction = __orb_correction(fullres_dm, mlooked_dm, fullres_phase, vphase, offset=offset)
 
         # save correction to disc
         if not orb_on_disc.parent.exists():
@@ -273,7 +271,7 @@ def independent_orbital_correction(ifg_path, params):
     fullres_ifg.close()
 
 
-def __orb_correction(fullres_dm, mlooked_dm, offset, fullres_phase, mlooked_phase):
+def __orb_correction(fullres_dm, mlooked_dm, fullres_phase, mlooked_phase, offset=False):
     """
     Function to perform the inversion to obtain orbital model parameters
     and return the orbital correction as the full resolution forward model.
@@ -284,6 +282,8 @@ def __orb_correction(fullres_dm, mlooked_dm, offset, fullres_phase, mlooked_phas
     # compute forward model at full resolution
     fullorb = reshape(dot(fullres_dm, orbparams), fullres_phase.shape)
 
+    # Estimate the offset of the interferogram as the median of ifg minus model
+    # Only needed if reference phase correction has already been applied?
     if offset:
         offset_removal = nanmedian(np.ravel(fullres_phase - fullorb))
     else:
@@ -310,8 +310,6 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
 
     :param list ifg_paths: List of Ifg class objects reduced to a minimum spanning
         tree network
-    :param str degree: model to fit (PLANAR / QUADRATIC / PART_CUBIC)
-    :param bool offset: True to calculate the model using offsets
     :param dict params: dictionary of configuration parameters
     :param list m_ifgs: list of multilooked Ifg class objects
         (sequence must be multilooked versions of 'ifgs' arg)
@@ -340,16 +338,17 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
     vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
     vphase = squeeze(vphase)
 
-    B = get_network_design_matrix(src_ifgs, degree, offset)
+    B = get_network_design_matrix(src_ifgs, degree, intercept=True)
 
     orbparams = __orb_inversion(B, vphase)
 
-    ncoef = _get_num_params(degree)
+    ncoef = _get_num_params(degree) # ignore the intercept term
     if preread_ifgs:
         temp_ifgs = OrderedDict(sorted(preread_ifgs.items())).values()
         ids = first_second_ids(get_all_epochs(temp_ifgs))
     else:
         ids = first_second_ids(get_all_epochs(ifgs))
+    # extract all params except intercept terms
     coefs = [orbparams[i:i+ncoef] for i in range(0, len(set(ids)) * ncoef, ncoef)]
 
     # create full res DM to expand determined coefficients into full res
@@ -358,11 +357,11 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
     if preread_ifgs:
         temp_ifg = Ifg(ifg_paths[0])  # ifgs here are paths
         temp_ifg.open()
-        dm = get_design_matrix(temp_ifg, degree, offset=False, scale=100)
+        dm = get_design_matrix(temp_ifg, degree, intercept=False, scale=100)
         temp_ifg.close()
     else:
         ifg = ifgs[0]
-        dm = get_design_matrix(ifg, degree, offset=False, scale=100)
+        dm = get_design_matrix(ifg, degree, intercept=False, scale=100)
 
     for i in ifg_paths:
         # open if not Ifg instance
@@ -399,9 +398,10 @@ def _remove_network_orb_error(coefs, dm, ifg, ids, offset, params):
     saved_orb_err_path = MultiplePaths.orb_error_path(ifg.data_path, params)
     orb = dm.dot(coefs[ids[ifg.second]] - coefs[ids[ifg.first]])
     orb = orb.reshape(ifg.shape)
-    # offset estimation
+    # Estimate the offset of the interferogram as the median of ifg minus model
+    # Only needed if reference phase correction has already been applied?
     if offset:
-        # bring all ifgs to same base level
+        # brings all ifgs to same reference level
         orb -= nanmedian(np.ravel(ifg.phase_data - orb))
     # subtract orbital error from the ifg
     ifg.phase_data -= orb
@@ -440,13 +440,13 @@ def __degrees_as_string(degree):
 
 
 # TODO: subtract reference pixel coordinate from x and y
-def get_design_matrix(ifg, degree, offset, scale: Optional[float] = 1.0):
+def get_design_matrix(ifg, degree, intercept: Optional[bool] = True, scale: Optional[float] = 1.0):
     """
     Returns orbital error design matrix with columns for model parameters.
 
     :param Ifg class instance ifg: interferogram to get design matrix for
     :param str degree: model to fit (PLANAR / QUADRATIC / PART_CUBIC)
-    :param bool offset: True to include offset column, otherwise False.
+    :param bool intercept: whether to include column for the intercept term.
     :param float scale: Scale factor for design matrix to improve inversion robustness
 
     :return: dm: design matrix
@@ -468,7 +468,7 @@ def get_design_matrix(ifg, degree, offset, scale: Optional[float] = 1.0):
     y = yg.reshape(ifg.num_cells) * ysize
 
     # TODO: performance test this vs np.concatenate (n by 1 cols)??
-    dm = empty((ifg.num_cells, _get_num_params(degree, offset)), dtype=float32)
+    dm = empty((ifg.num_cells, _get_num_params(degree, intercept)), dtype=float32)
 
     # apply positional parameter values, multiply pixel coordinate by cell size
     # to get distance (a coord by itself doesn't tell us distance from origin)
@@ -488,8 +488,8 @@ def get_design_matrix(ifg, degree, offset, scale: Optional[float] = 1.0):
         dm[:, 3] = x * y
         dm[:, 4] = x
         dm[:, 5] = y
-    if offset:
-        dm[:, -1] = np.ones(ifg.num_cells)
+    if intercept:
+        dm[:, -1] = np.ones(ifg.num_cells) # estimate the intercept term
 
     # report condition number of the design matrix - L2-norm computed using SVD
     log.debug(f'The condition number of the design matrix is {cond(dm)}')
@@ -497,7 +497,7 @@ def get_design_matrix(ifg, degree, offset, scale: Optional[float] = 1.0):
     return dm
 
 
-def get_network_design_matrix(ifgs, degree, offset):
+def get_network_design_matrix(ifgs, degree, intercept=True):
     # pylint: disable=too-many-locals
     """
     Returns larger-format design matrix for network error correction. The
@@ -505,7 +505,7 @@ def get_network_design_matrix(ifgs, degree, offset):
 
     :param list ifgs: List of Ifg class objects
     :param str degree: model to fit (PLANAR / QUADRATIC / PART_CUBIC)
-    :param bool offset: True to include offset cols, otherwise False.
+    :param bool intercept: whether to include columns for intercept estimation.
 
     :return: netdm: network design matrix
     :rtype: ndarray
@@ -522,20 +522,20 @@ def get_network_design_matrix(ifgs, degree, offset):
     # init sparse network design matrix
     nepochs = len(set(get_all_epochs(ifgs)))
 
-    # no offsets: they are made separately below
+    # no intercepts here; they are included separately below
     ncoef = _get_num_params(degree)
     shape = [ifgs[0].num_cells * nifgs, ncoef * nepochs]
 
-    if offset:
-        shape[1] += nifgs  # add extra block for offset cols
+    if intercept:
+        shape[1] += nifgs  # add extra block for intercept cols
 
     netdm = zeros(shape, dtype=float32)
 
     # calc location for individual design matrices
     dates = [ifg.first for ifg in ifgs] + [ifg.second for ifg in ifgs]
     ids = first_second_ids(dates)
-    offset_col = nepochs * ncoef  # base offset for the offset cols
-    tmpdm = get_design_matrix(ifgs[0], degree, offset=False, scale=100)
+    icpt_col = nepochs * ncoef  # base offset for the intercept cols
+    tmpdm = get_design_matrix(ifgs[0], degree, intercept=False, scale=100)
 
     # iteratively build up sparse matrix
     for i, ifg in enumerate(ifgs):
@@ -545,9 +545,9 @@ def get_network_design_matrix(ifgs, degree, offset):
         netdm[rs:rs + ifg.num_cells, m:m + ncoef] = -tmpdm
         netdm[rs:rs + ifg.num_cells, s:s + ncoef] = tmpdm
 
-        # offsets are diagonal cols across the extra array block created above
-        if offset:
-            netdm[rs:rs + ifg.num_cells, offset_col + i] = 1  # init offset cols
+        # intercepts are diagonals across the extra array block created above
+        if intercept:
+            netdm[rs:rs + ifg.num_cells, icpt_col + i] = 1  # init intercept cols
 
     return netdm
 

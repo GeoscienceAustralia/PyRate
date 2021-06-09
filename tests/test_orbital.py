@@ -87,13 +87,13 @@ class TestSingleDesignMatrixTests:
     # tests for planar model
 
     def test_create_planar_dm(self):
-        act = get_design_matrix(self.m, PLANAR, offset=False, scale=100)
+        act = get_design_matrix(self.m, PLANAR, intercept=False, scale=100)
         assert act.shape == (self.m.num_cells, 2)
         exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, offset=False)
         assert_array_equal(act, exp)
 
     def test_create_planar_dm_offsets(self):
-        act = get_design_matrix(self.m, PLANAR, offset=True, scale=100)
+        act = get_design_matrix(self.m, PLANAR, intercept=True, scale=100)
         assert act.shape == (self.m.num_cells, 3)
         exp = unittest_dm(self.m, INDEPENDENT_METHOD, PLANAR, offset=True)
         assert_array_almost_equal(act, exp)
@@ -101,13 +101,13 @@ class TestSingleDesignMatrixTests:
     # tests for quadratic model
 
     def test_create_quadratic_dm(self):
-        act = get_design_matrix(self.m, QUADRATIC, offset=False, scale=100)
+        act = get_design_matrix(self.m, QUADRATIC, intercept=False, scale=100)
         assert act.shape == (self.m.num_cells, 5)
         exp = unittest_dm(self.m, INDEPENDENT_METHOD, QUADRATIC, offset=False)
         assert_array_equal(act, exp)
 
     def test_create_quadratic_dm_offsets(self):
-        act = get_design_matrix(self.m, QUADRATIC, offset=True, scale=100)
+        act = get_design_matrix(self.m, QUADRATIC, intercept=True, scale=100)
         assert act.shape == (self.m.num_cells, 6)
         exp = unittest_dm(self.m, INDEPENDENT_METHOD, QUADRATIC, offset=True)
         assert_array_equal(act, exp)
@@ -115,13 +115,13 @@ class TestSingleDesignMatrixTests:
     # tests for partial cubic model
 
     def test_create_partcubic_dm(self):
-        act = get_design_matrix(self.m, PART_CUBIC, offset=False, scale=100)
+        act = get_design_matrix(self.m, PART_CUBIC, intercept=False, scale=100)
         assert act.shape == (self.m.num_cells, 6)
         exp = unittest_dm(self.m, INDEPENDENT_METHOD, PART_CUBIC, offset=False)
         assert_array_equal(act, exp)
 
     def test_create_partcubic_dm_offsets(self):
-        act = get_design_matrix(self.m, PART_CUBIC, offset=True, scale=100)
+        act = get_design_matrix(self.m, PART_CUBIC, intercept=True, scale=100)
         assert act.shape == (self.m.num_cells, 7)
         exp = unittest_dm(self.m, INDEPENDENT_METHOD, PART_CUBIC, offset=True)
         assert_array_equal(act, exp)
@@ -172,7 +172,7 @@ class TestIndependentCorrection:
 
     def alt_orbital_correction(self, ifg, deg, offset, scale):
         data = ifg.phase_data.reshape(ifg.num_cells)
-        dm = get_design_matrix(ifg, deg, offset, scale=scale)[~isnan(data)]
+        dm = get_design_matrix(ifg, deg, intercept=True, scale=scale)[~isnan(data)]
         fd = data[~isnan(data)].reshape((dm.shape[0], 1))
 
         dmt = dm.T
@@ -182,7 +182,7 @@ class TestIndependentCorrection:
         # FIXME: precision
         assert_array_almost_equal(orbparams, alt_params, decimal=1)
 
-        dm2 = get_design_matrix(ifg, deg, offset, scale=scale)
+        dm2 = get_design_matrix(ifg, deg, intercept=True, scale=scale)
         fullorb = np.reshape(np.dot(dm2, orbparams), ifg.phase_data.shape)
         if offset:
             offset_removal = nanmedian(np.ravel(ifg.phase_data - fullorb))
@@ -320,7 +320,7 @@ class TestNetworkDesignMatrixTests:
     def test_planar_network_dm(self):
         ncoef = 2
         offset = False
-        act = get_network_design_matrix(self.ifgs, PLANAR, offset)
+        act = get_network_design_matrix(self.ifgs, PLANAR, intercept=offset)
         assert act.shape == (self.ncells * self.nifgs, ncoef * self.nepochs)
         assert act.ptp() != 0
         self.check_equality(ncoef, act, self.ifgs, offset)
@@ -328,7 +328,7 @@ class TestNetworkDesignMatrixTests:
     def test_planar_network_dm_offset(self):
         ncoef = 2 # NB: doesn't include offset col
         offset = True
-        act = get_network_design_matrix(self.ifgs, PLANAR, offset)
+        act = get_network_design_matrix(self.ifgs, PLANAR, intercept=offset)
         assert act.shape[0] == self.ncells * self.nifgs
         assert act.shape[1] == (self.nepochs * ncoef) + self.nifgs
         assert act.ptp() != 0
@@ -337,7 +337,7 @@ class TestNetworkDesignMatrixTests:
     def test_quadratic_network_dm(self):
         ncoef = 5
         offset = False
-        act = get_network_design_matrix(self.ifgs, QUADRATIC, offset)
+        act = get_network_design_matrix(self.ifgs, QUADRATIC, intercept=offset)
         assert act.shape == (self.ncells * self.nifgs, ncoef * self.nepochs)
         assert act.ptp() != 0
         self.check_equality(ncoef, act, self.ifgs, offset)
@@ -345,7 +345,7 @@ class TestNetworkDesignMatrixTests:
     def test_quadratic_network_dm_offset(self):
         ncoef = 5
         offset = True
-        act = get_network_design_matrix(self.ifgs, QUADRATIC, offset)
+        act = get_network_design_matrix(self.ifgs, QUADRATIC, intercept=offset)
         assert act.shape[0] == self.ncells * self.nifgs
         assert act.shape[1] == (self.nepochs * ncoef) + self.nifgs
         assert act.ptp() != 0
@@ -354,7 +354,7 @@ class TestNetworkDesignMatrixTests:
     def test_partcubic_network_dm(self):
         ncoef = 6
         offset = False
-        act = get_network_design_matrix(self.ifgs, PART_CUBIC, offset)
+        act = get_network_design_matrix(self.ifgs, PART_CUBIC, intercept=offset)
         assert act.shape == (self.ncells * self.nifgs, ncoef * self.nepochs)
         assert act.ptp() != 0
         self.check_equality(ncoef, act, self.ifgs, offset)
@@ -362,7 +362,7 @@ class TestNetworkDesignMatrixTests:
     def test_partcubic_network_dm_offset(self):
         ncoef = 6
         offset = True
-        act = get_network_design_matrix(self.ifgs, PART_CUBIC, offset)
+        act = get_network_design_matrix(self.ifgs, PART_CUBIC, intercept=offset)
         assert act.shape[0] == self.ncells * self.nifgs
         assert act.shape[1] == (self.nepochs * ncoef) + self.nifgs
         assert act.ptp() != 0
@@ -426,7 +426,7 @@ def network_correction(ifgs, deg, off, ml_ifgs=None, tol=1e-6):
 
     # calculate forward correction
     sdm = unittest_dm(ifgs[0], NETWORK_METHOD, deg)
-    ncoef = _get_num_params(deg, offset=False)  # NB: ignore offsets for network method
+    ncoef = _get_num_params(deg, intercept=False)  # NB: ignore offsets for network method
     assert sdm.shape == (ncells, ncoef)
     orbs = _expand_corrections(ifgs, sdm, params, ncoef, off)
 
@@ -1046,11 +1046,11 @@ def test_orbital_error_is_removed_completely(orbfit_degrees):
             is_open = True
 
     ifg = TestIfg()
-    fullres_dm = get_design_matrix(ifg, orbfit_degrees, offset=True)
+    fullres_dm = get_design_matrix(ifg, orbfit_degrees, intercept=True)
     mlooked_dm = fullres_dm
     vphase = np.reshape(ifg.phase_data, ifg.num_cells)
-    orb_corr = __orb_correction(fullres_dm, mlooked_dm, offset=True,
-                                fullres_phase=ifg.phase_data, mlooked_phase=vphase)
+    orb_corr = __orb_correction(fullres_dm, mlooked_dm, fullres_phase=ifg.phase_data,
+                                mlooked_phase=vphase, offset=True)
     assert_array_almost_equal(ifg.phase_data, orb_corr)
 
 
