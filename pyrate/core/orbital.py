@@ -271,7 +271,7 @@ def __orb_correction(original_dm, mlooked_dm, offset, original_phase, mlooked_ph
     B = mlooked_dm[~isnan(mlooked_phase)]
     data = mlooked_phase[~isnan(mlooked_phase)]
     orbparams = dot(pinv(B, 1e-6), data)
-    fullorb = np.reshape(np.dot(original_dm, orbparams), original_phase.shape)
+    fullorb = reshape(dot(original_dm, orbparams), original_phase.shape)
 
     if offset:
         offset_removal = nanmedian(np.ravel(original_phase - fullorb))

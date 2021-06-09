@@ -21,7 +21,7 @@ interferogram geotiff files.
 import os
 from subprocess import check_call
 import warnings
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from pathlib import Path
 from joblib import Parallel, delayed
 import numpy as np
@@ -287,7 +287,7 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, fl
         Path(m_path.sampled_path).chmod(0o444)  # readonly output
 
 
-def find_header(path: MultiplePaths, params: dict):
+def find_header(path: MultiplePaths, params: dict) -> Dict[str: str]:
     processor = params[C.PROCESSOR]  # roipac, gamma or geotif
     tif_path = path.converted_path
     if (processor == GAMMA) or (processor == GEOTIF):
