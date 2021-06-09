@@ -37,9 +37,9 @@ from tests.common import small5_mock_ifgs, MockIfg
 from pyrate.core.algorithm import first_second_ids
 from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
     QUADRATIC, PART_CUBIC
-from pyrate.core.orbital import OrbitalError
+from pyrate.core.orbital import OrbitalError, __orb_correction, __orb_inversion
 from pyrate.core.orbital import get_design_matrix, get_network_design_matrix, orb_fit_calc_wrapper
-from pyrate.core.orbital import _get_num_params, remove_orbital_error, network_orbital_correction, __orb_correction
+from pyrate.core.orbital import _get_num_params, remove_orbital_error, network_orbital_correction
 from pyrate.core.shared import Ifg, mkdir_p
 from pyrate.core.shared import nanmedian
 from pyrate.core import roipac
@@ -1046,9 +1046,19 @@ def test_orbital_error_is_removed_completely(orbfit_degrees):
             is_open = True
 
     ifg = TestIfg()
-    original_dm = get_design_matrix(ifg, orbfit_degrees, offset=True)
-    mlooked_dm = original_dm
+    fullres_dm = get_design_matrix(ifg, orbfit_degrees, offset=True)
+    mlooked_dm = fullres_dm
     vphase = np.reshape(ifg.phase_data, ifg.num_cells)
-    orb_corr = __orb_correction(original_dm, mlooked_dm, offset=True,
-                                original_phase=ifg.phase_data, mlooked_phase=vphase)
+    orb_corr = __orb_correction(fullres_dm, mlooked_dm, offset=True,
+                                fullres_phase=ifg.phase_data, mlooked_phase=vphase)
     assert_array_almost_equal(ifg.phase_data, orb_corr)
+
+
+def test_orbital_inversion():
+    """Small unit to test the application of numpy pseudoinverse"""
+    A = np.array([[1, 1, 0],[1, 0, 1],[0, 1, 1]])
+    d = np.array([2, 4, 3])
+    exp = np.array([1.5, 0.5, 2.5])
+    res = __orb_inversion(A, d)
+    assert_array_almost_equal(res, exp, decimal=9)
+

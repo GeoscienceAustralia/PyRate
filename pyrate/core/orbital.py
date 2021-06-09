@@ -224,19 +224,21 @@ def independent_orbital_correction(ifg_path, params):
     scale = params[C.ORBFIT_SCALE]
 
     ifg0 = shared.Ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
-    design_matrix = get_design_matrix(ifg0, degree, offset, scale=scale)
+
+    # get full-resolution design matrix
+    fullres_dm = get_design_matrix(ifg0, degree, offset, scale=scale)
 
     ifg = shared.dem_or_ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
     ifg_path = ifg.data_path
 
     multi_path = MultiplePaths(ifg_path, params)
-    original_ifg = ifg  # keep a backup
+    fullres_ifg = ifg  # keep a backup
     orb_on_disc = MultiplePaths.orb_error_path(ifg_path, params)
     if not ifg.is_open:
         ifg.open()
 
     shared.nan_and_mm_convert(ifg, params)
-    original_phase = original_ifg.phase_data
+    fullres_phase = fullres_ifg.phase_data
 
     if orb_on_disc.exists():
         log.info(f'Reusing already computed orbital fit correction: {orb_on_disc}')
@@ -246,39 +248,57 @@ def independent_orbital_correction(ifg_path, params):
         if (xlooks > 1) or (ylooks > 1):
             exts, _, _ = __extents_from_params(params)
             mlooked = _create_mlooked_dataset(multi_path, ifg.data_path, exts, params)
-            ifg = Ifg(mlooked)
+            ifg = Ifg(mlooked) # multi-looked Ifg object
 
-        # vectorise, keeping NODATA
+        # vectorise phase data, keeping NODATA
         vphase = reshape(ifg.phase_data, ifg.num_cells)
-        dm = get_design_matrix(ifg, degree, offset, scale=scale)
 
-        orbital_correction = __orb_correction(design_matrix, dm, offset, original_phase, vphase)
-        # dump to disc
+        # compute design matrix for multi-looked data
+        mlooked_dm = get_design_matrix(ifg, degree, offset, scale=scale)
+
+        # invert to obtain the correction image (forward model) at full-res
+        orbital_correction = __orb_correction(fullres_dm, mlooked_dm, offset, fullres_phase, vphase)
+
+        # save correction to disc
         if not orb_on_disc.parent.exists():
             shared.mkdir_p(orb_on_disc.parent)
 
         np.save(file=orb_on_disc, arr=orbital_correction)
 
-    # subtract orbital error from the ifg
-    original_ifg.phase_data -= orbital_correction
+    # subtract orbital correction from the full-res ifg
+    fullres_ifg.phase_data -= orbital_correction
+
     # set orbfit meta tag and save phase to file
-    _save_orbital_error_corrected_phase(original_ifg, params)
-    original_ifg.close()
+    _save_orbital_error_corrected_phase(fullres_ifg, params)
+    fullres_ifg.close()
 
 
-def __orb_correction(original_dm, mlooked_dm, offset, original_phase, mlooked_phase):
-    # filter NaNs out before inverting to get the model
-    B = mlooked_dm[~isnan(mlooked_phase)]
-    data = mlooked_phase[~isnan(mlooked_phase)]
-    orbparams = dot(pinv(B, 1e-6), data)
-    fullorb = reshape(dot(original_dm, orbparams), original_phase.shape)
+def __orb_correction(fullres_dm, mlooked_dm, offset, fullres_phase, mlooked_phase):
+    """
+    Function to perform the inversion to obtain orbital model parameters
+    and return the orbital correction as the full resolution forward model.
+    """
+    # perform inversion using pseudoinverse of DM
+    orbparams = __orb_inversion(mlooked_dm, mlooked_phase)
+
+    # compute forward model at full resolution
+    fullorb = reshape(dot(fullres_dm, orbparams), fullres_phase.shape)
 
     if offset:
-        offset_removal = nanmedian(np.ravel(original_phase - fullorb))
+        offset_removal = nanmedian(np.ravel(fullres_phase - fullorb))
     else:
         offset_removal = 0
     orbital_correction = fullorb - offset_removal
     return orbital_correction
+
+
+def __orb_inversion(design_matrix, data):
+    """Inversion using pseudoinverse of design matrix"""
+    # remove NaN elements before inverting to get the model
+    B = design_matrix[~isnan(data)]
+    d = data[~isnan(data)]
+
+    return dot(pinv(B, 1e-6), d)
 
 
 def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None):
@@ -322,9 +342,7 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
 
     B = get_network_design_matrix(src_ifgs, degree, offset)
 
-    # filter NaNs out before getting model
-    B = B[~isnan(vphase)]
-    orbparams = dot(pinv(B, 1e-6), vphase[~isnan(vphase)])
+    orbparams = __orb_inversion(B, vphase)
 
     ncoef = _get_num_params(degree)
     if preread_ifgs:
