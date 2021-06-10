@@ -80,7 +80,7 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
     edge_to_indexed_ifgs = __create_ifg_edge_dict(ifg_files, params)
     ifgs = [v.IfgPhase for v in edge_to_indexed_ifgs.values()]
     n_ifgs = len(ifgs)
-    closure_dict = {}
+    closure = None
 
     if params[C.PARALLEL]:
         # rets = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
@@ -91,19 +91,37 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
         #     closure_dict[k], ifgs_breach_count_dict[k] = r
         # TODO: enable multiprocessing - needs pickle error fix
         ifgs_breach_count = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)), dtype=np.uint16)
+        closure = np.zeros((len(loops), *ifgs[0].phase_data.shape), dtype=np.float32)
         for k, weighted_loop in enumerate(loops):
-            closure_dict[k], ifgs_breach_count_l = __compute_ifgs_breach_count(weighted_loop, edge_to_indexed_ifgs,
+            closure[k,:,:], ifgs_breach_count_l = __compute_ifgs_breach_count(weighted_loop, edge_to_indexed_ifgs,
                                                                                params)
             ifgs_breach_count += ifgs_breach_count_l
     else:
-        loops_with_index = list(enumerate(loops))
-        process_loops = mpiops.array_split(loops_with_index)
+        process_loops = mpiops.array_split(loops)
         ifgs_breach_count_process = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)), dtype=np.uint16)
-        for k, weighted_loop in process_loops:
-            closure_dict[k], ifgs_breach_count_l = __compute_ifgs_breach_count(weighted_loop, edge_to_indexed_ifgs,
+        closure_process = np.zeros((len(loops), *ifgs[0].phase_data.shape), dtype=np.float32)
+        for k, weighted_loop in enumerate(process_loops):
+            closure_process[k,:,:], ifgs_breach_count_l = __compute_ifgs_breach_count(weighted_loop, edge_to_indexed_ifgs,
                                                                                params)
             ifgs_breach_count_process += ifgs_breach_count_l  # process
-        closure_dict = join_dicts(mpiops.comm.gather(closure_dict, root=0))
+        if mpiops.rank == 0:
+            closure = np.zeros((len(loops), *ifgs[0].phase_data.shape), dtype=np.float32)
+        if mpiops.MPI_INSTALLED:
+            #this Gatherv setup depends on the behaviour of np.array_split
+            #and the default row-major order of numpy arrays.
+            counts = ([len(loops) // mpiops.size + 1] * (len(loops) % mpiops.size) +
+                      [len(loops) // mpiops.size] * (mpiops.size - (len(loops) % mpiops.size)))
+            displs = [0]
+            for i in range(1,mpiops.size):
+                displs.append(displs[-1] + counts[i])
+            ifgres = np.prod(ifgs[0].phase_data.shape)
+            counts = [c * ifgres for c in counts]
+            displs = [d * ifgres for d in displs]
+            mpiops.comm.Gatherv([closure_process, len(process_loops), mpiops.MPI.FLOAT],
+                                [closure, counts, displs, mpiops.MPI.FLOAT], root = 0)
+            #TODO use Gatherv instead of allocating extra zeros and using Reduce
+        else:
+            closure = closure_process #if MPI isn't installed there's only one process so this is fine
 
         total_gb = mpiops.comm.allreduce(ifgs_breach_count_process.nbytes / 1e9, op=mpiops.MPI.SUM)
         log.info("Memory usage due to ifgs_breach_count_process {:2.4f}GB of data".format(total_gb))
@@ -121,10 +139,10 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
 
         log.debug(f"successfully summed phase closure breach array")
 
-    closure, num_occurrences_each_ifg = None, None
+    num_occurrences_each_ifg = None
     if mpiops.rank == 0:
+        closure = np.moveaxis(closure, 0, -1)
         num_occurrences_each_ifg = _find_num_occurrences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs)
-        closure = np.dstack([v for k, v in sorted(closure_dict.items(), key=lambda x: x[0])])
 
     return closure, ifgs_breach_count, num_occurrences_each_ifg
 
