@@ -113,7 +113,7 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
                       [len(loops) // mpiops.size] * (mpiops.size - (len(loops) % mpiops.size)))
             displs = [0]
             for i in range(1,mpiops.size):
-                displs.append(displs[-1] + counts[i])
+                displs.append(displs[-1] + counts[i-1])
             ifgres = np.prod(ifgs[0].phase_data.shape)
             counts = [c * ifgres for c in counts]
             displs = [d * ifgres for d in displs]
