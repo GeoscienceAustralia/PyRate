@@ -1035,10 +1035,12 @@ class TestIfg:
         self.ncols = 100
         self.num_cells = self.nrows * self.ncols
         self.is_open = False
-        self._phase_data = None
         self.orbfit_degrees = orbfit_degrees
         self.first = None
         self.second = None
+        self._phase_data = None
+        self._phase_data_first = None
+        self._phase_data_second = None
 
     @property
     def phase_data(self):
@@ -1050,14 +1052,24 @@ class TestIfg:
         return self._phase_data
 
     def open(self):
-        # define some random constants different for each ifg
         x, y = np.meshgrid(np.arange(self.nrows) * self.x_size, np.arange(self.ncols) * self.y_size)
+
+        # define some random constants different for each date
         x_slope, y_slope, x2_slope, y2_slope, x_y_slope, x_y2_slope, const = np.ravel(np.random.rand(1, 7))
-        self._phase_data = x_slope * x + y_slope * y + const  # planar
+        x_slope_, y_slope_, x2_slope_, y2_slope_, x_y_slope_, x_y2_slope_, const_ = np.ravel(np.random.rand(1, 7))
+
+        self._phase_data_first = x_slope * x + y_slope * y + const  # planar
+        self._phase_data_second = x_slope_ * x + y_slope_ * y + const  # planar
         if self.orbfit_degrees == QUADRATIC:
-            self._phase_data += x2_slope * x ** 2 + y2_slope * y ** 2 + x_y_slope * x * y
+            self._phase_data_first += x2_slope * x ** 2 + y2_slope * y ** 2 + x_y_slope * x * y
+            self._phase_data_second += x2_slope_ * x ** 2 + y2_slope_ * y ** 2 + x_y_slope_ * x * y
         elif self.orbfit_degrees == PART_CUBIC:
             self._phase_data += x2_slope * x ** 2 + y2_slope * y ** 2 + x_y_slope * x * y + x_y2_slope * x * (y ** 2)
+            self._phase_data += x2_slope_ * x ** 2 + y2_slope_ * y ** 2 + x_y_slope_ * x * y + \
+                x_y2_slope_ * x * (y ** 2)
+
+        # phase data for this ifg
+        self._phase_data = self._phase_data_first - self._phase_data_second
         self.is_open = True
 
 
