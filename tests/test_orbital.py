@@ -199,6 +199,7 @@ class TestIndependentCorrection:
         params[C.ORBITAL_FIT_METHOD] = method
         params[C.ORBITAL_FIT_DEGREE] = degree
         params[C.ORBFIT_OFFSET] = offset
+        params[C.ORBFIT_INTERCEPT] = 1
         params[C.ORBFIT_SCALE] = 100
         params[C.PARALLEL] = False
         params[C.NO_DATA_VALUE] = 0
@@ -402,7 +403,7 @@ class TestNetworkDesignMatrixTests:
 
 
 # components for network correction testing
-def network_correction(ifgs, deg, off, ml_ifgs=None, tol=1e-6):
+def network_correction(ifgs, deg, intercept, ml_ifgs=None, tol=1e-6):
     """
     Compares results of orbital_correction() to alternate implementation.
     deg - PLANAR, QUADRATIC or PART_CUBIC
@@ -413,11 +414,11 @@ def network_correction(ifgs, deg, off, ml_ifgs=None, tol=1e-6):
     if ml_ifgs:
         ml_nc = ml_ifgs[0].num_cells
         ml_data = concatenate([i.phase_data.reshape(ml_nc) for i in ml_ifgs])
-        dm = get_network_design_matrix(ml_ifgs, deg, off)[~isnan(ml_data)]
+        dm = get_network_design_matrix(ml_ifgs, deg, intercept)[~isnan(ml_data)]
         fd = ml_data[~isnan(ml_data)].reshape((dm.shape[0], 1))
     else:
         data = concatenate([i.phase_data.reshape(ncells) for i in ifgs])
-        dm = get_network_design_matrix(ifgs, deg, off)[~isnan(data)]
+        dm = get_network_design_matrix(ifgs, deg, intercept)[~isnan(data)]
         fd = data[~isnan(data)].reshape((dm.shape[0], 1))
 
     params = pinv(dm, tol).dot(fd)
@@ -427,13 +428,13 @@ def network_correction(ifgs, deg, off, ml_ifgs=None, tol=1e-6):
     sdm = unittest_dm(ifgs[0], NETWORK_METHOD, deg)
     ncoef = _get_num_params(deg, intercept=False)  # NB: ignore offsets for network method
     assert sdm.shape == (ncells, ncoef)
-    orbs = _expand_corrections(ifgs, sdm, params, ncoef, off)
+    orbs = _expand_corrections(ifgs, sdm, params, ncoef, intercept)
 
     # tricky: get expected result before orbital_correction() modifies ifg phase
     return [i.phase_data - orb for i, orb in zip(ifgs, orbs)]
 
 
-def _expand_corrections(ifgs, dm, params, ncoef, offsets):
+def _expand_corrections(ifgs, dm, params, ncoef, offset):
     """
     Convenience func returns model converted to data points.
     dm: design matrix (do not filter/remove nan cells)
@@ -454,7 +455,7 @@ def _expand_corrections(ifgs, dm, params, ncoef, offsets):
         # corresponds to "fullorb = B*parm + offset" in orbfwd.m
         cor = dm.dot(par).reshape(ifg.phase_data.shape)
 
-        if offsets:
+        if offset:
             off = np.ravel(ifg.phase_data - cor)
             # bring all ifgs to same base level
             cor -= nanmedian(off)
@@ -515,37 +516,38 @@ class TestNetworkCorrectionTests:
     # setUp() reset phase data between tests.
 
     def test_network_correction_planar(self):
-        deg, offset = PLANAR, False
-        exp = network_correction(self.ifgs, deg, offset)
-        self.verify_corrections(self.ifgs, exp, deg, offset)
+        deg, intercept = PLANAR, False
+        exp = network_correction(self.ifgs, deg, intercept)
+        self.verify_corrections(self.ifgs, exp, deg, intercept)
 
     def test_network_correction_planar_offset(self):
-        deg, offset = PLANAR, True
-        exp = network_correction(self.ifgs, deg, offset)
-        self.verify_corrections(self.ifgs, exp, deg, offset)
+        deg, intercept = PLANAR, True
+        exp = network_correction(self.ifgs, deg, intercept)
+        self.verify_corrections(self.ifgs, exp, deg, intercept)
 
     def test_network_correction_quadratic(self):
-        deg, offset = QUADRATIC, False
-        exp = network_correction(self.ifgs, deg, offset)
-        self.verify_corrections(self.ifgs, exp, deg, offset)
+        deg, intercept = QUADRATIC, False
+        offset = intercept
+        exp = network_correction(self.ifgs, deg, intercept)
+        self.verify_corrections(self.ifgs, exp, deg, intercept)
 
     def test_network_correction_quadratic_offset(self):
-        deg, offset = QUADRATIC, True
-        exp = network_correction(self.ifgs, deg, offset)
-        self.verify_corrections(self.ifgs, exp, deg, offset)
+        deg, intercept = QUADRATIC, True
+        exp = network_correction(self.ifgs, deg, intercept)
+        self.verify_corrections(self.ifgs, exp, deg, intercept)
 
     def test_network_correction_partcubic(self):
-        deg, offset = PART_CUBIC, False
-        exp = network_correction(self.ifgs, deg, offset)
-        self.verify_corrections(self.ifgs, exp, deg, offset)
+        deg, intercept = PART_CUBIC, False
+        exp = network_correction(self.ifgs, deg, intercept)
+        self.verify_corrections(self.ifgs, exp, deg, intercept)
 
     def test_network_correction_partcubic_offset(self):
-        deg, offset = PART_CUBIC, True
-        exp = network_correction(self.ifgs, deg, offset)
-        self.verify_corrections(self.ifgs, exp, deg, offset)
+        deg, intercept = PART_CUBIC, True
+        exp = network_correction(self.ifgs, deg, intercept)
+        self.verify_corrections(self.ifgs, exp, deg, intercept)
 
     @staticmethod
-    def verify_corrections(ifgs, exp, deg, offset):
+    def verify_corrections(ifgs, exp, deg, intercept):
         # checks orbital correction against unit test version
         params = dict()
         params[C.ORBITAL_FIT_METHOD] = NETWORK_METHOD
@@ -554,7 +556,8 @@ class TestNetworkCorrectionTests:
         params[C.ORBITAL_FIT_LOOKS_Y] = 1
         params[C.PARALLEL] = False
         params[C.OUT_DIR] = tempfile.mkdtemp()
-        params[C.ORBFIT_OFFSET] = offset
+        params[C.ORBFIT_OFFSET] = intercept
+        params[C.ORBFIT_INTERCEPT] = intercept
         params[C.PREREAD_IFGS] = None
         mkdir_p(Path(params[C.OUT_DIR]).joinpath(C.ORB_ERROR_DIR))
         network_orbital_correction(ifgs, params)
@@ -586,36 +589,36 @@ class TestNetworkCorrectionTestsMultilooking:
     # setUp() refresh phase data between tests.
 
     def test_mlooked_network_correction_planar(self):
-        deg, offset = PLANAR, False
-        exp = network_correction(self.ifgs, deg, offset, self.ml_ifgs)
-        self.verify_corrections(self.ifgs, exp, deg, offset)
+        deg, intercept = PLANAR, False
+        exp = network_correction(self.ifgs, deg, intercept, self.ml_ifgs)
+        self.verify_corrections(self.ifgs, exp, deg, intercept)
 
     def test_mlooked_network_correction_planar_offset(self):
-        deg, offset = PLANAR, True
-        exp = network_correction(self.ifgs, deg, offset, self.ml_ifgs)
-        self.verify_corrections(self.ifgs, exp, deg, offset)
+        deg, intercept = PLANAR, True
+        exp = network_correction(self.ifgs, deg, intercept, self.ml_ifgs)
+        self.verify_corrections(self.ifgs, exp, deg, intercept)
 
     def test_mlooked_network_correction_quadratic(self):
-        deg, offset = QUADRATIC, False
-        exp = network_correction(self.ifgs, deg, offset, self.ml_ifgs)
-        self.verify_corrections(self.ifgs, exp, deg, offset)
+        deg, intercept = QUADRATIC, False
+        exp = network_correction(self.ifgs, deg, intercept, self.ml_ifgs)
+        self.verify_corrections(self.ifgs, exp, deg, intercept)
 
     def test_mlooked_network_correction_quadratic_offset(self):
-        deg, offset = QUADRATIC, True
-        exp = network_correction(self.ifgs, deg, offset, self.ml_ifgs)
-        self.verify_corrections(self.ifgs, exp, deg, offset)
+        deg, intercept = QUADRATIC, True
+        exp = network_correction(self.ifgs, deg, intercept, self.ml_ifgs)
+        self.verify_corrections(self.ifgs, exp, deg, intercept)
 
     def test_mlooked_network_correction_partcubic(self):
-        deg, offset = PART_CUBIC, False
-        exp = network_correction(self.ifgs, deg, offset, self.ml_ifgs)
-        self.verify_corrections(self.ifgs, exp, deg, offset)
+        deg, intercept = PART_CUBIC, False
+        exp = network_correction(self.ifgs, deg, intercept, self.ml_ifgs)
+        self.verify_corrections(self.ifgs, exp, deg, intercept)
 
     def test_mlooked_network_correction_partcubic_offset(self):
-        deg, offset = PART_CUBIC, True
-        exp = network_correction(self.ifgs, deg, offset, self.ml_ifgs)
-        self.verify_corrections(self.ifgs, exp, deg, offset)
+        deg, intercept = PART_CUBIC, True
+        exp = network_correction(self.ifgs, deg, intercept, self.ml_ifgs)
+        self.verify_corrections(self.ifgs, exp, deg, intercept)
 
-    def verify_corrections(self, ifgs, exp, deg, offset):
+    def verify_corrections(self, ifgs, exp, deg, intercept):
         # checks orbital correction against unit test version
         params = dict()
         params[C.ORBITAL_FIT_METHOD] = NETWORK_METHOD
@@ -623,7 +626,8 @@ class TestNetworkCorrectionTestsMultilooking:
         params[C.ORBITAL_FIT_LOOKS_X] = 1
         params[C.ORBITAL_FIT_LOOKS_Y] = 1
         params[C.PARALLEL] = False
-        params[C.ORBFIT_OFFSET] = offset
+        params[C.ORBFIT_OFFSET] = intercept
+        params[C.ORBFIT_INTERCEPT] = intercept
         params[C.PREREAD_IFGS] = None
         params[C.OUT_DIR] = tempfile.mkdtemp()
         mkdir_p(Path(params[C.OUT_DIR]).joinpath(C.ORB_ERROR_DIR))
@@ -1026,7 +1030,7 @@ class TestOrbfitIndependentMethodWithMultilooking:
             assert i.shape == (72, 47)  # shape should not change
 
 
-class TestIfg:
+class DummyIfg:
 
     def __init__(self, orbfit_degrees=PLANAR):
         self.x_size = 0.00125  # pixel size - similar to cropA
@@ -1075,7 +1079,7 @@ class TestIfg:
 
 def test_orbital_error_is_removed_completely(orbfit_degrees, ifg=None):
     if ifg is None:
-        ifg = TestIfg()
+        ifg = DummyIfg()
     fullres_dm = get_design_matrix(ifg, orbfit_degrees, intercept=True)
     mlooked_dm = fullres_dm
     vphase = np.reshape(ifg.phase_data, ifg.num_cells)
@@ -1087,7 +1091,7 @@ def test_orbital_error_independent_method_removed_completely_from_all_ifgs(mexic
     ifgs = [Ifg(i.converted_path) for i in mexico_cropa_params[C.INTERFEROGRAM_FILES]]
     for i in ifgs:
         i.open()
-        test_ifg = TestIfg()
+        test_ifg = DummyIfg()
         test_ifg.first = i.first
         test_ifg.second = i.second
         test_orbital_error_is_removed_completely(orbfit_degrees, test_ifg)

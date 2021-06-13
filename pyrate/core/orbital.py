@@ -180,7 +180,7 @@ def _validate_mlooked(mlooked, ifgs):
         raise OrbitalError(msg)
 
 
-def _get_num_params(degree, intercept=None):
+def _get_num_params(degree, intercept: Optional[bool] = False):
     '''
     Returns number of model parameters from string parameter
     '''
@@ -198,7 +198,7 @@ def _get_num_params(degree, intercept=None):
 
     # NB: independent method only, network method handles intercept terms differently
     if intercept:
-        nparams += 1  # eg. y = mx + c
+        nparams += 1  # c in y = mx + c
     return nparams
 
 
@@ -217,6 +217,7 @@ def independent_orbital_correction(ifg_path, params):
     log.debug(f"Orbital correction of {ifg_path}")
     degree = params[C.ORBITAL_FIT_DEGREE]
     offset = params[C.ORBFIT_OFFSET]
+    intercept = params[C.ORBFIT_INTERCEPT]
     xlooks = params[C.ORBITAL_FIT_LOOKS_X]
     ylooks = params[C.ORBITAL_FIT_LOOKS_Y]
     scale = params[C.ORBFIT_SCALE]
@@ -224,7 +225,7 @@ def independent_orbital_correction(ifg_path, params):
     ifg0 = shared.Ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
 
     # get full-resolution design matrix
-    fullres_dm = get_design_matrix(ifg0, degree, intercept=True, scale=scale)
+    fullres_dm = get_design_matrix(ifg0, degree, intercept=intercept, scale=scale)
 
     ifg = shared.dem_or_ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
     ifg_path = ifg.data_path
@@ -252,7 +253,7 @@ def independent_orbital_correction(ifg_path, params):
         vphase = reshape(ifg.phase_data, ifg.num_cells)
 
         # compute design matrix for multi-looked data
-        mlooked_dm = get_design_matrix(ifg, degree, intercept=True, scale=scale)
+        mlooked_dm = get_design_matrix(ifg, degree, intercept=intercept, scale=scale)
 
         # invert to obtain the correction image (forward model) at full-res
         orbital_correction = __orb_correction(fullres_dm, mlooked_dm, fullres_phase, vphase, offset=offset)
@@ -322,6 +323,7 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
     offset = params[C.ORBFIT_OFFSET]
     degree = params[C.ORBITAL_FIT_DEGREE]
     preread_ifgs = params[C.PREREAD_IFGS]
+    intercept = params[C.ORBFIT_INTERCEPT]
     # all orbit corrections available?
     if isinstance(ifg_paths[0], str):
         if __check_and_apply_orberrors_found_on_disc(ifg_paths, params):
@@ -338,7 +340,7 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
     vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
     vphase = squeeze(vphase)
 
-    B = get_network_design_matrix(src_ifgs, degree, intercept=True)
+    B = get_network_design_matrix(src_ifgs, degree, intercept=intercept)
 
     orbparams = __orb_inversion(B, vphase)
 
