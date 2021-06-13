@@ -34,7 +34,7 @@ from scipy.linalg import lstsq
 import pyrate.constants as C
 import pyrate.core.orbital
 from tests.common import small5_mock_ifgs, MockIfg
-from pyrate.core.algorithm import first_second_ids
+from pyrate.core.algorithm import first_second_ids, get_all_epochs
 from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
     QUADRATIC, PART_CUBIC
 from pyrate.core.orbital import OrbitalError, __orb_correction, __orb_inversion
@@ -52,7 +52,7 @@ from tests.common import SML_TEST_LEGACY_ORBITAL_DIR
 from tests.common import SML_TEST_TIF
 from tests.common import small_ifg_file_list
 
-#TODO: Purpose of this variable? Degrees are 1, 2 and 3 respectively
+# TODO: Purpose of this variable? Degrees are 1, 2 and 3 respectively
 DEG_LOOKUP = {
     2: PLANAR,
     5: QUADRATIC,
@@ -125,7 +125,6 @@ class TestSingleDesignMatrixTests:
         assert act.shape == (self.m.num_cells, 7)
         exp = unittest_dm(self.m, INDEPENDENT_METHOD, PART_CUBIC, offset=True)
         assert_array_equal(act, exp)
-
 
     # tests for unittest_dm() assuming network method
 
@@ -326,7 +325,7 @@ class TestNetworkDesignMatrixTests:
         self.check_equality(ncoef, act, self.ifgs, offset)
 
     def test_planar_network_dm_offset(self):
-        ncoef = 2 # NB: doesn't include offset col
+        ncoef = 2  # NB: doesn't include offset col
         offset = True
         act = get_network_design_matrix(self.ifgs, PLANAR, intercept=offset)
         assert act.shape[0] == self.ncells * self.nifgs
@@ -377,29 +376,29 @@ class TestNetworkDesignMatrixTests:
         offset - boolean to include extra parameters for model offsets
         """
         deg = DEG_LOOKUP[ncoef]
-        np = ncoef * self.nepochs # index of 1st offset col
+        np = ncoef * self.nepochs  # index of 1st offset col
 
         for i, ifg in enumerate(ifgs):
             exp = unittest_dm(ifg, NETWORK_METHOD, deg, offset)
             assert exp.shape == (ifg.num_cells, ncoef)
 
-            ib1, ib2 = [x * self.ncells for x in (i, i+1)] # row start/end
-            jbm = ncoef * self.date_ids[ifg.first] # starting col index for first image
-            jbs = ncoef * self.date_ids[ifg.second] # col start for second image
-            assert_array_almost_equal(-exp, dm[ib1:ib2, jbm:jbm+ncoef])
-            assert_array_almost_equal( exp, dm[ib1:ib2, jbs:jbs+ncoef])
+            ib1, ib2 = [x * self.ncells for x in (i, i + 1)]  # row start/end
+            jbm = ncoef * self.date_ids[ifg.first]  # starting col index for first image
+            jbs = ncoef * self.date_ids[ifg.second]  # col start for second image
+            assert_array_almost_equal(-exp, dm[ib1:ib2, jbm:jbm + ncoef])
+            assert_array_almost_equal(exp, dm[ib1:ib2, jbs:jbs + ncoef])
 
             # ensure remaining rows/cols are zero for this ifg NOT inc offsets
-            assert_array_equal(0, dm[ib1:ib2, :jbm]) # all cols leading up to first image
-            assert_array_equal(0, dm[ib1:ib2, jbm + ncoef:jbs]) # cols btwn mas/slv
-            assert_array_equal(0, dm[ib1:ib2, jbs + ncoef:np]) # to end of non offsets
+            assert_array_equal(0, dm[ib1:ib2, :jbm])  # all cols leading up to first image
+            assert_array_equal(0, dm[ib1:ib2, jbm + ncoef:jbs])  # cols btwn mas/slv
+            assert_array_equal(0, dm[ib1:ib2, jbs + ncoef:np])  # to end of non offsets
 
             # check offset cols for 1s and 0s
             if offset is True:
-                ip1 = i + np # offset column index
+                ip1 = i + np  # offset column index
                 assert_array_equal(1, dm[ib1:ib2, ip1])
-                assert_array_equal(0, dm[ib1:ib2, np:ip1]) # cols before offset col
-                assert_array_equal(0, dm[ib1:ib2, ip1 + 1:]) # cols after offset col
+                assert_array_equal(0, dm[ib1:ib2, np:ip1])  # cols before offset col
+                assert_array_equal(0, dm[ib1:ib2, ip1 + 1:])  # cols after offset col
 
 
 # components for network correction testing
@@ -447,8 +446,8 @@ def _expand_corrections(ifgs, dm, params, ncoef, offsets):
 
     corrections = []
     for ifg in ifgs:
-        jbm = date_ids[ifg.first] * ncoef # starting row index for first image
-        jbs = date_ids[ifg.second] * ncoef # row start for second image
+        jbm = date_ids[ifg.first] * ncoef  # starting row index for first image
+        jbs = date_ids[ifg.second] * ncoef  # row start for second image
         par = params[jbs:jbs + ncoef] - params[jbm:jbm + ncoef]
 
         # estimate orbital correction effects
@@ -483,6 +482,7 @@ class TestNetworkCorrectionTests:
         """
         Ensure pinv(DM)*obs gives equal results given constant change to fd
         """
+
         def get_orbital_params():
             """Returns pseudo-inverse of the DM"""
             ncells = self.ifgs[0].num_cells
@@ -497,7 +497,7 @@ class TestNetworkCorrectionTests:
 
         # apply constant change to the observed values (fd)
         for value in [5.2, -23.5]:
-            for i in self.ifgs: # change ifgs in place
+            for i in self.ifgs:  # change ifgs in place
                 i.phase_data += value
                 assert isnan(i.phase_data).any()
 
@@ -579,7 +579,7 @@ class TestNetworkCorrectionTestsMultilooking:
 
         # add common nodata to all ifgs
         for i in cls.ifgs + cls.ml_ifgs:
-            i.phase_data[0,:] = nan
+            i.phase_data[0, :] = nan
 
     # These functions test multilooked data for orbital correction. The options
     # are separated as the ifg.phase_data arrays are modified in place, allowing
@@ -646,15 +646,15 @@ def unittest_dm(ifg, method, degree, offset=False, scale=100.0):
     if offset and method == INDEPENDENT_METHOD:
         ncoef += 1
     else:
-        offset = False # prevent offsets in DM sections for network method
+        offset = False  # prevent offsets in DM sections for network method
 
     # NB: avoids meshgrid to prevent copying production implementation
     data = empty((ifg.num_cells, ncoef), dtype=float32)
     rows = iter(data)
-    yr = range(1, ifg.nrows+1)  # simulate meshgrid starting from 1
-    xr = range(1, ifg.ncols+1)
+    yr = range(1, ifg.nrows + 1)  # simulate meshgrid starting from 1
+    xr = range(1, ifg.ncols + 1)
 
-    xsz, ysz = [i/scale for i in [ifg.x_size, ifg.y_size]]
+    xsz, ysz = [i / scale for i in [ifg.x_size, ifg.y_size]]
 
     if degree == PLANAR:
         for y, x in product(yr, xr):
@@ -665,13 +665,13 @@ def unittest_dm(ifg, method, degree, offset=False, scale=100.0):
             ys = y * ysz
             xs = x * xsz
             row = next(rows)
-            row[:xlen] = [xs**2, ys**2, xs*ys, xs, ys]
+            row[:xlen] = [xs ** 2, ys ** 2, xs * ys, xs, ys]
     else:
         for y, x in product(yr, xr):
             ys = y * ysz
             xs = x * xsz
             row = next(rows)
-            row[:xlen] = [xs*ys**2, xs**2, ys**2, xs*ys, xs, ys]
+            row[:xlen] = [xs * ys ** 2, xs ** 2, ys ** 2, xs * ys, xs, ys]
 
     if offset:
         data[:, -1] = 1
@@ -754,8 +754,8 @@ class TestLegacyComparisonTestsOrbfitMethod1:
         pyrate.core.orbital.orb_fit_calc_wrapper(self.params)
 
         onlyfiles = [f for f in os.listdir(SML_TEST_LEGACY_ORBITAL_DIR)
-            if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))
-            and f.endswith('.csv') and f.__contains__('_method1_')]
+                     if os.path.isfile(os.path.join(SML_TEST_LEGACY_ORBITAL_DIR, f))
+                     and f.endswith('.csv') and f.__contains__('_method1_')]
 
         count = 0
         for i, f in enumerate(onlyfiles):
@@ -794,6 +794,7 @@ class TestLegacyComparisonTestsOrbfitMethod2:
     orbfitlksy:    1
 
     """
+
     @classmethod
     def setup_class(cls):
         # change to orbital error correction method 2
@@ -880,6 +881,7 @@ class TestLegacyComparisonTestsOrbfitMethod2:
 
         # ensure that we have expected number of matches
         assert count == len(self.new_data_paths)
+
 
 # TODO: Write tests for various looks and degree combinations
 # TODO: write mpi tests
@@ -1024,41 +1026,65 @@ class TestOrbfitIndependentMethodWithMultilooking:
             assert i.shape == (72, 47)  # shape should not change
 
 
-def test_orbital_error_is_removed_completely(orbfit_degrees):
+class TestIfg:
 
-    class TestIfg:
+    def __init__(self, orbfit_degrees=PLANAR):
+        self.x_size = 0.00125  # pixel size - similar to cropA
+        self.y_size = 0.00125
+        self.nrows = 100
+        self.ncols = 100
+        self.num_cells = self.nrows * self.ncols
+        self.is_open = False
+        self._phase_data = None
+        self.orbfit_degrees = orbfit_degrees
+        self.first = None
+        self.second = None
 
-        x_size = 0.00125   # pixel size - similar to cropA
-        y_size = 0.00125
-        nrows = 100
-        ncols = 100
-        num_cells = nrows * ncols
-        x, y = np.meshgrid(np.arange(nrows) * x_size, np.arange(ncols) * y_size)
-        phase_data = x + y  # planar
-        if orbfit_degrees == QUADRATIC:
-            phase_data += x ** 2 + y ** 2 + x * y
-        elif orbfit_degrees == PART_CUBIC:
-            phase_data += x ** 2 + y ** 2 + x * y + x * (y ** 2)
+    @property
+    def phase_data(self):
+        """
+        Returns phase band as an array.
+        """
+        if self._phase_data is None:
+            self.open()
+        return self._phase_data
 
-        is_open = False
+    def open(self):
+        # define some random constants different for each ifg
+        x, y = np.meshgrid(np.arange(self.nrows) * self.x_size, np.arange(self.ncols) * self.y_size)
+        x_slope, y_slope, x2_slope, y2_slope, x_y_slope, x_y2_slope, const = np.ravel(np.random.rand(1, 7))
+        self._phase_data = x_slope * x + y_slope * y + const  # planar
+        if self.orbfit_degrees == QUADRATIC:
+            self._phase_data += x2_slope * x ** 2 + y2_slope * y ** 2 + x_y_slope * x * y
+        elif self.orbfit_degrees == PART_CUBIC:
+            self._phase_data += x2_slope * x ** 2 + y2_slope * y ** 2 + x_y_slope * x * y + x_y2_slope * x * (y ** 2)
+        self.is_open = True
 
-        def open(self):
-            is_open = True
 
-    ifg = TestIfg()
+def test_orbital_error_is_removed_completely(orbfit_degrees, ifg=None):
+    if ifg is None:
+        ifg = TestIfg()
     fullres_dm = get_design_matrix(ifg, orbfit_degrees, intercept=True)
     mlooked_dm = fullres_dm
     vphase = np.reshape(ifg.phase_data, ifg.num_cells)
-    orb_corr = __orb_correction(fullres_dm, mlooked_dm, fullres_phase=ifg.phase_data,
-                                mlooked_phase=vphase, offset=True)
+    orb_corr = __orb_correction(fullres_dm, mlooked_dm, ifg.phase_data, vphase, offset=True)
     assert_array_almost_equal(ifg.phase_data, orb_corr)
+
+
+def test_orbital_error_independent_method_removed_completely_from_all_ifgs(mexico_cropa_params, orbfit_degrees):
+    ifgs = [Ifg(i.converted_path) for i in mexico_cropa_params[C.INTERFEROGRAM_FILES]]
+    for i in ifgs:
+        i.open()
+        test_ifg = TestIfg()
+        test_ifg.first = i.first
+        test_ifg.second = i.second
+        test_orbital_error_is_removed_completely(orbfit_degrees, test_ifg)
 
 
 def test_orbital_inversion():
     """Small unit to test the application of numpy pseudoinverse"""
-    A = np.array([[1, 1, 0],[1, 0, 1],[0, 1, 1]])
+    A = np.array([[1, 1, 0], [1, 0, 1], [0, 1, 1]])
     d = np.array([2, 4, 3])
     exp = np.array([1.5, 0.5, 2.5])
     res = __orb_inversion(A, d)
     assert_array_almost_equal(res, exp, decimal=9)
-
