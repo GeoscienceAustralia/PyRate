@@ -30,6 +30,7 @@ import numpy as np
 from numpy.linalg import pinv, inv
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.linalg import lstsq
+from osgeo import gdal, gdalconst
 
 import pyrate.constants as C
 import pyrate.core.orbital
@@ -49,7 +50,7 @@ from pyrate.constants import ORB_ERROR_DIR
 from tests import common
 from tests.common import IFMS16, TEST_CONF_GAMMA
 from tests.common import SML_TEST_LEGACY_ORBITAL_DIR
-from tests.common import SML_TEST_TIF
+from tests.common import SML_TEST_TIF, PY37GDAL302
 from tests.common import small_ifg_file_list
 
 # TODO: Purpose of this variable? Degrees are 1, 2 and 3 respectively
@@ -1063,38 +1064,67 @@ class DummyIfg:
         x_slope_, y_slope_, x2_slope_, y2_slope_, x_y_slope_, x_y2_slope_, const_ = np.ravel(np.random.rand(1, 7))
 
         self._phase_data_first = x_slope * x + y_slope * y + const  # planar
-        self._phase_data_second = x_slope_ * x + y_slope_ * y + const  # planar
+        self._phase_data_second = x_slope_ * x + y_slope_ * y + const_  # planar
         if self.orbfit_degrees == QUADRATIC:
             self._phase_data_first += x2_slope * x ** 2 + y2_slope * y ** 2 + x_y_slope * x * y
             self._phase_data_second += x2_slope_ * x ** 2 + y2_slope_ * y ** 2 + x_y_slope_ * x * y
         elif self.orbfit_degrees == PART_CUBIC:
-            self._phase_data += x2_slope * x ** 2 + y2_slope * y ** 2 + x_y_slope * x * y + x_y2_slope * x * (y ** 2)
-            self._phase_data += x2_slope_ * x ** 2 + y2_slope_ * y ** 2 + x_y_slope_ * x * y + \
-                x_y2_slope_ * x * (y ** 2)
+            self._phase_data_first += x2_slope * x ** 2 + y2_slope * y ** 2 + x_y_slope * x * y + \
+                                      x_y2_slope * x * (y ** 2)
+            self._phase_data_second += x2_slope_ * x ** 2 + y2_slope_ * y ** 2 + x_y_slope_ * x * y + \
+                                       x_y2_slope_ * x * (y ** 2)
 
         # phase data for this ifg
         self._phase_data = self._phase_data_first - self._phase_data_second
         self.is_open = True
 
 
-def test_orbital_error_is_removed_completely(orbfit_degrees, ifg=None):
+@pytest.fixture(params=[1, 2, 3, 4])
+def orb_lks(request):
+    return request.param
+
+
+def test_orbital_error_is_removed_completely(orbfit_degrees, orb_lks, ifg=None):
+    from pyrate.core.gdal_python import _gdalwarp_width_and_height
     if ifg is None:
-        ifg = DummyIfg()
+        ifg = DummyIfg(orbfit_degrees)
     fullres_dm = get_design_matrix(ifg, orbfit_degrees, intercept=True)
-    mlooked_dm = fullres_dm
-    vphase = np.reshape(ifg.phase_data, ifg.num_cells)
-    orb_corr = __orb_correction(fullres_dm, mlooked_dm, ifg.phase_data, vphase, offset=True)
-    assert_array_almost_equal(ifg.phase_data, orb_corr)
+    src = gdal.GetDriverByName('MEM').Create('', ifg.ncols, ifg.nrows, 1, gdalconst.GDT_Float32)
+    gt = (0, ifg.x_size, 0, 0, 0, ifg.y_size)
+    src.SetGeoTransform(gt)
+    src.GetRasterBand(1).WriteArray(ifg.phase_data)
+    resampled_gt = (0, ifg.x_size * orb_lks, 0, 0, 0, ifg.y_size * orb_lks)
+    min_x, min_y = 0, 0
+    max_x, max_y = ifg.x_size * ifg.ncols, ifg.y_size * ifg.nrows
+
+    px_height, px_width = _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, resampled_gt)
+
+    dst = gdal.GetDriverByName('MEM').Create('', px_height, px_width, 1, gdalconst.GDT_Float32)
+    dst.SetGeoTransform(resampled_gt)
+
+    gdal.ReprojectImage(src, dst, '', '', gdal.GRA_Average)
+
+    m_looked_ifg = Ifg(dst)
+
+    m_looked_ifg.x_size, m_looked_ifg.y_size = resampled_gt[1], resampled_gt[-1]
+    mlooked_phase = np.reshape(m_looked_ifg.phase_data, m_looked_ifg.num_cells)
+    mlooked_dm = get_design_matrix(m_looked_ifg, orbfit_degrees, intercept=True)
+
+    orb_corr = __orb_correction(fullres_dm, mlooked_dm, ifg.phase_data, mlooked_phase, offset=True)
+    decimal = 4 if orb_lks == 1 else 2
+    assert_array_almost_equal(ifg.phase_data, orb_corr, decimal=decimal)
 
 
-def test_orbital_error_independent_method_removed_completely_from_all_ifgs(mexico_cropa_params, orbfit_degrees):
+@pytest.mark.slow
+@pytest.mark.skipif((not PY37GDAL302), reason="Only run in one CI env")
+def test_orbital_error_independent_method_removed_completely_from_all_ifgs(
+        mexico_cropa_params, orbfit_degrees, orb_lks
+    ):
     ifgs = [Ifg(i.converted_path) for i in mexico_cropa_params[C.INTERFEROGRAM_FILES]]
     for i in ifgs:
         i.open()
-        test_ifg = DummyIfg()
-        test_ifg.first = i.first
-        test_ifg.second = i.second
-        test_orbital_error_is_removed_completely(orbfit_degrees, test_ifg)
+        test_ifg = DummyIfg(orbfit_degrees)
+        test_orbital_error_is_removed_completely(orbfit_degrees, orb_lks, test_ifg)
 
 
 def test_orbital_inversion():

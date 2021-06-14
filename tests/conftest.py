@@ -188,3 +188,9 @@ def ten_geotiffs():
     tifs = [u.as_posix() for u in GEOTIFF.glob('*_unw.tif')]
     tifs.sort()
     return tifs[:10]
+
+
+@pytest.fixture
+def cropa_geotifs(mexico_cropa_params):
+    m_paths = mexico_cropa_params[C.INTERFEROGRAM_FILES]
+    return [m.converted_path for m in m_paths]
