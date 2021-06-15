@@ -79,7 +79,6 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
     edge_to_indexed_ifgs = __create_ifg_edge_dict(ifg_files, params)
     ifgs = [v.IfgPhase for v in edge_to_indexed_ifgs.values()]
     n_ifgs = len(ifgs)
-    num_occurrences_each_ifg = _find_num_occurrences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs)
 
     if params[C.PARALLEL]:
         # rets = Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
@@ -95,17 +94,14 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
             closure[:, :, k], ifgs_breach_count_l = __compute_ifgs_breach_count(weighted_loop, edge_to_indexed_ifgs,
                                                                                 params)
             ifgs_breach_count += ifgs_breach_count_l
-        return closure, ifgs_breach_count, num_occurrences_each_ifg
     else:
-        closure_dict = {}
-        loops_with_index = list(enumerate(loops))
-        process_loops = mpiops.array_split(loops_with_index)
+        process_loops = mpiops.array_split(loops)
+        closure_process = np.zeros(shape=(* ifgs[0].phase_data.shape, len(process_loops)), dtype=np.float32)
         ifgs_breach_count_process = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)), dtype=np.uint16)
-        for k, weighted_loop in process_loops:
-            closure_dict[k], ifgs_breach_count_l = __compute_ifgs_breach_count(weighted_loop, edge_to_indexed_ifgs,
-                                                                               params)
+        for k, weighted_loop in enumerate(process_loops):
+            closure_process[:, :, k], ifgs_breach_count_l = \
+                __compute_ifgs_breach_count(weighted_loop, edge_to_indexed_ifgs, params)
             ifgs_breach_count_process += ifgs_breach_count_l  # process
-        closure_dict = join_dicts(mpiops.comm.gather(closure_dict, root=0))
 
         total_gb = mpiops.comm.allreduce(ifgs_breach_count_process.nbytes / 1e9, op=mpiops.MPI.SUM)
         log.info("Memory usage due to ifgs_breach_count_process {:2.4f}GB of data".format(total_gb))
@@ -113,8 +109,21 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
         log.debug(f"dtype of ifgs_breach_count_process is {ifgs_breach_count_process.dtype}")
         if mpiops.rank == 0:
             ifgs_breach_count = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)), dtype=np.uint16)
+
+            # closure
+            closure = np.zeros(shape=(* ifgs[0].phase_data.shape, len(loops)), dtype=np.float32)
+            main_process_indices = mpiops.array_split(range(len(loops))).astype(np.uint16)
+            closure[:, :, main_process_indices] = closure_process
+            for rank in range(1, mpiops.size):
+                rank_indices = mpiops.array_split(range(len(loops)), rank).astype(np.uint16)
+                this_rank_closure = np.zeros(shape=(* ifgs[0].phase_data.shape, len(rank_indices)), dtype=np.float32)
+                mpiops.comm.Recv(this_rank_closure, source=rank, tag=rank)
+                closure[:, :, rank_indices] = this_rank_closure
         else:
+            closure = None
             ifgs_breach_count = None
+            mpiops.comm.Send(closure_process, dest=0, tag=mpiops.rank)
+
         if mpiops.MPI_INSTALLED:
             mpiops.comm.Reduce([ifgs_breach_count_process, mpiops.MPI.UINT16_T],
                                [ifgs_breach_count, mpiops.MPI.UINT16_T], op=mpiops.MPI.SUM, root=0)  # global
@@ -123,11 +132,11 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
 
         log.debug(f"successfully summed phase closure breach array")
 
-        closure, num_occurrences_each_ifg = None, None
-        if mpiops.rank == 0:
-            num_occurrences_each_ifg = _find_num_occurrences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs)
-            closure = np.dstack([v for k, v in sorted(closure_dict.items(), key=lambda x: x[0])])
-        return closure, ifgs_breach_count, num_occurrences_each_ifg
+    num_occurrences_each_ifg = None
+    if mpiops.rank == 0:
+        num_occurrences_each_ifg = _find_num_occurrences_each_ifg(loops, edge_to_indexed_ifgs, n_ifgs)
+
+    return closure, ifgs_breach_count, num_occurrences_each_ifg
 
 
 def _find_num_occurrences_each_ifg(loops: List[WeightedLoop],
