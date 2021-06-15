@@ -80,13 +80,15 @@ def __drop_ifgs_if_not_part_of_any_loop(ifg_files: List[str], loops: List[Weight
 
 def __drop_ifgs_exceeding_threshold(orig_ifg_files: List[str], ifgs_breach_count, num_occurences_each_ifg, params):
     """
-    We demand two thresholds breaches for an ifg to be dropped.
-    1. The first one is the basic ifg loop participation count check.
-    2. The second threshold check is a weighted average check of pixels breached taking all loops into account.
-        (a) ifgs_breach_count contains unwrapping error count for each pixel for each ifg seen in all loops
-        (b) sum(ifgs_breach_count[:, :, i]) is pixel total count with unwrapping error for i-th ifg over all loops
-        (c) divide by loop_count_of_this_ifg and num of cells (nrows x ncols) for a weighted measure of threshold
-
+    Function to identify and drop ifgs, based on two thresholds.
+    We demand two thresholds to be breached before an ifg is dropped:
+    1. loops_thr_ifg: the basic ifg loop participation count check: does the ifg participate in
+                      enough loops to accurately check for unwrapping errors?
+    2. The second threshold is an average check of pixels breached taking all loops into account.
+       It is evaluated as follows:
+        (i) ifgs_breach_count contains the number of loops where this pixel in this ifg had a closure exceeding closure_thr.
+        (b) sum(ifgs_breach_count[:, :, i]) is the number of pixels in ifg exceeding closure_thr over all loops
+        (c) divide by loop_count_of_this_ifg and num of cells (nrows x ncols) for a normalised  measure of threshold.
     """
     orig_ifg_files.sort()
     nrows, ncols, n_ifgs = ifgs_breach_count.shape
@@ -95,7 +97,7 @@ def __drop_ifgs_exceeding_threshold(orig_ifg_files: List[str], ifgs_breach_count
         loop_count_of_this_ifg = num_occurences_each_ifg[i]
         if loop_count_of_this_ifg:  # if the ifg participated in at least one loop
             ifg_remove_threshold_breached = \
-                np.sum(ifgs_breach_count[:, :, i]) / loop_count_of_this_ifg / nrows / ncols > params[
+                np.sum(ifgs_breach_count[:, :, i]) / ( loop_count_of_this_ifg * nrows * ncols ) > params[
                     C.AVG_IFG_ERR_THR]
             if not (
                     # min loops count # check 1
