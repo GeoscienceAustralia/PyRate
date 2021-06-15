@@ -102,3 +102,85 @@ The PyRate _phase closure_ algorithm proceeds as follows:
    are masked (changed to NaN value) for those pixels in those ifgs.
    (function `closure_check.mask_pixels_with_unwrapping_errors`)
 
+## Example usage
+
+To illustrate the PyRate phase closure functionality, we use a small example dataset
+of 8 Sentinel-1 ifgs which connect 5 common acquisition dates:
+
+```
+20160314-20160326
+20160314-20160407
+20160314-20160501
+20160326-20160407
+20160326-20160513
+20160407-20160501
+20160407-20160513
+20160501-20160513
+```
+
+The below plots show the ifgs following `prepifg`:
+
+![Ifgs before phase closure correction](./images/ifg-phase-plot-1-before.png)
+
+Circled in black are some visually obvious unwrapping errors.
+
+In this example, we run the `correct` step with orbital correction and phase
+closure correction enabled, and the following parameters:
+
+```
+orbfitmethod:  2
+orbfitdegrees: 1
+orbfitlksx:    10
+orbfitlksy:    10
+
+closure_thr:         0.5
+avg_ifg_err_thr:     0.1
+min_loops_per_ifg:   2
+max_loop_length:     4
+max_loop_redundancy: 2
+```
+
+We get the following log information from iteration #1:
+
+```
+16:40:45 closure_check:126 421776 INFO 0/7 Closure check iteration #1: working on 8 ifgs
+16:40:45 closure_check:187 421776 INFO 0/7 Total number of selected closed loops with up to MAX_LOOP_LENGTH = 4 edges is 9
+16:40:45 closure_check:202 421776 INFO 0/7 After applying MAX_LOOP_REDUNDANCY = 2 criteria, 8 loops are retained
+16:40:52 plot_closure:76 421776 INFO 0/7 8 closure loops plotted in out/phase_closure_dir/closure_loops_iteration_1_fig_0.png
+```
+
+![Iteration #1 closure loops](./images/closure_loops_iteration_1_fig_0.png)
+
+The 8 plotted closure loops from iteration #1 show areas where the `closure_thr`
+threshold has been breached as either dark red or dark blue. The previously
+circled unwrapping errors show up as breached areas in several closure loops.
+
+The `avg_ifg_err_thr` parameter is set to 10% in this example. This is enough
+to detect the largest mis-closed area, which amounts to around 25% of the phase
+data area spatially. The ifg introducing this mis-closure (20160407-20160513)
+is dropped and iteration #2 continues:
+
+```
+16:40:52 closure_check:126 421776 INFO 0/7 Closure check iteration #2: working on 7 ifgs
+16:40:52 closure_check:187 421776 INFO 0/7 Total number of selected closed loops with up to MAX_LOOP_LENGTH = 4 edges is 5
+16:40:52 closure_check:202 421776 INFO 0/7 After applying MAX_LOOP_REDUNDANCY = 2 criteria, 5 loops are retained
+16:40:58 plot_closure:76 421776 INFO 0/7 5 closure loops plotted in out/phase_closure_dir/closure_loops_iteration_2_fig_0.png
+```
+
+![Iteration #2 closure loops](./images/closure_loops_iteration_2_fig_0.png)
+
+Now the ifg network is smaller (7 ifgs) and less closure loops (5) are retained.
+Three smaller breached areas are evident: in the top left, centre bottom and
+bottom right of the image. The average breached area is now not greater than 10%
+so no further ifgs are fully dropped and no further iteration is required.
+
+Finally, pixels found to be breaching the `closure_thr` are masked in ifgs:
+
+![Ifgs after phase closure correction](./images/ifg-phase-plot-1-after.png)
+
+The previously circled unwrapping error in ifg 20160314-20160501 has now been
+masked, but this spatial area has not been masked in other ifgs. In this case,
+the algorithm has been successfully able to attribute the source of the unwrapping
+error to this single ifg. The ability to do this depends on the parameter
+settings chosen.
+
