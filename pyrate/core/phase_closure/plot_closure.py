@@ -52,7 +52,7 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop],
         this_fig_plots = 0
         for p_r in range(plt_rows):
             for p_c in range(plt_cols):
-                if all_fig_plots == n_loops:   
+                if all_fig_plots == n_loops + 1:   
                     break
                     
                 ax = fig.add_subplot(plt_rows, plt_cols, plt_cols * p_r + p_c + 1)
