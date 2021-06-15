@@ -162,10 +162,13 @@ def phase_closure_wrapper(params: dict, config: Configuration) -> dict:
         log.info("Phase closure correction is not required!")
         return
 
-    ifg_files, ifgs_breach_count, num_occurences_each_ifg = iterative_closure_check(config)
-    if ifg_files is None:
-        sys.exit("Zero loops are returned after phase closure calcs!!! \n"
-                 "Check your interferogram network configuration.")
+    rets = iterative_closure_check(config)
+    if rets is None:
+        log.info("Zero loops are returned from the iterative closure check.")
+        log.warning("Abandoning phase closure correction without modifying the interferograms.")
+        return
+        
+    ifg_files, ifgs_breach_count, num_occurences_each_ifg = rets
 
     # update params with closure checked ifg list
     params[C.INTERFEROGRAM_FILES] = \
