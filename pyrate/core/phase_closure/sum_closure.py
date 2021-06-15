@@ -95,11 +95,32 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
                                                                                 params)
             ifgs_breach_count += ifgs_breach_count_l
     else:
-        process_loops = mpiops.array_split(loops)
-        closure_process = np.zeros(shape=(* ifgs[0].phase_data.shape, len(process_loops)), dtype=np.float32)
+        if mpiops.MPI_INSTALLED:
+            # create a shared array elements of type float
+            closure_shape = (* ifgs[0].phase_data.shape, len(loops))
+            size = np.prod(closure_shape)
+            itemsize = mpiops.MPI.FLOAT.Get_size()
+            if mpiops.rank == 0:
+                nbytes = size * itemsize
+            else:
+                nbytes = 0
+
+            win = mpiops.MPI.Win.Allocate_shared(nbytes, itemsize, comm=mpiops.comm)
+
+            # create a numpy array whose data points to the shared mem
+            buf, itemsize = win.Shared_query(0)
+            assert itemsize == mpiops.MPI.FLOAT.Get_size()
+            closure = np.ndarray(buffer=buf, dtype=np.float32, shape=closure_shape)
+        else:
+            closure = np.zeros(shape=(* ifgs[0].phase_data.shape, len(loops)), dtype=np.float32)
+
+        loops_with_index = list(enumerate(loops))
+        process_loops = mpiops.array_split(loops_with_index)
+
         ifgs_breach_count_process = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)), dtype=np.uint16)
-        for k, weighted_loop in enumerate(process_loops):
-            closure_process[:, :, k], ifgs_breach_count_l = \
+
+        for k, weighted_loop in process_loops:
+            closure[:, :, k], ifgs_breach_count_l = \
                 __compute_ifgs_breach_count(weighted_loop, edge_to_indexed_ifgs, params)
             ifgs_breach_count_process += ifgs_breach_count_l  # process
 
@@ -108,24 +129,12 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
         log.debug(f"shape of ifgs_breach_count_process is {ifgs_breach_count_process.shape}")
         log.debug(f"dtype of ifgs_breach_count_process is {ifgs_breach_count_process.dtype}")
 
-        total_gb = mpiops.comm.allreduce(closure_process.nbytes / 1e9, op=mpiops.MPI.SUM)
-        log.info("Memory usage due to closure_process {:2.4f}GB of data".format(total_gb))
+        mpiops.comm.barrier()
+
         if mpiops.rank == 0:
             ifgs_breach_count = np.zeros(shape=(ifgs[0].phase_data.shape + (n_ifgs,)), dtype=np.uint16)
-
-            # closure
-            closure = np.zeros(shape=(* ifgs[0].phase_data.shape, len(loops)), dtype=np.float32)
-            main_process_indices = mpiops.array_split(range(len(loops))).astype(np.uint16)
-            closure[:, :, main_process_indices] = closure_process
-            for rank in range(1, mpiops.size):
-                rank_indices = mpiops.array_split(range(len(loops)), rank).astype(np.uint16)
-                this_rank_closure = np.zeros(shape=(* ifgs[0].phase_data.shape, len(rank_indices)), dtype=np.float32)
-                mpiops.comm.Recv(this_rank_closure, source=rank, tag=rank)
-                closure[:, :, rank_indices] = this_rank_closure
         else:
-            closure = None
             ifgs_breach_count = None
-            mpiops.comm.Send(closure_process, dest=0, tag=mpiops.rank)
 
         if mpiops.MPI_INSTALLED:
             mpiops.comm.Reduce([ifgs_breach_count_process, mpiops.MPI.UINT16_T],
