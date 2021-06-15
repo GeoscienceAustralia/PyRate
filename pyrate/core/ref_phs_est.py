@@ -138,12 +138,12 @@ def est_ref_phase_ifg_median(ifg_paths, params):
         comp = np.ravel(comp, order='F')
 
         if params[C.PARALLEL]:
-            log.info("Calculating ref phase using multiprocessing")
+            log.debug("Calculating ref phase using multiprocessing")
             ref_phs = Parallel(n_jobs=params[C.PROCESSES], verbose=joblib_log_level(C.LOG_LEVEL))(
                 delayed(_est_ref_phs_ifg_median)(p.phase_data, comp) for p in proc_ifgs
             )
         else:
-            log.info("Calculating ref phase")
+            log.debug("Calculating ref phase")
             ref_phs = np.zeros(len(proc_ifgs))
             for n, ifg in enumerate(proc_ifgs):
                 ref_phs[n] = _est_ref_phs_ifg_median(ifg.phase_data, comp)
