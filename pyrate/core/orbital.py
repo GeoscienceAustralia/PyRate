@@ -461,8 +461,9 @@ def get_design_matrix(ifg, degree, intercept: Optional[bool] = True, scale: Opti
         raise OrbitalError("Invalid degree argument")
 
     # scaling required with higher degree models to help with param estimation
-    xsize = ifg.x_size / scale if scale else ifg.x_size
-    ysize = ifg.y_size / scale if scale else ifg.y_size
+    xsize = ifg.x_step / scale if scale else ifg.x_step
+    ysize = ifg.y_step / scale if scale else ifg.y_step
+    print(xsize, ysize)
 
     # mesh needs to start at 1, otherwise first cell resolves to 0 and ignored
     xg, yg = [g+1 for g in meshgrid(range(ifg.ncols), range(ifg.nrows))]

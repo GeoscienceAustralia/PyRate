@@ -1033,9 +1033,9 @@ class TestOrbfitIndependentMethodWithMultilooking:
 
 class DummyIfg:
 
-    def __init__(self, orbfit_degrees=PLANAR):
-        self.x_size = 0.00125  # pixel size - similar to cropA
-        self.y_size = 0.00125
+    def __init__(self, orbfit_degrees):
+        self.x_step = 0.00125  # pixel size - similar to cropA
+        self.y_step = 0.00125
         self.nrows = 100
         self.ncols = 100
         self.num_cells = self.nrows * self.ncols
@@ -1057,7 +1057,7 @@ class DummyIfg:
         return self._phase_data
 
     def open(self):
-        x, y = np.meshgrid(np.arange(self.nrows) * self.x_size, np.arange(self.ncols) * self.y_size)
+        x, y = np.meshgrid(np.arange(self.nrows) * self.x_step, np.arange(self.ncols) * self.y_step)
 
         # define some random constants different for each date
         x_slope, y_slope, x2_slope, y2_slope, x_y_slope, x_y2_slope, const = np.ravel(np.random.rand(1, 7))
@@ -1085,17 +1085,27 @@ def orb_lks(request):
 
 
 def test_orbital_error_is_removed_completely(orbfit_degrees, orb_lks, ifg=None):
+    """
+    These tests are checking that perfect orbital errors, those matching the assumed orbital error model, can be
+    completely removed by the independent orbital correction with and without multilooking.
+
+    These tests also prove that orbital error estimates using orbfit multilooking is a valid approach and matches the
+    modelled error with acceptable numerical accuracy, with the accuracy depending on the multilooking factor used.
+
+    These tests also prove that the orbital error parameters can be approximated using multilooking in the
+    independent method.
+    """
     from pyrate.core.gdal_python import _gdalwarp_width_and_height
     if ifg is None:
         ifg = DummyIfg(orbfit_degrees)
     fullres_dm = get_design_matrix(ifg, orbfit_degrees, intercept=True)
     src = gdal.GetDriverByName('MEM').Create('', ifg.ncols, ifg.nrows, 1, gdalconst.GDT_Float32)
-    gt = (0, ifg.x_size, 0, 0, 0, ifg.y_size)
+    gt = (0, ifg.x_step, 0, 0, 0, ifg.y_step)
     src.SetGeoTransform(gt)
     src.GetRasterBand(1).WriteArray(ifg.phase_data)
-    resampled_gt = (0, ifg.x_size * orb_lks, 0, 0, 0, ifg.y_size * orb_lks)
+    resampled_gt = (0, ifg.x_step * orb_lks, 0, 0, 0, ifg.y_step * orb_lks)
     min_x, min_y = 0, 0
-    max_x, max_y = ifg.x_size * ifg.ncols, ifg.y_size * ifg.nrows
+    max_x, max_y = ifg.x_step * ifg.ncols, ifg.y_step * ifg.nrows
 
     px_height, px_width = _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, resampled_gt)
 
@@ -1106,13 +1116,62 @@ def test_orbital_error_is_removed_completely(orbfit_degrees, orb_lks, ifg=None):
 
     m_looked_ifg = Ifg(dst)
 
-    m_looked_ifg.x_size, m_looked_ifg.y_size = resampled_gt[1], resampled_gt[-1]
+    # m_looked_ifg.x_step, m_looked_ifg.y_step = resampled_gt[1], resampled_gt[-1]
     mlooked_phase = np.reshape(m_looked_ifg.phase_data, m_looked_ifg.num_cells)
     mlooked_dm = get_design_matrix(m_looked_ifg, orbfit_degrees, intercept=True)
 
     orb_corr = __orb_correction(fullres_dm, mlooked_dm, ifg.phase_data, mlooked_phase, offset=True)
     decimal = 4 if orb_lks == 1 else 2
     assert_array_almost_equal(ifg.phase_data, orb_corr, decimal=decimal)
+
+
+def test_independent_orbital_error_equality_in_cropA(cropa_geotifs, orbfit_degrees, orb_lks):
+    """
+    These tests are checking that perfect orbital errors, those matching the assumed orbital error model, can be
+    completely removed by the independent orbital correction with and without multilooking.
+
+    These tests also prove that orbital error estimates using orbfit multilooking is a valid approach and matches the
+    modelled error with acceptable numerical accuracy, with the accuracy depending on the multilooking factor used.
+
+    These tests also prove that the orbital error parameters can be approximated using multilooking in the
+    independent method.
+    """
+    from pyrate.core.gdal_python import _gdalwarp_width_and_height
+
+    for p in cropa_geotifs:
+        ifg = Ifg(p)
+        ifg.open()
+        src = gdal.GetDriverByName('MEM').Create('', ifg.ncols, ifg.nrows, 1, gdalconst.GDT_Float32)
+        gt = (0, ifg.x_step, 0, 0, 0, abs(ifg.y_step))
+        src.SetGeoTransform(gt)
+        src.GetRasterBand(1).WriteArray(ifg.phase_data)
+        resampled_gt = (0, ifg.x_step * orb_lks, 0, 0, 0, abs(ifg.y_step) * orb_lks)
+        min_x, min_y = 0, 0
+        max_x, max_y = ifg.x_step * ifg.ncols, abs(ifg.y_step) * ifg.nrows
+
+        px_height, px_width = _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, resampled_gt)
+
+        dst = gdal.GetDriverByName('MEM').Create('', px_height, px_width, 1, gdalconst.GDT_Float32)
+        dst.SetGeoTransform(resampled_gt)
+
+        gdal.ReprojectImage(src, dst, '', '', gdal.GRA_Average)
+        orig_ifg = Ifg(src)
+        fullres_dm = get_design_matrix(orig_ifg, orbfit_degrees, intercept=True)
+
+        m_looked_ifg = Ifg(dst)
+
+        # m_looked_ifg.x_step, m_looked_ifg.y_step = resampled_gt[1], resampled_gt[-1]
+        mlooked_phase = np.reshape(m_looked_ifg.phase_data, m_looked_ifg.num_cells)
+        mlooked_dm = get_design_matrix(m_looked_ifg, orbfit_degrees, intercept=True)
+        if orb_lks == 1:
+            print(px_width, px_height, ifg.ncols, ifg.nrows)
+            assert px_width == ifg.ncols
+            assert px_height == ifg.nrows
+            assert_array_almost_equal(mlooked_dm, fullres_dm, decimal=4)
+
+        orb_corr = __orb_correction(fullres_dm, mlooked_dm, ifg.phase_data, mlooked_phase, offset=True)
+        decimal = 4 if orb_lks == 1 else 2
+        assert_array_almost_equal(ifg.phase_data, orb_corr, decimal=decimal)
 
 
 @pytest.mark.slow

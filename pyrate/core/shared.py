@@ -159,7 +159,7 @@ class RasterBase(object):
         if self.dataset is None:
             raise RasterException("Error opening %s" % self.data_path)
 
-        self.add_geographic_data()
+        # self.add_geographic_data()
 
     def add_geographic_data(self):
         """
