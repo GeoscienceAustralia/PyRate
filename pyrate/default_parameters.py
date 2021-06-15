@@ -364,7 +364,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": [0, 1],
         "Required": False
     },
-    "large_dev_thr": {
+    "closure_thr": {
         "DataType": float,
         "DefaultValue": 0.5,
         "MinValue": 0.01,
@@ -374,13 +374,13 @@ PYRATE_DEFAULT_CONFIGURATION = {
     },
     "avg_ifg_err_thr": {
         "DataType": float,
-        "DefaultValue": 0.05,
+        "DefaultValue": 0.5,
         "MinValue": 0.01,
         "MaxValue": 1.0,
         "PossibleValues": None,
         "Required": False
     },
-    "loops_thr_ifg": {
+    "min_loops_per_ifg": {
         "DataType": int,
         "DefaultValue": 2,
         "MinValue": 1,
@@ -396,20 +396,20 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
+    "max_loop_redundancy": {
+        "DataType": int,
+        "DefaultValue": 2,
+        "MinValue": 1,
+        "MaxValue": None,
+        "PossibleValues": None,
+        "Required": False
+    },
     "subtract_median": {
         "DataType": int,
         "DefaultValue": 1,
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": [0, 1],
-        "Required": False
-    },
-    "max_loops_per_ifg": {
-        "DataType": int,
-        "DefaultValue": 2,
-        "MinValue": 1,
-        "MaxValue": None,
-        "PossibleValues": None,
         "Required": False
     },
 

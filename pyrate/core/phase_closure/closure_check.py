@@ -33,7 +33,7 @@ def mask_pixels_with_unwrapping_errors(ifgs_breach_count: NDArray[(Any, Any, Any
                                        num_occurrences_each_ifg: NDArray[(Any,), UInt16],
                                        params: dict) -> None:
     """
-    Find pixels in the phase data that breach large_dev_thr, and mask
+    Find pixels in the phase data that breach closure_thr, and mask
     (assign nans) to those pixels in those ifgs.
     :param ifgs_breach_count: unwrapping issues at pixels in all loops
     :param num_occurrences_each_ifg:  frequency of ifgs appearing in all loops
@@ -82,8 +82,8 @@ def __drop_ifgs_exceeding_threshold(orig_ifg_files: List[str], ifgs_breach_count
     """
     Function to identify and drop ifgs, based on two thresholds.
     We demand two thresholds to be breached before an ifg is dropped:
-    1. loops_thr_ifg: the basic ifg loop participation count check: does the ifg participate in
-                      enough loops to accurately check for unwrapping errors?
+    1. min_loops_per_ifg: the basic ifg loop participation count check: does the ifg participate in
+                          enough loops to accurately check for unwrapping errors?
     2. The second threshold is an average check of pixels breached taking all loops into account.
        It is evaluated as follows:
         (i) ifgs_breach_count contains the number of loops where this pixel in this ifg had a closure exceeding closure_thr.
@@ -101,7 +101,7 @@ def __drop_ifgs_exceeding_threshold(orig_ifg_files: List[str], ifgs_breach_count
                     C.AVG_IFG_ERR_THR]
             if not (
                     # min loops count # check 1
-                    (num_occurences_each_ifg[i] > params[C.LOOPS_THR_IFG])
+                    (num_occurences_each_ifg[i] > params[C.MIN_LOOPS_PER_IFG])
                     and
                     ifg_remove_threshold_breached  # and breached threshold
             ):
@@ -131,7 +131,7 @@ def iterative_closure_check(config, interactive_plot=True) -> \
         if interactive_plot:
             if mpiops.rank == 0:
                 plot_closure(closure=closure, loops=loops, config=config,
-                             thr=params[C.LARGE_DEV_THR], iteration=i)
+                             thr=params[C.CLOSURE_THR], iteration=i)
         if len(ifg_files) == len(new_ifg_files):
             break
         else:
@@ -150,19 +150,19 @@ def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) ->
 
     :param loops: list of loops
     :param params: params dict
-    :return: selected loops satisfying MAX_LOOPS_PER_IFG criteria
+    :return: selected loops satisfying MAX_LOOP_REDUNDANCY criteria
     """
     selected_loops = []
     ifg_counter = defaultdict(int)
     for loop in loops:
         edge_appearances = np.array([ifg_counter[e] for e in loop.edges])
-        if not np.all(edge_appearances > params[C.MAX_LOOPS_PER_IFG]):
+        if not np.all(edge_appearances > params[C.MAX_LOOP_REDUNDANCY]):
             selected_loops.append(loop)
             for e in loop.edges:
                 ifg_counter[e] += 1
         else:
             log.debug(f"Loop {loop.loop} ignored: all constituent ifgs have been in a loop "
-                      f"{params[C.MAX_LOOPS_PER_IFG]} times or more")
+                      f"{params[C.MAX_LOOP_REDUNDANCY]} times or more")
     return selected_loops
 
 
@@ -194,7 +194,7 @@ def __wrap_closure_check(config: Configuration) -> \
                                      sorted_signed_loops, params)
     ifgs_with_loops = mpiops.run_once(__drop_ifgs_if_not_part_of_any_loop, ifg_files, retained_loops, params)
 
-    msg = f"After applying MAX_LOOPS_PER_IFG = {params[C.MAX_LOOPS_PER_IFG]} criteria, " \
+    msg = f"After applying MAX_LOOP_REDUNDANCY = {params[C.MAX_LOOP_REDUNDANCY]} criteria, " \
           f"{len(retained_loops)} loops are retained"
     if len(retained_loops) < 1:
         return None

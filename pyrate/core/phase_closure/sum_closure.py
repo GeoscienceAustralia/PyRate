@@ -67,7 +67,7 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
     """
     Compute the closure sum for each pixel in each loop, and count the number of times a pixel
     contributes to a failed closure loop (where the summed closure is above/below the 
-    LARGE_DEV_THR threshold).
+    CLOSURE_THR threshold).
     :param ifg_files: list of ifg files
     :param loops: list of loops
     :param params: params dict
@@ -149,7 +149,7 @@ def __compute_ifgs_breach_count(weighted_loop: WeightedLoop,
     n_ifgs = len(edge_to_indexed_ifgs)
     indexed_ifg = list(edge_to_indexed_ifgs.values())[0]
     ifg = indexed_ifg.IfgPhase
-    large_dev_thr = params[C.LARGE_DEV_THR] * np.pi
+    closure_thr = params[C.CLOSURE_THR] * np.pi
     use_median = params[C.SUBTRACT_MEDIAN]
 
     closure = np.zeros(shape=ifg.phase_data.shape, dtype=np.float32)
@@ -161,16 +161,16 @@ def __compute_ifgs_breach_count(weighted_loop: WeightedLoop,
         ifg = indexed_ifg.IfgPhase
         closure += signed_edge.sign * ifg.phase_data
     if use_median:
-        closure -= np.nanmedian(closure)  # may be able to drop median
+        closure -= np.nanmedian(closure)  # optionally subtract the median closure phase
 
     # this will deal with nans in `closure`, i.e., nans are not selected in indices_breaching_threshold
-    indices_breaching_threshold = np.absolute(closure) > large_dev_thr
+    indices_breaching_threshold = np.absolute(closure) > closure_thr
 
     for signed_edge in weighted_loop.loop:
         ifg_index = edge_to_indexed_ifgs[signed_edge.edge].index
         # the variable 'ifgs_breach_count' is increased by 1 for that pixel
         # make sure we are not incrementing the nan positions in the closure
-        # as we don't know the phase of these pixels and also they were converted to zero before large_dev_thr check
+        # as we don't know the phase of these pixels and also they were converted to zero before closure check
         # Therefore, we leave them out of ifgs_breach_count, i.e., we don't increment their ifgs_breach_count values
         ifgs_breach_count[indices_breaching_threshold, ifg_index] += 1
     return closure, ifgs_breach_count
