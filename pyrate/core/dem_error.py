@@ -114,8 +114,8 @@ def _process_dem_error_per_tile(tile: Tile, params: dict) -> None:
     log.debug(f"Calculating per-pixel baseline for tile {tile.index} during DEM error correction")
     bperp, look_angle, range_dist = _calculate_bperp_wrapper(ifg_paths, az_parts, rg_parts,
                                                              lat_parts, lon_parts, dem_parts)
-    log.debug(f"Calculating DEM error for tile {tile.index} during DEM error correction")
-
+    log.debug(f"Calculating DEM error for tile {tile.index} during DEM error correction") 
+     
     # mst_tile = np.load(Configuration.mst_path(params, tile.index))
     # calculate the DEM error estimate and the correction values for each IFG
     # current implementation uses the look angle and range distance matrix of the primary SLC in the last IFG
@@ -200,6 +200,11 @@ def calc_dem_errors(ifgs: list, bperp: np.ndarray, look_angle: np.ndarray, range
                 # phase observations (in mm)
                 y = ifg_data[sel, row, col]
                 bperp_pix = bperp[sel, row, col]
+
+                if np.isnan(y).any() or np.isnan(bperp_pix).any():
+                    log.debug("NaN found in per-pixel DEM loop")
+                    continue
+
                 # using the actual geometry of a particular IFG would be possible but is likely not signif. different
                 # geom = bperp_pix / (range_dist[row, col] * np.sin(look_angle[row, col]))
                 time_span = ifg_time_span[sel]
