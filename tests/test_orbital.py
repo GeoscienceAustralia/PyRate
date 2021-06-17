@@ -1031,7 +1031,12 @@ class TestOrbfitIndependentMethodWithMultilooking:
             assert i.shape == (72, 47)  # shape should not change
 
 
-class DummyIfg:
+class SyntheticIfg:
+    """
+    This class will generate a mock interferogram whose signal consists entirely
+    of a synthetic orbital error. The orbital error is generated as a 2D
+    polynomial signal with zero noise.
+    """
 
     def __init__(self, orbfit_degrees):
         self.x_step = 0.00125  # pixel size - similar to cropA
@@ -1059,10 +1064,11 @@ class DummyIfg:
     def open(self):
         x, y = np.meshgrid(np.arange(self.nrows) * self.x_step, np.arange(self.ncols) * self.y_step)
 
-        # define some random constants different for each date
+        # define some random coefficients, different for each date
         x_slope, y_slope, x2_slope, y2_slope, x_y_slope, x_y2_slope, const = np.ravel(np.random.rand(1, 7))
         x_slope_, y_slope_, x2_slope_, y2_slope_, x_y_slope_, x_y2_slope_, const_ = np.ravel(np.random.rand(1, 7))
 
+        # compute the 2D polynomial separately for first and second dates
         self._phase_data_first = x_slope * x + y_slope * y + const  # planar
         self._phase_data_second = x_slope_ * x + y_slope_ * y + const_  # planar
         if self.orbfit_degrees == QUADRATIC:
@@ -1074,7 +1080,7 @@ class DummyIfg:
             self._phase_data_second += x2_slope_ * x ** 2 + y2_slope_ * y ** 2 + x_y_slope_ * x * y + \
                                        x_y2_slope_ * x * (y ** 2)
 
-        # phase data for this ifg
+        # combine orbit error for first and second dates to give synthetic phase data for this ifg
         self._phase_data = self._phase_data_first - self._phase_data_second
         self.is_open = True
 
@@ -1084,8 +1090,12 @@ def orb_lks(request):
     return request.param
 
 
-def test_orbital_error_is_removed_completely(orbfit_degrees, orb_lks, ifg=None):
+def test_single_synthetic_ifg_independent_method(orbfit_degrees, orb_lks, ifg=None):
     """
+    Test that the independent method can generate an orbital correction that
+    matches a single synthetic ifg for a range of multi-look factors and
+    polynomial degrees.
+
     These tests are checking that perfect orbital errors, those matching the assumed orbital error model, can be
     completely removed by the independent orbital correction with and without multilooking.
 
@@ -1097,7 +1107,7 @@ def test_orbital_error_is_removed_completely(orbfit_degrees, orb_lks, ifg=None):
     """
     from pyrate.core.gdal_python import _gdalwarp_width_and_height
     if ifg is None:
-        ifg = DummyIfg(orbfit_degrees)
+        ifg = SyntheticIfg(orbfit_degrees)
     fullres_dm = get_design_matrix(ifg, orbfit_degrees, intercept=True)
     src = gdal.GetDriverByName('MEM').Create('', ifg.ncols, ifg.nrows, 1, gdalconst.GDT_Float32)
     gt = (0, ifg.x_step, 0, 0, 0, ifg.y_step)
@@ -1169,21 +1179,27 @@ def test_independent_orbital_error_equality_in_cropA(cropa_geotifs, orbfit_degre
             assert px_height == ifg.nrows
             assert_array_almost_equal(mlooked_dm, fullres_dm, decimal=4)
 
-        orb_corr = __orb_correction(fullres_dm, mlooked_dm, ifg.phase_data, mlooked_phase, offset=True)
-        decimal = 4 if orb_lks == 1 else 2
-        assert_array_almost_equal(ifg.phase_data, orb_corr, decimal=decimal)
+    # generate the orb correction using independent method
+    orb_corr = __orb_correction(fullres_dm, mlooked_dm, ifg.phase_data, mlooked_phase, offset=True)
+    decimal = 4 if orb_lks == 1 else 2
+    # test that input equals the generated correction
+    assert_array_almost_equal(ifg.phase_data, orb_corr, decimal=decimal)
 
 
 @pytest.mark.slow
 @pytest.mark.skipif((not PY37GDAL302), reason="Only run in one CI env")
-def test_orbital_error_independent_method_removed_completely_from_all_ifgs(
-        mexico_cropa_params, orbfit_degrees, orb_lks
-    ):
+def test_set_synthetic_ifgs_independent_method(mexico_cropa_params, orbfit_degrees, orb_lks):
+    """
+    Test that the independent method can generate a set of orbital corrections
+    that matches a set of synthetic ifg for a range of multi-look factors and
+    polynomial degrees.
+    """
+    # Use the CropA ifg network configuration
     ifgs = [Ifg(i.converted_path) for i in mexico_cropa_params[C.INTERFEROGRAM_FILES]]
     for i in ifgs:
         i.open()
-        test_ifg = DummyIfg(orbfit_degrees)
-        test_orbital_error_is_removed_completely(orbfit_degrees, orb_lks, test_ifg)
+        test_ifg = SyntheticIfg(orbfit_degrees)
+        test_single_synthetic_ifg_independent_method(orbfit_degrees, orb_lks, test_ifg)
 
 
 def test_orbital_inversion():
