@@ -214,7 +214,7 @@ def independent_orbital_correction(ifg_path, params):
 
     :return: None - interferogram phase data is updated and saved to disk
     """
-    log.debug(f"Orbital correction of {ifg_path}")
+    print(f"================Orbital correction of {ifg_path}")
     degree = params[C.ORBITAL_FIT_DEGREE]
     offset = params[C.ORBFIT_OFFSET]
     intercept = params[C.ORBFIT_INTERCEPT]
@@ -247,6 +247,7 @@ def independent_orbital_correction(ifg_path, params):
         if (xlooks > 1) or (ylooks > 1):
             exts, _, _ = __extents_from_params(params)
             mlooked = _create_mlooked_dataset(multi_path, ifg.data_path, exts, params)
+            print("using mlooked dataset ===========")
             ifg = Ifg(mlooked) # multi-looked Ifg object
 
         # vectorise phase data, keeping NODATA
@@ -279,6 +280,7 @@ def __orb_correction(fullres_dm, mlooked_dm, fullres_phase, mlooked_phase, offse
     """
     # perform inversion using pseudoinverse of DM
     orbparams = __orb_inversion(mlooked_dm, mlooked_phase)
+    print(orbparams)
 
     # compute forward model at full resolution
     fullorb = reshape(dot(fullres_dm, orbparams), fullres_phase.shape)
@@ -461,9 +463,12 @@ def get_design_matrix(ifg, degree, intercept: Optional[bool] = True, scale: Opti
         raise OrbitalError("Invalid degree argument")
 
     # scaling required with higher degree models to help with param estimation
-    xsize = ifg.x_step / scale if scale else ifg.x_step
-    ysize = ifg.y_step / scale if scale else ifg.y_step
-    print(xsize, ysize)
+    # print("===========================>>>>>", ifg.x_size, ifg.x_step, ifg.y_size, ifg.y_step)
+
+    # print("===========================>>>>>", ifg.x_size, ifg.y_size)
+    xsize = ifg.x_size / scale if scale else ifg.x_size
+    ysize = ifg.y_size / scale if scale else ifg.y_size
+
 
     # mesh needs to start at 1, otherwise first cell resolves to 0 and ignored
     xg, yg = [g+1 for g in meshgrid(range(ifg.ncols), range(ifg.nrows))]

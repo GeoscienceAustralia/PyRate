@@ -159,7 +159,7 @@ class RasterBase(object):
         if self.dataset is None:
             raise RasterException("Error opening %s" % self.data_path)
 
-        # self.add_geographic_data()
+        self.add_geographic_data()
 
     def add_geographic_data(self):
         """
@@ -171,6 +171,7 @@ class RasterBase(object):
         self.lat_centre = self.y_first + (self.y_step * self.y_centre)
         self.long_centre = self.x_first + (self.x_step * self.x_centre)
         # use cell size from centre of scene
+        print("add_geographic_data from IFG====", self.lat_centre, self.long_centre, self.x_step, self.y_step)
         self.x_size, self.y_size = cell_size(self.lat_centre, self.long_centre, self.x_step, self.y_step)
 
     @property
@@ -322,7 +323,7 @@ class Ifg(RasterBase):
         md = self.dataset.GetMetadata()
         self.wavelength = float(md[ifc.PYRATE_WAVELENGTH_METRES])
         self.meta_data = md
-        self.nan_converted = False # This flag set True after NaN conversion
+        self.nan_converted = False  # This flag set True after NaN conversion
 
     def _init_dates(self):
         """
