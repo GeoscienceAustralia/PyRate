@@ -243,7 +243,7 @@ class Configuration:
                     self.rows, self.cols = 1, 1
 
         # force orbfit scale = 1 for independent network correction method
-        self.orbfitscale = 1
+        self.orbfitscale = 100000
 
         # create a temporary directory if not supplied
         if not hasattr(self, 'tmpdir'):
