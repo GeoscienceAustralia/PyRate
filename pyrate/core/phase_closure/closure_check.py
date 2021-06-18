@@ -97,7 +97,7 @@ def __drop_ifgs_exceeding_threshold(orig_ifg_files: List[str], ifgs_breach_count
         loop_count_of_this_ifg = num_occurences_each_ifg[i]
         if loop_count_of_this_ifg:  # if the ifg participated in at least one loop
             ifg_remove_threshold_breached = \
-                np.sum(ifgs_breach_count[:, :, i]) / ( loop_count_of_this_ifg * nrows * ncols ) > params[
+                np.sum(ifgs_breach_count[:, :, i] == loop_count_of_this_ifg) / (nrows * ncols) > params[
                     C.AVG_IFG_ERR_THR]
             if not (
                     # min loops count # check 1
