@@ -273,7 +273,7 @@ def _write_dem_errors(ifg_paths: list, params: dict, preread_ifgs: dict) -> None
     gt, md, wkt = shared.get_geotiff_header_info(ifg_paths[0])
     md[ifc.DATA_TYPE] = ifc.DEM_ERROR
     dem_error = assemble_tiles(shape, params[C.TMPDIR], tiles, out_type='dem_error')
-    dem_error_file = os.path.join(params[C.OUT_DIR], 'dem_error.tif')
+    dem_error_file = os.path.join(params[C.DEM_ERROR_DIR], 'dem_error.tif')
     shared.remove_file_if_exists(dem_error_file)
     shared.write_output_geotiff(md, gt, wkt, dem_error, dem_error_file, np.nan)
 
