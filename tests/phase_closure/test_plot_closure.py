@@ -62,6 +62,6 @@ def test_plot_closure(mexico_cropa_params):
         else:
             correct.correct_steps[step](params)
 
-    closure_plot_file = Path(config.phase_closure_dir).joinpath(f'closure_loops_iteration_1.png')
+    closure_plot_file = Path(config.phase_closure_dir).joinpath(f'closure_loops_iteration_1_fig_0.png')
     assert closure_plot_file.exists()
     shutil.rmtree(params[C.OUT_DIR], ignore_errors=True)
