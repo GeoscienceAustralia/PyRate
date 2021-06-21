@@ -85,7 +85,7 @@ The PyRate _phase closure_ algorithm proceeds as follows:
    (function `sum_closure.__compute_ifgs_breach_count`)
 
 5. Next, ifgs are dropped (removed from the processing list) if the fraction of
-   constituent pixels breaching the `closure_thr` parameter averaged over the loops
+   constituent pixels breaching the `closure_thr` parameter in all loops
    the ifg participates in exceeds the parameter `avg_ifg_err_thr`, or the ifg
    does not contribute to a number of loops at least equal to the parameter
    `min_loops_per_ifg`.
