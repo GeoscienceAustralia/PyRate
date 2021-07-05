@@ -25,7 +25,7 @@ Command-line arguments:
 """
 
 # Arguments
-parser = argparse.ArgumentParser(description="Script to plot orbit correction files with uncorrected and corrected interferogram")
+parser = argparse.ArgumentParser(description="Script to plot correction files with uncorrected and corrected interferogram")
 parser.add_argument("IFG_DIR", type=str, help="full path to uncorrected interferograms in PyRate")
 parser.add_argument("CORRECTION_FILE_DIR", type=str, help="full path to correction files in PyRate")
 parser.add_argument("CORRECTED_IFG_DIR", type=str, help="full path to corrected interferograms in PyRate")
