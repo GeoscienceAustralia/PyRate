@@ -96,7 +96,7 @@ def spatio_temporal_filter(tsincr: np.ndarray, ifg_paths: List[str], params: dic
     ts_aps = spatial_low_pass_filter(ts_hp, ifg, params)
     tsincr -= ts_aps
 
-    _ts_to_ifgs(tsincr, preread_ifgs, params)
+    _ts_to_ifgs(tsincr, preread_ifgs, params, ts_aps)
     ifg.close()
 
 
@@ -150,7 +150,7 @@ def _assemble_tsincr(ifg_paths: List[str], params: dict, preread_ifgs: dict,
     return np.dstack([v[1] for v in sorted(tsincr_g.items())])
 
 
-def _ts_to_ifgs(tsincr: np.ndarray, preread_ifgs: dict, params: dict) -> None:
+def _ts_to_ifgs(tsincr: np.ndarray, preread_ifgs: dict, params: dict, ts_aps: np.ndarray) -> None:
     """
     Function that converts an incremental displacement time series into
     interferometric phase observations. Used to re-construct an interferogram
@@ -158,6 +158,7 @@ def _ts_to_ifgs(tsincr: np.ndarray, preread_ifgs: dict, params: dict) -> None:
     :param tsincr: incremental time series array of size (ifg.shape, nepochs-1)
     :param preread_ifgs: Dictionary of shared.PrereadIfg class instances
     :param params: Dictionary of PyRate configuration parameters.
+    :param ts_aps: incremental time series of APS corrections 
     """
     log.debug('Reconstructing interferometric observations from time series')
     ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
@@ -170,7 +171,8 @@ def _ts_to_ifgs(tsincr: np.ndarray, preread_ifgs: dict, params: dict) -> None:
     for i, ifg in num_ifgs_tuples:
         aps_error_on_disc = MultiplePaths.aps_error_path(ifg.tmp_path, params)
         phase = np.sum(tsincr[:, :, index_first[i]: index_second[i]], axis=2)
-        np.save(file=aps_error_on_disc, arr=phase)
+        phase_correction = np.sum(ts_aps[:, :, index_first[i]: index_second[i]], axis=2)
+        np.save(file=aps_error_on_disc, arr=phase_correction)
         _save_aps_corrected_phase(ifg.tmp_path, phase)
 
 
