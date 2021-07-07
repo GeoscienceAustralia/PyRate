@@ -83,10 +83,26 @@ for i in range(first_ifg_num, last_ifg_num + 1):
         ifg_corr = src.read(1)
     
     # Identify Date Pair
-    date_pair_list = re.findall(r'\d{8}-\d{8}', ifg_list[i])
-    date_pair_string = date_pair_list[0]
+    date_pair_list_ifg = re.findall(r'\d{8}-\d{8}', ifg_list[i])
+    date_pair_string_ifg = date_pair_list_ifg[0]
+
+    date_pair_list_corr = re.findall(r'\d{8}-\d{8}', corr_list[i])
+    date_pair_string_corr = date_pair_list_corr[0]
+
+    date_pair_list_ifgcorr = re.findall(r'\d{8}-\d{8}', tempml_list[i])
+    date_pair_string_ifgcorr = date_pair_list_ifgcorr[0]
+
+    # Check the Date-pairs are the same in case of mismatched files saved into the directories
+    if date_pair_string_ifg == date_pair_string_corr and date_pair_string_ifg == date_pair_string_ifgcorr:
+       
+         print(f'\nPlotting for {date_pair_string_ifg}...\n')
+        pass
+
+    else:
+
+        print(f'\nERROR: Interferogram datepair mismatch at {date_pair_string_ifg}, check that directories have the same interferograms.\n')
+        break
     
-    print(f'\nPlotting for {date_pair_string}...\n')
     
     # Plot
     climit = 100
@@ -114,9 +130,9 @@ for i in range(first_ifg_num, last_ifg_num + 1):
     fig.tight_layout()
 
     # Title
-    ax[1].set_title(f'{date_pair_string}', fontsize=10, fontweight='bold')
+    ax[1].set_title(f'{date_pair_string_ifg}', fontsize=10, fontweight='bold')
 
-    plt.savefig(f'{save_dir}/{date_pair_string}.png', dpi=300)
+    plt.savefig(f'{save_dir}/{date_pair_string_ifg}.png', dpi=300)
     
     plt.close()
 
