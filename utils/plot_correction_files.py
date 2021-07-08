@@ -22,6 +22,7 @@ Command-line arguments:
           SAVE_DIR       - full path to directory where images will be saved (needs to exist).
          FIRST_IFG       - first IFG in range of IFGs to plot (e.g. 1 to start plotting at 1st IFG in directory).
           LAST_IFG       - last IFG in range of IFGs to plot (e.g. 37 will plot up until the 37th IFG in directory).
+         NORMALISE       - Switch to subtract median to from figures (0=YES, 1=No, default is 0). 
 """
 
 # Arguments
@@ -32,6 +33,7 @@ parser.add_argument("CORRECTED_IFG_DIR", type=str, help="full path to corrected 
 parser.add_argument("SAVE_DIR", type=str, help="full path to directory where images will be saved")
 parser.add_argument("FIRST_IFG", type=int, help="first IFG in range of IFGs to plot (e.g. 1 to start plotting at first IFG in directory)")
 parser.add_argument("LAST_IFG", type=int, help="last IFG in range of IFGs to plot (e.g. 37 will plot up until the 37th IFG in directory)")
+parser.add_argument("-sm", "--subtract_median", type=int, default=1, help="Switch to subtract median to from figures (1=YES, 0=No, default is 1)")
 args = parser.parse_args()
 
 
@@ -44,6 +46,8 @@ save_dir = os.path.abspath(args.SAVE_DIR)
 
 first_ifg_num = args.FIRST_IFG - 1
 last_ifg_num = args.LAST_IFG - 1
+
+subtract_median = args.subtract_median
 
 
 # Create Lists
@@ -95,7 +99,7 @@ for i in range(first_ifg_num, last_ifg_num + 1):
     # Check the Date-pairs are the same in case of mismatched files saved into the directories
     if date_pair_string_ifg == date_pair_string_corr and date_pair_string_ifg == date_pair_string_ifgcorr:
        
-         print(f'\nPlotting for {date_pair_string_ifg}...\n')
+        print(f'\nPlotting for {date_pair_string_ifg}...\n')
         pass
 
     else:
@@ -104,20 +108,30 @@ for i in range(first_ifg_num, last_ifg_num + 1):
         break
     
     
-    # Plot
-    climit = 100
+    # PLOTTING
+    ifg_quant = np.nanquantile(ifg, [0.05, 0.95])
+    climit = np.nanmax(np.abs(ifg_quant))
+    
+    # subtract median
+    
+    if subtract_median == 1:
+        sub_med = 1
+    else:
+        sub_med = 0
+    
+
     fig, ax = plt.subplots(1,3, figsize=(6, 3))
      
     # IFG
-    s0 = ax[0].imshow(ifg-np.nanmedian(ifg), cmap='bwr', clim=(-1*climit, climit))
+    s0 = ax[0].imshow(ifg-(np.nanmedian(ifg)*sub_med), cmap='bwr', clim=(-1*climit, climit))
     ax[0].set_axis_off()
 
     # CORRECTION FILE
-    s1 =ax[1].imshow(corr-np.nanmedian(corr), cmap='bwr', clim=(-1*climit, climit))
+    s1 =ax[1].imshow(corr-(np.nanmedian(corr)*sub_med), cmap='bwr', clim=(-1*climit, climit))
     ax[1].set_axis_off()
 
     # IFG CORRECTED
-    s2 = ax[2].imshow(ifg_corr-np.nanmedian(ifg_corr), cmap='bwr', clim=(-1*climit,climit))
+    s2 = ax[2].imshow(ifg_corr-(np.nanmedian(ifg_corr)*sub_med), cmap='bwr', clim=(-1*climit,climit))
     ax[2].set_axis_off()
 
     # Extra
