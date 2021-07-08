@@ -112,26 +112,25 @@ for i in range(first_ifg_num, last_ifg_num + 1):
     ifg_quant = np.nanquantile(ifg, [0.05, 0.95])
     climit = np.nanmax(np.abs(ifg_quant))
     
-    # subtract median
-    
+    # switch to subtract median or not
     if subtract_median == 1:
-        sub_med = 1
+        switch = 1
     else:
-        sub_med = 0
+        switch = 0
     
 
     fig, ax = plt.subplots(1,3, figsize=(6, 3))
      
     # IFG
-    s0 = ax[0].imshow(ifg-(np.nanmedian(ifg)*sub_med), cmap='bwr', clim=(-1*climit, climit))
+    s0 = ax[0].imshow(ifg-(np.nanmedian(ifg)*switch), cmap='bwr', clim=(-1*climit, climit))
     ax[0].set_axis_off()
 
     # CORRECTION FILE
-    s1 =ax[1].imshow(corr-(np.nanmedian(corr)*sub_med), cmap='bwr', clim=(-1*climit, climit))
+    s1 =ax[1].imshow(corr-(np.nanmedian(corr)*switch), cmap='bwr', clim=(-1*climit, climit))
     ax[1].set_axis_off()
 
     # IFG CORRECTED
-    s2 = ax[2].imshow(ifg_corr-(np.nanmedian(ifg_corr)*sub_med), cmap='bwr', clim=(-1*climit,climit))
+    s2 = ax[2].imshow(ifg_corr-(np.nanmedian(ifg_corr)*switch), cmap='bwr', clim=(-1*climit,climit))
     ax[2].set_axis_off()
 
     # Extra
