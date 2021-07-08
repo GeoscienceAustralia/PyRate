@@ -458,6 +458,8 @@ def printcoords(event):
     imt = imt[mask]
     dph = dph[mask]
 
+    err = err[mask]
+
     for model, vis in enumerate(visibilities):
         if len(dph) > 1:
             yvalues = calc_model(dph, imo, xvalues, model, vel1p, intercept1p)
@@ -466,9 +468,8 @@ def printcoords(event):
                 axts.legend()
             else:
                 lines1[model], = axts.plot(xdates, yvalues, 'r-', visible=vis, alpha=0.6, zorder=3)
-
     # axts.scatter(imt, dph, label=label1, c='b', alpha=0.6, zorder=5)
-    axts.errorbar(imdates_dt, dph, yerr=err, label=label1, fmt='.', color='black', ecolor='blue', elinewidth=0.5, capsize=2)
+    axts.errorbar(imt, dph, yerr=err, label=label1, fmt='.', color='black', ecolor='blue', elinewidth=0.5, capsize=2)
     axts.set_title('Velocity = {:.1f} +/- {:.1f} [mm/yr] @({}, {})'.format(vel1p, errp, ii, jj), fontsize=10)
     # axts.set_ylim(-100,100)
 
