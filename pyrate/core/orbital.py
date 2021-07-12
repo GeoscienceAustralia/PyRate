@@ -333,25 +333,17 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
         ifgs = [shared.Ifg(i) for i in ifg_paths]
     else:  # alternate test paths # TODO: improve
         ifgs = ifg_paths
-
     src_ifgs = ifgs if m_ifgs is None else m_ifgs
     src_ifgs = mst.mst_from_ifgs(src_ifgs)[3]  # use networkx mst
 
-    vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
-    vphase = squeeze(vphase)
-
-    B = get_network_design_matrix(src_ifgs, degree, intercept=intercept)
-
-    orbparams = __orb_inversion(B, vphase)
-
-    ncoef = _get_num_params(degree) # ignore the intercept term
     if preread_ifgs:
         temp_ifgs = OrderedDict(sorted(preread_ifgs.items())).values()
         ids = first_second_ids(get_all_epochs(temp_ifgs))
     else:
         ids = first_second_ids(get_all_epochs(ifgs))
-    # extract all params except intercept terms
-    coefs = [orbparams[i:i+ncoef] for i in range(0, len(set(ids)) * ncoef, ncoef)]
+
+    # call the actual inversion routine
+    coefs = calc_network_orb_correction(src_ifgs, degree, ids, intercept=intercept)
 
     # create full res DM to expand determined coefficients into full res
     # orbital correction (eg. expand coarser model to full size)
@@ -374,6 +366,31 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
             shared.nan_and_mm_convert(i, params)
         _remove_network_orb_error(coefs, dm, i, ids, offset, params)
 
+def calc_network_orb_correction(src_ifgs, degree, ids, intercept=False):
+    """
+    Calculate and return coefficients for the network orbital correction model
+    given a set of ifgs:
+    :param src_ifgs: iterable of Ifg objects
+    :param degree: the degree of the orbital fit (planar, quadratic or part-cubic)
+    :param ids: a dict that maps dates in the source ifgs to epoch indices. The epoch
+    :param intercept: whether to include a constant offset to fit to each ifg. This
+    intercept is discarded and not returned.
+
+    :return coefs: a list of coefficient lists, indexed by the epoch indices provided in 
+    ids. The coefficient lists are in the following order:
+    PLANAR - x, y
+    QUADRATIC - x^2, y^2, x*y, x, y
+    PART_CUBIX - x*y^2, x^2, y^2, x*y, x, y
+    """
+    vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
+    vphase = squeeze(vphase)
+    B = get_network_design_matrix(src_ifgs, degree, intercept=intercept)
+    orbparams = __orb_inversion(B, vphase)
+    ncoef = _get_num_params(degree) # ignore the intercept term
+    # extract all params except intercept terms
+    nepochs = len(set(ids))
+    coefs = [orbparams[i:i+ncoef] for i in range(0, nepochs * ncoef, ncoef)]
+    return coefs
 
 def __check_and_apply_orberrors_found_on_disc(ifg_paths, params):
     saved_orb_err_paths = [MultiplePaths.orb_error_path(ifg_path, params) for ifg_path in ifg_paths]

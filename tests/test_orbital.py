@@ -25,6 +25,7 @@ from numpy import empty, dot, concatenate, float32
 from numpy import nan, isnan, array
 from os.path import join
 from pathlib import Path
+from datetime import date
 
 import numpy as np
 from numpy.linalg import pinv, inv
@@ -41,6 +42,7 @@ from pyrate.core.orbital import INDEPENDENT_METHOD, NETWORK_METHOD, PLANAR, \
 from pyrate.core.orbital import OrbitalError, __orb_correction, __orb_inversion
 from pyrate.core.orbital import get_design_matrix, get_network_design_matrix, orb_fit_calc_wrapper
 from pyrate.core.orbital import _get_num_params, remove_orbital_error, network_orbital_correction
+from pyrate.core.orbital import calc_network_orb_correction
 from pyrate.core.shared import Ifg, mkdir_p
 from pyrate.core.shared import nanmedian
 from pyrate.core import roipac
@@ -1170,6 +1172,146 @@ def test_set_synthetic_ifgs_independent_method(mexico_cropa_params, orbfit_degre
         test_ifg = SyntheticIfg(orbfit_degrees)
         test_single_synthetic_ifg_independent_method(orbfit_degrees, orb_lks, test_ifg)
 
+#an in-memory "open" interferogram that we can pass to top-level orb correction methods
+class FakeIfg:
+    def __init__(self, orbfit_deg, model_params, date_first, date_second):
+        self.x_step = 0.001388888900000  # pixel size - same as cropA
+        self.y_step = 0.001388888900000
+        self.nrows = 100
+        self.ncols = 100
+        self.num_cells = self.nrows * self.ncols
+        self.is_open = False
+        self.orbfit_degrees = orbfit_deg
+        self.model_params = model_params
+        self.first = date_first
+        self.second = date_second
+        self._phase_data = None
+        self.y_first = 0
+        self.x_first = 0
+        self.nan_fraction = 0
+        self.add_geographic_data()
+
+    def add_geographic_data(self):
+        """
+        Determine and add geographic data to object
+        """
+        # add some geographic data
+        self.x_centre = int(self.ncols / 2)
+        self.y_centre = int(self.nrows / 2)
+        self.lat_centre = self.y_first + (self.y_step * self.y_centre)
+        self.long_centre = self.x_first + (self.x_step * self.x_centre)
+        # use cell size from centre of scene
+        self.x_size, self.y_size = cell_size(self.lat_centre, self.long_centre, self.x_step, self.y_step)
+
+    @property
+    def phase_data(self):
+        """
+        Returns phase band as an array.
+        """
+        if self._phase_data is None:
+            self.open()
+        return self._phase_data
+
+    def open(self):
+        x, y = np.meshgrid(np.arange(self.nrows) * self.x_step, np.arange(self.ncols) * self.y_step)
+        x += self.x_step
+        y += self.y_step
+
+        # use provided coefficients
+        if self.orbfit_degrees == PLANAR:
+            mx, my = self.model_params
+            self._phase_data = mx*x + my*y
+        elif self.orbfit_degrees == QUADRATIC:
+            mx, my, mx2, my2, mxy = self.model_params
+            self._phase_data = mx*x + my*y + mx2*x**2 + my2*y**2 + mxy*x*y
+        else:
+            mx, my, mx2, my2, mxy, mxy2 = self.model_params
+            self._phase_data = mx*x + my*y + mx2*x**2 + my2*y**2 + mxy*x*y + mxy2*x*y**2
+            
+        self.is_open = True
+
+#tests for network method to recover synthetic orbital error
+class SyntheticNetwork:
+    """
+    This class will generate a network of synthetic ifgs, based on
+    orbital errors for each epoch. The signal will be purely from the synthetic
+    orbital error with no noise.
+    """
+
+    def __init__(self, orbfit_deg, epochs, network, model_params):
+        """
+        orbfit_deg: synthesise ifgs with planar, quadratic, or part cubic
+        orbit error models.
+        epochs: list of epoch dates in the network
+        network: list of lists, spec of the ifgs to generate for each epoch as
+        primary
+        model_params: list of iterable - model parameters of correct degree for
+        each epoch
+        """
+        ifgs = []
+        for i, e1 in enumerate(epochs):
+            for j in network[i]:
+                ifg_err_model = [model_params[i][k] - model_params[j][k] for k in range(len(model_params[0]))]
+                ifgs.append(FakeIfg(orbfit_deg, ifg_err_model, e1, epochs[j]))
+        self.ifgs = ifgs
+        self.epochs = epochs
+
+
+def test_synthetic_network_correction(orbfit_degrees):
+    epochs = [date(2000, 1, 1),
+              date(2000, 1,13),
+              date(2000, 1,25),
+              date(2000, 2, 6),
+              date(2000, 2,18),
+              date(2000, 3, 1)]
+    #start with the network as a connected tree so mst does nothing
+    network = [[2],[2],[3],[4,5],[],[]]
+    #six sets of model parameters - one for each epoch
+    model_params = [[-1,1,-1,1,-1,1],
+                    [0,1,2,3,4,5],
+                    [5,4,3,2,1,0],
+                    [3,6,9,6,3,0],
+                    [9,4,1,0,1,4],
+                    [1,1,1,1,1,1]]
+    if orbfit_degrees == PLANAR:
+        nparam = 2
+    elif orbfit_degrees == QUADRATIC:
+        nparam = 5
+    else:
+        nparam = 6
+    model_params = [mi[:nparam] for mi in model_params]
+
+    syn_data = SyntheticNetwork(orbfit_degrees, epochs, network, model_params)
+    id_dict = {date:i for date, i in enumerate(epochs)}
+    coeffs = calc_network_orb_correction(syn_data.ifgs, orbfit_degrees, id_dict, intercept=False)
+
+    #reconstruct correction
+    #
+    reconstructed = []
+    #ifgs are built with lat/long metadata,
+    #orbfit modelling is done with metres coordinates
+    csx = syn_data.ifgs[0].x_size
+    csy = syn_data.ifgs[0].y_size
+    x, y = (coord + 1 for coord in np.meshgrid(np.arange(100, dtype=float),np.arange(100, dtype=float)))
+    x *= csx
+    y *= csy
+    x /= 100
+    y /= 100
+
+    for i, js in enumerate(network):
+        for j in js:
+            cpair = [cj - ci for ci, cj in zip(coeffs[i],coeffs[j])]
+            if orbfit_degrees == PLANAR:
+                reconstructed.append(cpair[0]*x + cpair[1]*y)
+            elif orbfit_degrees == QUADRATIC:
+                reconstructed.append(cpair[0]*x**2 + cpair[1]*y**2 + cpair[2]*x*y\
+                    + cpair[3]*x + cpair[4]*y)
+            else:
+                reconstructed.append(cpair[0]*x*y**2 + cpair[1]*x**2 + cpair[2]*y**2 + \
+                    cpair[3]*x*y + cpair[4]*x + cpair[5]*y)
+
+    for orig, recon in zip(syn_data.ifgs, reconstructed):
+        assert_array_almost_equal(orig.phase_data, recon, decimal=2)
 
 def test_orbital_inversion():
     """Small unit to test the application of numpy pseudoinverse"""
