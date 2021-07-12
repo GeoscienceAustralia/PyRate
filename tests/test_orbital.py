@@ -1251,7 +1251,7 @@ class SyntheticNetwork:
         ifgs = []
         for i, e1 in enumerate(epochs):
             for j in network[i]:
-                ifg_err_model = [model_params[i][k] - model_params[j][k] for k in range(len(model_params[0]))]
+                ifg_err_model = [model_params[j][k] - model_params[i][k] for k in range(len(model_params[0]))]
                 ifgs.append(FakeIfg(orbfit_deg, ifg_err_model, e1, epochs[j]))
         self.ifgs = ifgs
         self.epochs = epochs
@@ -1290,6 +1290,7 @@ def test_synthetic_network_correction(orbfit_degrees):
     reconstructed = []
     #ifgs are built with lat/long metadata,
     #orbfit modelling is done with metres coordinates
+    #network method uses a hard coded scale of 100
     csx = syn_data.ifgs[0].x_size
     csy = syn_data.ifgs[0].y_size
     x, y = (coord + 1 for coord in np.meshgrid(np.arange(100, dtype=float),np.arange(100, dtype=float)))
