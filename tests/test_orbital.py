@@ -1106,11 +1106,34 @@ class SyntheticIfg:
         self._phase_data = self._phase_data_first - self._phase_data_second
         self.is_open = True
 
+from pyrate.core.gdal_python import _gdalwarp_width_and_height
+from pyrate.core.orbital import __orb_inversion
+
+#helper function to multilook a synthetic ifg with gdal
+def mlk_ifg(ifg, nlooks):
+    src = gdal.GetDriverByName('MEM').Create('', ifg.ncols, ifg.nrows, 1, gdalconst.GDT_Float32)
+    gt = (0, ifg.x_step, 0, 0, 0, ifg.y_step)
+    src.SetGeoTransform(gt)
+    src.GetRasterBand(1).WriteArray(ifg.phase_data)
+    resampled_gt = (0, ifg.x_step * nlooks, 0, 0, 0, ifg.y_step * nlooks)
+    min_x, min_y = 0, 0
+    max_x, max_y = ifg.x_step * ifg.ncols, ifg.y_step * ifg.nrows
+
+    px_height, px_width = _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, resampled_gt)
+
+    dst = gdal.GetDriverByName('MEM').Create('', px_height, px_width, 1, gdalconst.GDT_Float32)
+    dst.SetGeoTransform(resampled_gt)
+
+    gdal.ReprojectImage(src, dst, '', '', gdal.GRA_Average)
+
+    mlooked = Ifg(dst)
+    mlooked.first = ifg.first
+    mlooked.second = ifg.second
+    return mlooked
 
 @pytest.fixture(params=[1, 2, 3, 4])
 def orb_lks(request):
     return request.param
-
 
 def test_single_synthetic_ifg_independent_method(orbfit_degrees, orb_lks, ifg=None):
     """
@@ -1123,27 +1146,11 @@ def test_single_synthetic_ifg_independent_method(orbfit_degrees, orb_lks, ifg=No
     These tests also prove that the orbital error parameters can be approximated using multilooking in the
     independent method.
     """
-    from pyrate.core.gdal_python import _gdalwarp_width_and_height
-    from pyrate.core.orbital import __orb_inversion
     if ifg is None:
         ifg = SyntheticIfg(orbfit_degrees)
     fullres_dm = get_design_matrix(ifg, orbfit_degrees, intercept=True, scale=100000)
-    src = gdal.GetDriverByName('MEM').Create('', ifg.ncols, ifg.nrows, 1, gdalconst.GDT_Float32)
-    gt = (0, ifg.x_step, 0, 0, 0, ifg.y_step)
-    src.SetGeoTransform(gt)
-    src.GetRasterBand(1).WriteArray(ifg.phase_data)
-    resampled_gt = (0, ifg.x_step * orb_lks, 0, 0, 0, ifg.y_step * orb_lks)
-    min_x, min_y = 0, 0
-    max_x, max_y = ifg.x_step * ifg.ncols, ifg.y_step * ifg.nrows
-
-    px_height, px_width = _gdalwarp_width_and_height(max_x, max_y, min_x, min_y, resampled_gt)
-
-    dst = gdal.GetDriverByName('MEM').Create('', px_height, px_width, 1, gdalconst.GDT_Float32)
-    dst.SetGeoTransform(resampled_gt)
-
-    gdal.ReprojectImage(src, dst, '', '', gdal.GRA_Average)
-
-    m_looked_ifg = Ifg(dst)
+    
+    m_looked_ifg = mlk_ifg(ifg, orb_lks)
 
     mlooked_phase = np.reshape(m_looked_ifg.phase_data, m_looked_ifg.num_cells)
     mlooked_dm = get_design_matrix(m_looked_ifg, orbfit_degrees, intercept=True, scale=100000)
@@ -1257,7 +1264,7 @@ class SyntheticNetwork:
         self.epochs = epochs
 
 
-def test_synthetic_network_correction(orbfit_degrees):
+def test_synthetic_network_correction(orbfit_degrees, orb_lks):
     epochs = [date(2000, 1, 1),
               date(2000, 1,13),
               date(2000, 1,25),
@@ -1283,7 +1290,10 @@ def test_synthetic_network_correction(orbfit_degrees):
 
     syn_data = SyntheticNetwork(orbfit_degrees, epochs, network, model_params)
     id_dict = {date:i for date, i in enumerate(epochs)}
-    coeffs = calc_network_orb_correction(syn_data.ifgs, orbfit_degrees, id_dict, intercept=False)
+
+    mlk_ifgs = [mlk_ifg(ifg, orb_lks) for ifg in syn_data.ifgs]
+
+    coeffs = calc_network_orb_correction(mlk_ifgs, orbfit_degrees, id_dict, intercept=False)
 
     #reconstruct correction
     #
