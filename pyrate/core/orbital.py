@@ -24,7 +24,7 @@ from pathlib import Path
 from numpy import empty, isnan, reshape, float32, squeeze
 from numpy import dot, vstack, zeros, meshgrid
 import numpy as np
-from numpy.linalg import pinv, cond, lstsq
+from numpy.linalg import pinv, cond
 
 import pyrate.constants as C
 from pyrate.core.algorithm import first_second_ids, get_all_epochs
@@ -351,11 +351,11 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
     if preread_ifgs:
         temp_ifg = Ifg(ifg_paths[0])  # ifgs here are paths
         temp_ifg.open()
-        dm = get_design_matrix(temp_ifg, degree, intercept=False, scale=100)
+        dm = get_design_matrix(temp_ifg, degree, intercept=intercept, scale=100)
         temp_ifg.close()
     else:
         ifg = ifgs[0]
-        dm = get_design_matrix(ifg, degree, intercept=False, scale=100)
+        dm = get_design_matrix(ifg, degree, intercept=intercept, scale=100)
 
     for i in ifg_paths:
         # open if not Ifg instance
@@ -386,7 +386,7 @@ def calc_network_orb_correction(src_ifgs, degree, ids, intercept=False):
     vphase = squeeze(vphase)
     B = get_network_design_matrix(src_ifgs, degree, intercept=intercept)
     orbparams = __orb_inversion(B, vphase)
-    ncoef = _get_num_params(degree) # ignore the intercept term
+    ncoef = _get_num_params(degree) + intercept
     # extract all params except intercept terms
     nepochs = len(set(ids))
     coefs = [orbparams[i:i+ncoef] for i in range(0, nepochs * ncoef, ncoef)]
@@ -546,27 +546,22 @@ def get_network_design_matrix(ifgs, degree, intercept=True):
     shape = [ifgs[0].num_cells * nifgs, ncoef * nepochs]
 
     if intercept:
-        shape[1] += nifgs  # add extra block for intercept cols
+        shape[1] += nepochs  # add extra space for intercepts
 
     netdm = zeros(shape, dtype=float32)
 
     # calc location for individual design matrices
     dates = [ifg.first for ifg in ifgs] + [ifg.second for ifg in ifgs]
     ids = first_second_ids(dates)
-    icpt_col = nepochs * ncoef  # base offset for the intercept cols
-    tmpdm = get_design_matrix(ifgs[0], degree, intercept=False, scale=100)
+    tmpdm = get_design_matrix(ifgs[0], degree, intercept=intercept, scale=100)
 
     # iteratively build up sparse matrix
     for i, ifg in enumerate(ifgs):
         rs = i * ifg.num_cells  # starting row
-        m = ids[ifg.first] * ncoef  # start col for first
-        s = ids[ifg.second] * ncoef  # start col for second
-        netdm[rs:rs + ifg.num_cells, m:m + ncoef] = -tmpdm
-        netdm[rs:rs + ifg.num_cells, s:s + ncoef] = tmpdm
-
-        # intercepts are diagonals across the extra array block created above
-        if intercept:
-            netdm[rs:rs + ifg.num_cells, icpt_col + i] = 1  # init intercept cols
+        m = ids[ifg.first] * (ncoef + intercept)  # start col for first
+        s = ids[ifg.second] * (ncoef + intercept)  # start col for second
+        netdm[rs:rs + ifg.num_cells, m:m + ncoef + intercept] = -tmpdm
+        netdm[rs:rs + ifg.num_cells, s:s + ncoef + intercept] = tmpdm
 
     return netdm
 

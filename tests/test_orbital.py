@@ -333,7 +333,7 @@ class TestNetworkDesignMatrixTests:
         offset = True
         act = get_network_design_matrix(self.ifgs, PLANAR, intercept=offset)
         assert act.shape[0] == self.ncells * self.nifgs
-        assert act.shape[1] == (self.nepochs * ncoef) + self.nifgs
+        assert act.shape[1] == (self.nepochs * (ncoef + offset))
         assert act.ptp() != 0
         self.check_equality(ncoef, act, self.ifgs, offset)
 
@@ -350,7 +350,7 @@ class TestNetworkDesignMatrixTests:
         offset = True
         act = get_network_design_matrix(self.ifgs, QUADRATIC, intercept=offset)
         assert act.shape[0] == self.ncells * self.nifgs
-        assert act.shape[1] == (self.nepochs * ncoef) + self.nifgs
+        assert act.shape[1] == (self.nepochs * (ncoef + offset))
         assert act.ptp() != 0
         self.check_equality(ncoef, act, self.ifgs, offset)
 
@@ -367,7 +367,7 @@ class TestNetworkDesignMatrixTests:
         offset = True
         act = get_network_design_matrix(self.ifgs, PART_CUBIC, intercept=offset)
         assert act.shape[0] == self.ncells * self.nifgs
-        assert act.shape[1] == (self.nepochs * ncoef) + self.nifgs
+        assert act.shape[1] == (self.nepochs * (ncoef+offset))
         assert act.ptp() != 0
         self.check_equality(ncoef, act, self.ifgs, offset)
 
@@ -387,22 +387,15 @@ class TestNetworkDesignMatrixTests:
             assert exp.shape == (ifg.num_cells, ncoef)
 
             ib1, ib2 = [x * self.ncells for x in (i, i + 1)]  # row start/end
-            jbm = ncoef * self.date_ids[ifg.first]  # starting col index for first image
-            jbs = ncoef * self.date_ids[ifg.second]  # col start for second image
+            jbm = (ncoef + offset) * self.date_ids[ifg.first]  # starting col index for first image
+            jbs = (ncoef + offset) * self.date_ids[ifg.second]  # col start for second image
             assert_array_almost_equal(-exp, dm[ib1:ib2, jbm:jbm + ncoef])
             assert_array_almost_equal(exp, dm[ib1:ib2, jbs:jbs + ncoef])
 
             # ensure remaining rows/cols are zero for this ifg NOT inc offsets
             assert_array_equal(0, dm[ib1:ib2, :jbm])  # all cols leading up to first image
-            assert_array_equal(0, dm[ib1:ib2, jbm + ncoef:jbs])  # cols btwn mas/slv
-            assert_array_equal(0, dm[ib1:ib2, jbs + ncoef:np])  # to end of non offsets
-
-            # check offset cols for 1s and 0s
-            if offset is True:
-                ip1 = i + np  # offset column index
-                assert_array_equal(1, dm[ib1:ib2, ip1])
-                assert_array_equal(0, dm[ib1:ib2, np:ip1])  # cols before offset col
-                assert_array_equal(0, dm[ib1:ib2, ip1 + 1:])  # cols after offset col
+            assert_array_equal(0, dm[ib1:ib2, jbm + ncoef + offset:jbs])  # cols btwn mas/slv
+            assert_array_equal(0, dm[ib1:ib2, jbs + ncoef + offset:np])  # to end of non offsets
 
 
 # components for network correction testing
@@ -1293,7 +1286,7 @@ def test_synthetic_network_correction(orbfit_degrees, orb_lks):
 
     mlk_ifgs = [mlk_ifg(ifg, orb_lks) for ifg in syn_data.ifgs]
 
-    coeffs = calc_network_orb_correction(mlk_ifgs, orbfit_degrees, id_dict, intercept=False)
+    coeffs = calc_network_orb_correction(mlk_ifgs, orbfit_degrees, id_dict, intercept=True)
 
     #reconstruct correction
     #
