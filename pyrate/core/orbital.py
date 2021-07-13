@@ -24,7 +24,7 @@ from pathlib import Path
 from numpy import empty, isnan, reshape, float32, squeeze
 from numpy import dot, vstack, zeros, meshgrid
 import numpy as np
-from numpy.linalg import pinv, cond
+from numpy.linalg import pinv, cond, lstsq
 
 import pyrate.constants as C
 from pyrate.core.algorithm import first_second_ids, get_all_epochs
@@ -299,7 +299,7 @@ def __orb_inversion(design_matrix, data):
     B = design_matrix[~isnan(data)]
     d = data[~isnan(data)]
 
-    return dot(pinv(B, 1e-6), d)
+    return pinv(B) @ d
 
 
 def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None):

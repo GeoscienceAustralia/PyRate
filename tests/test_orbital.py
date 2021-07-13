@@ -1148,12 +1148,12 @@ def test_single_synthetic_ifg_independent_method(orbfit_degrees, orb_lks, ifg=No
     """
     if ifg is None:
         ifg = SyntheticIfg(orbfit_degrees)
-    fullres_dm = get_design_matrix(ifg, orbfit_degrees, intercept=True, scale=100000)
+    fullres_dm = get_design_matrix(ifg, orbfit_degrees, intercept=True, scale=1)
     
     m_looked_ifg = mlk_ifg(ifg, orb_lks)
 
     mlooked_phase = np.reshape(m_looked_ifg.phase_data, m_looked_ifg.num_cells)
-    mlooked_dm = get_design_matrix(m_looked_ifg, orbfit_degrees, intercept=True, scale=100000)
+    mlooked_dm = get_design_matrix(m_looked_ifg, orbfit_degrees, intercept=True, scale=1)
 
     orb_corr = __orb_correction(fullres_dm, mlooked_dm, ifg.phase_data, mlooked_phase, offset=True)
     if orb_lks == 1:
