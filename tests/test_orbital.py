@@ -475,6 +475,14 @@ class TestNetworkCorrectionTests:
 
         cls.nc_tol = 1e-6
 
+    """
+    this test checks that the network orbital fit will return the same
+    parameters if we add a constant to every interferogram. The current
+    network method actually uses the constant parameters, which are
+    assigned per epoch rather than per interferogram, so this test will
+    fail (and should fail).
+    """
+    @pytest.mark.skip(reason="legacy test against old network method")
     def test_offset_inversion(self):
         """
         Ensure pinv(DM)*obs gives equal results given constant change to fd
@@ -516,6 +524,13 @@ class TestNetworkCorrectionTests:
         exp = network_correction(self.ifgs, deg, intercept)
         self.verify_corrections(self.ifgs, exp, deg, intercept)
 
+    """
+    the test_network_correction_{DEGREE}_offset tests check against a method
+    that fits a constant offset to each interferogram but doesn't remove it.
+    This differs from the current implementation of the network correction
+    so these tests will fail.
+    """
+    @pytest.mark.skip(reason="legacy test against old network method")
     def test_network_correction_planar_offset(self):
         deg, intercept = PLANAR, True
         exp = network_correction(self.ifgs, deg, intercept)
@@ -527,6 +542,7 @@ class TestNetworkCorrectionTests:
         exp = network_correction(self.ifgs, deg, intercept)
         self.verify_corrections(self.ifgs, exp, deg, intercept)
 
+    @pytest.mark.skip(reason="legacy test against old network method")
     def test_network_correction_quadratic_offset(self):
         deg, intercept = QUADRATIC, True
         exp = network_correction(self.ifgs, deg, intercept)
@@ -536,7 +552,8 @@ class TestNetworkCorrectionTests:
         deg, intercept = PART_CUBIC, False
         exp = network_correction(self.ifgs, deg, intercept)
         self.verify_corrections(self.ifgs, exp, deg, intercept)
-
+    
+    @pytest.mark.skip(reason="legacy test against old network method")
     def test_network_correction_partcubic_offset(self):
         deg, intercept = PART_CUBIC, True
         exp = network_correction(self.ifgs, deg, intercept)
@@ -589,6 +606,7 @@ class TestNetworkCorrectionTestsMultilooking:
         exp = network_correction(self.ifgs, deg, intercept, self.ml_ifgs)
         self.verify_corrections(self.ifgs, exp, deg, intercept)
 
+    @pytest.mark.skip(reason="legacy test against old network method")
     def test_mlooked_network_correction_planar_offset(self):
         deg, intercept = PLANAR, True
         exp = network_correction(self.ifgs, deg, intercept, self.ml_ifgs)
@@ -599,6 +617,7 @@ class TestNetworkCorrectionTestsMultilooking:
         exp = network_correction(self.ifgs, deg, intercept, self.ml_ifgs)
         self.verify_corrections(self.ifgs, exp, deg, intercept)
 
+    @pytest.mark.skip(reason="legacy test against old network method")
     def test_mlooked_network_correction_quadratic_offset(self):
         deg, intercept = QUADRATIC, True
         exp = network_correction(self.ifgs, deg, intercept, self.ml_ifgs)
@@ -609,6 +628,7 @@ class TestNetworkCorrectionTestsMultilooking:
         exp = network_correction(self.ifgs, deg, intercept, self.ml_ifgs)
         self.verify_corrections(self.ifgs, exp, deg, intercept)
 
+    @pytest.mark.skip(reason="legacy test against old network method")
     def test_mlooked_network_correction_partcubic_offset(self):
         deg, intercept = PART_CUBIC, True
         exp = network_correction(self.ifgs, deg, intercept, self.ml_ifgs)
