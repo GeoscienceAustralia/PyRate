@@ -40,7 +40,7 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop],
 
     nrows, ncols, n_loops = closure.shape
 
-    #50 ifgs per fig
+    # 49 ifgs per fig
     plt_rows = 7 
     plt_cols = 7
     plots_per_fig = plt_rows * plt_cols
@@ -48,7 +48,7 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop],
 
     all_fig_plots = 1
     for fig_i in range(n_figs):
-        fig = plt.figure(figsize=(12*plt_rows, 8*plt_cols))
+        fig = plt.figure(figsize=(9*plt_rows, 6*plt_cols))
         this_fig_plots = 0
         for p_r in range(plt_rows):
             for p_c in range(plt_cols):
@@ -60,8 +60,9 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop],
                 loop = loops[plt_cols * p_r + p_c + fig_i * plots_per_fig]
                 title = ',\n'.join([repr(l) for l in loop.loop])
                 im = ax.imshow(data, vmin=-thr, vmax=thr, cmap=cmap)
+                plt.tick_params(axis='both', which='major', labelsize=12)
                 text = ax.set_title(title)
-                text.set_fontsize(20)
+                text.set_fontsize(16)
                 #text.set_fontsize(min(20, int(n_loops/3)))
 
                 divider = make_axes_locatable(ax)
@@ -70,7 +71,9 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop],
                 this_fig_plots += 1
                 all_fig_plots += 1
 
+        fig.tight_layout()
+
         closure_plot_file = Path(config.phase_closure_dir).joinpath(f'closure_loops_iteration_{iteration}_fig_{fig_i}.png')
-        plt.savefig(closure_plot_file)
+        plt.savefig(closure_plot_file, dpi=100)
         plt.close(fig)
         log.info(f'{this_fig_plots} closure loops plotted in {closure_plot_file}')
