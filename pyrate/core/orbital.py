@@ -248,6 +248,8 @@ def independent_orbital_correction(ifg_path, params):
             exts, _, _ = __extents_from_params(params)
             mlooked = _create_mlooked_dataset(multi_path, ifg.data_path, exts, params)
             ifg = Ifg(mlooked) # multi-looked Ifg object
+            ifg.initialize()
+            shared.nan_and_mm_convert(ifg, params)
 
         # vectorise phase data, keeping NODATA
         vphase = reshape(ifg.phase_data, ifg.num_cells)
