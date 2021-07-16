@@ -40,13 +40,14 @@ _input_parameters.conf_ as follows:
 # Phase closure correction parameters
 
 # closure_thr:         Closure threshold for each pixel in multiples of pi, e.g. 0.5 = pi/2, 1 = pi.
-# avg_ifg_err_thr:     Ifgs with more than this fraction of pixels above the closure threshold, on average, will be dropped entirely.
+# ifg_drop_thr:        Ifgs with more than this fraction of pixels above the closure threshold in all
+#                      loops it participates in, will be dropped entirely.
 # min_loops_per_ifg:   Ifgs are dropped entirely if they do not participate in at least this many closure loops.
 # max_loop_length:     Closure loops with up to this many edges will be used.
 # max_loop_redundancy: A closure loop will be discarded if all constituent ifgs in that loop have
 #                      already contributed to a number of loops equal to this parameter.
 closure_thr:         0.5
-avg_ifg_err_thr:     0.05
+ifg_drop_thr:        0.05
 min_loops_per_ifg:   2
 max_loop_length:     4
 max_loop_redundancy: 2
@@ -86,7 +87,7 @@ The PyRate _phase closure_ algorithm proceeds as follows:
 
 5. Next, ifgs are dropped (removed from the processing list) if the fraction of
    constituent pixels breaching the `closure_thr` parameter in all loops
-   the ifg participates in exceeds the parameter `avg_ifg_err_thr`, or the ifg
+   the ifg participates in exceeds the parameter `ifg_drop_thr`, or the ifg
    does not contribute to a number of loops at least equal to the parameter
    `min_loops_per_ifg`.
    (function `closure_check.__drop_ifgs_exceeding_threshold`)
@@ -134,7 +135,7 @@ orbfitlksx:    10
 orbfitlksy:    10
 
 closure_thr:         0.5
-avg_ifg_err_thr:     0.1
+ifg_drop_thr:        0.1
 min_loops_per_ifg:   2
 max_loop_length:     4
 max_loop_redundancy: 2
@@ -155,7 +156,7 @@ The 8 plotted closure loops from iteration #1 show areas where the `closure_thr`
 threshold has been breached as either dark red or dark blue. The previously
 circled unwrapping errors show up as breached areas in several closure loops.
 
-The `avg_ifg_err_thr` parameter is set to 10% in this example. This is enough
+The `ifg_drop_thr` parameter is set to 10% in this example. This is enough
 to detect the largest mis-closed area, which amounts to around 25% of the phase
 data area spatially. The ifg introducing this mis-closure (20160407-20160513)
 is dropped and iteration #2 continues:

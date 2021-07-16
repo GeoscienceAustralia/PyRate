@@ -372,7 +372,7 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
-    "avg_ifg_err_thr": {
+    "ifg_drop_thr": {
         "DataType": float,
         "DefaultValue": 0.5,
         "MinValue": 0.01,
