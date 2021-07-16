@@ -166,12 +166,15 @@ def _est_ref_phs_ifg_median(phase_data, comp):
     return nanmedian(ifgv)
 
 
-def _update_phase_and_metadata(ifgs, ref_phs):
+def _update_phase_and_metadata(ifgs, ref_phs, params):
     """
     Function that applies the reference phase correction and updates ifg metadata
     """
     def __inner(ifg, ref_ph):
         ifg.open()
+        # nan-convert before subtracting ref phase
+        ifg.nodata_value = params["noDataValue"]
+        ifg.convert_to_nans()
         # add 1e-20 to avoid 0.0 values being converted to NaN downstream (Github issue #310)
         # TODO: implement a more robust way of avoiding this issue, e.g. using numpy masked
         #       arrays to mark invalid pixel values rather than directly changing values to NaN
@@ -217,7 +220,7 @@ def ref_phase_est_wrapper(params):
     # If ref phase file exists on disk, then reuse - subtract ref_phase from ifgs and return
     if ref_phs_file.exists():
         ref_phs = np.load(ref_phs_file)
-        _update_phase_and_metadata(ifgs, ref_phs)
+        _update_phase_and_metadata(ifgs, ref_phs, params)
         shared.save_numpy_phase(ifg_paths, params)
         return ref_phs, ifgs
 
@@ -250,7 +253,7 @@ def ref_phase_est_wrapper(params):
     mpiops.comm.Bcast(collected_ref_phs, root=0)
 
     # subtract ref_phase from ifgs
-    _update_phase_and_metadata(ifgs, collected_ref_phs)
+    _update_phase_and_metadata(ifgs, collected_ref_phs, params)
 
     mpiops.comm.barrier()
     shared.save_numpy_phase(ifg_paths, params)
