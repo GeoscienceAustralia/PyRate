@@ -38,7 +38,7 @@ def test_discard_loops_containing_max_ifg_count(closure_params):
 
 def retain_loops(params):
     sorted_loops = sort_loops_based_on_weights_and_date(params)
-    params[C.MAX_LOOPS_PER_IFG] = 2
+    params[C.MAX_LOOP_REDUNDANCY] = 2
     params[C.MAX_LOOP_LENGTH] = 3
     retained_loops_meeting_max_loop_criteria = [sl for sl in sorted_loops
                                                 if len(sl) <= params[C.MAX_LOOP_LENGTH]]
@@ -46,7 +46,7 @@ def retain_loops(params):
           f"{len(retained_loops_meeting_max_loop_criteria)} loops are retained"
     print(msg)
     retained_loops = discard_loops_containing_max_ifg_count(retained_loops_meeting_max_loop_criteria, params)
-    msg = f"After applying MAX_LOOPS_PER_IFG={params[C.MAX_LOOPS_PER_IFG]} criteria, " \
+    msg = f"After applying MAX_LOOP_REDUNDANCY={params[C.MAX_LOOP_REDUNDANCY]} criteria, " \
           f"{len(retained_loops)} loops are retained"
     print(msg)
     return retained_loops

@@ -180,12 +180,12 @@ APS_ELEVATION_EXT = 'APS_ELEVATION_EXT'
 
 # phase closure
 PHASE_CLOSURE = 'phase_closure'
-LARGE_DEV_THR = 'large_dev_thr'
-AVG_IFG_ERR_THR = 'avg_ifg_err_thr'
-LOOPS_THR_IFG = 'loops_thr_ifg'
+CLOSURE_THR = 'closure_thr'
+IFG_DROP_THR = 'ifg_drop_thr'
+MIN_LOOPS_PER_IFG = 'min_loops_per_ifg'
 MAX_LOOP_LENGTH = 'max_loop_length'
+MAX_LOOP_REDUNDANCY = 'max_loop_redundancy'
 SUBTRACT_MEDIAN = 'subtract_median'
-MAX_LOOPS_PER_IFG = 'max_loops_per_ifg'
 
 # orbital error correction/parameters
 #: BOOL (1/0); Perform orbital error correction (1: yes, 0: no)
