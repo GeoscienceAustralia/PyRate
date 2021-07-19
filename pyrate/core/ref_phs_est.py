@@ -24,7 +24,7 @@ import numpy as np
 
 import pyrate.constants as C
 from pyrate.core import ifgconstants as ifc, shared
-from pyrate.core.shared import joblib_log_level, nanmedian, Ifg
+from pyrate.core.shared import joblib_log_level, nanmedian, Ifg, nan_and_mm_convert
 from pyrate.core import mpiops
 from pyrate.configuration import Configuration
 from pyrate.core.logger import pyratelogger as log
@@ -172,9 +172,8 @@ def _update_phase_and_metadata(ifgs, ref_phs, params):
     """
     def __inner(ifg, ref_ph):
         ifg.open()
-        # nan-convert before subtracting ref phase
-        ifg.nodata_value = params["noDataValue"]
-        ifg.convert_to_nans()
+        # nan-convert and mm-convert before subtracting ref phase
+        nan_and_mm_convert(ifg, params)
         # add 1e-20 to avoid 0.0 values being converted to NaN downstream (Github issue #310)
         # TODO: implement a more robust way of avoiding this issue, e.g. using numpy masked
         #       arrays to mark invalid pixel values rather than directly changing values to NaN

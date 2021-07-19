@@ -34,7 +34,7 @@ from pyrate.core.logger import pyratelogger as log
 from pyrate.core import shared, ifgconstants as ifc, mpiops
 from pyrate.core.covariance import cvd_from_phase, RDist
 from pyrate.core.algorithm import get_epochs
-from pyrate.core.shared import Ifg, Tile, EpochList
+from pyrate.core.shared import Ifg, Tile, EpochList, nan_and_mm_convert
 from pyrate.core.timeseries import time_series
 from pyrate.merge import assemble_tiles
 from pyrate.configuration import MultiplePaths, Configuration
@@ -68,7 +68,7 @@ def spatio_temporal_filter(params: dict) -> None:
     aps_paths = [MultiplePaths.aps_error_path(i, params) for i in ifg_paths]
     if all(a.exists() for a in aps_paths):
         log.warning('Reusing APS errors from previous run')
-        _apply_aps_correction(ifg_paths, aps_paths)
+        _apply_aps_correction(ifg_paths, aps_paths, params)
         return
 
     # obtain the incremental time series using SVD
@@ -92,7 +92,7 @@ def spatio_temporal_filter(params: dict) -> None:
     _make_aps_corrections(ts_aps, ifgs, params)
 
     # apply correction to ifgs and save ifgs to disc.
-    _apply_aps_correction(ifg_paths, aps_paths)
+    _apply_aps_correction(ifg_paths, aps_paths, params)
 
     # update/save the phase_data in the tiled numpy files
     shared.save_numpy_phase(ifg_paths, params)
@@ -172,7 +172,7 @@ def _make_aps_corrections(ts_aps: np.ndarray, ifgs: List[Ifg], params: dict) -> 
     mpiops.comm.barrier()
 
 
-def _apply_aps_correction(ifg_paths: List[str], aps_paths: List[str]) -> None:
+def _apply_aps_correction(ifg_paths: List[str], aps_paths: List[str], params: dict) -> None:
     """
     Function to read and apply (subtract) APS corrections from interferogram data.
     """
@@ -182,6 +182,8 @@ def _apply_aps_correction(ifg_paths: List[str], aps_paths: List[str]) -> None:
         # open the Ifg object
         ifg = Ifg(ifg_path)
         ifg.open(readonly=False)
+        # convert NaNs and convert to mm
+        nan_and_mm_convert(ifg, params)
         # subtract the correction from the ifg phase data
         ifg.phase_data[~np.isnan(ifg.phase_data)] -= aps_corr[~np.isnan(ifg.phase_data)]
         # set meta-data tags after aps error correction

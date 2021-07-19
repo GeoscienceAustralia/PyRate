@@ -25,7 +25,7 @@ from pyrate.core.phase_closure.mst_closure import sort_loops_based_on_weights_an
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.core.phase_closure.sum_closure import sum_phase_closures
 from pyrate.core.phase_closure.plot_closure import plot_closure
-from pyrate.core.shared import Ifg
+from pyrate.core.shared import Ifg, nan_and_mm_convert
 from pyrate.core.logger import pyratelogger as log
 
 
@@ -34,23 +34,22 @@ def mask_pixels_with_unwrapping_errors(ifgs_breach_count: NDArray[(Any, Any, Any
                                        params: dict) -> None:
     """
     Find pixels in the phase data that breach closure_thr, and mask
-    (assign nans) to those pixels in those ifgs.
+    (assign NaNs) to those pixels in those ifgs.
     :param ifgs_breach_count: unwrapping issues at pixels in all loops
     :param num_occurrences_each_ifg:  frequency of ifgs appearing in all loops
     :param params: params dict
     """
-    log.debug("Updating phase data of retained ifgs")
+    log.debug("Masking phase data of retained ifgs")
 
     for i, m_p in enumerate(params[C.INTERFEROGRAM_FILES]):
         pix_index = ifgs_breach_count[:, :, i] == num_occurrences_each_ifg[i]
         ifg = Ifg(m_p.tmp_sampled_path)
         ifg.open()
-        ifg.nodata_value = params[C.NO_DATA_VALUE]
-        ifg.convert_to_nans()
+        nan_and_mm_convert(ifg, params)
         ifg.phase_data[pix_index] = np.nan
         ifg.write_modified_phase()
 
-    log.info(f"Updated phase data of {i + 1} retained ifgs after phase closure")
+    log.info(f"Masked phase data of {i + 1} retained ifgs after phase closure")
     return None
 
 

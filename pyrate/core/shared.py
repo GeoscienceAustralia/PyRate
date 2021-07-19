@@ -405,42 +405,49 @@ class Ifg(RasterBase):
 
     def convert_to_mm(self):
         """
-        Convert phase data units from radians to millimetres.
+        Convert phase_data units from radians to millimetres.
+        Note: converted phase_data held in memory and not written to disc
+              (see shared.write_modified_phase)
         """
-        self.mm_converted = True
         if self.dataset.GetMetadataItem(ifc.DATA_UNITS) == MILLIMETRES:
-            msg = '{}: ignored as previous phase unit conversion ' \
-                  'already applied'.format(self.data_path)
+            self.mm_converted = True
+            msg = '{}: ignored as phase units are already ' \
+                  'millimetres'.format(self.data_path)
             log.debug(msg)
-            self.phase_data = self.phase_data
             return
         elif self.dataset.GetMetadataItem(ifc.DATA_UNITS) == RADIANS:
             self.phase_data = convert_radians_to_mm(self.phase_data, self.wavelength)
             self.meta_data[ifc.DATA_UNITS] = MILLIMETRES
+            self.mm_converted = True
             # self.write_modified_phase()
             # otherwise NaN's don't write to bytecode properly
             # and numpy complains
             # self.dataset.FlushCache()
             msg = '{}: converted phase units to millimetres'.format(self.data_path)
             log.debug(msg)
+            return
         else:  # pragma: no cover
             msg = 'Phase units are not millimetres or radians'
             raise IfgException(msg)
 
     def convert_to_radians(self):
         """
-        return mm converted phase data into radians
-        In memory conversion but don't write on disc
+        Convert phase_data units from millimetres to radians.
+        Note: converted phase_data held in memory and not written to disc
+              (see shared.write_modified_phase)
         """
         if self.meta_data[ifc.DATA_UNITS] == MILLIMETRES:
-            msg = '{}: ignored as previous phase unit conversion ' \
-                  'already applied'.format(self.data_path)
-            log.debug(msg)
             self.phase_data = convert_mm_to_radians(self.phase_data, wavelength=self.wavelength)
             self.meta_data[ifc.DATA_UNITS] = RADIANS
             self.mm_converted = False
+            msg = '{}: converted phase units to radians'.format(self.data_path)
+            log.debug(msg)
             return
         elif self.meta_data[ifc.DATA_UNITS] == RADIANS:
+            self.mm_converted = False
+            msg = '{}: ignored as phase units are already ' \
+                  'radians'.format(self.data_path)
+            log.debug(msg)
             return
         else:  # pragma: no cover
             msg = 'Phase units are not millimetres or radians'
