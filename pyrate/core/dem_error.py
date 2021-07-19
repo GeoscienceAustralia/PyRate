@@ -134,7 +134,7 @@ def _process_dem_error_per_tile(tile: Tile, params: dict) -> None:
     np.save(file=os.path.join(params[C.TMPDIR], 'dem_error_correction_{}.npy'.format(tile.index)), arr=tmp_array)
 
     # Calculate and save the average perpendicular baseline for the tile
-    bperp_avg =  np.mean(bperp, axis=(1, 2), dtype=np.float64)
+    bperp_avg =  np.nanmean(bperp, axis=(1, 2), dtype=np.float64)
     np.save(file=os.path.join(params[C.TMPDIR], 'bperp_avg_{}.npy'.format(tile.index)), arr=bperp_avg)
 
 
@@ -200,6 +200,9 @@ def calc_dem_errors(ifgs: list, bperp: np.ndarray, look_angle: np.ndarray, range
                 # phase observations (in mm)
                 y = ifg_data[sel, row, col]
                 bperp_pix = bperp[sel, row, col]
+                # If NaN: skip pixel
+                if np.isnan(y).any() or np.isnan(bperp_pix).any():
+                    continue
                 # using the actual geometry of a particular IFG would be possible but is likely not signif. different
                 # geom = bperp_pix / (range_dist[row, col] * np.sin(look_angle[row, col]))
                 time_span = ifg_time_span[sel]
@@ -268,7 +271,7 @@ def _write_dem_errors(ifg_paths: list, params: dict, preread_ifgs: dict) -> None
     gt, md, wkt = shared.get_geotiff_header_info(ifg_paths[0])
     md[ifc.DATA_TYPE] = ifc.DEM_ERROR
     dem_error = assemble_tiles(shape, params[C.TMPDIR], tiles, out_type='dem_error')
-    dem_error_file = os.path.join(params[C.OUT_DIR], 'dem_error.tif')
+    dem_error_file = os.path.join(params[C.DEM_ERROR_DIR], 'dem_error.tif')
     shared.remove_file_if_exists(dem_error_file)
     shared.write_output_geotiff(md, gt, wkt, dem_error, dem_error_file, np.nan)
 
@@ -288,10 +291,10 @@ def _write_dem_errors(ifg_paths: list, params: dict, preread_ifgs: dict) -> None
         dem_error_correction_ifg = assemble_tiles(shape, params[C.TMPDIR], tiles, out_type='dem_error_correction',
                                                   index=idx)
         # calculate average bperp value across all tiles for the ifg
-        bperp_val = np.mean(bperp[:, idx])
-        idx += 1
+        bperp_val = np.nanmean(bperp[:, idx])
         dem_error_correction_on_disc = MultiplePaths.dem_error_path(ifg.data_path, params)
         np.save(file=dem_error_correction_on_disc, arr=dem_error_correction_ifg)
+        idx += 1
 
         # subtract DEM error from the ifg
         ifg.phase_data -= dem_error_correction_ifg

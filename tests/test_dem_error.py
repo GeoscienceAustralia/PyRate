@@ -209,7 +209,7 @@ class TestDEMErrorResults:
         ref_phase_est_wrapper(self.params)
         dem_error_calc_wrapper(self.params)
         # dem_error.tif from this run (result)
-        dem_error_tif_res = join(self.params[C.OUT_DIR], 'dem_error.tif')
+        dem_error_tif_res = join(self.params[C.DEM_ERROR_DIR], 'dem_error.tif')
         dem = DEM(dem_error_tif_res)
         dem_error_res = dem.data
         # check equality
