@@ -26,7 +26,7 @@ import sys
 
 import pyrate.constants as C
 from pyrate.core import (shared, algorithm, mpiops)
-from pyrate.core.aps import wrap_spatio_temporal_filter
+from pyrate.core.aps import spatio_temporal_filter
 from pyrate.core.covariance import maxvar_vcm_calc_wrapper
 from pyrate.core.mst import mst_calc_wrapper
 from pyrate.core.orbital import orb_fit_calc_wrapper
@@ -194,7 +194,7 @@ correct_steps = {
     'phase_closure': phase_closure_wrapper,
     'demerror': dem_error_calc_wrapper,
     'mst': mst_calc_wrapper,
-    'apscorrect': wrap_spatio_temporal_filter,
+    'apscorrect': spatio_temporal_filter,
     'maxvar': maxvar_vcm_calc_wrapper,
 }
 
