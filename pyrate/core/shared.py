@@ -1263,13 +1263,13 @@ class PrereadIfg:
 
 def save_numpy_phase(ifg_paths, params):
     """
-    Save interferogram phase data as numpy array file on disk.
+    Split interferogram phase data in to tiles (if they exist in the params
+    dict) and save as numpy array files on disk.
 
     :param list ifg_paths: List of strings for interferogram paths
-    :param list tiles: List of pyrate.shared.Tile instances
     :param dict params: Dictionary of configuration parameters
 
-    :return: None, file saved to disk
+    :return: None, numpy file saved to disk
     """
     tiles = params['tiles']
     outdir = params[C.TMPDIR]
@@ -1288,6 +1288,7 @@ def save_numpy_phase(ifg_paths, params):
                     arr=p_data)
         ifg.close()
     mpiops.comm.barrier()
+    log.debug(f'Finished writing phase_data to numpy files in {outdir}')
 
 
 def get_geotiff_header_info(ifg_path):
