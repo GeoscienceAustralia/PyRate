@@ -343,8 +343,10 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
     else:
         ids = first_second_ids(get_all_epochs(ifgs))
 
+    nepochs = len(set(ids))
+
     # call the actual inversion routine
-    coefs = calc_network_orb_correction(src_ifgs, degree, scale, ids, intercept=intercept)
+    coefs = calc_network_orb_correction(src_ifgs, degree, scale, nepochs, intercept=intercept)
 
     # create full res DM to expand determined coefficients into full res
     # orbital correction (eg. expand coarser model to full size)
@@ -366,22 +368,22 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
             shared.nan_and_mm_convert(i, params)
         _remove_network_orb_error(coefs, dm, i, ids, offset, params)
 
-def calc_network_orb_correction(src_ifgs, degree, scale, ids, intercept=False):
+def calc_network_orb_correction(src_ifgs, degree, scale, nepochs, intercept=False):
     """
     Calculate and return coefficients for the network orbital correction model
     given a set of ifgs:
     :param list src_ifgs: iterable of Ifg objects
     :param str degree: the degree of the orbital fit (planar, quadratic or part-cubic)
     :param int scale: Scale factor for design matrix to improve inversion robustness
-    :param ids: a dict that maps dates in the source ifgs to epoch indices. The epoch
+    :param int nepochs: The number of epochs in the network
     :param intercept: whether to include a constant offset to fit to each ifg. This
                       intercept is discarded and not returned.
 
-    :return coefs: a list of coefficient lists, indexed by the epoch indices provided in 
-    ids. The coefficient lists are in the following order:
-    PLANAR - x, y
-    QUADRATIC - x^2, y^2, x*y, x, y
-    PART_CUBIX - x*y^2, x^2, y^2, x*y, x, y
+    :return coefs: a list of coefficient lists, indexed by epoch.
+                   The coefficient lists are in the following order:
+                     PLANAR - x, y
+                     QUADRATIC - x^2, y^2, x*y, x, y
+                     PART_CUBIC - x*y^2, x^2, y^2, x*y, x, y
     """
     vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
     vphase = squeeze(vphase)
@@ -389,7 +391,6 @@ def calc_network_orb_correction(src_ifgs, degree, scale, ids, intercept=False):
     orbparams = __orb_inversion(B, vphase)
     ncoef = _get_num_params(degree) + intercept
     # extract all params except intercept terms
-    nepochs = len(set(ids))
     coefs = [orbparams[i:i+ncoef] for i in range(0, nepochs * ncoef, ncoef)]
     return coefs
 

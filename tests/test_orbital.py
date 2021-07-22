@@ -1317,11 +1317,12 @@ def test_synthetic_network_correction(orbfit_degrees, orb_lks):
     scale = 100
 
     syn_data = SyntheticNetwork(orbfit_degrees, epochs, network, model_params)
-    id_dict = {date: i for date, i in enumerate(epochs)}
+#    id_dict = {date: i for date, i in enumerate(epochs)}
+    nepochs = len(epochs)
 
     mlk_ifgs = [mlk_ifg(ifg, orb_lks) for ifg in syn_data.ifgs]
 
-    coeffs = calc_network_orb_correction(mlk_ifgs, orbfit_degrees, scale, id_dict, intercept=True)
+    coeffs = calc_network_orb_correction(mlk_ifgs, orbfit_degrees, scale, nepochs, intercept=True)
 
     # reconstruct correction
     reconstructed = []
