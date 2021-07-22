@@ -508,6 +508,7 @@ class TestRefPhsEstReusedFromDisc:
     def test_ref_phase_used_from_disc_on_rerun(self, ref_est_method):
         self.params = Configuration(self.conf).__dict__
         self.params[C.REF_EST_METHOD] = ref_est_method
+        correct._copy_mlooked(self.params)
         correct._update_params_with_tiles(self.params)
 
         phase_prev, time_written = self.__run_once()
