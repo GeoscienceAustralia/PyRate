@@ -220,12 +220,11 @@ def independent_orbital_correction(ifg_path, params):
     intercept = params[C.ORBFIT_INTERCEPT]
     xlooks = params[C.ORBITAL_FIT_LOOKS_X]
     ylooks = params[C.ORBITAL_FIT_LOOKS_Y]
-    scale = params[C.ORBFIT_SCALE]
 
     ifg0 = shared.Ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
 
     # get full-resolution design matrix
-    fullres_dm = get_design_matrix(ifg0, degree, intercept=intercept, scale=scale)
+    fullres_dm = get_design_matrix(ifg0, degree, intercept=intercept)
 
     ifg = shared.dem_or_ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
     ifg_path = ifg.data_path
@@ -255,7 +254,7 @@ def independent_orbital_correction(ifg_path, params):
         vphase = reshape(ifg.phase_data, ifg.num_cells)
 
         # compute design matrix for multi-looked data
-        mlooked_dm = get_design_matrix(ifg, degree, intercept=intercept, scale=scale)
+        mlooked_dm = get_design_matrix(ifg, degree, intercept=intercept)
 
         # invert to obtain the correction image (forward model) at full-res
         orbital_correction = __orb_correction(fullres_dm, mlooked_dm, fullres_phase, vphase, offset=offset)
@@ -316,8 +315,6 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
     :param dict params: dictionary of configuration parameters
     :param list m_ifgs: list of multilooked Ifg class objects
         (sequence must be multilooked versions of 'ifgs' arg)
-    :param dict preread_ifgs: Dictionary containing information specifically
-        for MPI jobs (optional)
 
     :return: None - interferogram phase data is updated and saved to disk
     """
@@ -326,6 +323,8 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
     degree = params[C.ORBITAL_FIT_DEGREE]
     preread_ifgs = params[C.PREREAD_IFGS]
     intercept = params[C.ORBFIT_INTERCEPT]
+    scale = params[C.ORBFIT_SCALE]
+
     # all orbit corrections available?
     if isinstance(ifg_paths[0], str):
         if __check_and_apply_orberrors_found_on_disc(ifg_paths, params):
@@ -345,19 +344,18 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
         ids = first_second_ids(get_all_epochs(ifgs))
 
     # call the actual inversion routine
-    coefs = calc_network_orb_correction(src_ifgs, degree, ids, intercept=intercept)
+    coefs = calc_network_orb_correction(src_ifgs, degree, scale, ids, intercept=intercept)
 
     # create full res DM to expand determined coefficients into full res
     # orbital correction (eg. expand coarser model to full size)
-
     if preread_ifgs:
         temp_ifg = Ifg(ifg_paths[0])  # ifgs here are paths
         temp_ifg.open()
-        dm = get_design_matrix(temp_ifg, degree, intercept=intercept, scale=100)
+        dm = get_design_matrix(temp_ifg, degree, intercept=intercept, scale=scale)
         temp_ifg.close()
     else:
         ifg = ifgs[0]
-        dm = get_design_matrix(ifg, degree, intercept=intercept, scale=100)
+        dm = get_design_matrix(ifg, degree, intercept=intercept, scale=scale)
 
     for i in ifg_paths:
         # open if not Ifg instance
@@ -368,15 +366,16 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
             shared.nan_and_mm_convert(i, params)
         _remove_network_orb_error(coefs, dm, i, ids, offset, params)
 
-def calc_network_orb_correction(src_ifgs, degree, ids, intercept=False):
+def calc_network_orb_correction(src_ifgs, degree, scale, ids, intercept=False):
     """
     Calculate and return coefficients for the network orbital correction model
     given a set of ifgs:
-    :param src_ifgs: iterable of Ifg objects
-    :param degree: the degree of the orbital fit (planar, quadratic or part-cubic)
+    :param list src_ifgs: iterable of Ifg objects
+    :param str degree: the degree of the orbital fit (planar, quadratic or part-cubic)
+    :param int scale: Scale factor for design matrix to improve inversion robustness
     :param ids: a dict that maps dates in the source ifgs to epoch indices. The epoch
     :param intercept: whether to include a constant offset to fit to each ifg. This
-    intercept is discarded and not returned.
+                      intercept is discarded and not returned.
 
     :return coefs: a list of coefficient lists, indexed by the epoch indices provided in 
     ids. The coefficient lists are in the following order:
@@ -386,7 +385,7 @@ def calc_network_orb_correction(src_ifgs, degree, ids, intercept=False):
     """
     vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
     vphase = squeeze(vphase)
-    B = get_network_design_matrix(src_ifgs, degree, intercept=intercept)
+    B = get_network_design_matrix(src_ifgs, degree, scale, intercept=intercept)
     orbparams = __orb_inversion(B, vphase)
     ncoef = _get_num_params(degree) + intercept
     # extract all params except intercept terms
@@ -461,14 +460,14 @@ def __degrees_as_string(degree):
 
 
 # TODO: subtract reference pixel coordinate from x and y
-def get_design_matrix(ifg, degree, intercept: Optional[bool] = True, scale: Optional[float] = 1.0):
+def get_design_matrix(ifg, degree, intercept: Optional[bool] = True, scale: Optional[int] = 1):
     """
     Returns orbital error design matrix with columns for model parameters.
 
     :param Ifg class instance ifg: interferogram to get design matrix for
     :param str degree: model to fit (PLANAR / QUADRATIC / PART_CUBIC)
     :param bool intercept: whether to include column for the intercept term.
-    :param float scale: Scale factor for design matrix to improve inversion robustness
+    :param int scale: Scale factor for design matrix to improve inversion robustness
 
     :return: dm: design matrix
     :rtype: ndarray
@@ -478,6 +477,9 @@ def get_design_matrix(ifg, degree, intercept: Optional[bool] = True, scale: Opti
 
     if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
         raise OrbitalError("Invalid degree argument")
+
+    if scale < 1:
+        raise OrbitalError("Scale argument must be greater or equal to 1")
 
     # scaling required with higher degree models to help with param estimation
     xsize = ifg.x_size / scale if scale else ifg.x_size
@@ -518,7 +520,7 @@ def get_design_matrix(ifg, degree, intercept: Optional[bool] = True, scale: Opti
     return dm
 
 
-def get_network_design_matrix(ifgs, degree, intercept=True):
+def get_network_design_matrix(ifgs, degree, scale, intercept=True):
     # pylint: disable=too-many-locals
     """
     Returns larger-format design matrix for network error correction. The
@@ -526,6 +528,7 @@ def get_network_design_matrix(ifgs, degree, intercept=True):
 
     :param list ifgs: List of Ifg class objects
     :param str degree: model to fit (PLANAR / QUADRATIC / PART_CUBIC)
+    :param int scale: Scale factor for design matrix to improve inversion robustness
     :param bool intercept: whether to include columns for intercept estimation.
 
     :return: netdm: network design matrix
@@ -534,6 +537,9 @@ def get_network_design_matrix(ifgs, degree, intercept=True):
 
     if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
         raise OrbitalError("Invalid degree argument")
+
+    if scale < 1:
+        raise OrbitalError("Scale argument must be greater or equal to 1")
 
     nifgs = len(ifgs)
     if nifgs < 1:
@@ -555,7 +561,7 @@ def get_network_design_matrix(ifgs, degree, intercept=True):
     # calc location for individual design matrices
     dates = [ifg.first for ifg in ifgs] + [ifg.second for ifg in ifgs]
     ids = first_second_ids(dates)
-    tmpdm = get_design_matrix(ifgs[0], degree, intercept=intercept, scale=100)
+    tmpdm = get_design_matrix(ifgs[0], degree, intercept=intercept, scale=scale)
 
     # iteratively build up sparse matrix
     for i, ifg in enumerate(ifgs):
@@ -585,5 +591,6 @@ def orb_fit_calc_wrapper(params: dict) -> None:
     ifg_paths = [p.tmp_sampled_path for p in multi_paths]
     remove_orbital_error(ifg_paths, params)
     mpiops.comm.barrier()
+    # update phase_data saved in tiled numpy files
     shared.save_numpy_phase(ifg_paths, params)
     log.debug('Finished Orbital error correction')

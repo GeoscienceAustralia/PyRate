@@ -266,16 +266,16 @@ class TestError:
     def test_invalid_ifgs_arg(self):
         # min requirement is 1 ifg, can still subtract one epoch from the other
         with pytest.raises(OrbitalError):
-            get_network_design_matrix([], PLANAR, True)
+            get_network_design_matrix([], PLANAR, 100, True)
 
     def test_invalid_degree_arg(self):
         # test failure of a few different args for 'degree'
         for d in range(-5, 1):
             with pytest.raises(OrbitalError):
-                get_network_design_matrix(self.ifgs, d, True)
+                get_network_design_matrix(self.ifgs, d, 100, True)
         for d in range(4, 7):
             with pytest.raises(OrbitalError):
-                get_network_design_matrix(self.ifgs, d, True)
+                get_network_design_matrix(self.ifgs, d, 100, True)
 
     def test_invalid_method(self):
         # test failure of a few different args for 'method'
@@ -323,7 +323,7 @@ class TestNetworkDesignMatrixTests:
     def test_planar_network_dm(self):
         ncoef = 2
         offset = False
-        act = get_network_design_matrix(self.ifgs, PLANAR, intercept=offset)
+        act = get_network_design_matrix(self.ifgs, PLANAR, 100, intercept=offset)
         assert act.shape == (self.ncells * self.nifgs, ncoef * self.nepochs)
         assert act.ptp() != 0
         self.check_equality(ncoef, act, self.ifgs, offset)
@@ -331,7 +331,7 @@ class TestNetworkDesignMatrixTests:
     def test_planar_network_dm_offset(self):
         ncoef = 2  # NB: doesn't include offset col
         offset = True
-        act = get_network_design_matrix(self.ifgs, PLANAR, intercept=offset)
+        act = get_network_design_matrix(self.ifgs, PLANAR, 100, intercept=offset)
         assert act.shape[0] == self.ncells * self.nifgs
         assert act.shape[1] == (self.nepochs * (ncoef + offset))
         assert act.ptp() != 0
@@ -340,7 +340,7 @@ class TestNetworkDesignMatrixTests:
     def test_quadratic_network_dm(self):
         ncoef = 5
         offset = False
-        act = get_network_design_matrix(self.ifgs, QUADRATIC, intercept=offset)
+        act = get_network_design_matrix(self.ifgs, QUADRATIC, 100, intercept=offset)
         assert act.shape == (self.ncells * self.nifgs, ncoef * self.nepochs)
         assert act.ptp() != 0
         self.check_equality(ncoef, act, self.ifgs, offset)
@@ -348,7 +348,7 @@ class TestNetworkDesignMatrixTests:
     def test_quadratic_network_dm_offset(self):
         ncoef = 5
         offset = True
-        act = get_network_design_matrix(self.ifgs, QUADRATIC, intercept=offset)
+        act = get_network_design_matrix(self.ifgs, QUADRATIC, 100, intercept=offset)
         assert act.shape[0] == self.ncells * self.nifgs
         assert act.shape[1] == (self.nepochs * (ncoef + offset))
         assert act.ptp() != 0
@@ -357,7 +357,7 @@ class TestNetworkDesignMatrixTests:
     def test_partcubic_network_dm(self):
         ncoef = 6
         offset = False
-        act = get_network_design_matrix(self.ifgs, PART_CUBIC, intercept=offset)
+        act = get_network_design_matrix(self.ifgs, PART_CUBIC, 100, intercept=offset)
         assert act.shape == (self.ncells * self.nifgs, ncoef * self.nepochs)
         assert act.ptp() != 0
         self.check_equality(ncoef, act, self.ifgs, offset)
@@ -365,7 +365,7 @@ class TestNetworkDesignMatrixTests:
     def test_partcubic_network_dm_offset(self):
         ncoef = 6
         offset = True
-        act = get_network_design_matrix(self.ifgs, PART_CUBIC, intercept=offset)
+        act = get_network_design_matrix(self.ifgs, PART_CUBIC, 100, intercept=offset)
         assert act.shape[0] == self.ncells * self.nifgs
         assert act.shape[1] == (self.nepochs * (ncoef + offset))
         assert act.ptp() != 0
@@ -410,11 +410,11 @@ def network_correction(ifgs, deg, intercept, ml_ifgs=None, tol=1e-6):
     if ml_ifgs:
         ml_nc = ml_ifgs[0].num_cells
         ml_data = concatenate([i.phase_data.reshape(ml_nc) for i in ml_ifgs])
-        dm = get_network_design_matrix(ml_ifgs, deg, intercept)[~isnan(ml_data)]
+        dm = get_network_design_matrix(ml_ifgs, deg, 100, intercept)[~isnan(ml_data)]
         fd = ml_data[~isnan(ml_data)].reshape((dm.shape[0], 1))
     else:
         data = concatenate([i.phase_data.reshape(ncells) for i in ifgs])
-        dm = get_network_design_matrix(ifgs, deg, intercept)[~isnan(data)]
+        dm = get_network_design_matrix(ifgs, deg, 100, intercept)[~isnan(data)]
         fd = data[~isnan(data)].reshape((dm.shape[0], 1))
 
     params = pinv(dm, tol).dot(fd)
@@ -493,7 +493,7 @@ class TestNetworkCorrectionTests:
             """Returns pseudo-inverse of the DM"""
             ncells = self.ifgs[0].num_cells
             data = concatenate([i.phase_data.reshape(ncells) for i in self.ifgs])
-            dm = get_network_design_matrix(self.ifgs, PLANAR, True)[~isnan(data)]
+            dm = get_network_design_matrix(self.ifgs, PLANAR, 100, True)[~isnan(data)]
             fd = data[~isnan(data)].reshape((dm.shape[0], 1))
             return dot(pinv(dm, self.nc_tol), fd)
 
@@ -573,6 +573,7 @@ class TestNetworkCorrectionTests:
         params[C.OUT_DIR] = tempfile.mkdtemp()
         params[C.ORBFIT_OFFSET] = intercept
         params[C.ORBFIT_INTERCEPT] = intercept
+        params[C.ORBFIT_SCALE] = 100
         params[C.PREREAD_IFGS] = None
         mkdir_p(Path(params[C.OUT_DIR]).joinpath(C.ORB_ERROR_DIR))
         network_orbital_correction(ifgs, params)
@@ -646,6 +647,7 @@ class TestNetworkCorrectionTestsMultilooking:
         params[C.PARALLEL] = False
         params[C.ORBFIT_OFFSET] = intercept
         params[C.ORBFIT_INTERCEPT] = intercept
+        params[C.ORBFIT_SCALE] = 100
         params[C.PREREAD_IFGS] = None
         params[C.OUT_DIR] = tempfile.mkdtemp()
         mkdir_p(Path(params[C.OUT_DIR]).joinpath(C.ORB_ERROR_DIR))
@@ -1311,25 +1313,27 @@ def test_synthetic_network_correction(orbfit_degrees, orb_lks):
         nparam = 6
     model_params = [mi[:nparam] for mi in model_params]
 
+    # network method uses a hard coded scale of 100
+    scale = 100
+
     syn_data = SyntheticNetwork(orbfit_degrees, epochs, network, model_params)
     id_dict = {date: i for date, i in enumerate(epochs)}
 
     mlk_ifgs = [mlk_ifg(ifg, orb_lks) for ifg in syn_data.ifgs]
 
-    coeffs = calc_network_orb_correction(mlk_ifgs, orbfit_degrees, id_dict, intercept=True)
+    coeffs = calc_network_orb_correction(mlk_ifgs, orbfit_degrees, scale, id_dict, intercept=True)
 
     # reconstruct correction
     reconstructed = []
     # ifgs are built with lat/long metadata,
     # orbfit modelling is done with metres coordinates
-    # network method uses a hard coded scale of 100
     csx = syn_data.ifgs[0].x_size
     csy = syn_data.ifgs[0].y_size
     x, y = (coord + 1 for coord in np.meshgrid(np.arange(100, dtype=float), np.arange(100, dtype=float)))
     x *= csx
     y *= csy
-    x /= 100
-    y /= 100
+    x /= scale
+    y /= scale
 
     for i, js in enumerate(network):
         for j in js:
