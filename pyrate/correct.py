@@ -185,7 +185,7 @@ def phase_closure_wrapper(params: dict, config: Configuration) -> dict:
     if mpiops.rank == 0:
         mask_pixels_with_unwrapping_errors(ifgs_breach_count, num_occurences_each_ifg, params)
 
-    _create_ifg_dict(params)
+    _create_ifg_dict(params) # update the preread_ifgs dict
 
     ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
     # update/save the phase_data in the tiled numpy files
@@ -212,11 +212,14 @@ def correct_ifgs(config: Configuration) -> None:
     params = config.__dict__
     __validate_correct_steps(params)
 
-    # house keeping
+    # work out the tiling and add to params dict
     _update_params_with_tiles(params)
+
+    # create the preread_ifgs dict for use with tiled data
     _create_ifg_dict(params)
 
     ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
+
     # create initial tiled phase_data numpy files on disc
     save_numpy_phase(ifg_paths, params)
 

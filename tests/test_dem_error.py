@@ -158,6 +158,7 @@ class TestDEMErrorFilesReusedFromDisc:
         shutil.rmtree(cls.params[C.OUT_DIR])
 
     def test_dem_error_used_from_disc_on_rerun(self):
+        correct._copy_mlooked(self.params)
         correct._update_params_with_tiles(self.params)
         times_written = self.__run_once()
         assert len(times_written) == len(self.ifg_paths)
