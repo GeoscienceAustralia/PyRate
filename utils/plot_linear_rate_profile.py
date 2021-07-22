@@ -90,7 +90,7 @@ lim = np.round(np.amax(np.array([np.abs(vmin_auto), np.abs(vmax_auto)])), decima
 #vmin = vmin_auto - refvalue_vel
 #vmax = vmax_auto - refvalue_vel
 
-cmap = matplotlib.cm.bwr_r
+cmap = matplotlib.cm.Spectral_r
 cmap.set_bad('grey',1.)
 fig = plt.figure('PyRate Linear Rate Profile', figsize=(7,10))
 axes = fig.subplots(2, 1, gridspec_kw={'height_ratios': [2, 1]})

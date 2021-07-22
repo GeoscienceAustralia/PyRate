@@ -32,6 +32,7 @@ Command-line arguments:
 """
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib import cm
 import glob
 import re
 import math
@@ -73,6 +74,10 @@ for file in glob.glob(f'{tempml_dir}/*ifg.tif'):
 ifg_list.sort()
 corr_list.sort()
 tempml_list.sort()
+
+# define colour map
+cmap = cm.Spectral_r
+cmap.set_bad(color='grey')
 
 # loop over each ifg in turn
 for i in range(args.FIRST_IFG - 1, args.LAST_IFG):    
@@ -124,17 +129,17 @@ for i in range(args.FIRST_IFG - 1, args.LAST_IFG):
     fig, ax = plt.subplots(1,3, figsize=(6, 3))
      
     # ORIGINAL IFG
-    s0 = ax[0].imshow(ifg, cmap='bwr', clim=(-1*climit, climit))
+    s0 = ax[0].imshow(ifg, cmap=cmap, clim=(-1*climit, climit))
     ax[0].set_title('Original Ifg', fontsize=8)
     ax[0].set_axis_off()
 
     # CORRECTION FILE
-    s1 =ax[1].imshow(corr, cmap='bwr', clim=(-1*climit, climit))
+    s1 =ax[1].imshow(corr, cmap=cmap, clim=(-1*climit, climit))
     ax[1].set_title('Correction', fontsize=8)
     ax[1].set_axis_off()
 
     # CORRECTED IFG
-    s2 = ax[2].imshow(ifg_corr, cmap='bwr', clim=(-1*climit,climit))
+    s2 = ax[2].imshow(ifg_corr, cmap=cmap, clim=(-1*climit,climit))
     ax[2].set_title('Corrected Ifg', fontsize=8)
     ax[2].set_axis_off()
 

@@ -101,7 +101,7 @@ lim = np.round(np.amax(np.array([np.abs(dmin_auto), np.abs(dmax_auto)])), decima
 ####  ANIMATION of LOS Cumulative displacement TS
 fig = plt.figure('PyRate Cumulative Displacement Animation', figsize=(5,5))
 faxv = fig.add_axes([0.15,0.15,0.75,0.75])
-cmap = matplotlib.cm.bwr_r #
+cmap = matplotlib.cm.Spectral_r
 cmap.set_bad('grey',1.) # filled grey color to nan value
 ims = [] # pre-allocate list for appending time slices
 

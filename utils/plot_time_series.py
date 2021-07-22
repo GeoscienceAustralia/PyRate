@@ -117,8 +117,8 @@ def get_range(arr, refarea):
     refvalue = np.nanmean(arr[refarea[0]:refarea[1], refarea[2]:refarea[3]]) # reference values
     if str(refvalue) == 'nan':
         refvalue = 0
-    dmin_auto = np.nanpercentile((tscuml[-1, :, :]), 100 - auto_crange)
-    dmax_auto = np.nanpercentile((tscuml[-1, :, :]), auto_crange)
+    dmin_auto = np.nanpercentile(arr, 100 - auto_crange)
+    dmax_auto = np.nanpercentile(arr, auto_crange)
     dmin = dmin_auto - refvalue
     dmax = dmax_auto - refvalue
 
@@ -145,7 +145,7 @@ axt = pv.text(0.01, 0.78, 'Ref area:\n X {}:{}\n Y {}:{}\n (start from 0)'.forma
 
 # create masked array for NaNs
 mvel = np.ma.array(vs.vel, mask=np.isnan(vs.vel))
-cmap = matplotlib.cm.bwr_r
+cmap = matplotlib.cm.Spectral_r
 cmap.set_bad('grey')
 cax = axv.imshow(mvel, clim=[vmin, vmax], cmap=cmap)
 cbr = pv.colorbar(cax, orientation='vertical')
@@ -245,7 +245,7 @@ def show_vel(val_ind):
         cmap2 = matplotlib.cm.Reds # cmap2 = 'Reds'
         cmap2.set_bad('grey', 1.)  # filled grey color to nan value
         if val_ind == 'Error':
-            cax.set_clim(0, 10)
+            cax.set_clim(0, 20)
         elif val_ind == 'R squared':
             cax.set_clim(0, 1)
         cax.set_cmap(cmap2)
@@ -253,7 +253,6 @@ def show_vel(val_ind):
     cbr.set_label(mapdict_unit[val_ind])
     cax.set_data(data)
     axv.set_title(val_ind)
-    #cax.set_clim(-100, 100)
 
     pv.canvas.draw()
 
@@ -304,9 +303,6 @@ axts = pts.add_axes([0.12, 0.14, 0.7, 0.8])
 
 axts.scatter(imdates_dt, np.zeros(len(imdates_dt)), c='b', alpha=0.6)
 axts.grid()
-
-# axts.set_xlabel('Time [Year]')
-# axts.set_ylabel('Displacement [mm]')
 
 loc_ts = axts.xaxis.set_major_locator(mdates.AutoDateLocator())
 try:  # Only support from Matplotlib 3.1
@@ -414,6 +410,7 @@ def printcoords(event):
     axts.set_axisbelow(True)
     axts.set_xlabel('Date')
     axts.set_ylabel('Cumulative Displacement (mm)')
+    axts.set_ylim(dmin, dmax)
 
     ### Get values of noise indices and incidence angle
     noisetxt = ''
@@ -474,10 +471,9 @@ def printcoords(event):
     # axts.set_ylim(-100,100)
 
     ### Y axis
-   # if ylen:
-   #     vlim = [np.nanmedian(dph) - ylen / 2, np.nanmedian(dph) + ylen / 2]
-   #     axts.set_ylim(vlim)
-    axts.set_ylim([-20,110])
+    if ylen:
+        vlim = [np.nanmedian(dph) - ylen / 2, np.nanmedian(dph) + ylen / 2]
+        axts.set_ylim(vlim)
     ### Legend
     axts.legend()
 
