@@ -322,7 +322,7 @@ class Ifg(RasterBase):
         md = self.dataset.GetMetadata()
         self.wavelength = float(md[ifc.PYRATE_WAVELENGTH_METRES])
         self.meta_data = md
-        self.nan_converted = False # This flag set True after NaN conversion
+        self.nan_converted = False  # This flag set True after NaN conversion
 
     def _init_dates(self):
         """

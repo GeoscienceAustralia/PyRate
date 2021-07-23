@@ -70,7 +70,7 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
     :param ifg_files: list of ifg files
     :param loops: list of loops
     :param params: params dict
-    :return: Tuple of closure, ifgs_breach_count_process, num_occurrences_each_ifg
+    :return: Tuple of closure, ifgs_breach_count, num_occurrences_each_ifg
         closure: summed closure for each loop.
         ifgs_breach_count: shape=(ifg.shape, n_ifgs) number of times a pixel in an ifg fails the closure
             check (i.e., has unwrapping error) in all loops under investigation.

@@ -242,9 +242,6 @@ class Configuration:
                 else:  # i.e. serial
                     self.rows, self.cols = 1, 1
 
-        # force offset = 1 for both method options. This adds the required intercept term to the design matrix
-        self.orbfitoffset = 1
-
         # create a temporary directory if not supplied
         if not hasattr(self, 'tmpdir'):
             self.tmpdir = Path(self.outdir).joinpath("tmpdir")

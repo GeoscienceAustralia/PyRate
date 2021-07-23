@@ -16,12 +16,30 @@
 """
 This Python script applies optional multilooking and cropping to input
 interferogram geotiff files.
+
+There are two modes of running prepifg using pyrate:
+1. A python/numpy version, which is also the default version, and
+2. a `largetifs` option which can be activated using the config option largetifs: 1
+
+The python/numpy version is recommended when the both the input interferogram and multilooked interferogram can fit
+into the memory allocated to the process.
+
+When dealing with relatively large (compared to memory available to the process) interferogram, the largetif option
+can be used. This option uses a slightly modified version of the `gdal_calc.py` included with pyrate. Arbitrarily
+large interferograms can be multilooked using largetifs.
+
+The `largetifs` option uses system calls to gdal utilities and avoid loading large chunks of memory. Our tests
+(tests/test_prepifg_largetifs_vs_python.py::test_prepifg_largetifs_vs_python) indicate that for two different small
+datasets included in our test suite, the `largetifs` option exactly match the output of the numpy version. However,
+on large practical datasets we have observed numerical differences in the multilooked output in the 3rd and 4th decimal
+places (in sub mm range).
+
 """
 # -*- coding: utf-8 -*-
 import os
 from subprocess import check_call
 import warnings
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from pathlib import Path
 from joblib import Parallel, delayed
 import numpy as np
@@ -287,7 +305,7 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, fl
         Path(m_path.sampled_path).chmod(0o444)  # readonly output
 
 
-def find_header(path: MultiplePaths, params: dict):
+def find_header(path: MultiplePaths, params: dict) -> Dict[str, str]:
     processor = params[C.PROCESSOR]  # roipac, gamma or geotif
     tif_path = path.converted_path
     if (processor == GAMMA) or (processor == GEOTIF):

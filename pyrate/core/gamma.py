@@ -458,11 +458,9 @@ def manage_headers(dem_header_file, header_paths, baseline_paths=None):
         hdrs = [parse_epoch_header(hp) for hp in header_paths]
         if baseline_paths is not None:
             baseline_header = parse_baseline_header(baseline_paths)
-            combined_header = combine_headers(hdrs[0], hdrs[1],
-                              dem_header, baseline_header)
+            combined_header = combine_headers(hdrs[0], hdrs[1], dem_header, baseline_header)
         else:
-#            baseline_header = {}
-             combined_header = combine_headers(hdrs[0], hdrs[1], dem_header)
+            combined_header = combine_headers(hdrs[0], hdrs[1], dem_header)
     elif len(header_paths) > 2:
         msg = f'There are too many parameter files for one interferogram; there should only be two. {len(header_paths)} parameter files have been given: {header_paths}.'
         raise GammaException(msg)

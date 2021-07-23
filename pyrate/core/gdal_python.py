@@ -86,8 +86,6 @@ def world_to_pixel(geo_transform, x, y):
     return col, line
 
 
-
-
 def resample_nearest_neighbour(input_tif, extents, new_res, output_file):
     """
     Nearest neighbor resampling and cropping of an image.

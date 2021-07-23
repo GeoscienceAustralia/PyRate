@@ -308,6 +308,30 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
+    "orbfitintercept": {
+        "DataType": int,
+        "DefaultValue": 1,
+        "MinValue": None,
+        "MaxValue": None,
+        "PossibleValues": [0, 1],
+        "Required": False
+    },
+    "orbfitoffset": {
+        "DataType": int,
+        "DefaultValue": 0,
+        "MinValue": None,
+        "MaxValue": None,
+        "PossibleValues": [0, 1],
+        "Required": False
+    },
+    "orbfitscale": {
+        "DataType": int,
+        "DefaultValue": 100,
+        "MinValue": 1,
+        "MaxValue": None,
+        "PossibleValues": None,
+        "Required": False
+    },
     "apsest": {
         "DataType": int,
         "DefaultValue": 0,
