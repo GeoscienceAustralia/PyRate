@@ -68,7 +68,6 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False, write_vals=False, save_acg=F
     radial average of its 2D autocorrelation.
 
     :param str ifg_path: An interferogram file path. OR
-    :param Ifg class ifg_path: A pyrate.shared.Ifg class object
     :param dict params: Dictionary of configuration parameters
     :param ndarray r_dist: Array of distance values from the image centre
                 (See Rdist class for more details)
@@ -83,13 +82,8 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False, write_vals=False, save_acg=F
     :return: alpha: the exponential length-scale of decay factor
     :rtype: float
     """
-
-    if isinstance(ifg_path, str):  # used during MPI
-        ifg = shared.Ifg(ifg_path)
-        ifg.open()
-    else:
-        ifg = ifg_path
-
+    ifg = shared.Ifg(ifg_path)
+    ifg.open()
     shared.nan_and_mm_convert(ifg, params)
     # calculate 2D auto-correlation of image using the
     # spectral method (Wiener-Khinchin theorem)
@@ -99,12 +93,10 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False, write_vals=False, save_acg=F
         phase = ifg.phase_data
 
     maxvar, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=save_acg, params=params)
-
     if write_vals:
         _add_metadata(ifg, maxvar, alpha)
 
-    if isinstance(ifg_path, str):
-        ifg.close()
+    ifg.close()
 
     return maxvar, alpha
 
