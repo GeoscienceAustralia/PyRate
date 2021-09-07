@@ -94,21 +94,14 @@ def cvd(ifg_path, params, r_dist, calc_alpha=False, write_vals=False, save_acg=F
 
     maxvar, alpha = cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=save_acg, params=params)
     if write_vals:
-        _add_metadata(ifg, maxvar, alpha)
+        ifg.add_metadata(**{
+            ifc.PYRATE_MAXVAR: str(maxvar),
+            ifc.PYRATE_ALPHA: str(alpha)
+        })
 
     ifg.close()
 
     return maxvar, alpha
-
-
-def _add_metadata(ifg, maxvar, alpha):
-    """
-    Convenience function for saving metadata to ifg
-    """
-    md = ifg.meta_data
-    md[ifc.PYRATE_MAXVAR] = str(maxvar)
-    md[ifc.PYRATE_ALPHA] = str(alpha)
-    ifg.write_modified_phase()
 
 
 def _save_cvd_data(acg, r_dist, ifg_path, outdir):
