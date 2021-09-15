@@ -6,7 +6,7 @@ Development Lead
 ----------------
 
 `PyRate` has been developed by `Geoscience Australia <http://www.ga.gov.au>`__
-with assistance from the `National Computational Infrastructure <http://nci.org.au/>`__.
+with some initial assistance from the `National Computational Infrastructure <http://nci.org.au/>`__.
 
 Contact: `Geoscience Australia InSAR team <mailto:insar@ga.gov.au>`__
 
@@ -25,9 +25,11 @@ Thanks to `all the contributors`_ who helped to build the ship and raise the sai
 * Matt Garthwaite (GA)
 * Simon Knapp (GA)
 * Sarah Lawrie (GA)
+* Jonathan Mettes (GA)
 * Negin Moghaddam (GA)
 * Brenainn Moushall (GA)
 * Vanessa Newey (GA)
 * Chandrakanta Ojha (GA)
 * Garrick Paskos (GA)
 * Nahidul Samrat (GA)
+* Richard Taylor (GA)
