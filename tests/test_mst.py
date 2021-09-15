@@ -225,6 +225,7 @@ class TestMSTFilesReusedFromDisc:
         shutil.rmtree(cls.params[C.OUT_DIR])
 
     def test_mst_used_from_disc_on_rerun(self):
+        correct._copy_mlooked(self.params)
         correct._update_params_with_tiles(self.params)
         times_written = self.__run_once()
         times_written_1 = self.__run_once()

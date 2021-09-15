@@ -80,7 +80,7 @@ class TestTimeSeries:
         cls.params = default_params()
         cls.mstmat = mst.mst_boolean_array(cls.ifgs)
         r_dist = covariance.RDist(cls.ifgs[0])()
-        cls.maxvar = [covariance.cvd(i, cls.params, r_dist)[0]
+        cls.maxvar = [covariance.cvd(i.data_path, cls.params, r_dist)[0]
                       for i in cls.ifgs]
         cls.vcmt = covariance.get_vcmt(cls.ifgs, cls.maxvar)
 

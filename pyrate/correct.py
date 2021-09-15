@@ -26,7 +26,7 @@ import sys
 
 import pyrate.constants as C
 from pyrate.core import (shared, algorithm, mpiops)
-from pyrate.core.aps import wrap_spatio_temporal_filter
+from pyrate.core.aps import spatio_temporal_filter
 from pyrate.core.covariance import maxvar_vcm_calc_wrapper
 from pyrate.core.mst import mst_calc_wrapper
 from pyrate.core.orbital import orb_fit_calc_wrapper
@@ -36,7 +36,7 @@ from pyrate.core.phase_closure.closure_check import iterative_closure_check, mas
 from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
 from pyrate.core.shared import PrereadIfg, Ifg, get_tiles, mpi_vs_multiprocess_logging, join_dicts, \
-        nan_and_mm_convert
+        nan_and_mm_convert, save_numpy_phase
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration, MultiplePaths, ConfigException
 
@@ -45,8 +45,7 @@ MAIN_PROCESS = 0
 
 def _create_ifg_dict(params):
     """
-    1. Convert ifg phase data into numpy binary files.
-    2. Save the preread_ifgs dict with information about the ifgs that are
+    Save the preread_ifgs dict with information about the ifgs that are
     later used for fast loading of Ifg files in IfgPart class
 
     :param list dest_tifs: List of destination tifs
@@ -61,7 +60,7 @@ def _create_ifg_dict(params):
     ifgs_dict = {}
     process_tifs = mpiops.array_split(dest_tifs)
     for d in process_tifs:
-        ifg = Ifg(d.sampled_path)
+        ifg = Ifg(d.tmp_sampled_path) # get the writable copy
         ifg.open()
         nan_and_mm_convert(ifg, params)
         ifgs_dict[d.tmp_sampled_path] = PrereadIfg(
@@ -75,13 +74,13 @@ def _create_ifg_dict(params):
             ncols=ifg.ncols,
             metadata=ifg.meta_data
         )
+        ifg.write_modified_phase() # update phase converted to mm
         ifg.close()
     ifgs_dict = join_dicts(mpiops.comm.allgather(ifgs_dict))
 
     ifgs_dict = mpiops.run_once(__save_ifgs_dict_with_headers_and_epochs, dest_tifs, ifgs_dict, params, process_tifs)
 
     params[C.PREREAD_IFGS] = ifgs_dict
-    log.debug('Finished converting phase_data to numpy in process {}'.format(mpiops.rank))
     return ifgs_dict
 
 
@@ -110,6 +109,10 @@ def __save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, proce
 
 
 def _copy_mlooked(params):
+    """
+    Make a copy of the multi-looked files in the 'tmp_sampled_path'
+    for manipulation during correct steps
+    """
     log.info("Copying input files into tempdir for manipulation during 'correct' steps")
     mpaths = params[C.INTERFEROGRAM_FILES]
     process_mpaths = mpiops.array_split(mpaths)
@@ -134,14 +137,13 @@ def main(config):
     params = config.__dict__
     mpi_vs_multiprocess_logging("correct", params)
 
-    # Make a copy of the multi-looked files for manipulation during correct steps
     _copy_mlooked(params)
 
     return correct_ifgs(config)
 
 
 def _update_params_with_tiles(params: dict) -> None:
-    ifg_path = params[C.INTERFEROGRAM_FILES][0].sampled_path
+    ifg_path = params[C.INTERFEROGRAM_FILES][0].tmp_sampled_path
     rows, cols = params["rows"], params["cols"]
     tiles = mpiops.run_once(get_tiles, ifg_path, rows, cols)
     # add tiles to params
@@ -183,7 +185,11 @@ def phase_closure_wrapper(params: dict, config: Configuration) -> dict:
     if mpiops.rank == 0:
         mask_pixels_with_unwrapping_errors(ifgs_breach_count, num_occurences_each_ifg, params)
 
-    _create_ifg_dict(params)
+    _create_ifg_dict(params) # update the preread_ifgs dict
+
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
+    # update/save the phase_data in the tiled numpy files
+    save_numpy_phase(ifg_paths, params)
 
     return params
 
@@ -194,7 +200,7 @@ correct_steps = {
     'phase_closure': phase_closure_wrapper,
     'demerror': dem_error_calc_wrapper,
     'mst': mst_calc_wrapper,
-    'apscorrect': wrap_spatio_temporal_filter,
+    'apscorrect': spatio_temporal_filter,
     'maxvar': maxvar_vcm_calc_wrapper,
 }
 
@@ -206,9 +212,17 @@ def correct_ifgs(config: Configuration) -> None:
     params = config.__dict__
     __validate_correct_steps(params)
 
-    # house keeping
+    # work out the tiling and add to params dict
     _update_params_with_tiles(params)
+
+    # create the preread_ifgs dict for use with tiled data
     _create_ifg_dict(params)
+
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
+
+    # create initial tiled phase_data numpy files on disc
+    save_numpy_phase(ifg_paths, params)
+
     params[C.REFX_FOUND], params[C.REFY_FOUND] = ref_pixel_calc_wrapper(params)
 
     # run through the correct steps in user specified sequence

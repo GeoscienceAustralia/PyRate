@@ -30,7 +30,7 @@ from joblib import Parallel, delayed
 import pyrate.constants as C
 from pyrate.core import ifgconstants as ifc
 from pyrate.core import mpiops
-from pyrate.core.shared import Ifg
+from pyrate.core.shared import Ifg, nan_and_mm_convert
 from pyrate.core.shared import joblib_log_level
 from pyrate.core.logger import pyratelogger as log
 from pyrate.core import prepifg_helper
@@ -53,12 +53,7 @@ def update_refpix_metadata(ifg_paths, refx, refy, transform, params):
         ifg = Ifg(ifg_file)
         log.debug("Open dataset")
         ifg.open(readonly=True)
-        log.debug("Set no data value")
-        ifg.nodata_value = params["noDataValue"]
-        log.debug("Update no data values in dataset")
-        ifg.convert_to_nans()
-        log.debug("Convert mm")
-        ifg.convert_to_mm()
+        nan_and_mm_convert(ifg, params)
         half_patch_size = params["refchipsize"] // 2
         x, y = refx, refy
         log.debug("Extract reference pixel windows")
@@ -76,7 +71,7 @@ def update_refpix_metadata(ifg_paths, refx, refy, transform, params):
             ifc.PYRATE_MEAN_REF_AREA: str(mean_ref_area),
             ifc.PYRATE_STDDEV_REF_AREA: str(stddev_ref_area)
         })
-
+        ifg.write_modified_phase()
         ifg.close()
 
 

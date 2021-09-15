@@ -31,6 +31,7 @@ from tests.common import (
     assert_two_dirs_equal,
     manipulate_test_conf,
     MEXICO_CROPA_CONF,
+    TEST_CONF_GAMMA,
     PY37GDAL304,
     PY37GDAL302,
     PYTHON3P8,
@@ -71,6 +72,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
         params[C.ORBITAL_FIT_DEGREE] = orbfit_degrees
         params[C.REF_EST_METHOD] = ref_est_method
         params[C.MAX_LOOP_LENGTH] = 3
+        params[C.LR_MAXSIG] = 0 # turn off pixel masking for these tests
         params["rows"], params["cols"] = 3, 2
         params["savenpy"] = 1
         params["notiles"] = params["rows"] * params["cols"]  # number of tiles
@@ -87,7 +89,7 @@ def modified_config(tempdir, get_lks, get_crop, orbfit_lks, orbfit_method, orbfi
 @pytest.mark.mpi
 @pytest.mark.slow
 @pytest.mark.skipif(not PYTHON3P8, reason="Only run in one CI env")
-def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf):
+def test_pipeline_parallel_vs_mpi(modified_config, gamma_or_mexicoa_conf=TEST_CONF_GAMMA):
     """
     Tests proving single/multiprocess/mpi produce same output
     """

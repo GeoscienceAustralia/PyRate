@@ -1,15 +1,21 @@
-import numpy as np
-from matplotlib import pyplot as plt
-import glob
-import re
-import math
-import rasterio as rio
-import argparse
-import os
-
+#   This Python module is part of the PyRate software package.
+#
+#   Copyright 2021 Geoscience Australia
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
 """
 This script plots the original interferogram, the corresponding correction file, 
-and the resulting corrected interferogram from a PyRate directory with already,
+and the final corrected interferogram from a PyRate directory with already,
 processed data. directories are given as user arguments to the script, and the
 number of plots is determined by a number range given by user. 
 
@@ -24,6 +30,15 @@ Command-line arguments:
           LAST_IFG       - last IFG in range of IFGs to plot (e.g. 37 will plot up until the 37th IFG in directory).
          NORMALISE       - Switch to subtract median to from figures (0=YES, 1=No, default is 0). 
 """
+import numpy as np
+from matplotlib import pyplot as plt
+from matplotlib import cm
+import glob
+import re
+import math
+import argparse
+import os
+from pyrate.core.shared import Ifg
 
 # Arguments
 parser = argparse.ArgumentParser(description="Script to plot correction files with uncorrected and corrected interferogram")
@@ -36,19 +51,11 @@ parser.add_argument("LAST_IFG", type=int, help="last IFG in range of IFGs to plo
 parser.add_argument("-sm", "--subtract_median", type=int, default=1, help="Switch to subtract median to from figures (1=YES, 0=No, default is 1)")
 args = parser.parse_args()
 
-
-
 # Directories and variable from user agruments
 ifg_dir = os.path.abspath(args.IFG_DIR)
 corr_dir = os.path.abspath(args.CORRECTION_FILE_DIR)
 tempml_dir = os.path.abspath(args.CORRECTED_IFG_DIR)
 save_dir = os.path.abspath(args.SAVE_DIR)
-
-first_ifg_num = args.FIRST_IFG - 1
-last_ifg_num = args.LAST_IFG - 1
-
-subtract_median = args.subtract_median
-
 
 # Create Lists
 ifg_list = []
@@ -68,23 +75,26 @@ ifg_list.sort()
 corr_list.sort()
 tempml_list.sort()
 
-for i in range(first_ifg_num, last_ifg_num + 1):    
-    
-    # Read data
-    with rio.open(ifg_list[i]) as src:
-        ifg = src.read(1)
-        ifg[ifg==0.0] = np.nan
-        mask = np.isnan(ifg)
-    
-        # convert to mm 
-        ifg = ifg * 1000 * (0.0562356424 / (4 * math.pi))
-    
-    corr =  np.load(corr_list[i])
-    corr[mask] = np.nan
-    
+# define colour map
+cmap = cm.Spectral_r
+cmap.set_bad(color='grey')
 
-    with rio.open(tempml_list[i]) as src:
-        ifg_corr = src.read(1)
+# loop over each ifg in turn
+for i in range(args.FIRST_IFG - 1, args.LAST_IFG):    
+    # Read data
+    orig_ifg = Ifg(ifg_list[i])
+    orig_ifg.open()
+    orig_ifg.convert_to_mm() # force mm conversion
+    ifg = orig_ifg.phase_data
+    orig_ifg.close()
+
+    corr =  np.load(corr_list[i])
+    
+    corr_ifg = Ifg(tempml_list[i])
+    corr_ifg.open()
+    corr_ifg.convert_to_mm() # force mm conversion
+    ifg_corr = corr_ifg.phase_data
+    corr_ifg.close()
     
     # Identify Date Pair
     date_pair_list_ifg = re.findall(r'\d{8}-\d{8}', ifg_list[i])
@@ -98,56 +108,53 @@ for i in range(first_ifg_num, last_ifg_num + 1):
 
     # Check the Date-pairs are the same in case of mismatched files saved into the directories
     if date_pair_string_ifg == date_pair_string_corr and date_pair_string_ifg == date_pair_string_ifgcorr:
-       
         print(f'\nPlotting for {date_pair_string_ifg}...\n')
         pass
-
     else:
-
         print(f'\nERROR: Interferogram datepair mismatch at {date_pair_string_ifg}, check that directories have the same interferograms.\n')
         break
     
-    
     # PLOTTING
-    ifg_quant = np.nanquantile(ifg, [0.05, 0.95])
-    climit = np.nanmax(np.abs(ifg_quant))
+#    ifg_quant = np.nanquantile(ifg, [0.05, 0.95])
+#    climit = np.nanmax(np.abs(ifg_quant))
+    climit = 30
     
-    # switch to subtract median or not
-    if subtract_median == 1:
-        switch = 1
-    else:
-        switch = 0
-    
+    # subtract median of image
+    if args.subtract_median == 1:
+        ifg -= np.nanmedian(ifg)
+        corr -= np.nanmedian(corr)
+        ifg_corr -= np.nanmedian(ifg_corr)
 
+    # three sub-plots
     fig, ax = plt.subplots(1,3, figsize=(6, 3))
      
-    # IFG
-    s0 = ax[0].imshow(ifg-(np.nanmedian(ifg)*switch), cmap='bwr', clim=(-1*climit, climit))
+    # ORIGINAL IFG
+    s0 = ax[0].imshow(ifg, cmap=cmap, clim=(-1*climit, climit))
+    ax[0].set_title('Original Ifg', fontsize=8)
     ax[0].set_axis_off()
 
     # CORRECTION FILE
-    s1 =ax[1].imshow(corr-(np.nanmedian(corr)*switch), cmap='bwr', clim=(-1*climit, climit))
+    s1 =ax[1].imshow(corr, cmap=cmap, clim=(-1*climit, climit))
+    ax[1].set_title('Correction', fontsize=8)
     ax[1].set_axis_off()
 
-    # IFG CORRECTED
-    s2 = ax[2].imshow(ifg_corr-(np.nanmedian(ifg_corr)*switch), cmap='bwr', clim=(-1*climit,climit))
+    # CORRECTED IFG
+    s2 = ax[2].imshow(ifg_corr, cmap=cmap, clim=(-1*climit,climit))
+    ax[2].set_title('Corrected Ifg', fontsize=8)
     ax[2].set_axis_off()
 
-    # Extra
-    fig.colorbar(s0, ax=ax[0], location='bottom', label='mm')
-    fig.colorbar(s1, ax=ax[1], location='bottom', label='mm')
-    fig.colorbar(s2, ax=ax[2], location='bottom', label='mm')
+    # Colorbar
+    cbar = fig.colorbar(s1, ax=ax.ravel().tolist(), orientation='horizontal', label='mm', \
+            ticks=[-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50])
+    cbar.ax.tick_params(labelsize=8)
 
+    # set figure window colour to grey
     fig.set_facecolor('grey')
     
-    fig.tight_layout()
-
     # Title
-    ax[1].set_title(f'{date_pair_string_ifg}', fontsize=10, fontweight='bold')
+    fig.suptitle(f'{date_pair_string_ifg}', y=0.75, fontsize=10, fontweight='bold')
 
     plt.savefig(f'{save_dir}/{date_pair_string_ifg}.png', dpi=300)
     
     plt.close()
-
-    i = i + 1
 

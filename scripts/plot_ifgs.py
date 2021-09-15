@@ -24,7 +24,7 @@ import math
 import numpy as np
 import pyrate.constants as C
 from pyrate.core.logger import pyratelogger as log, configure_stage_log
-from pyrate.core.shared import Ifg, InputTypes
+from pyrate.core.shared import Ifg, InputTypes, nan_and_mm_convert
 from pyrate.main import _params_from_conf
 
 
@@ -32,7 +32,7 @@ try:
     import matplotlib.pyplot as plt
     import matplotlib as mpl
     from mpl_toolkits.axes_grid1 import make_axes_locatable
-    cmap = mpl.cm.Spectral
+    cmap = mpl.cm.Spectral_r
     cmap.set_bad(color='grey')
 except ImportError as e:
     log.warn(ImportError(e))
@@ -101,9 +101,7 @@ def main():
                 ifg_num = plt_cols * p_r + p_c + ifgs_per_plot * i
                 file = ifgs[ifg_num]
                 log.info(f'Plotting {file}')
-                __plot_ifg(file, cmap, ax, num_ifgs,
-                            nan_convert=params[C.NAN_CONVERSION],
-                            nodataval=params[C.NO_DATA_VALUE])
+                __plot_ifg(file, cmap, ax, num_ifgs, params)
                 tot_plots += 1
                 fig_plots += 1
                 log.debug(f'Plotted interferogram #{tot_plots}')
@@ -117,16 +115,15 @@ def main():
                 break
 
 
-def __plot_ifg(file, cmap, ax, num_ifgs, nan_convert=None, nodataval=None):
+def __plot_ifg(file, cmap, ax, num_ifgs, params):
     try:
         ifg = Ifg(file)
         ifg.open()
     except:
         raise AttributeError(f'Cannot open interferogram geotiff: {file}')
 
-    if nan_convert: # change nodata values to NaN for display
-        ifg.nodata_value = nodataval
-        ifg.convert_to_nans()
+    # change nodata values to NaN for display; convert units to mm (if in radians)
+    nan_and_mm_convert(ifg, params)
 
     im = ax.imshow(ifg.phase_data, cmap=cmap)
     text = ax.set_title(Path(ifg.data_path).stem)
@@ -134,7 +131,7 @@ def __plot_ifg(file, cmap, ax, num_ifgs, nan_convert=None, nodataval=None):
 #    text.set_fontsize(min(20, int(num_ifgs / 2)))
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
-    plt.colorbar(im, cax=cax)
+    plt.colorbar(im, cax=cax, label='mm')
     ifg.close()
 
 

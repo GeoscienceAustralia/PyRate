@@ -227,15 +227,13 @@ def independent_orbital_correction(ifg_path, params):
     fullres_dm = get_design_matrix(ifg0, degree, intercept=intercept)
 
     ifg = shared.dem_or_ifg(ifg_path) if isinstance(ifg_path, str) else ifg_path
-    ifg_path = ifg.data_path
+    multi_path = MultiplePaths(ifg.data_path, params)
+    orb_on_disc = MultiplePaths.orb_error_path(ifg.data_path, params)
 
-    multi_path = MultiplePaths(ifg_path, params)
-    fullres_ifg = ifg  # keep a backup
-    orb_on_disc = MultiplePaths.orb_error_path(ifg_path, params)
     if not ifg.is_open:
         ifg.open()
-
     shared.nan_and_mm_convert(ifg, params)
+    fullres_ifg = ifg  # keep a backup
     fullres_phase = fullres_ifg.phase_data
 
     if orb_on_disc.exists():
@@ -270,7 +268,6 @@ def independent_orbital_correction(ifg_path, params):
 
     # set orbfit meta tag and save phase to file
     _save_orbital_error_corrected_phase(fullres_ifg, params)
-    fullres_ifg.close()
 
 
 def __orb_correction(fullres_dm, mlooked_dm, fullres_phase, mlooked_phase, offset=False):

@@ -28,7 +28,7 @@ import pyrate.constants as C
 from pyrate import conv2tif, prepifg, correct
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.core import shared
-from pyrate.core.aps import wrap_spatio_temporal_filter, _interpolate_nans_2d, _kernel
+from pyrate.core.aps import spatio_temporal_filter, _interpolate_nans_2d, _kernel
 from pyrate.core.aps import gaussian_temporal_filter as tlpfilter, gaussian_spatial_filter as slpfilter
 from pyrate.core.shared import Ifg
 from pyrate.core.ifgconstants import DAYS_PER_YEAR
@@ -196,7 +196,7 @@ class TestAPSErrorCorrectionsOnDiscReused:
     def test_aps_error_files_on_disc(self, slpnanfill_method, slpfcutoff):
         self.params[C.SLPF_NANFILL_METHOD] = slpnanfill_method
         self.params[C.SLPF_CUTOFF] = slpfcutoff
-        wrap_spatio_temporal_filter(self.params)
+        spatio_temporal_filter(self.params)
 
         # test_orb_errors_written
         aps_error_files = [MultiplePaths.aps_error_path(i, self.params) for i in self.ifg_paths]
@@ -205,7 +205,7 @@ class TestAPSErrorCorrectionsOnDiscReused:
         phase_prev = [i.phase_data for i in self.ifgs]
 
         # run aps error removal again
-        wrap_spatio_temporal_filter(self.params)
+        spatio_temporal_filter(self.params)
         aps_error_files2 = [MultiplePaths.aps_error_path(i, self.params) for i in self.ifg_paths]
         # if files are written again - times will change
         last_mod_times_2 = [os.stat(o).st_mtime for o in aps_error_files2]
@@ -214,7 +214,7 @@ class TestAPSErrorCorrectionsOnDiscReused:
         phase_now = [i.phase_data for i in self.ifgs]
 
         # run aps error correction once mroe
-        wrap_spatio_temporal_filter(self.params)
+        spatio_temporal_filter(self.params)
         aps_error_files3 = [MultiplePaths.aps_error_path(i, self.params) for i in self.ifg_paths]
         last_mod_times_3 = [os.stat(o).st_mtime for o in aps_error_files3]
         assert all(a == b for a, b in zip(last_mod_times, last_mod_times_3))

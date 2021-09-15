@@ -34,16 +34,20 @@ from pyrate.core.logger import pyratelogger as log
 from pyrate.core import shared, ifgconstants as ifc, mpiops
 from pyrate.core.covariance import cvd_from_phase, RDist
 from pyrate.core.algorithm import get_epochs
-from pyrate.core.shared import Ifg, Tile, EpochList
+from pyrate.core.shared import Ifg, Tile, EpochList, nan_and_mm_convert
 from pyrate.core.timeseries import time_series
 from pyrate.merge import assemble_tiles
 from pyrate.configuration import MultiplePaths, Configuration
 
 
-def wrap_spatio_temporal_filter(params: dict) -> None:
+def spatio_temporal_filter(params: dict) -> None:
     """
-    A wrapper for the spatio-temporal filter so it can be tested.
-    See docstring for spatio_temporal_filter.
+    Applies a spatio-temporal filter to remove the atmospheric phase screen
+    (APS) and saves the corrected interferograms. Firstly the incremental
+    time series is computed using the SVD method, before a cascade of temporal
+    then spatial Gaussian filters is applied. The resulting APS corrections are
+    saved to disc before being subtracted from each interferogram.
+
     :param params: Dictionary of PyRate configuration parameters.
     """
     if params[C.APSEST]:
@@ -61,43 +65,37 @@ def wrap_spatio_temporal_filter(params: dict) -> None:
         log.debug('Finished APS correction')
         return  # return if True condition returned
 
-    aps_error_files_on_disc = [MultiplePaths.aps_error_path(i, params) for i in ifg_paths]
-    if all(a.exists() for a in aps_error_files_on_disc):
-        log.warning("Reusing APS errors from previous run!!!")
-        for ifg_path, a in mpiops.array_split(list(zip(ifg_paths, aps_error_files_on_disc))):
-            phase = np.load(a)
-            _save_aps_corrected_phase(ifg_path, phase)
-    else:
-        tsincr = _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles)
-        mpiops.comm.barrier()
+    aps_paths = [MultiplePaths.aps_error_path(i, params) for i in ifg_paths]
+    if all(a.exists() for a in aps_paths):
+        log.warning('Reusing APS errors from previous run')
+        _apply_aps_correction(ifg_paths, aps_paths, params)
+        return
 
-        spatio_temporal_filter(tsincr, ifg_paths, params, preread_ifgs)
+    # obtain the incremental time series using SVD
+    tsincr = _calc_svd_time_series(ifg_paths, params, preread_ifgs, tiles)
     mpiops.comm.barrier()
-    shared.save_numpy_phase(ifg_paths, params)
 
+    # get lists of epochs and ifgs
+    ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
+    epochlist = mpiops.run_once(get_epochs, ifgs)[0]
 
-def spatio_temporal_filter(tsincr: np.ndarray, ifg_paths: List[str], params: dict,
-                           preread_ifgs: dict) -> None:
-    """
-    Applies a spatio-temporal filter to remove the atmospheric phase screen
-    (APS) and saves the corrected interferograms. Before performing this step,
-    the time series is computed using the SVD method. This function then
-    performs temporal and spatial filtering.
+    # first perform temporal high pass filter
+    ts_hp = temporal_high_pass_filter(tsincr, epochlist, params)
 
-    :param tsincr: incremental time series array of size (ifg.shape, nepochs-1)
-    :param ifg_paths: List of interferogram file paths
-    :param params: Dictionary of PyRate configuration parameters
-    :param preread_ifgs: Dictionary of shared.PrereadIfg class instances
-    """
+    # second perform spatial low pass filter to obtain APS correction in ts domain
     ifg = Ifg(ifg_paths[0])  # just grab any for parameters in slpfilter
     ifg.open()
-    epochlist = mpiops.run_once(get_epochs, preread_ifgs)[0]
-    ts_hp = temporal_high_pass_filter(tsincr, epochlist, params)
     ts_aps = spatial_low_pass_filter(ts_hp, ifg, params)
-    tsincr -= ts_aps
-
-    _ts_to_ifgs(tsincr, preread_ifgs, params)
     ifg.close()
+
+    # construct APS corrections for each ifg
+    _make_aps_corrections(ts_aps, ifgs, params)
+
+    # apply correction to ifgs and save ifgs to disc.
+    _apply_aps_correction(ifg_paths, aps_paths, params)
+
+    # update/save the phase_data in the tiled numpy files
+    shared.save_numpy_phase(ifg_paths, params)
 
 
 def _calc_svd_time_series(ifg_paths: List[str], params: dict, preread_ifgs: dict,
@@ -150,42 +148,49 @@ def _assemble_tsincr(ifg_paths: List[str], params: dict, preread_ifgs: dict,
     return np.dstack([v[1] for v in sorted(tsincr_g.items())])
 
 
-def _ts_to_ifgs(tsincr: np.ndarray, preread_ifgs: dict, params: dict) -> None:
+def _make_aps_corrections(ts_aps: np.ndarray, ifgs: List[Ifg], params: dict) -> None:
     """
-    Function that converts an incremental displacement time series into
-    interferometric phase observations. Used to re-construct an interferogram
-    network from a time series.
-    :param tsincr: incremental time series array of size (ifg.shape, nepochs-1)
-    :param preread_ifgs: Dictionary of shared.PrereadIfg class instances
+    Function to convert the time series APS filter output into interferometric
+    phase corrections and save them to disc.
+
+    :param ts_aps: Incremental APS time series array.
+    :param ifgs:   List of Ifg class objects.
     :param params: Dictionary of PyRate configuration parameters.
     """
     log.debug('Reconstructing interferometric observations from time series')
-    ifgs = list(OrderedDict(sorted(preread_ifgs.items())).values())
-    _, n = mpiops.run_once(get_epochs, ifgs)
+    # get first and second image indices 
+    _ , n = mpiops.run_once(get_epochs, ifgs)
     index_first, index_second = n[:len(ifgs)], n[len(ifgs):]
 
     num_ifgs_tuples = mpiops.array_split(list(enumerate(ifgs)))
-    num_ifgs_tuples = [(int(num), ifg) for num, ifg in num_ifgs_tuples]
-
-    for i, ifg in num_ifgs_tuples:
+    for i, ifg in [(int(num), ifg) for num, ifg in num_ifgs_tuples]:
+        # sum time slice data from first to second epoch
+        ifg_aps = np.sum(ts_aps[:, :, index_first[i]: index_second[i]], axis=2)
         aps_error_on_disc = MultiplePaths.aps_error_path(ifg.tmp_path, params)
-        phase = np.sum(tsincr[:, :, index_first[i]: index_second[i]], axis=2)
-        np.save(file=aps_error_on_disc, arr=phase)
-        _save_aps_corrected_phase(ifg.tmp_path, phase)
+        np.save(file=aps_error_on_disc, arr=ifg_aps) # save APS as numpy array
+
+    mpiops.comm.barrier()
 
 
-def _save_aps_corrected_phase(ifg_path: str, phase: np.ndarray) -> None:
+def _apply_aps_correction(ifg_paths: List[str], aps_paths: List[str], params: dict) -> None:
     """
-    Save (update) interferogram metadata and phase data after
-    spatio-temporal filter (APS) correction.
+    Function to read and apply (subtract) APS corrections from interferogram data.
     """
-    ifg = Ifg(ifg_path)
-    ifg.open(readonly=False)
-    ifg.phase_data[~np.isnan(ifg.phase_data)] = phase[~np.isnan(ifg.phase_data)]
-    # set aps tags after aps error correction
-    ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, ifc.APS_REMOVED)
-    ifg.write_modified_phase()
-    ifg.close()
+    for ifg_path, aps_path in mpiops.array_split(list(zip(ifg_paths, aps_paths))):
+        # read the APS correction from numpy array
+        aps_corr = np.load(aps_path)
+        # open the Ifg object
+        ifg = Ifg(ifg_path)
+        ifg.open(readonly=False)
+        # convert NaNs and convert to mm
+        nan_and_mm_convert(ifg, params)
+        # subtract the correction from the ifg phase data
+        ifg.phase_data[~np.isnan(ifg.phase_data)] -= aps_corr[~np.isnan(ifg.phase_data)]
+        # set meta-data tags after aps error correction
+        ifg.dataset.SetMetadataItem(ifc.PYRATE_APS_ERROR, ifc.APS_REMOVED)
+        # write phase data to disc and close ifg.
+        ifg.write_modified_phase()
+        ifg.close()
 
 
 def spatial_low_pass_filter(ts_hp: np.ndarray, ifg: Ifg, params: dict) -> np.ndarray:

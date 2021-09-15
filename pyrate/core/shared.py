@@ -405,42 +405,49 @@ class Ifg(RasterBase):
 
     def convert_to_mm(self):
         """
-        Convert phase data units from radians to millimetres.
+        Convert phase_data units from radians to millimetres.
+        Note: converted phase_data held in memory and not written to disc
+              (see shared.write_modified_phase)
         """
-        self.mm_converted = True
         if self.dataset.GetMetadataItem(ifc.DATA_UNITS) == MILLIMETRES:
-            msg = '{}: ignored as previous phase unit conversion ' \
-                  'already applied'.format(self.data_path)
+            self.mm_converted = True
+            msg = '{}: ignored as phase units are already ' \
+                  'millimetres'.format(self.data_path)
             log.debug(msg)
-            self.phase_data = self.phase_data
             return
         elif self.dataset.GetMetadataItem(ifc.DATA_UNITS) == RADIANS:
             self.phase_data = convert_radians_to_mm(self.phase_data, self.wavelength)
             self.meta_data[ifc.DATA_UNITS] = MILLIMETRES
+            self.mm_converted = True
             # self.write_modified_phase()
             # otherwise NaN's don't write to bytecode properly
             # and numpy complains
             # self.dataset.FlushCache()
             msg = '{}: converted phase units to millimetres'.format(self.data_path)
             log.debug(msg)
+            return
         else:  # pragma: no cover
             msg = 'Phase units are not millimetres or radians'
             raise IfgException(msg)
 
     def convert_to_radians(self):
         """
-        return mm converted phase data into radians
-        In memory conversion but don't write on disc
+        Convert phase_data units from millimetres to radians.
+        Note: converted phase_data held in memory and not written to disc
+              (see shared.write_modified_phase)
         """
         if self.meta_data[ifc.DATA_UNITS] == MILLIMETRES:
-            msg = '{}: ignored as previous phase unit conversion ' \
-                  'already applied'.format(self.data_path)
-            log.debug(msg)
             self.phase_data = convert_mm_to_radians(self.phase_data, wavelength=self.wavelength)
             self.meta_data[ifc.DATA_UNITS] = RADIANS
             self.mm_converted = False
+            msg = '{}: converted phase units to radians'.format(self.data_path)
+            log.debug(msg)
             return
         elif self.meta_data[ifc.DATA_UNITS] == RADIANS:
+            self.mm_converted = False
+            msg = '{}: ignored as phase units are already ' \
+                  'radians'.format(self.data_path)
+            log.debug(msg)
             return
         else:  # pragma: no cover
             msg = 'Phase units are not millimetres or radians'
@@ -1256,13 +1263,13 @@ class PrereadIfg:
 
 def save_numpy_phase(ifg_paths, params):
     """
-    Save interferogram phase data as numpy array file on disk.
+    Split interferogram phase data in to tiles (if they exist in the params
+    dict) and save as numpy array files on disk.
 
     :param list ifg_paths: List of strings for interferogram paths
-    :param list tiles: List of pyrate.shared.Tile instances
     :param dict params: Dictionary of configuration parameters
 
-    :return: None, file saved to disk
+    :return: None, numpy file saved to disk
     """
     tiles = params['tiles']
     outdir = params[C.TMPDIR]
@@ -1281,6 +1288,7 @@ def save_numpy_phase(ifg_paths, params):
                     arr=p_data)
         ifg.close()
     mpiops.comm.barrier()
+    log.debug(f'Finished writing phase_data to numpy files in {outdir}')
 
 
 def get_geotiff_header_info(ifg_path):

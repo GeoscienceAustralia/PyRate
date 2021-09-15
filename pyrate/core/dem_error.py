@@ -246,7 +246,7 @@ def _per_tile_setup(ifgs: list) -> Tuple[np.ndarray, np.ndarray, int, int, np.nd
     nifgs = len(ifgs)
     ifg_data = np.zeros((nifgs, nrows, ncols), dtype=np.float32)
     for ifg_num in range(nifgs):
-        ifg_data[ifg_num] = ifgs[ifg_num].phase_data
+        ifg_data[ifg_num] = ifgs[ifg_num].phase_data # phase data is read from numpy files
     mst = ~np.isnan(ifg_data)
     ifg_time_span = np.zeros((nifgs))
     for ifg_num in range(nifgs):
@@ -287,6 +287,7 @@ def _write_dem_errors(ifg_paths: list, params: dict, preread_ifgs: dict) -> None
     for ifg_path in ifg_paths:
         ifg = Ifg(ifg_path)
         ifg.open()
+        shared.nan_and_mm_convert(ifg, params) # ensure we have phase data in mm
         # read dem error correction file from tmpdir
         dem_error_correction_ifg = assemble_tiles(shape, params[C.TMPDIR], tiles, out_type='dem_error_correction',
                                                   index=idx)
