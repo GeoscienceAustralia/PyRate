@@ -20,7 +20,7 @@ from setuptools.command.develop import develop
 from subprocess import check_output, run
 import platform
 import setuptools
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 
 # Get requirements (and dev requirements for testing) from requirements
 #  txt files. Also ensure we are using correct GDAL version.
@@ -152,7 +152,6 @@ setup(
         "Natural Language :: English",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
