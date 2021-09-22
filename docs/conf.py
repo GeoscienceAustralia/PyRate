@@ -25,7 +25,8 @@ extensions = ['sphinx.ext.autodoc',
               'matplotlib.sphinxext.plot_directive',
               'IPython.sphinxext.ipython_console_highlighting',
               'IPython.sphinxext.ipython_directive',
-              'sphinxcontrib.programoutput'
+              'sphinxcontrib.programoutput',
+              'm2r2'
               ]
 
 # Add any paths that contain templates here, relative to this directory.
