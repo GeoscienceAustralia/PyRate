@@ -243,7 +243,7 @@ def assemble_tiles(s: Tuple, dir: str, tiles: Tile, out_type: str, index: Option
 
     :param s: shape for merged array.
     :param dir: path to directory containing numpy tile files.
-    :param tiles : pyrate.core.shared.Tile Class object.
+    :param tiles: pyrate.core.shared.Tile Class object.
     :param out_type: product type string, used to construct numpy tile file name.
     :param index: array third dimension index to extract from 3D time series array tiles.
     :return: merged_array: array assembled from all tiles.

@@ -307,11 +307,9 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
 
     Warning: This will write orbital error corrected phase_data to the ifgs.
 
-    :param list ifg_paths: List of Ifg class objects reduced to a minimum spanning
-        tree network
+    :param list ifg_paths: List of Ifg class objects reduced to a minimum spanning tree network
     :param dict params: dictionary of configuration parameters
-    :param list m_ifgs: list of multilooked Ifg class objects
-        (sequence must be multilooked versions of 'ifgs' arg)
+    :param list m_ifgs: list of multilooked Ifg class objects (sequence must be multilooked versions of 'ifgs' arg)
 
     :return: None - interferogram phase data is updated and saved to disk
     """
@@ -374,13 +372,13 @@ def calc_network_orb_correction(src_ifgs, degree, scale, nepochs, intercept=Fals
     :param int scale: Scale factor for design matrix to improve inversion robustness
     :param int nepochs: The number of epochs in the network
     :param intercept: whether to include a constant offset to fit to each ifg. This
-                      intercept is discarded and not returned.
+    intercept is discarded and not returned.
 
-    :return coefs: a list of coefficient lists, indexed by epoch.
-                   The coefficient lists are in the following order:
-                     PLANAR - x, y
-                     QUADRATIC - x^2, y^2, x*y, x, y
-                     PART_CUBIC - x*y^2, x^2, y^2, x*y, x, y
+    :return coefs: a list of coefficient lists, indexed by epoch. The coefficient lists are in the following order:
+
+    PLANAR - x, y
+    QUADRATIC - x^2, y^2, x*y, x, y
+    PART_CUBIC - x*y^2, x^2, y^2, x*y, x, y
     """
     vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
     vphase = squeeze(vphase)

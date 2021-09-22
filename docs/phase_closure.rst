@@ -213,10 +213,15 @@ error to this single ifg. The ability to do this depends on the parameter
 settings chosen.
 
 .. automodule:: pyrate.core.phase_closure.closure_check
+   :members:
 .. automodule:: pyrate.core.phase_closure.collect_loops
+   :members:
 .. automodule:: pyrate.core.phase_closure.correct_phase
+   :members:
 .. automodule:: pyrate.core.phase_closure.mst_closure
+   :members:
 .. automodule:: pyrate.core.phase_closure.plot_closure
+   :members:
 .. automodule:: pyrate.core.phase_closure.sum_closure
    :members:
 

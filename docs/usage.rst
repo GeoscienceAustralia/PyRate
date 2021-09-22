@@ -4,12 +4,10 @@ Usage
 Configuration
 -------------
 
-Various parameters_ are controlled by values given in a text-based configuration file.
+Various parameters are controlled by values given in a text-based configuration file.
 The user can choose any filename for this configuration file.
 Example parameters for running `PyRate` with `GAMMA`-format interferograms are
 contained in the example configuration file ``PyRate/input_parameters.conf``.
-
-.. _parameters: https://geoscienceaustralia.github.io/PyRate/config.html
 
 
 Workflow
@@ -21,8 +19,8 @@ File Discovery
 To allow flexibility in the file types that can be processed, `PyRate` requires
 file lists to be provided. This allows `PyRate` to identify files of each
 type without relying on file extensions. The file path to these lists are 
-provided under ``ifgfilelist``, ``hdrfilelist`` and ``cohfilelist`` keywords
-in the configuration file.
+provided under ``ifgfilelist``, ``hdrfilelist``, ``cohfilelist`` and 
+``basefilelist`` keywords in the configuration file.
 
 .. note::
 
@@ -77,12 +75,21 @@ Example of a coherence file list for `GAMMA` flat-binary files::
       The epoch pair must be in the format ``YYYYMMDD-YYYYMMDD`` or
       ``YYMMDD-YYMMDD``. Otherwise, any naming convention is appropriate.
 
+The ``basefilelist`` is an optional list which contains the pool of all
+available GAMMA baseline vector files. These are only needed if the user
+wants to use the DEM error correction functionality.
+Example of a baseline file list for `GAMMA` ``base.par`` files::
+
+    /absolute/path/to/20150702-20150920_base.par
+    /absolute/path/to/20151219-20160109_base.par
+    /absolute/path/to/20160202-20160415_base.par
+
 The date epochs in filenames are used to match the corresponding MLI header
-or coherence files to each interferogram. It is recommended to provide a complete
-list of available headers/coherence files for a stack in their respective lists,
-since only the necessary files will be used. This allows you to process a subset
-of interferograms by removing entries in ``ifgfilelist`` without needing to modify
-all three lists.
+or coherence files to each interferogram. It is recommended to provide a
+complete list of available headers/coherence/baseline files for a stack in
+their respective lists, since only the necessary files will be used. This
+allows you to process a subset of interferograms by removing entries in
+``ifgfilelist`` without needing to modify all four lists.
 
 `PyRate` Workflow
 ^^^^^^^^^^^^^^^^^
@@ -271,15 +278,12 @@ calculated using metadata from the `GAMMA` MLI parameter files.
 
 The output arrays are saved to ``<outdir>/geometry_dir`` and contain as follows:
 
-``rdc_azimuth.tif``        azimuth coordinate in range-doppler system;
-``rdc_range.tif``          range coordinate in range-doppler system;
-``look_angle.tif``         look angle (vector between line-of-sight and
-satellite nadir);
-``incidence_angle.tif``    incidence angle (vector between line-of-sight and
-vector perpendicular to local ground surface);
-``azimuth_angle.tif``      azimuth angle (projection of line-of-sight on the
-surface);
-``range_dist.tif``         satellite to ground range distance.
+- ``rdc_azimuth.tif``: azimuth coordinate in range-doppler system;
+- ``rdc_range.tif``: range coordinate in range-doppler system;
+- ``look_angle.tif``: look angle (vector between line-of-sight and satellite nadir);
+- ``incidence_angle.tif``: incidence angle (vector between line-of-sight and vector perpendicular to local ground surface);
+- ``azimuth_angle.tif``: azimuth angle (projection of line-of-sight on the surface);
+- ``range_dist.tif``: satellite to ground range distance.
 
 
 Upon completion, ``prepifg`` will save a new set of interferogram files in the
@@ -488,13 +492,13 @@ Results Visualisation
 ---------------------
 
 Several plotting scripts are included in the ``utils/`` directory to help the
-user visually inspect the output products of `PyRate`::
+user visually inspect the output products of `PyRate`:
 
-``make_tscuml_animation.py``      - Make an animated gif from cumulative time series data;
-``plot_linear_rate_profile.py``   - Plot a profile through a linear rate map;
-``plot_time_series.py``           - Map and graph view of cumulative time series data;
-``plot_correction_files.py``      - Before and after viewing of interferogram corrections;
-``plot_sbas_network.py``          - Baseline-time plot for the interferogram network.
+- ``make_tscuml_animation.py``: Make an animated gif from cumulative time series data;
+- ``plot_linear_rate_profile.py``: Plot a profile through a linear rate map;
+- ``plot_time_series.py``: Map and graph view of cumulative time series data;
+- ``plot_correction_files.py``: Before and after viewing of interferogram corrections;
+- ``plot_sbas_network.py``: Baseline-time plot for the interferogram network.
 
 
 Example usage of ``plot_time_series.py`` with the included test data::

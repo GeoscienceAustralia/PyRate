@@ -80,9 +80,8 @@ def parse_epoch_header(path):
     """
     Returns dictionary of epoch metadata required for PyRate
 
-    :param str path: `Full path to Gamma *mli.par file`
-    # note that the mli.par is required as input since the baseline calculations require the input values valid for the
-    # Gamma-multi-looked products, also the Gamma lookup table gives radar coordinates for the multi-looked geometry.
+    :param str path: Full path to GAMMA mli.par file. Note that the mli.par is required as input since the baseline calculations require the input values valid for the GAMMA multi-looked products and also the GAMMA lookup table gives radar coordinates for the multi-looked geometry.
+
     :return: subset: subset of full metadata
     :rtype: dict
     """
@@ -233,7 +232,7 @@ def parse_baseline_header(path: str) -> dict:
     Will read the Precise baseline estimate, if available,
     otherwise will read the Initial baseline estimate.
 
-    :param path: Full path to Gamma *base.par file
+    :param path: Full path to GAMMA base.par file
 
     :return: bdict: Dictionary of baseline values
     """
@@ -477,7 +476,7 @@ def get_header_paths(input_file, slc_file_list):
     Function that matches input GAMMA file names with GAMMA header file names
 
     :param str input_file: input GAMMA image file.
-    :param slc_file_list: file listing the pool of available header files (GAMMA: *slc.par, ROI_PAC: *.rsc)
+    :param slc_file_list: file listing the pool of available header files (GAMMA: slc.par, ROI_PAC: .rsc)
     :return: list of matching header files
     :rtype: list
     """

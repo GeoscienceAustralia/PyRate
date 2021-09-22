@@ -407,7 +407,7 @@ class Ifg(RasterBase):
         """
         Convert phase_data units from radians to millimetres.
         Note: converted phase_data held in memory and not written to disc
-              (see shared.write_modified_phase)
+        (see shared.write_modified_phase)
         """
         if self.dataset.GetMetadataItem(ifc.DATA_UNITS) == MILLIMETRES:
             self.mm_converted = True
@@ -434,7 +434,7 @@ class Ifg(RasterBase):
         """
         Convert phase_data units from millimetres to radians.
         Note: converted phase_data held in memory and not written to disc
-              (see shared.write_modified_phase)
+        (see shared.write_modified_phase)
         """
         if self.meta_data[ifc.DATA_UNITS] == MILLIMETRES:
             self.phase_data = convert_mm_to_radians(self.phase_data, wavelength=self.wavelength)
@@ -1456,8 +1456,7 @@ def tiles_split(func: Callable, params: dict, *args, **kwargs) -> np.ndarray:
     """
     Function to pass tiles of a full array to an array processing function call.
     :param func: Name of function to pass tiles to.
-    :param params: Dictionary of PyRate configuration parameters.
-        params must contain a 'tiles' list
+    :param params: Dictionary of PyRate configuration parameters; must contain a 'tiles' list
     """
     tiles = params[C.TILES]
     return iterable_split(func, tiles, params, *args, **kwargs)

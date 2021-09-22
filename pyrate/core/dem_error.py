@@ -171,8 +171,9 @@ def calc_dem_errors(ifgs: list, bperp: np.ndarray, look_angle: np.ndarray, range
     """
     Function to calculate the DEM error for each pixel using least-squares adjustment of phase data and
     perpendicular baseline. The least-squares adjustment co-estimates the velocities.
-        - *nrows* is the number of rows in the ifgs,
-        - *ncols* is the  number of columns in the ifgs, and
+    - *nrows* is the number of rows in the ifgs, and
+    - *ncols* is the  number of columns in the ifgs.
+
     :param ifgs: list of interferogram class objects.
     :param bperp: Per-pixel perpendicular baseline for each interferogram
     :param look_angle: Per-pixel look angle

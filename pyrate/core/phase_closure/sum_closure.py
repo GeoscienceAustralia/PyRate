@@ -71,10 +71,10 @@ def sum_phase_closures(ifg_files: List[str], loops: List[WeightedLoop], params: 
     :param loops: list of loops
     :param params: params dict
     :return: Tuple of closure, ifgs_breach_count, num_occurrences_each_ifg
-        closure: summed closure for each loop.
-        ifgs_breach_count: shape=(ifg.shape, n_ifgs) number of times a pixel in an ifg fails the closure
-            check (i.e., has unwrapping error) in all loops under investigation.
-        num_occurrences_each_ifg: frequency of ifg appearance in all loops.
+    closure: summed closure for each loop.
+    ifgs_breach_count: shape=(ifg.shape, n_ifgs) number of times a pixel in an ifg fails the closure
+    check (i.e., has unwrapping error) in all loops under investigation.
+    num_occurrences_each_ifg: frequency of ifg appearance in all loops.
     """
     edge_to_indexed_ifgs = __create_ifg_edge_dict(ifg_files, params)
     ifgs = [v.IfgPhase for v in edge_to_indexed_ifgs.values()]
