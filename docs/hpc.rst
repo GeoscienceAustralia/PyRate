@@ -34,7 +34,8 @@ installation, first run an interactive session::
     qsub -I -q express -l walltime=01:00:00,mem=16Gb,ncpus=4,wd
 
 Once the session has started, you will need to reactivate your virtual 
-environment and reload the required modules::
+environment and reload the required modules. 
+There is a call to activate the virtual environment built into the
+script below so this can be completed with a single command::
 
-    source ~/PyRateVenv/bin/activate
     source ~/PyRate/scripts/nci_load_modules.sh
