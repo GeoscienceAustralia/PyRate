@@ -78,7 +78,7 @@ Example of a coherence file list for `GAMMA` flat-binary files::
 The ``basefilelist`` is an optional list which contains the pool of all
 available GAMMA baseline vector files. These are only needed if the user
 wants to use the DEM error correction functionality.
-Example of a baseline file list for `GAMMA` ``base.par`` files::
+Example of a baseline file list for `GAMMA` baseline vector files::
 
     /absolute/path/to/20150702-20150920_base.par
     /absolute/path/to/20151219-20160109_base.par
@@ -282,15 +282,13 @@ The output arrays are saved to ``<outdir>/geometry_dir`` and contain as follows:
 - ``look_angle.tif``: look angle (vector between line-of-sight and satellite nadir);
 - ``incidence_angle.tif``: incidence angle (vector between line-of-sight and vector perpendicular to local ground surface);
 - ``azimuth_angle.tif``: azimuth angle (projection of line-of-sight on the surface);
-- ``range_dist.tif``: satellite to ground range distance.
-
+- ``range_dist.tif``: satellite to ground range distance;
+- ``dem.tif``: digital elevation model.
 
 Upon completion, ``prepifg`` will save a new set of interferogram files in the
 ``<outdir>\interferogram_dir`` (``*_ifg.tif``).
 If provided as input, coherence files will be saved to ``<outdir>\coherence_dir``
 (``*_coh.tif``).
-A DEM file will be saved to the ``<outdir>\geometry_dir`` (``dem.tif``), together
-with the geometry files previously described.
 
 
 ``correct``: Compute and apply interferometric phase corrections
