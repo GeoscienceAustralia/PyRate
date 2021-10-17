@@ -212,8 +212,7 @@ and leave a set of high-quality pixels for analysis.
 
 Coherence masking is enabled by setting ``cohmask: 1`` in
 the configuration file. A threshold, ``cohthresh`` needs to be provided. 
-For every pixel where the coherence is lower than ``cohthresh`` the phase will be
-changed to Not-a-Number (NaN).
+Pixels with coherence values below ``cohthresh`` will be set to Not-a-Number (NaN).
 
 .. note::
 
