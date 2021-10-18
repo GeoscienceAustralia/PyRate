@@ -3,12 +3,12 @@
 Release History
 ===============
 
-0.6.0 (2021-09-30)
+0.6.0 (2021-10-18)
 ------------------
 Added
 +++++
 - Geometry and baseline calculations, making use of GAMMA software MLI metadata and baseline files.
-- DEM error estimation and correction functionality (prototype).
+- DEM error estimation and correction functionality (untested prototype).
 - Unwrapping error detection and masking functionality, making use of phase closure loops.
 - Tests to check that the independent and network orbital methods are both able to recover the input parameters in synthetic examples.
 - Tests for temporal and spatial gaussian filter options. Compare PyRate code against ``scipy.ndimage`` equivalents.
