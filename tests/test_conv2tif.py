@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2020 Geoscience Australia
+#   Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -25,36 +25,36 @@ import itertools
 from pathlib import Path
 
 import pyrate.configuration
-import pyrate.core.config as cf
+import pyrate.constants as C
 from pyrate.core.shared import Ifg, DEM
 from pyrate.core import ifgconstants as ifc
 from pyrate import conv2tif, prepifg, configuration
-from tests.common import manipulate_test_conf
+from tests.common import manipulate_test_conf, GAMMA_SML_TEST_DIR
 
 
 def test_dem_and_incidence_not_converted(gamma_params):
     gp_copy = copy.deepcopy(gamma_params)
-    gp_copy[cf.DEM_FILE] = None
-    gp_copy[cf.APS_INCIDENCE_MAP] = None
+    gp_copy[C.DEM_FILE] = None
+    gp_copy[C.APS_INCIDENCE_MAP] = None
     conv2tif.main(gp_copy)
-    inc_tif = glob.glob(os.path.join(gp_copy[cf.OBS_DIR], '*inc.tif'))
+    inc_tif = glob.glob(os.path.join(GAMMA_SML_TEST_DIR, '*inc.tif'))
     assert len(inc_tif) == 0
-    dem_tif = glob.glob(os.path.join(gp_copy[cf.OBS_DIR], '*dem.tif'))
+    dem_tif = glob.glob(os.path.join(GAMMA_SML_TEST_DIR, '*dem.tif'))
     assert len(dem_tif) == 0
 
 
 def test_conv2tif_file_types(tempdir, gamma_conf):
     tdir = Path(tempdir())
     params = manipulate_test_conf(gamma_conf, tdir)
-    params[cf.COH_MASK] = 1
+    params[C.COH_MASK] = 1
     output_conf_file = 'conf.conf'
     output_conf = tdir.joinpath(output_conf_file)
     pyrate.configuration.write_config_file(params=params, output_conf_file=output_conf)
     params_s = configuration.Configuration(output_conf).__dict__
     conv2tif.main(params_s)
-    ifg_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_ifg.tif'))
-    coh_files = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_coh.tif'))
-    dem_file = list(Path(tdir.joinpath(params_s[cf.OUT_DIR])).glob('*_dem.tif'))[0]
+    ifg_files = list(Path(tdir.joinpath(params_s[C.OUT_DIR])).glob('*_ifg.tif'))
+    coh_files = list(Path(tdir.joinpath(params_s[C.OUT_DIR])).glob('*_coh.tif'))
+    dem_file = list(Path(tdir.joinpath(params_s[C.GEOMETRY_DIR])).glob('*_dem.tif'))[0]
     # assert coherence and ifgs have correct metadata
     for i in itertools.chain(*[ifg_files, coh_files]):
         ifg = Ifg(i)
@@ -77,11 +77,14 @@ def test_conv2tif_file_types(tempdir, gamma_conf):
 
 def test_tifs_placed_in_out_dir(gamma_params):
     # Test no tifs in obs dir
-    tifs = glob.glob(os.path.join(gamma_params[cf.OUT_DIR], '*.tif'))
+    tifs = glob.glob(os.path.join(gamma_params[C.INTERFEROGRAM_DIR], '*.tif'))
     assert len(tifs) == 0
     # Test tifs in obs dir
     conv2tif.main(gamma_params)
-    tifs = glob.glob(os.path.join(gamma_params[cf.OUT_DIR], '*.tif'))
+    tifs = glob.glob(os.path.join(gamma_params[C.INTERFEROGRAM_DIR], '*.tif')) + \
+        glob.glob(os.path.join(gamma_params[C.COHERENCE_DIR], '*.tif')) + \
+        glob.glob(os.path.join(gamma_params[C.GEOMETRY_DIR], '*.tif')) \
+
     assert len(tifs) == 35
 
 

@@ -1,31 +1,38 @@
 name: PyRate CI
 
-on: [push, pull_request]
+
+on:
+  pull_request:
+    branches:
+      - 'master'
+  push:
+    branches:
+      - '**'
 
 jobs:
   build:
-    runs-on: ubuntu-16.04
+    if: ${{ ! (contains(github.event.head_commit.message, 'ci skip') || contains(github.event.head_commit.message, 'skip ci'))}}
+    runs-on: ubuntu-18.04
     name: Python ${{ matrix.python }}
-    if: "!(contains(github.event.head_commit.message, '[skip ci]') || contains(github.event.pull_request.head_commit.message, '[ci skip]'))"
     strategy:
       matrix:
         include:
           - build: 1
-            python-version: "3.6"
-            GDALVERSION: "3.0.2"
-            PROJVERSION: "6.1.1"
-          - build: 2
             python-version: "3.7"
             GDALVERSION: "3.0.2"
             PROJVERSION: "6.2.1"
-          - build: 3
+          - build: 2
             python-version: "3.7"
             GDALVERSION: "3.0.4"
             PROJVERSION: "6.1.1"
-          - build: 4
+          - build: 3
             python-version: "3.8"
             GDALVERSION: "3.0.4"
             PROJVERSION: "6.1.1"
+          - build: 4
+            python-version: "3.9"
+            GDALVERSION: "3.0.4"
+            PROJVERSION: "6.3.2"
 
     env:
       PIP_WHEEL_DIR: "/home/runner/.cache/pip/wheels"
@@ -36,6 +43,7 @@ jobs:
       PROJINST: "/home/runner/gdalinstall"
       PROJBUILD: "/home/runner/projbuild"
       PROJVERSION: ${{ matrix.PROJVERSION }}
+      PYTHONVERSION: ${{ matrix.python-version }}
 
     steps:
       - uses: actions/checkout@v2
@@ -44,15 +52,22 @@ jobs:
         with:
           path: |
             /home/runner/gdalinstall
-          key: ${{ runner.os }}-GDAL-${{ matrix.GDALVERSION }}-proj-${{ matrix.PROJVERSION }}
+          key: ${{ runner.os }}-cache-GDAL-${{ matrix.GDALVERSION }}-proj-${{ matrix.PROJVERSION }}
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install packages
-        run: sudo apt-get install libhdf5-serial-dev libgdal-dev libatlas-dev libatlas-base-dev gfortran openmpi-bin libopenmpi-dev
-      - run: python -m pip install -U pip
-      - run: python -m pip install wheel
+      - name: Common set up ${{ matrix.python-version }}
+        run: |
+          sudo apt update
+          sudo apt upgrade
+          python -m pip install -U pip wheel
+      - name: Install packages including openmpi
+        if: env.PYTHONVERSION != '3.9'
+        run: sudo apt install libhdf5-serial-dev libnetcdf13 libatlas-base-dev gfortran openmpi-bin libopenmpi-dev
+      - name: Install packages except openmpi libraries
+        if: env.PYTHONVERSION == '3.9'
+        run: sudo apt install libhdf5-serial-dev libnetcdf13 libatlas-base-dev gfortran
       - name: Install proj ${{matrix.PROJVERSION}}
         run: |
           echo "PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH" >> $GITHUB_ENV
@@ -60,19 +75,34 @@ jobs:
           source ./scripts/ci_proj_install.sh
       - name: Install GDAL ${{matrix.GDALVERSION}}
         run: |
-          source ./scripts/ci_gdal_install.sh
           echo "GDAL_DATA=$GDALINST/gdal-$GDALVERSION/share/gdal" >> $GITHUB_ENV
           echo "PROJ_LIB=$GDALINST/gdal-$GDALVERSION/share/proj" >> $GITHUB_ENV
-      - name: Install PyRate
+          echo "LDFLAGS=-L$GDALINST/gdal-$GDALVERSION/lib -Wl,-rpath,$GDALINST/gdal-$GDALVERSION/lib" >> $GITHUB_ENV
+          source ./scripts/ci_gdal_install.sh
+      - name: Python ${{ matrix.python-version }} with MPI
+        if: env.PYTHONVERSION != '3.9'
         run: |
-          sed -i '/^GDAL/d' requirements.txt
-          pip install -r requirements.txt -r requirements-dev.txt -r requirements-test.txt
-          pip install GDAL==$(gdal-config --version)
           python setup.py install
           rm -rf Py_Rate.egg-info  # remove the local egg
-          echo "PYTHONPATH=$PYRATEPATH:$PYTHONPATH" >> $GITHUB_ENV
+          echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
           chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif  # makes the file readonly, used in a test
-      - name: Test PyRate
+          pip install -r requirements-dev.txt -r requirements-test.txt
+      - name: Python ${{ matrix.python-version }} without MPI
+        if: env.PYTHONVERSION == '3.9'
+        run: |
+          python setup.py install
+          rm -rf Py_Rate.egg-info  # remove the local egg
+          echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
+          chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif  # makes the file readonly, used in a test
+          pip install -r requirements-test.txt
+      - name: Test Pyrate in Python ${{ matrix.python-version }} with MPI
+        if: env.PYTHONVERSION != '3.9'
         run: |
           pytest tests/ -m "slow"
+          mpirun -n 3 pytest tests/test_shared.py -k test_tiles_split -s
           pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/ -m "not slow"
+      - name: Test Pyrate in Python ${{ matrix.python-version }} without MPI
+        if: env.PYTHONVERSION == '3.9'
+        run: |
+          pytest tests/ -m "not mpi and slow"
+          pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/ -m "not slow and not mpi"

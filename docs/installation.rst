@@ -34,11 +34,12 @@ in the repository. If you compiled the ``pyrate`` executable program::
 
     pyrate workflow -f input_parameters.conf
 
-If you installed from the Python Package Index (PyPI_)::
+If you installed from the Python Package Index (PyPI_), you won't have a
+``pyrate`` executable program. Instead use::
 
     python3 pyrate/main.py workflow -f input_parameters.conf
 
 If the installation has been successful, this workflow will complete without 
-errors and geotiff files will be available in::
+errors and output geotiff files will be generated in::
 
     ~/PyRate/out

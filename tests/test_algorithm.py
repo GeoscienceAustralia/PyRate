@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2020 Geoscience Australia
+#   Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ from pyrate.core.algorithm import (least_squares_covariance,
                                    factorise_integer,
                                    )
 
-from pyrate.core.config import parse_namelist
+from pyrate.configuration import parse_namelist
 from pyrate.core.shared import Ifg, convert_radians_to_mm
 from tests.common import small5_mock_ifgs, SML_TEST_TIF, UnitTestAdaptation
 

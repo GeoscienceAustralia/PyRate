@@ -112,8 +112,8 @@ Before you submit a pull request, check that it meets these guidelines:
 1. The pull request should include tests that cover new functionality.
 2. If the pull request adds functionality, the documentation should be updated.
    Put your new functionality into a function with a docstring.
-3. The pull request should work for Python 3.6+.
+3. The pull request should work for Python 3.7+.
 
-   Check https://travis-ci.org/GeoscienceAustralia/PyRate
-   under pull requests for active pull requests or run the ``tox`` command and
+   Check https://github.com/GeoscienceAustralia/PyRate/actions
+   for active pull requests or run the ``tox`` command and
    make sure that the tests pass for all supported Python versions.

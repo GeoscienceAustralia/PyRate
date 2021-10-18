@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2020 Geoscience Australia
+#   Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -19,17 +19,18 @@ This Python module contains tests for the stack.py PyRate module.
 """
 import os
 import shutil
-import pytest
 
 from numpy import eye, array, ones, nan
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
+import pyrate.constants as C
 import pyrate.core.orbital
+import pyrate.core.prepifg_helper
 import pyrate.core.ref_phs_est
 import pyrate.core.refpixel
 import tests.common
-from pyrate.core import shared, config as cf, covariance as vcm_module
+from pyrate.core import covariance as vcm_module
 from pyrate.core.stack import stack_rate_pixel, mask_rate
 from pyrate import correct, prepifg, conv2tif
 from pyrate.configuration import Configuration
@@ -110,17 +111,20 @@ class TestLegacyEquality:
     @classmethod
     def setup_class(cls):
         params = Configuration(common.TEST_CONF_ROIPAC).__dict__
-        params[cf.TEMP_MLOOKED_DIR] = os.path.join(params[cf.OUT_DIR], cf.TEMP_MLOOKED_DIR)
+        params[C.TEMP_MLOOKED_DIR] = os.path.join(params[C.OUT_DIR], C.TEMP_MLOOKED_DIR)
+
+        # force error maps to 1-sigma to match legacy
+        params[C.VELERROR_NSIG] = 1
         conv2tif.main(params)
         prepifg.main(params)
 
-        params[cf.REF_EST_METHOD] = 2
+        params[C.REF_EST_METHOD] = 2
 
-        xlks, _, crop = cf.transform_params(params)
+        xlks, _, crop = pyrate.core.prepifg_helper.transform_params(params)
 
-        dest_paths, headers = common.repair_params_for_correct_tests(params[cf.OUT_DIR], params)
+        dest_paths, headers = common.repair_params_for_correct_tests(params[C.INTERFEROGRAM_DIR], params)
         correct._copy_mlooked(params)
-        copied_dest_paths = [os.path.join(params[cf.TEMP_MLOOKED_DIR], os.path.basename(d)) for d in dest_paths]
+        copied_dest_paths = [os.path.join(params[C.TEMP_MLOOKED_DIR], os.path.basename(d)) for d in dest_paths]
         del dest_paths
         # start run_pyrate copy
         ifgs = pre_prepare_ifgs(copied_dest_paths, params)
@@ -128,9 +132,9 @@ class TestLegacyEquality:
 
         refx, refy = pyrate.core.refpixel.ref_pixel_calc_wrapper(params)
 
-        params[cf.REFX] = refx
-        params[cf.REFY] = refy
-        params[cf.ORBFIT_OFFSET] = True
+        params[C.REFX] = refx
+        params[C.REFY] = refy
+        params[C.ORBFIT_OFFSET] = True
 
         # Estimate and remove orbit errors
         pyrate.core.orbital.remove_orbital_error(ifgs, params)
@@ -151,11 +155,11 @@ class TestLegacyEquality:
             ifg.open()
         
         # Calculate stacked rate map
-        params[cf.PARALLEL] = 1
+        params[C.PARALLEL] = 1
         cls.rate, cls.error, cls.samples = tests.common.calculate_stack_rate(ifgs, params, vcmt, mst_mat=mst_grid)
 
         # Calculate stacked rate map
-        params[cf.PARALLEL] = 0
+        params[C.PARALLEL] = 0
         cls.rate_s, cls.error_s, cls.samples_s = tests.common.calculate_stack_rate(ifgs, params, vcmt, mst_mat=mst_grid)
 
         stackrate_dir = os.path.join(SML_TEST_DIR, 'stackrate')
@@ -171,7 +175,7 @@ class TestLegacyEquality:
 
     @classmethod
     def teardown_class(cls):
-        shutil.rmtree(cls.params[cf.OUT_DIR])
+        shutil.rmtree(cls.params[C.OUT_DIR])
 
     def test_stack_rate_full_parallel(self):
         """

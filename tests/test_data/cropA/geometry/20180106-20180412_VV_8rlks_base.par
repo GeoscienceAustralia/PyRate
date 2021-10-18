@@ -1,0 +1,6 @@
+initial_baseline(TCN):         -3.3824897      -65.5423278       36.9516791   m   m   m
+initial_baseline_rate:          0.0000000       -0.0300356        0.1047678   m/s m/s m/s
+precision_baseline(TCN):        0.0000000      -65.6149034       36.9707023   m   m   m
+precision_baseline_rate:        0.0000000       -0.0194198        0.0946307   m/s m/s m/s
+unwrap_phase_constant:           -0.00012     radians
+

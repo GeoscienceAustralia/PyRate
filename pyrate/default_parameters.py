@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2020 Geoscience Australia
+#   Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License,
 #   Version 2.0 (the "License");
@@ -17,7 +17,6 @@
 #   either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-YEARS_PER_DAY = 1 / 365.25
 
 PYRATE_DEFAULT_CONFIGURATION = {
     "ifgfilelist": {
@@ -53,6 +52,22 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "Required": True
     },
     "cohfilelist": {
+        "DataType": "path",
+        "DefaultValue": None,
+        "MinValue": None,
+        "MaxValue": None,
+        "PossibleValues": None,
+        "Required": False
+    },
+    "basefilelist": {
+        "DataType": "path",
+        "DefaultValue": None,
+        "MinValue": None,
+        "MaxValue": None,
+        "PossibleValues": None,
+        "Required": False
+    },
+    "ltfile": {
         "DataType": "path",
         "DefaultValue": None,
         "MinValue": None,
@@ -293,6 +308,30 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": None,
         "Required": False
     },
+    "orbfitintercept": {
+        "DataType": int,
+        "DefaultValue": 1,
+        "MinValue": None,
+        "MaxValue": None,
+        "PossibleValues": [0, 1],
+        "Required": False
+    },
+    "orbfitoffset": {
+        "DataType": int,
+        "DefaultValue": 0,
+        "MinValue": None,
+        "MaxValue": None,
+        "PossibleValues": [0, 1],
+        "Required": False
+    },
+    "orbfitscale": {
+        "DataType": int,
+        "DefaultValue": 100,
+        "MinValue": 1,
+        "MaxValue": None,
+        "PossibleValues": None,
+        "Required": False
+    },
     "apsest": {
         "DataType": int,
         "DefaultValue": 0,
@@ -301,33 +340,17 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": [0, 1],
         "Required": False
     },
-    "slpfmethod": {
-        "DataType": int,
-        "DefaultValue": 1,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": [1, 2],
-        "Required": False
-    },
     "slpfcutoff": {
         "DataType": float,
         "DefaultValue": 1.0,
-        "MinValue": 0.001,
+        "MinValue": 0,
         "MaxValue": None,
         "PossibleValues": None,
         "Required": False
     },
-    "slpforder": {
-        "DataType": int,
-        "DefaultValue": 1,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": [1, 2, 3],
-        "Required": False
-    },
     "slpnanfill": {
         "DataType": int,
-        "DefaultValue": 0,
+        "DefaultValue": 1,
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": [0, 1],
@@ -335,24 +358,16 @@ PYRATE_DEFAULT_CONFIGURATION = {
     },
     "slpnanfill_method": {
         "DataType": str,
-        "DefaultValue": "cubic",
+        "DefaultValue": "nearest",
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": ["linear", "nearest", "cubic"],
         "Required": False
     },
-    "tlpfmethod": {
-        "DataType": int,
-        "DefaultValue": 1,
-        "MinValue": None,
-        "MaxValue": None,
-        "PossibleValues": [1, 2, 3],
-        "Required": False
-    },
     "tlpfcutoff": {
-        "DataType": float,
-        "DefaultValue": 1.0,
-        "MinValue": YEARS_PER_DAY,
+        "DataType": int,
+        "DefaultValue": 30,
+        "MinValue": 1,
         "MaxValue": None,
         "PossibleValues": None,
         "Required": False
@@ -361,6 +376,79 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "DataType": int,
         "DefaultValue": 1,
         "MinValue": 1,
+        "MaxValue": None,
+        "PossibleValues": None,
+        "Required": False
+    },
+    "phase_closure": {
+        "DataType": int,
+        "DefaultValue": 0,
+        "MinValue": None,
+        "MaxValue": None,
+        "PossibleValues": [0, 1],
+        "Required": False
+    },
+    "closure_thr": {
+        "DataType": float,
+        "DefaultValue": 0.5,
+        "MinValue": 0.01,
+        "MaxValue": None,
+        "PossibleValues": None,
+        "Required": False
+    },
+    "ifg_drop_thr": {
+        "DataType": float,
+        "DefaultValue": 0.5,
+        "MinValue": 0.01,
+        "MaxValue": 1.0,
+        "PossibleValues": None,
+        "Required": False
+    },
+    "min_loops_per_ifg": {
+        "DataType": int,
+        "DefaultValue": 2,
+        "MinValue": 1,
+        "MaxValue": None,
+        "PossibleValues": None,
+        "Required": False
+    },
+    "max_loop_length": {
+        "DataType": int,
+        "DefaultValue": 4,
+        "MinValue": 3,
+        "MaxValue": None,
+        "PossibleValues": None,
+        "Required": False
+    },
+    "max_loop_redundancy": {
+        "DataType": int,
+        "DefaultValue": 2,
+        "MinValue": 1,
+        "MaxValue": None,
+        "PossibleValues": None,
+        "Required": False
+    },
+    "subtract_median": {
+        "DataType": int,
+        "DefaultValue": 1,
+        "MinValue": None,
+        "MaxValue": None,
+        "PossibleValues": [0, 1],
+        "Required": False
+    },
+
+    "demerror": {
+        "DataType": int,
+        "DefaultValue": 0,
+        "MinValue": None,
+        "MaxValue": None,
+        "PossibleValues": [0, 1],
+        "Required": False
+    },
+    "de_pthr": {
+        "DataType": int,
+        "DefaultValue": 10,
+        "MinValue": 4,
         "MaxValue": None,
         "PossibleValues": None,
         "Required": False
@@ -437,9 +525,33 @@ PYRATE_DEFAULT_CONFIGURATION = {
         "PossibleValues": [1, 0],
         "Required": False
     },
+    "los_projection": {
+        "DataType": int,
+        "DefaultValue": 0,
+        "MinValue": 0,
+        "MaxValue": 2,
+        "PossibleValues": [2, 1, 0],
+        "Required": False
+    },
+    "signal_polarity": {
+        "DataType": int,
+        "DefaultValue": -1,
+        "MinValue": -1,
+        "MaxValue": 1,
+        "PossibleValues": [1, -1],
+        "Required": False
+    },
+    "velerror_nsig": {
+        "DataType": int,
+        "DefaultValue": 2,
+        "MinValue": 1,
+        "MaxValue": None,
+        "PossibleValues": None,
+        "Required": False
+    },
     "correct": {
         "DataType": list,
-        "DefaultValue": ['orbfit', 'refphase', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack'],
+        "DefaultValue": ['orbfit', 'refphase', 'demerror', 'mst', 'apscorrect', 'maxvar', 'timeseries', 'stack'],
         "MinValue": None,
         "MaxValue": None,
         "PossibleValues": None,

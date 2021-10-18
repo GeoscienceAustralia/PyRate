@@ -2,3 +2,4 @@ rasterio
 matplotlib 
 statsmodels
 xarray
+pylab

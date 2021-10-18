@@ -4,12 +4,10 @@ Usage
 Configuration
 -------------
 
-Various parameters_ are controlled by values given in a text-based configuration file.
+Various parameters are controlled by values given in a text-based configuration file.
 The user can choose any filename for this configuration file.
 Example parameters for running `PyRate` with `GAMMA`-format interferograms are
 contained in the example configuration file ``PyRate/input_parameters.conf``.
-
-.. _parameters: https://geoscienceaustralia.github.io/PyRate/config.html
 
 
 Workflow
@@ -21,8 +19,8 @@ File Discovery
 To allow flexibility in the file types that can be processed, `PyRate` requires
 file lists to be provided. This allows `PyRate` to identify files of each
 type without relying on file extensions. The file path to these lists are 
-provided under ``ifgfilelist``, ``hdrfilelist`` and ``cohfilelist`` keywords
-in the configuration file.
+provided under ``ifgfilelist``, ``hdrfilelist``, ``cohfilelist`` and 
+``basefilelist`` keywords in the configuration file.
 
 .. note::
 
@@ -44,20 +42,24 @@ Example of an interferogram file list for `GAMMA` flat-binary files::
       Any naming convention is appropriate as long as an epoch pair of format
       ``YYYYMMDD-YYYYMMDD`` or ``YYMMDD-YYMMDD`` exists in the filename.
 
-The ``hdrfilelist`` gives the list of `GAMMA` SLC header text files.
-Example of a `GAMMA` SLC header file list::
+The ``hdrfilelist`` gives the list of `GAMMA` Multi-Look Intensity (MLI) header
+text files. Example of a `GAMMA` MLI header file list::
 
-    /absolute/path/to/20150702_slc.par
-    /absolute/path/to/20150920_slc.par
-    /absolute/path/to/20151219_slc.par
-    /absolute/path/to/20160109_slc.par
-    /absolute/path/to/20160202_slc.par
-    /absolute/path/to/20160415_slc.par
+    /absolute/path/to/20150702_mli.par
+    /absolute/path/to/20150920_mli.par
+    /absolute/path/to/20151219_mli.par
+    /absolute/path/to/20160109_mli.par
+    /absolute/path/to/20160202_mli.par
+    /absolute/path/to/20160415_mli.par
 
 .. note::
 
-    - SLC header filenames must contain a single date epoch in the format
+    - MLI header filenames must contain a single date epoch in the format
       ``YYYYMMDD`` or ``YYMMDD``.
+    - `GAMMA` Single-Look Complex (SLC) header files could be used instead, but
+      the geometry calculations in ``prepifg`` will not work, and subsequently
+      the DEM Error correction step in ``correct`` will not work. Both require
+      parameters valid for the multi-looked radar-coded interferograms.
 
 The ``cohfilelist`` is an optional list which contains the pool of all available
 coherence files to be used for optional coherence masking.
@@ -73,12 +75,21 @@ Example of a coherence file list for `GAMMA` flat-binary files::
       The epoch pair must be in the format ``YYYYMMDD-YYYYMMDD`` or
       ``YYMMDD-YYMMDD``. Otherwise, any naming convention is appropriate.
 
-The date epochs in filenames are used to match the corresponding SLC header
-or coherence files to each interferogram. It is recommended to provide a complete
-list of available headers/coherence files for a stack in their respective lists,
-since only the necessary files will be used. This allows you to process a subset
-of interferograms by removing entries in ``ifgfilelist`` without needing to modify
-all three lists.
+The ``basefilelist`` is an optional list which contains the pool of all
+available GAMMA baseline vector files. These are only needed if the user
+wants to use the DEM error correction functionality.
+Example of a baseline file list for `GAMMA` baseline vector files::
+
+    /absolute/path/to/20150702-20150920_base.par
+    /absolute/path/to/20151219-20160109_base.par
+    /absolute/path/to/20160202-20160415_base.par
+
+The date epochs in filenames are used to match the corresponding MLI header
+or coherence files to each interferogram. It is recommended to provide a
+complete list of available headers/coherence/baseline files for a stack in
+their respective lists, since only the necessary files will be used. This
+allows you to process a subset of interferograms by removing entries in
+``ifgfilelist`` without needing to modify all four lists.
 
 `PyRate` Workflow
 ^^^^^^^^^^^^^^^^^
@@ -122,7 +133,7 @@ executable program ``pyrate`` is created in the system path::
     - If running on NCI, be sure to first load the correct modules and virtual environment:
       ``source ~/PyRate/scripts/nci_load_modules.sh`` 
 
-The ``pyrate`` program has four command line options corresponding to
+The ``pyrate`` program has six command line options corresponding to
 different steps in the `PyRate` workflow:
 
 1. ``conv2tif`` (optional)
@@ -149,9 +160,12 @@ Each step can be run on the command line in one of the following two ways
 (e.g. for ``conv2tif``)::
 
     >> pyrate conv2tif -f /path/to/config_file
+
+or::
+
     >> python3 pyrate/main.py conv2tif -f /path/to/config_file
 
-In the following sub-sections we discuss each of the available steps.
+In the following sub-sections we describe each of the available steps.
 
 
 ``conv2tif``: Converting flat-binary files to Geotiff format
@@ -166,13 +180,13 @@ need to be converted into geotiff format using the optional ``conv2tif`` step.
       geotiffs using the `GAMMA` program ``data2geotiff``, which is included in all
       `GAMMA` software distributions.
     - In this case, ``ifgfilelist`` and ``cohfilelist`` would contain the absolute
-      paths to these geotiff files. Even when using geotiff files, the SLC header files
+      paths to these geotiff files. Even when using geotiff files, the MLI header files
       are still required by ``prepifg``.
     - If a DEM is to be processed by ``prepifg``, it's file format should match the
       input interferograms (e.g. geotiff or flat-binary files).
 
 Upon completion of ``conv2tif`` geotiff formatted copies of the input files will be placed
-in the ``outdir`` directory defined in the configuration file.
+in the ``<outdir>`` directory defined in the configuration file.
 
 .. note::
 
@@ -183,29 +197,28 @@ in the ``outdir`` directory defined in the configuration file.
 ``prepifg``: Preparing input interferograms
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``prepifg`` is the second step of `PyRate`, which applys multi-looking, cropping
-and coherence masking operations to the geotiff-format input interferograms.
-This is a required step, which formats the input data in a way expected by the
-rest of the `PyRate` workflow.
+``prepifg`` is the second step of `PyRate`, which applys optional multi-looking
+(sub-sampling), cropping and coherence masking operations to the geotiff-format
+input interferograms. This is a required step, which formats the input data in
+a way expected by the rest of the `PyRate` workflow.
 
 **Coherence masking**
 
-If specified via the ``cohmask`` parameter, ``prepifg`` will perform coherence masking
-on the interferograms before multi-looking and cropping is performed. This requires
-corresponding coherence images for each interferogram. The purpose
-of coherence masking is to remove poor quality phase observations and leave a set of
-high-quality pixels for analysis. Pixels with coherence values below a certain threshold
-(defined with ``cohthresh`` parameter) will be set to Not-a-Number (NaN). 
+``prepifg`` will perform optional coherence masking on the interferograms
+before multi-looking and cropping is performed. This requires corresponding
+coherence images for each interferogram.
+The purpose of coherence masking is to remove poor quality phase observations
+and leave a set of high-quality pixels for analysis.
+
+Coherence masking is enabled by setting ``cohmask: 1`` in
+the configuration file. A threshold, ``cohthresh`` needs to be provided. 
+Pixels with coherence values below ``cohthresh`` will be set to Not-a-Number (NaN).
 
 .. note::
 
     - The number of pixels with numeric phase values (i.e. pixels not equal to NaN)
-      in each interferogram will be different after coherence masking.
+      will be different in each interferogram after coherence masking.
 
-Coherence masking is enabled by setting ``cohmask: 1`` in
-the configuration file. A threshold, ``cohthresh`` needs to be provided. 
-For every pixel where the coherence is lower than ``cohthresh`` the phase will be
-changed to NaN.
 The available coherence files need to be specified in a list file as described above
 and defined in the ``cohfilelist`` parameter.
 
@@ -214,6 +227,9 @@ and defined in the ``cohfilelist`` parameter.
     - Multi-looked and cropped versions of those coherence images found that match
       the epochs of the input interferograms will be saved to disk in geotiff format,
       even if coherence masking is not applied (i.e. ``cohmask: 0``).
+    - Additionally, the mean, median and standard deviation of the coherence for
+      each pixel is calculated and saved as part of ``prepifg``.
+    - All coherence files are saved to the ``<outdir>\coherence_dir`` directory.
 
 **Multi-looking**
 
@@ -250,33 +266,72 @@ To crop, set ``ifgcropopt`` to ``3`` and provide the geographic latitude and lon
 bounds in the ``ifgxfirst`` (west), ``ifgxlast`` (east), ``ifgyfirst`` (north), and
 ``ifgylast`` (south) parameters.
 
-Upon completion, ``prepifg`` will save in the ``outdir`` a new set of interferogram files
-(``*_ifg.tif``) and if provided as input, coherence files (``*_coh.tif``) and a DEM
-(``dem.tif``).
+**Geometry calculations**
+
+During the ``prepifg`` step, the radar viewing geometry for every pixel is
+calculated using metadata from the `GAMMA` MLI parameter files.
+
+.. note::
+
+    - Geometry calculations are only implemented for `GAMMA` format input data.
+
+The output arrays are saved to ``<outdir>/geometry_dir`` and contain as follows:
+
+- ``rdc_azimuth.tif``: azimuth coordinate in range-doppler system;
+- ``rdc_range.tif``: range coordinate in range-doppler system;
+- ``look_angle.tif``: look angle (vector between line-of-sight and satellite nadir);
+- ``incidence_angle.tif``: incidence angle (vector between line-of-sight and vector perpendicular to local ground surface);
+- ``azimuth_angle.tif``: azimuth angle (projection of line-of-sight on the surface);
+- ``range_dist.tif``: satellite to ground range distance;
+- ``dem.tif``: digital elevation model.
+
+Upon completion, ``prepifg`` will save a new set of interferogram files in the
+``<outdir>\interferogram_dir`` (``*_ifg.tif``).
+If provided as input, coherence files will be saved to ``<outdir>\coherence_dir``
+(``*_coh.tif``).
 
 
 ``correct``: Compute and apply interferometric phase corrections
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``correct`` is the third step in the `PyRate` processing workflow. This step will perform
-a series of corrections to the interferogram phase data.
-It is a required step in the processing workflow consisting of a series of optional
-and non-optional phase corrections.
-Orbital error and spatio-temporal filtering are the optional steps, controlled by the
-configuration parameters ``orbfit`` and ``apsest``, respectively.
-Non-optional phase corrections include:
+``correct`` is the third step in the `PyRate` processing workflow. This step
+will perform a series of optional corrections to the interferogram phase data
+and apply a number of prepatory steps required prior to data inversion.
 
-- Minimum Spanning Tree matrix calculation,
-- Identification of a suitable reference phase area,
-- Correction of reference phase in interferograms,
-- Calculation of interferogram covariance,
+The sub-steps are performed in the following default order:
+
+- Search for a suitable reference pixel;
+- Residual Orbit error correction (optional, controlled by ``orbfit`` parameter);
+- Correction of reference phase in interferograms;
+- Residual DEM error correction (optional, controlled by ``demerror`` parameter);
+- Unwrapping error detection and masking (optional, controlled by ``phase_closure`` parameter); 
+- Minimum Spanning Tree matrix formation;
+- Spatio-temporal filtering of the interferograms ((optional, controlled by ``apsest`` parameter);  
+- Calculation of interferogram spatial covariance functions;
 - Assembly of the variance-covariance matrix.
 
-The corrected interferogram phase is saved to copies of the ``prepifg`` interferograms in
-the directory ``<outdir>/temp_mlooked_dir/`` (the output from ``prepifg`` is retained
-as a read-only dataset in the ``outdir``).
-Additionally, copies of the phase corrections are saved to disk as numpy array
-files (``*.npy``) for use in post-processing.
+This default order of steps can be modified by the user by copying the
+following code block in to the configuration file and switching the order of
+steps as required::
+
+    [correct]
+    steps =
+        orbfit
+        refphase
+        demerror
+        phase_closure
+        mst
+        apscorrect
+        maxvar
+
+
+The corrected interferogram phase is saved to copies of the ``prepifg``
+interferograms in the directory ``<outdir>/temp_mlooked_dir/`` (the original
+output from ``prepifg`` is retained as a read-only interferogram dataset in the
+``<outdir>/interferogram_dir``).
+Additionally, copies of the phase corrections subtracted from interferograms
+are saved to disk as numpy array files (``*.npy``) for use in post-processing.
+These can be found in labelled sub-directories in the ``<outdir>``.
 
 
 ``timeseries``: Compute the displacement time series
@@ -315,20 +370,38 @@ The velocity from stacking (``stack_rate*``) is saved by default.
 geotiff files containing the final time series, linear rate and stacking products.
 ``merge`` will also re-assemble tiles that were generated during the previous
 steps. Tiling is discussed in the :ref:`parallel_label` section below.
+
+The final outputs contain signals in the line-of-sight (LOS) of the satellite.
+Using the ``los_projection`` option, the user can project those signals to
+either the pseudo-vertical (set to 1) or pseudo-horizontal (set to 2). This
+projection makes use of the per-pixel incidence angle image generated during
+``prepifg``.
+
+.. note::
+
+    - Users should be aware that the pseudo-vertical and pseudo-horizontal
+      signal projections do not necessarily represent the **true** vertical
+      or horizontal ground movement signal. The true signals cannot be
+      recovered with InSAR data from a single LOS viewing geometry.
+    - If the user has InSAR data from multiple viewing geometries (e.g. from
+      both ascending and descending orbits), signal decomposition can be
+      carried out after PyRate analysis as a post-processing step.
+
+If necessary, the user can switch the polarity of the final output products
+by setting ``signal_polarity: -1``.
+
+The error products produced by `PyRate` can be scaled by n-sigma using the
+parameter ``velerror_nsig``.
+
 After running the ``merge`` step, several geotiff products will appear in the
-``outdir`` directory.
+``<outdir>/velocity_dir`` and ``<outdir>/timeseries_dir`` directories.
 
 
 ``workflow``: Run the full PyRate workflow
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``workflow`` is an additional option that will run all the above six steps
-in order as a single job.
-
-.. note::
-
-    - ``workflow`` will only be useful for users starting with flat-binary input files,
-      since ``conv2tif`` is the first step to be run as part of this full workflow.
+in order as a single job. This could be useful for batch processing runs.
 
 
 Input Files
@@ -350,8 +423,8 @@ interferometry softwares. `PyRate` will determine the input format from the
 Each `GAMMA` geocoded unwrapped interferogram requires three header files
 to extract metadata required for data formatting: a geocoded DEM header
 file (``demHeaderFile`` keyword in the configuration file) and the relevant
-SLC image header files (``*slc.par``) found in the ``hdrfilelist``.
-The header files for the first and second SLC images used in the formation
+MLI image header files (``*mli.par``) found in the ``hdrfilelist``.
+The header files for the first and second MLI images used in the formation
 of a particular interferogram are found automatically by date-string pattern
 matching based on date epochs given in the filenames.
 A DEM with matching size and geometry to the interferograms can also be processed.
@@ -415,9 +488,17 @@ is to reassemble these tiles in to the full image for each output product.
 Results Visualisation
 ---------------------
 
-A plotting script is included in the ``utils/`` directory that can be used to inspect the
-cumulative time series (``tscuml*.tif``) and linear rate (``linear_rate.tif``) geotiff files
-produced in the ``merge`` step. Example usage for the included test data is as follows::
+Several plotting scripts are included in the ``utils/`` directory to help the
+user visually inspect the output products of `PyRate`:
+
+- ``make_tscuml_animation.py``: Make an animated gif from cumulative time series data;
+- ``plot_linear_rate_profile.py``: Plot a profile through a linear rate map;
+- ``plot_time_series.py``: Map and graph view of cumulative time series data;
+- ``plot_correction_files.py``: Before and after viewing of interferogram corrections;
+- ``plot_sbas_network.py``: Baseline-time plot for the interferogram network.
+
+
+Example usage of ``plot_time_series.py`` with the included test data::
 
     cd PyRate
     source ~/PyRateVenv/bin/activate

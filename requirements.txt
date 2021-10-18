@@ -1,8 +1,9 @@
 GDAL
-joblib==0.14.1
+joblib==1.0.0
 mpi4py==3.0.3
-networkx==2.4
-numpy==1.18.3
-pyproj==2.6.0
-scipy==1.4.1
-numexpr==2.7.1
+networkx==2.5
+numpy==1.19.4
+pyproj==3.0.0
+scipy==1.5.4
+numexpr==2.7.2
+nptyping==1.4.0

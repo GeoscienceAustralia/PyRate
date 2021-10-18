@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2020 Geoscience Australia
+#   Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -24,8 +24,9 @@ from joblib import Parallel, delayed
 import numpy as np
 from pathlib import Path
 
+import pyrate.constants as C
 from pyrate.core.prepifg_helper import PreprocessError
-from pyrate.core import shared, mpiops, config as cf, gamma, roipac
+from pyrate.core import shared, mpiops, gamma, roipac
 from pyrate.core import ifgconstants as ifc
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import MultiplePaths
@@ -49,19 +50,19 @@ def main(params):
     # Going to assume base_ifg_paths is ordered correcly
     # pylint: disable=too-many-branches
 
-    if params[cf.PROCESSOR] == 2:  # if geotif
+    if params[C.PROCESSOR] == 2:  # if geotif
         log.warning("'conv2tif' step not required for geotiff!")
         return
 
     mpi_vs_multiprocess_logging("conv2tif", params)
 
-    base_ifg_paths = params[cf.INTERFEROGRAM_FILES]
+    base_ifg_paths = params[C.INTERFEROGRAM_FILES]
 
-    if params[cf.COH_FILE_LIST] is not None:
-        base_ifg_paths.extend(params[cf.COHERENCE_FILE_PATHS])
+    if params[C.COH_FILE_LIST] is not None:
+        base_ifg_paths.extend(params[C.COHERENCE_FILE_PATHS])
 
-    if params[cf.DEM_FILE] is not None:  # optional DEM conversion
-        base_ifg_paths.append(params[cf.DEM_FILE_PATH])
+    if params[C.DEM_FILE] is not None:  # optional DEM conversion
+        base_ifg_paths.append(params[C.DEM_FILE_PATH])
 
     process_base_ifgs_paths = np.array_split(base_ifg_paths, mpiops.size)[mpiops.rank]
     gtiff_paths = do_geotiff(process_base_ifgs_paths, params)
@@ -76,11 +77,12 @@ def do_geotiff(unw_paths: List[MultiplePaths], params: dict) -> List[str]:
     """
     # pylint: disable=expression-not-assigned
     log.info("Converting input interferograms to geotiff")
-    parallel = params[cf.PARALLEL]
+    parallel = params[C.PARALLEL]
 
     if parallel:
-        log.info("Running geotiff conversion in parallel with {} processes".format(params[cf.PROCESSES]))
-        dest_base_ifgs = Parallel(n_jobs=params[cf.PROCESSES], verbose=shared.joblib_log_level(cf.LOG_LEVEL))(
+        log.info("Running geotiff conversion in parallel with {} processes".format(params[C.PROCESSES]))
+        dest_base_ifgs = Parallel(n_jobs=params[C.PROCESSES], verbose=shared.joblib_log_level(
+            C.LOG_LEVEL))(
             delayed(_geotiff_multiprocessing)(p, params) for p in unw_paths)
     else:
         log.info("Running geotiff conversion in serial")
@@ -94,7 +96,7 @@ def _geotiff_multiprocessing(unw_path: MultiplePaths, params: dict) -> Tuple[str
     """
     # TODO: Need a more robust method for identifying coherence files.
     dest = unw_path.converted_path
-    processor = params[cf.PROCESSOR]  # roipac or gamma
+    processor = params[C.PROCESSOR]  # roipac or gamma
 
     # Create full-res geotiff if not already on disk
     if not os.path.exists(dest):
@@ -106,7 +108,8 @@ def _geotiff_multiprocessing(unw_path: MultiplePaths, params: dict) -> Tuple[str
         else:
             raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
         header[ifc.INPUT_TYPE] = unw_path.input_type
-        shared.write_fullres_geotiff(header, unw_path.unwrapped_path, dest, nodata=params[cf.NO_DATA_VALUE])
+        shared.write_fullres_geotiff(header, unw_path.unwrapped_path, dest, nodata=params[
+            C.NO_DATA_VALUE])
         Path(dest).chmod(0o444)  # readonly output
         return dest, True
     else:

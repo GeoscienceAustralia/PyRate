@@ -1,6 +1,6 @@
 # This Python module is part of the PyRate software package
 #
-# Copyright 2020 Geoscience Australia
+# Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ def gen_color_file(input_file):
 
     dem = DEM(input_file)
     dem.open()
-    phase_data = dem.height_band.ReadAsArray()
+    phase_data = dem._band.ReadAsArray()
 
     max_ph = np.nanmax(phase_data)
     min_ph = np.nanmin(phase_data)

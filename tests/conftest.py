@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2020 Geoscience Australia
+#   Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -21,9 +21,12 @@ import random
 import string
 import tempfile
 import pytest
-from pyrate.core import mpiops, config as cf, shared
+
+import pyrate.constants as C
+from pyrate.constants import PYRATEPATH
+from pyrate.core import mpiops, shared
 from pyrate.configuration import Configuration
-from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA
+from tests.common import TEST_CONF_ROIPAC, TEST_CONF_GAMMA, SML_TEST_DEM_TIF, MEXICO_CROPA_CONF
 from tests.common import ROIPAC_SYSTEM_CONF, GAMMA_SYSTEM_CONF, GEOTIF_SYSTEM_CONF, SML_TEST_COH_LIST
 
 
@@ -41,7 +44,7 @@ def tempdir():
 def system_conf(request):
     params = Configuration(request.param).__dict__
     yield request.param
-    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
+    shutil.rmtree(params[C.OUT_DIR], ignore_errors=True)
 
 
 @pytest.fixture
@@ -84,12 +87,12 @@ def orbfit_lks(request):
     return request.param
 
 
-@pytest.fixture(params=cf.ORB_METHOD_NAMES.keys())
+@pytest.fixture(params=C.ORB_METHOD_NAMES.keys())
 def orbfit_method(request):
     return request.param
 
 
-@pytest.fixture(params=cf.ORB_DEGREE_NAMES.keys())
+@pytest.fixture(params=C.ORB_DEGREE_NAMES.keys())
 def orbfit_degrees(request):
     return request.param
 
@@ -107,25 +110,31 @@ def get_crop(request):
 @pytest.fixture()
 def get_config():
     def params(conf_file):
-        params = cf.get_config_params(conf_file)
-        return params
+        params_ = Configuration(conf_file).__dict__
+        return params_
     return params
 
 
 @pytest.fixture
 def gamma_params():
     params = Configuration(TEST_CONF_GAMMA).__dict__
-    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
-    shared.mkdir_p(params[cf.OUT_DIR])
+    shared.mkdir_p(params[C.OUT_DIR])
     yield params
-    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
+    shutil.rmtree(params[C.OUT_DIR], ignore_errors=True)
 
 
 @pytest.fixture
 def roipac_params():
     params = Configuration(TEST_CONF_ROIPAC).__dict__
     yield params
-    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
+    shutil.rmtree(params[C.OUT_DIR], ignore_errors=True)
+
+
+@pytest.fixture
+def mexico_cropa_params():
+    params = Configuration(MEXICO_CROPA_CONF).__dict__
+    yield params
+    shutil.rmtree(params[C.OUT_DIR], ignore_errors=True)
 
 
 @pytest.fixture(params=[TEST_CONF_GAMMA, TEST_CONF_ROIPAC])
@@ -137,9 +146,51 @@ def roipac_or_gamma_conf(request):
 def gamma_conf(request):
     params = Configuration(TEST_CONF_GAMMA).__dict__
     yield request.param
-    shutil.rmtree(params[cf.OUT_DIR], ignore_errors=True)
+    shutil.rmtree(params[C.OUT_DIR], ignore_errors=True)
 
 
 @pytest.fixture
 def coh_list_file():
     return SML_TEST_COH_LIST
+
+
+@pytest.fixture
+def dem():
+    d = shared.dem_or_ifg(SML_TEST_DEM_TIF)
+    d.open()
+    return d
+
+
+@pytest.fixture(params=[TEST_CONF_GAMMA, MEXICO_CROPA_CONF], scope='session')
+def gamma_or_mexicoa_conf(request):
+    params = Configuration(request.param).__dict__
+    yield request.param
+    shutil.rmtree(params[C.OUT_DIR], ignore_errors=True)
+
+
+@pytest.fixture(params=range(5))
+def run_number(request):
+    return request.param
+
+
+GEOTIFF = PYRATEPATH.joinpath('tests', 'test_data', 'geotiffs')
+
+
+@pytest.fixture
+def geotiffs():
+    tifs = [u.as_posix() for u in GEOTIFF.glob('*_unw.tif')]
+    tifs.sort()
+    return tifs
+
+
+@pytest.fixture
+def ten_geotiffs():
+    tifs = [u.as_posix() for u in GEOTIFF.glob('*_unw.tif')]
+    tifs.sort()
+    return tifs[:10]
+
+
+@pytest.fixture
+def cropa_geotifs(mexico_cropa_params):
+    m_paths = mexico_cropa_params[C.INTERFEROGRAM_FILES]
+    return [m.converted_path for m in m_paths]

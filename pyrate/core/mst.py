@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2020 Geoscience Australia
+#   Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -27,15 +27,16 @@ from networkx.classes.reportviews import EdgeView
 import networkx as nx
 from joblib import Parallel, delayed
 
+import pyrate.constants as C
 from pyrate.core.algorithm import ifg_date_lookup
 from pyrate.core.algorithm import ifg_date_index_lookup
-from pyrate.core import config as cf
 from pyrate.core.shared import IfgPart, create_tiles, tiles_split
 from pyrate.core.shared import joblib_log_level, Tile
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration
 
 np.seterr(invalid='ignore')  # stops RuntimeWarning in nan conversion
+
 
 # TODO: may need to implement memory saving row-by-row access
 # TODO: document weighting by either Nan fraction OR variance
@@ -59,16 +60,14 @@ def mst_from_ifgs(ifgs):
     :rtype: list
     """
 
-    edges_with_weights_for_networkx = [(i.first, i.second, i.nan_fraction)
-                                       for i in ifgs]
+    edges_with_weights_for_networkx = [(i.first, i.second, i.nan_fraction) for i in ifgs]
     g_nx = _build_graph_networkx(edges_with_weights_for_networkx)
     mst = nx.minimum_spanning_tree(g_nx)
     # mst_edges, is tree?, number of trees
     edges = mst.edges()
     ifg_sub = [ifg_date_index_lookup(ifgs, d) for d in edges]
     mst_ifgs = [i for k, i in enumerate(ifgs) if k in ifg_sub]
-    return mst.edges(), nx.is_tree(mst), \
-        nx.number_connected_components(mst), mst_ifgs
+    return mst.edges(), nx.is_tree(mst), nx.number_connected_components(mst), mst_ifgs
 
 
 def mst_parallel(ifgs, params):
@@ -83,7 +82,7 @@ def mst_parallel(ifgs, params):
     """
 
     log.info('Calculating MST in tiles')
-    ncpus = params[cf.PROCESSES]
+    ncpus = params[C.PROCESSES]
     no_ifgs = len(ifgs)
     no_y, no_x = ifgs[0].phase_data.shape
     tiles = create_tiles(ifgs[0].shape)
@@ -95,21 +94,18 @@ def mst_parallel(ifgs, params):
     ifg_paths = [i.data_path for i in ifgs]
     result = empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
 
-    if params[cf.PARALLEL]:
+    if params[C.PARALLEL]:
         log.info('Calculating MST using {} tiles in parallel using {} ' \
                  'processes'.format(no_tiles, ncpus))
-        t_msts = Parallel(n_jobs=params[cf.PROCESSES], 
-                          verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(mst_multiprocessing)(t, ifg_paths, params=params)
-            for t in tiles)
+        t_msts = Parallel(n_jobs=params[C.PROCESSES], verbose=joblib_log_level(C.LOG_LEVEL))(
+            delayed(mst_multiprocessing)(t, ifg_paths, params=params) for t in tiles
+        )
         for k, tile in enumerate(tiles):
-            result[:, tile.top_left_y:tile.bottom_right_y,
-                   tile.top_left_x: tile.bottom_right_x] = t_msts[k]
+            result[:, tile.top_left_y:tile.bottom_right_y, tile.top_left_x: tile.bottom_right_x] = t_msts[k]
     else:
         log.info('Calculating MST using {} tiles in serial'.format(no_tiles))
         for k, tile in enumerate(tiles):
-            result[:, tile.top_left_y:tile.bottom_right_y,
-                   tile.top_left_x: tile.bottom_right_x] = \
+            result[:, tile.top_left_y:tile.bottom_right_y, tile.top_left_x: tile.bottom_right_x] = \
                 mst_multiprocessing(tile, ifg_paths, params=params)
 
     return result
@@ -128,11 +124,11 @@ def mst_multiprocessing(tile, ifgs_or_paths, preread_ifgs=None, params=None):
         valid ifg connections
     :rtype: ndarray
     """
-    #The memory requirement during MPI MST computation is determined by the
-    #number of interferograms times size of IfgPart. Note that we need all
-    #interferogram header information (like first/second image dates) for MST
-    #computation. To manage memory we need smaller tiles (IfgPart) as number
-    #of interferograms increases
+    # The memory requirement during MPI MST computation is determined by the
+    # number of interferograms times size of IfgPart. Note that we need all
+    # interferogram header information (like first/second image dates) for MST
+    # computation. To manage memory we need smaller tiles (IfgPart) as number
+    # of interferograms increases
 
     ifg_parts = [IfgPart(p, tile, preread_ifgs, params) for p in ifgs_or_paths]
     return mst_boolean_array(ifg_parts)
@@ -157,11 +153,11 @@ def mst_boolean_array(ifgs):
     :return: result: Array of booleans representing valid ifg connections
     :rtype: ndarray
     """
-    #The MSTs are stripped of connecting edge info, leaving just the ifgs.
+    # The MSTs are stripped of connecting edge info, leaving just the ifgs.
     nifgs = len(ifgs)
     ny, nx = ifgs[0].phase_data.shape
     result = empty(shape=(nifgs, ny, nx), dtype=np.bool)
-    
+
     for y, x, mst in mst_matrix_networkx(ifgs):
         # mst is a list of datetime.date tuples
         if isinstance(mst, EdgeView):
@@ -178,8 +174,8 @@ def _mst_matrix_ifgs_only(ifgs):
     """
     Alternative method for producing 3D MST array
     """
-    #Currently not used
-    #The MSTs are stripped of connecting edge info, leaving just the ifgs.
+    # Currently not used
+    # The MSTs are stripped of connecting edge info, leaving just the ifgs.
     result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
 
     for y, x, mst in mst_matrix_networkx(ifgs):
@@ -195,8 +191,8 @@ def _mst_matrix_as_array(ifgs):
     """
     Alternative method for producing 3D MST array
     """
-    #Currently not used
-    #Each pixel contains an MST (with connecting edges etc).
+    # Currently not used
+    # Each pixel contains an MST (with connecting edges etc).
     mst_result = empty(shape=ifgs[0].phase_data.shape, dtype=object)
 
     for y, x, mst in mst_matrix_networkx(ifgs):
@@ -226,10 +222,6 @@ def mst_matrix_networkx(ifgs):
     # TODO: memory efficiencies can be achieved here with tiling
 
     list_of_phase_data = [i.phase_data for i in ifgs]
-    log.debug("list_of_phase_data length: " + str(len(list_of_phase_data)))
-    for row in list_of_phase_data:
-        log.debug("row length in list_of_phase_data: " + str(len(row)))
-        log.debug("row in list_of_phase_data: " + str(row))
     data_stack = array(list_of_phase_data, dtype=float32)
 
     # create MSTs for each pixel in the ifg data stack
@@ -286,8 +278,8 @@ def mst_calc_wrapper(params):
         """
         Convenient inner loop for mst tile saving
         """
-        preread_ifgs = params[cf.PREREAD_IFGS]
-        dest_tifs = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
+        preread_ifgs = params[C.PREREAD_IFGS]
+        dest_tifs = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
         mst_file_process_n = Configuration.mst_path(params, index=tile.index)
         if mst_file_process_n.exists():
             return

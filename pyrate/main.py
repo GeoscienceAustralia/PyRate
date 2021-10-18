@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2020 Geoscience Australia
+#   Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -19,15 +19,14 @@ This Python module defines executable run configuration for the PyRate software
 
 import os
 import argparse
-import pickle as cp
 from argparse import RawTextHelpFormatter
 import time
 from pathlib import Path
 
+import pyrate.constants as C
 from pyrate.constants import CLI_DESCRIPTION
 from pyrate import conv2tif, prepifg, correct, merge
 from pyrate.core.logger import pyratelogger as log, configure_stage_log
-from pyrate.core import config as cf
 from pyrate.core import mpiops
 from pyrate.configuration import Configuration
 from pyrate.core.shared import mpi_vs_multiprocess_logging
@@ -38,11 +37,20 @@ from pyrate.core.timeseries import timeseries_calc_wrapper
 def _params_from_conf(config_file):
     config_file = os.path.abspath(config_file)
     config = Configuration(config_file)
-    return config.__dict__
+    params = config.__dict__
+    return params
+
+
+def update_params_due_to_ifg_selection(config):
+    params = config.__dict__
+    if config.phase_closure_filtered_ifgs_list(params).exists():
+        params = config.refresh_ifg_list(params)
+        correct._create_ifg_dict(params)
+        correct._update_params_with_tiles(params)
+    return params
 
 
 def main():
-
     start_time = time.time()
 
     parser = argparse.ArgumentParser(prog='pyrate', description=CLI_DESCRIPTION, add_help=True,
@@ -54,51 +62,39 @@ def main():
     subparsers.required = True
 
     parser_conv2tif = subparsers.add_parser('conv2tif', help='<Optional> Convert interferograms to geotiff.',
-        add_help=True)
-    parser_conv2tif.add_argument('-f', '--config_file', action="store", type=str, default=None,
-                                 help="Pass configuration file", required=True)
+                                            add_help=True)
 
     parser_prepifg = subparsers.add_parser(
         'prepifg', help='Perform multilooking, cropping and coherence masking to interferogram geotiffs.',
         add_help=True)
-    parser_prepifg.add_argument('-f', '--config_file', action="store", type=str, default=None,
-                                help="Pass configuration file", required=True)
 
     parser_correct = subparsers.add_parser(
         'correct', help='Calculate and apply corrections to interferogram phase data.',
         add_help=True)
-    parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
-                                help="Pass configuration file", required=True)
 
-    parser_correct = subparsers.add_parser(
-        'timeseries', help='<Optional> Timeseries inversion of interferogram phase data.',
-        add_help=True)
-    parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
-                                help="Pass configuration file", required=True)
+    parser_ts = subparsers.add_parser(
+        'timeseries', help='<Optional> Timeseries inversion of interferogram phase data.', add_help=True
+    )
 
-    parser_correct = subparsers.add_parser(
-        'stack', help='<Optional> Stacking of interferogram phase data.',
-        add_help=True)
-    parser_correct.add_argument('-f', '--config_file', action="store", type=str, default=None,
-                                help="Pass configuration file", required=True)
+    parser_stack = subparsers.add_parser('stack', help='<Optional> Stacking of interferogram phase data.',
+                                         add_help=True)
 
     parser_merge = subparsers.add_parser(
         'merge', help="Reassemble computed tiles and save as geotiffs.",
         add_help=True)
-    parser_merge.add_argument('-f', '--config_file', action="store", type=str, default=None,
-                              help="Pass configuration file", required=False)
 
     parser_workflow = subparsers.add_parser(
         'workflow', help="<Optional> Sequentially run all the PyRate processing steps.",
         add_help=True)
-    parser_workflow.add_argument('-f', '--config_file', action="store", type=str, default=None,
-                                 help="Pass configuration file", required=False)
+    for p in [parser_conv2tif, parser_prepifg, parser_correct, parser_merge, parser_ts, parser_stack, parser_workflow]:
+        p.add_argument('-f', '--config_file', action="store", type=str, default=None,
+                       help="Pass configuration file", required=False)
 
     args = parser.parse_args()
 
     params = mpiops.run_once(_params_from_conf, args.config_file)
 
-    configure_stage_log(args.verbosity, args.command, Path(params[cf.OUT_DIR]).joinpath('pyrate.log.').as_posix())
+    configure_stage_log(args.verbosity, args.command, Path(params[C.OUT_DIR]).joinpath('pyrate.log.').as_posix())
 
     log.debug("Starting PyRate")
     log.debug("Arguments supplied at command line: ")
@@ -115,13 +111,19 @@ def main():
         prepifg.main(params)
 
     if args.command == "correct":
-        correct.main(params)
+        config_file = os.path.abspath(args.config_file)
+        config = Configuration(config_file)
+        correct.main(config)
 
     if args.command == "timeseries":
-        timeseries(params)
+        config_file = os.path.abspath(args.config_file)
+        config = Configuration(config_file)
+        timeseries(config)
 
     if args.command == "stack":
-        stack(params)
+        config_file = os.path.abspath(args.config_file)
+        config = Configuration(config_file)
+        stack(config)
 
     if args.command == "merge":
         merge.main(params)
@@ -136,16 +138,17 @@ def main():
 
         log.info("***********CORRECT**************")
         # reset params as prepifg modifies params
-        params = mpiops.run_once(_params_from_conf, args.config_file)
-        correct.main(params)
+        config_file = os.path.abspath(args.config_file)
+        config = Configuration(config_file)
+        correct.main(config)
 
         log.info("***********TIMESERIES**************")
-        params = mpiops.run_once(_params_from_conf, args.config_file)
-        timeseries(params)
+        config = Configuration(config_file)
+        timeseries(config)
 
         log.info("***********STACK**************")
-        params = mpiops.run_once(_params_from_conf, args.config_file)
-        stack(params)
+        config = Configuration(config_file)
+        stack(config)
 
         log.info("***********MERGE**************")
         params = mpiops.run_once(_params_from_conf, args.config_file)
@@ -154,16 +157,19 @@ def main():
     log.info("--- Runtime = %s seconds ---" % (time.time() - start_time))
 
 
-def timeseries(params: dict) -> None:
+def timeseries(config: Configuration) -> None:
+    params = config.__dict__
     mpi_vs_multiprocess_logging("timeseries", params)
+    params = update_params_due_to_ifg_selection(config=config)
     timeseries_calc_wrapper(params)
 
 
-def stack(params: dict) -> None:
+def stack(config: Configuration) -> None:
+    params = config.__dict__
     mpi_vs_multiprocess_logging("stack", params)
+    params = update_params_due_to_ifg_selection(config=config)
     stack_calc_wrapper(params)
 
 
 if __name__ == "__main__":
     main()
-

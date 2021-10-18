@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2020 Geoscience Australia
+#   Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -21,12 +21,14 @@ import re
 from configparser import ConfigParser
 from pathlib import Path, PurePath
 from typing import Union
-from pyrate.constants import NO_OF_PARALLEL_PROCESSES, sixteen_digits_pattern, twelve_digits_pattern
+
+import pyrate.constants as C
+from pyrate.constants import NO_OF_PARALLEL_PROCESSES, sixteen_digits_pattern, twelve_digits_pattern, ORB_ERROR_DIR, \
+    DEM_ERROR_DIR, TEMP_MLOOKED_DIR
+from pyrate.core import ifgconstants as ifg
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
 from pyrate.core.shared import extract_epochs_from_filename, InputTypes, get_tiles
-from pyrate.core.config import parse_namelist, ConfigException, ORB_ERROR_DIR, TEMP_MLOOKED_DIR
-from pyrate.core import config as cf, mpiops
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
@@ -50,17 +52,20 @@ def validate_parameter_value(input_name, input_value, min_value=None, max_value=
         if min_value is not None:
             if input_value < min_value:  # pragma: no cover
                 raise ValueError(
-                    "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Provide a value greater than or equal to " + str(min_value) + ".")
+                    "Invalid value for " + str(input_name) + " supplied: " + str(
+                        input_value) + ". Provide a value greater than or equal to " + str(min_value) + ".")
     if input_value is not None:
         if max_value is not None:
             if input_value > max_value:  # pragma: no cover
                 raise ValueError(
-                    "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Provide a value less than or equal to " + str(max_value) + ".")
+                    "Invalid value for " + str(input_name) + " supplied: " + str(
+                        input_value) + ". Provide a value less than or equal to " + str(max_value) + ".")
 
     if possible_values is not None:
         if input_value not in possible_values:  # pragma: no cover
             raise ValueError(
-                "Invalid value for " + str(input_name) + " supplied: " + str(input_value) + ". Provide a value from: " + str(possible_values) + ".")
+                "Invalid value for " + str(input_name) + " supplied: " + str(
+                    input_value) + ". Provide one of these values: " + str(possible_values) + ".")
     return True
 
 
@@ -83,8 +88,8 @@ class MultiplePaths:
     def __init__(self, file_name: str, params: dict, input_type: InputTypes = InputTypes.IFG):
 
         self.input_type = input_type
-        out_dir = params[cf.OUT_DIR]
-        tempdir = params[cf.TEMP_MLOOKED_DIR]
+        out_dir = params[C.OUT_DIR]
+        tempdir = params[C.TEMP_MLOOKED_DIR]
         if isinstance(tempdir, str):
             tempdir = Path(tempdir)
         b = Path(file_name)
@@ -98,14 +103,20 @@ class MultiplePaths:
         else:
             filestr = ''
 
+        dir_exists = input_type.value in InputTypes.dir_map.value.keys()
+        anchoring_dir = Path(out_dir).joinpath(InputTypes.dir_map.value[input_type.value]) \
+            if dir_exists else Path(out_dir)
+
         if b.suffix == ".tif":
             self.unwrapped_path = None
             converted_path = b  # original file
-            self.sampled_path = Path(out_dir).joinpath(filestr + input_type.value + '.tif')
+            self.sampled_path = anchoring_dir.joinpath(filestr + input_type.value + '.tif')
         else:
             self.unwrapped_path = b.as_posix()
-            converted_path = Path(out_dir).joinpath(b.stem.split('.')[0] + '_' + b.suffix[1:]).with_suffix('.tif')
+            converted_path = anchoring_dir.joinpath(b.stem.split('.')[0] + '_' + b.suffix[1:]).with_suffix('.tif')
             self.sampled_path = converted_path.with_name(filestr + input_type.value + '.tif')
+
+        # tmp_sampled_paths are used after prepifg, during correct steps
         self.tmp_sampled_path = tempdir.joinpath(self.sampled_path.name).as_posix()
         self.converted_path = converted_path.as_posix()
         self.sampled_path = self.sampled_path.as_posix()
@@ -114,31 +125,35 @@ class MultiplePaths:
     def orb_error_path(ifg_path: Union[str, Path], params) -> Path:
         if isinstance(ifg_path, str):
             ifg_path = Path(ifg_path)
-        return Path(params[cf.OUT_DIR], cf.ORB_ERROR_DIR,
+        return Path(params[C.OUT_DIR], C.ORB_ERROR_DIR,
                     ifg_path.stem + '_' +
-                    '_'.join([str(params[cf.ORBITAL_FIT_METHOD]),
-                              str(params[cf.ORBITAL_FIT_DEGREE]),
-                              str(params[cf.ORBITAL_FIT_LOOKS_X]),
-                              str(params[cf.ORBITAL_FIT_LOOKS_Y])]) +
+                    '_'.join([str(params[C.ORBITAL_FIT_METHOD]),
+                              str(params[C.ORBITAL_FIT_DEGREE]),
+                              str(params[C.ORBITAL_FIT_LOOKS_X]),
+                              str(params[C.ORBITAL_FIT_LOOKS_Y])]) +
                     '_orbfit.npy')
+
+    @staticmethod
+    def dem_error_path(ifg_path: Union[str, Path], params) -> Path:
+        if isinstance(ifg_path, str):
+            ifg_path = Path(ifg_path)
+        return Path(params[C.OUT_DIR], C.DEM_ERROR_DIR,
+                    ifg_path.stem + '_' + str(params[C.DE_PTHR]) + '_dem_error.npy')
 
     @staticmethod
     def aps_error_path(ifg_path: Union[str, Path], params) -> Path:
         if isinstance(ifg_path, str):
             ifg_path = Path(ifg_path)
-        return Path(params[cf.OUT_DIR], cf.APS_ERROR_DIR,
+        return Path(params[C.OUT_DIR], C.APS_ERROR_DIR,
                     ifg_path.stem + '_' +
                     '_'.join([str(x) for x in [
-                        params[cf.SLPF_METHOD],
-                        params[cf.SLPF_CUTOFF],
-                        params[cf.SLPF_ORDER],
-                        params[cf.SLPF_NANFILL],
-                        params[cf.SLPF_NANFILL_METHOD],
-                        params[cf.TLPF_METHOD],
-                        params[cf.TLPF_CUTOFF],
-                        params[cf.TLPF_PTHR]
-                        ]
-                    ]) + '_aps_error.npy')
+                        params[C.SLPF_CUTOFF],
+                        params[C.SLPF_NANFILL],
+                        params[C.SLPF_NANFILL_METHOD],
+                        params[C.TLPF_CUTOFF],
+                        params[C.TLPF_PTHR]
+                    ]
+                              ]) + '_aps_error.npy')
 
     def __str__(self):  # pragma: no cover
         st = ""
@@ -147,9 +162,9 @@ class MultiplePaths:
         else:
             st += """\nunwrapped_path = None"""
         st += """
-            converted_path = """ + self.converted_path+""" 
-            sampled_path = """ + self.sampled_path+"""    
-            tmp_sampled_path = """ + self.tmp_sampled_path+"""
+            converted_path = """ + self.converted_path + """ 
+            sampled_path = """ + self.sampled_path + """    
+            tmp_sampled_path = """ + self.tmp_sampled_path + """
             """
         return st
 
@@ -177,6 +192,8 @@ class Configuration:
             self.__dict__['correct'] = [
                 'orbfit',
                 'refphase',
+                'demerror',
+                'phase_closure',
                 'mst',
                 'apscorrect',
                 'maxvar',
@@ -195,11 +212,12 @@ class Configuration:
             param_value = self.__dict__[parameter_name] if parameter_name in required or \
                                                            parameter_name in self.__dict__ else ''
 
-            self.__dict__[parameter_name] = set_parameter_value(PYRATE_DEFAULT_CONFIGURATION[parameter_name]["DataType"],
-                                                                param_value,
-                                                                PYRATE_DEFAULT_CONFIGURATION[parameter_name]["DefaultValue"],
-                                                                PYRATE_DEFAULT_CONFIGURATION[parameter_name]["Required"],
-                                                                parameter_name)
+            self.__dict__[parameter_name] = set_parameter_value(
+                PYRATE_DEFAULT_CONFIGURATION[parameter_name]["DataType"],
+                param_value,
+                PYRATE_DEFAULT_CONFIGURATION[parameter_name]["DefaultValue"],
+                PYRATE_DEFAULT_CONFIGURATION[parameter_name]["Required"],
+                parameter_name)
             validate_parameter_value(parameter_name, self.__dict__[parameter_name],
                                      PYRATE_DEFAULT_CONFIGURATION[parameter_name]["MinValue"],
                                      PYRATE_DEFAULT_CONFIGURATION[parameter_name]["MaxValue"],
@@ -216,16 +234,13 @@ class Configuration:
         if hasattr(self, 'rows') and hasattr(self, 'cols'):
             self.rows, self.cols = int(self.rows), int(self.cols)
         else:
-            if NO_OF_PARALLEL_PROCESSES > 1: # i.e. mpirun
+            if NO_OF_PARALLEL_PROCESSES > 1:  # i.e. mpirun
                 self.rows, self.cols = [int(num) for num in factorise_integer(NO_OF_PARALLEL_PROCESSES)]
             else:
-                if self.parallel: # i.e. joblib parallelism
+                if self.parallel:  # i.e. joblib parallelism
                     self.rows, self.cols = [int(num) for num in factorise_integer(self.processes)]
-                else: # i.e. serial
+                else:  # i.e. serial
                     self.rows, self.cols = 1, 1
-
-        # force offset = 1 for both method options. This adds the required intercept term to the design matrix
-        self.orbfitoffset = 1
 
         # create a temporary directory if not supplied
         if not hasattr(self, 'tmpdir'):
@@ -239,13 +254,35 @@ class Configuration:
         self.orb_error_dir = Path(self.outdir).joinpath(ORB_ERROR_DIR)
         self.orb_error_dir.mkdir(parents=True, exist_ok=True)
 
+        self.interferogram_dir = Path(self.outdir).joinpath(C.INTERFEROGRAM_DIR)
+        self.interferogram_dir.mkdir(parents=True, exist_ok=True)
+
+        # create DEM error dir
+        self.dem_error_dir = Path(self.outdir).joinpath(DEM_ERROR_DIR)
+        self.dem_error_dir.mkdir(parents=True, exist_ok=True)
+
         # create aps error dir
-        self.aps_error_dir = Path(self.outdir).joinpath(cf.APS_ERROR_DIR)
+        self.aps_error_dir = Path(self.outdir).joinpath(C.APS_ERROR_DIR)
         self.aps_error_dir.mkdir(parents=True, exist_ok=True)
 
         # create mst dir
-        self.mst_dir = Path(self.outdir).joinpath(cf.MST_DIR)
+        self.mst_dir = Path(self.outdir).joinpath(C.MST_DIR)
         self.mst_dir.mkdir(parents=True, exist_ok=True)
+
+        self.phase_closure_dir = Path(self.outdir).joinpath(C.PHASE_CLOSURE_DIR)
+        self.phase_closure_dir.mkdir(parents=True, exist_ok=True)
+
+        self.coherence_dir = Path(self.outdir).joinpath(C.COHERENCE_DIR)
+        self.coherence_dir.mkdir(parents=True, exist_ok=True)
+
+        self.geometry_dir = Path(self.outdir).joinpath(C.GEOMETRY_DIR)
+        self.geometry_dir.mkdir(parents=True, exist_ok=True)
+
+        self.timeseries_dir = Path(self.outdir).joinpath(C.TIMESERIES_DIR)
+        self.timeseries_dir.mkdir(parents=True, exist_ok=True)
+
+        self.velocity_dir = Path(self.outdir).joinpath(C.VELOCITY_DIR)
+        self.velocity_dir.mkdir(parents=True, exist_ok=True)
 
         # create temp multilooked files dir
         self.temp_mlooked_dir = Path(self.outdir).joinpath(TEMP_MLOOKED_DIR)
@@ -270,6 +307,11 @@ class Configuration:
             validate_file_list_values(self.cohfilelist, 1)
             self.coherence_file_paths = self.__get_files_from_attr('cohfilelist', input_type=InputTypes.COH)
 
+        if self.basefilelist is not None:
+            # if self.processor != 0:  # not roipac
+            validate_file_list_values(self.basefilelist, 1)
+            self.baseline_file_paths = self.__get_files_from_attr('basefilelist', input_type=InputTypes.BASE)
+
         self.header_file_paths = self.__get_files_from_attr('hdrfilelist', input_type=InputTypes.HEADER)
 
         self.interferogram_files = self.__get_files_from_attr('ifgfilelist')
@@ -283,40 +325,51 @@ class Configuration:
 
     @staticmethod
     def ref_pixel_path(params):
-        return Path(params[cf.OUT_DIR]).joinpath(
+        return Path(params[C.OUT_DIR]).joinpath(
             '_'.join(
                 [str(x) for x in [
-                    'ref_pixel', params[cf.REFX], params[cf.REFY], params[cf.REFNX], params[cf.REFNY],
-                    params[cf.REF_CHIP_SIZE], params[cf.REF_MIN_FRAC], '.npy'
-                    ]
+                    'ref_pixel', params[C.REFX], params[C.REFY], params[
+                        C.REFNX], params[C.REFNY],
+                    params[C.REF_CHIP_SIZE], params[C.REF_MIN_FRAC], '.npy'
                 ]
+                 ]
             )
         )
 
     @staticmethod
     def mst_path(params, index) -> Path:
-        return Path(params[cf.OUT_DIR], cf.MST_DIR).joinpath(f'mst_mat_{index}.npy')
+        return Path(params[C.OUT_DIR], C.MST_DIR).joinpath(f'mst_mat_{index}.npy')
 
     @staticmethod
     def preread_ifgs(params: dict) -> Path:
-        return Path(params[cf.TMPDIR], 'preread_ifgs.pk')
+        return Path(params[C.TMPDIR], 'preread_ifgs.pk')
 
     @staticmethod
     def vcmt_path(params):
-        return Path(params[cf.OUT_DIR], cf.VCMT).with_suffix('.npy')
+        return Path(params[C.OUT_DIR], C.VCMT).with_suffix('.npy')
+
+    @staticmethod
+    def phase_closure_filtered_ifgs_list(params):
+        return Path(params[C.TEMP_MLOOKED_DIR]).joinpath('phase_closure_filtered_ifgs_list')
+
+    def refresh_ifg_list(self, params):  # update params dict
+        filtered_ifgs_list = self.phase_closure_filtered_ifgs_list(params)
+        files = parse_namelist(filtered_ifgs_list.as_posix())
+        params[C.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.__dict__, input_type=InputTypes.IFG) for p in files]
+        return params
 
     @staticmethod
     def ref_phs_file(params):
         ref_pixel_path = Configuration.ref_pixel_path(params)
         # add ref pixel path as when ref pixel changes - ref phs path should also change
-        return Path(params[cf.OUT_DIR]).joinpath(
+        return Path(params[C.OUT_DIR]).joinpath(
             ref_pixel_path.stem + '_' +
-            '_'.join(['ref_phs', str(params[cf.REF_EST_METHOD]), '.npy'])
+            '_'.join(['ref_phs', str(params[C.REF_EST_METHOD]), '.npy'])
         )
 
     @staticmethod
     def get_tiles(params):
-        ifg_path = params[cf.INTERFEROGRAM_FILES][0].sampled_path
+        ifg_path = params[C.INTERFEROGRAM_FILES][0].sampled_path
         rows, cols = params['rows'], params['cols']
         return get_tiles(ifg_path, rows, cols)
 
@@ -324,6 +377,28 @@ class Configuration:
         val = self.__getattribute__(attr)
         files = parse_namelist(val)
         return [MultiplePaths(p, self.__dict__, input_type=input_type) for p in files]
+
+    def closure(self):
+        closure_d = Path(self.phase_closure_dir)
+
+        class Closure:
+            def __init__(self):
+                self.closure = closure_d.joinpath('closure.npy')
+                self.ifgs_breach_count = closure_d.joinpath('ifgs_breach_count.npy')
+                self.num_occurences_each_ifg = closure_d.joinpath('num_occurrences_each_ifg.npy')
+                self.loops = closure_d.joinpath('loops.npy')
+
+        return Closure()
+
+    @staticmethod
+    def coherence_stats(params):
+        coh_d = Path(params[C.COHERENCE_DIR])
+        return {k: coh_d.joinpath(k.lower() + '.tif').as_posix() for k in [ifg.COH_MEDIAN, ifg.COH_MEAN, ifg.COH_STD]}
+
+    @staticmethod
+    def geometry_files(params):
+        geom_dir = Path(params[C.GEOMETRY_DIR])
+        return {k: geom_dir.joinpath(k.lower() + '.tif').as_posix() for k in C.GEOMETRY_OUTPUT_TYPES}
 
 
 def write_config_parser_file(conf: ConfigParser, output_conf_file: Union[str, Path]):
@@ -346,7 +421,7 @@ def write_config_file(params, output_conf_file):
         for k, v in params.items():
             if v is not None:
                 if k == 'correct':
-                    f.write(''.join([k, ':\t', '', '\n']))
+                    f.write(''.join(['[', k, ']' ':\t', '', '\n']))
                     f.write(''.join(['steps = ', '\n']))
                     for vv in v:
                         f.write(''.join(['\t' + str(vv), '\n']))
@@ -363,3 +438,24 @@ def write_config_file(params, output_conf_file):
                     f.write(''.join([k, ':\t', str(vv), '\n']))
             else:
                 f.write(''.join([k, ':\t', '', '\n']))
+
+
+def parse_namelist(nml):
+    """
+    Parses name list file into array of paths
+
+    :param str nml: interferogram file list
+
+    :return: list of interferogram file names
+    :rtype: list
+    """
+    with open(nml) as f_in:
+        lines = [line.rstrip() for line in f_in]
+    return filter(None, lines)
+
+
+class ConfigException(Exception):
+    """
+    Default exception class for configuration errors.
+    """
+

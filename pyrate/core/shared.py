@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2020 Geoscience Australia
+#   Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ all other PyRate modules
 """
 # pylint: disable=too-many-lines
 import re
-from typing import List, Union
+from typing import List, Union, Optional, Iterable, Callable, Dict
 
 import errno
 import math
@@ -37,13 +37,16 @@ import numpy as np
 from numpy import where, nan, isnan, sum as nsum, isclose
 import pyproj
 import pkg_resources
+
+import pyrate.constants as C
+
 try:
     from osgeo import osr, gdal
     from osgeo.gdalconst import GA_Update, GA_ReadOnly
 except ImportError:
     import gdal
 
-from pyrate.core import ifgconstants as ifc, mpiops, config as cf
+from pyrate.core import ifgconstants as ifc, mpiops
 from pyrate.core.logger import pyratelogger as log
 
 
@@ -68,8 +71,15 @@ GDAL_Y_FIRST = 3
 class InputTypes(Enum):
     IFG = 'ifg'
     COH = 'coh'
+    BASE = 'base'
+    LT = 'lt'
     DEM = 'dem'
     HEADER = 'header'
+    dir_map = {
+        IFG: C.INTERFEROGRAM_DIR,
+        COH: C.COHERENCE_DIR,
+        DEM: C.GEOMETRY_DIR,
+    }
 
 
 def joblib_log_level(level: str) -> int:
@@ -104,12 +114,13 @@ class RasterBase(object):
     """
     # pylint: disable=missing-docstring
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, path: Union[gdal.Dataset, str]):
+    def __init__(self, path: Union[gdal.Dataset, str, Path]):
         if isinstance(path, gdal.Dataset):
             self.dataset = path  # path will be Dataset in this case
             self.data_path = self.dataset  # data_path dummy
             self.add_geographic_data()
         else:
+            path = path.as_posix() if isinstance(path, Path) else path
             self.data_path = path
             self.dataset = None  # for GDAL dataset obj
             self._readonly = not os.access(path, os.R_OK | os.W_OK)
@@ -276,13 +287,12 @@ class Ifg(RasterBase):
     interferometric phase raster band data and related data.
     """
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, path: Union[str, Path]):
+    def __init__(self, path: Union[str, Path, gdal.Dataset]):
         """
         Interferogram constructor, for 2-band Ifg raster datasets.
 
         :param str path: Path to interferogram file
         """
-        path = path.as_posix() if isinstance(path, Path) else path
         RasterBase.__init__(self, path)
         self._phase_band = None
         self._phase_data = None
@@ -312,7 +322,7 @@ class Ifg(RasterBase):
         md = self.dataset.GetMetadata()
         self.wavelength = float(md[ifc.PYRATE_WAVELENGTH_METRES])
         self.meta_data = md
-        self.nan_converted = False # This flag set True after NaN conversion
+        self.nan_converted = False  # This flag set True after NaN conversion
 
     def _init_dates(self):
         """
@@ -388,36 +398,60 @@ class Ifg(RasterBase):
         """
         Returns phase band as an array.
         """
+        # TODO: enhance this to use x/y offset and size
         if self._phase_data is None:
             self._phase_data = self.phase_band.ReadAsArray()
         return self._phase_data
 
     def convert_to_mm(self):
         """
-        Convert phase data units from radians to millimetres.
+        Convert phase_data units from radians to millimetres.
+        Note: converted phase_data held in memory and not written to disc
+        (see shared.write_modified_phase)
         """
-        self.mm_converted = True
         if self.dataset.GetMetadataItem(ifc.DATA_UNITS) == MILLIMETRES:
-            msg = '{}: ignored as previous phase unit conversion ' \
-                  'already applied'.format(self.data_path)
+            self.mm_converted = True
+            msg = '{}: ignored as phase units are already ' \
+                  'millimetres'.format(self.data_path)
             log.debug(msg)
-            self.phase_data = self.phase_data
             return
         elif self.dataset.GetMetadataItem(ifc.DATA_UNITS) == RADIANS:
-            self.phase_data = convert_radians_to_mm(self.phase_data,
-                                                    self.wavelength)
+            self.phase_data = convert_radians_to_mm(self.phase_data, self.wavelength)
             self.meta_data[ifc.DATA_UNITS] = MILLIMETRES
+            self.mm_converted = True
             # self.write_modified_phase()
             # otherwise NaN's don't write to bytecode properly
             # and numpy complains
             # self.dataset.FlushCache()
             msg = '{}: converted phase units to millimetres'.format(self.data_path)
             log.debug(msg)
+            return
         else:  # pragma: no cover
             msg = 'Phase units are not millimetres or radians'
             raise IfgException(msg)
 
-        # self.write_modified_phase(self.phase_data)
+    def convert_to_radians(self):
+        """
+        Convert phase_data units from millimetres to radians.
+        Note: converted phase_data held in memory and not written to disc
+        (see shared.write_modified_phase)
+        """
+        if self.meta_data[ifc.DATA_UNITS] == MILLIMETRES:
+            self.phase_data = convert_mm_to_radians(self.phase_data, wavelength=self.wavelength)
+            self.meta_data[ifc.DATA_UNITS] = RADIANS
+            self.mm_converted = False
+            msg = '{}: converted phase units to radians'.format(self.data_path)
+            log.debug(msg)
+            return
+        elif self.meta_data[ifc.DATA_UNITS] == RADIANS:
+            self.mm_converted = False
+            msg = '{}: ignored as phase units are already ' \
+                  'radians'.format(self.data_path)
+            log.debug(msg)
+            return
+        else:  # pragma: no cover
+            msg = 'Phase units are not millimetres or radians'
+            raise IfgException(msg)
 
     @phase_data.setter
     def phase_data(self, data):
@@ -493,11 +527,37 @@ class Ifg(RasterBase):
         self.dataset.FlushCache()  # write to disc
 
 
+class Tile:
+    """
+    Tile class for containing a sub-part of an interferogram
+    """
+    def __init__(self, index, top_left, bottom_right):
+        """
+        Parameters
+        ----------
+        index: int
+            identifying index of a tile
+        top_left: tuple
+            ifg index of top left of tile
+        bottom_right: tuple
+            ifg index of bottom right of tile
+        """
+
+        self.index = index
+        self.top_left = top_left
+        self.bottom_right = bottom_right
+        self.top_left_y, self.top_left_x = top_left
+        self.bottom_right_y, self.bottom_right_x = bottom_right
+
+    def __str__(self):
+        return "Convenience Tile class containing tile co-ordinates"
+
+
 class IfgPart(object):
     """
     Create a tile (subset) of an Ifg data object
     """
-    def __init__(self, ifg_or_path, tile, ifg_dict=None, params=None):
+    def __init__(self, ifg_or_path, tile: Tile, ifg_dict=None, params=None):
         """
         Interferogram tile constructor.
 
@@ -515,7 +575,7 @@ class IfgPart(object):
             self.second = ifg.second
             self.time_span = ifg.time_span
             phase_file = 'phase_data_{}_{}.npy'.format(basename(ifg_or_path).split('.')[0], tile.index)
-            self.phase_data = np.load(join(params[cf.TMPDIR], phase_file))
+            self.phase_data = np.load(join(params[C.TMPDIR], phase_file))
         else:
             # check if Ifg was sent.
             if isinstance(ifg_or_path, Ifg):
@@ -529,9 +589,9 @@ class IfgPart(object):
             self.second = None
             self.time_span = None
         if isinstance(ifg, Ifg):
-            self.read_required(ifg)
+            self.read_tile(ifg)
 
-    def read_required(self, ifg):
+    def read_tile(self, ifg: Ifg):
         """
         Read interferogram file if not already open.
         """
@@ -616,9 +676,15 @@ class Incidence(RasterBase):   # pragma: no cover
         return self._azimuth_data
 
 
-class DEM(RasterBase):
+class TileMixin:
+    def __call__(self, tile: Tile):
+        t = tile
+        return self.data[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
+
+
+class DEM(RasterBase, TileMixin):
     """
-    Generic raster class for single band DEM files.
+    Generic raster class for single band DEM/Geometry files.
     """
 
     def __init__(self, path):
@@ -627,15 +693,43 @@ class DEM(RasterBase):
         """
         RasterBase.__init__(self, path)
         self._band = None
+        self._data = None
 
     @property
-    def height_band(self):
+    def band(self):
         """
         Returns the GDALBand for the elevation layer.
         """
+        if not self.is_open:
+            self.open()
         if self._band is None:
             self._band = self._get_band(1)
         return self._band
+
+    @property
+    def data(self):
+        """
+        Returns the geometry band as an array.
+        """
+        if self._data is None:
+            self._data = self.band.ReadAsArray()
+        return self._data
+
+
+class MemGeometry(TileMixin):
+
+    def __init__(self, data):
+        """
+        Set phase data value
+        """
+        self._data = data
+
+    @property
+    def data(self):
+        return self._data
+
+
+Geometry = DEM
 
 
 class IfgException(Exception):
@@ -683,6 +777,19 @@ def convert_radians_to_mm(data, wavelength):
     return data * ifc.MM_PER_METRE * (wavelength / (4 * math.pi))
 
 
+def convert_mm_to_radians(data, wavelength):
+    """
+    Function to translates phase in units of radians to units in millimetres.
+
+    :param ndarray data: Interferogram phase data array
+    :param float wavelength: Radar wavelength in metres
+
+    :return: data: converted phase data
+    :rtype: ndarray
+    """
+    return data / ifc.MM_PER_METRE * ((4 * math.pi) / wavelength)
+
+
 def nanmedian(x):
     """
     Determine the median of values excluding nan values.
@@ -717,6 +824,22 @@ def _is_coherence(hdr):
            (hdr[ifc.INPUT_TYPE] == InputTypes.COH if ifc.INPUT_TYPE in hdr else False)
 
 
+def _is_baseline(hdr):
+    """
+    Convenience function to determine if file is baseline file
+    """
+    return (ifc.PYRATE_WAVELENGTH_METRES in hdr) and \
+           (hdr[ifc.INPUT_TYPE] == InputTypes.BASE if ifc.INPUT_TYPE in hdr else False)
+
+
+def _is_lookuptable(hdr):
+    """
+    Convenience function to determine if file is lookup table file
+    """
+    return (ifc.PYRATE_WAVELENGTH_METRES in hdr) and \
+           (hdr[ifc.INPUT_TYPE] == InputTypes.LT if ifc.INPUT_TYPE in hdr else False)
+
+
 def _is_incidence(hdr):
     """
     Convenience function to determine if incidence file
@@ -742,7 +865,7 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
     ifg_proc = header[ifc.PYRATE_INSAR_PROCESSOR]
     ncols = header[ifc.PYRATE_NCOLS]
     nrows = header[ifc.PYRATE_NROWS]
-    bytes_per_col, fmtstr = _data_format(ifg_proc, _is_interferogram(header), ncols)
+    bytes_per_col, fmtstr = data_format(ifg_proc, _is_interferogram(header), ncols)
     if _is_interferogram(header) and ifg_proc == ROIPAC:
         # roipac ifg has 2 bands
         _check_raw_data(bytes_per_col*2, data_path, ncols, nrows)
@@ -758,7 +881,8 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
         raise GeotiffException(msg)
 
     wkt = srs.ExportToWkt()
-    dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header) or _is_coherence(header)) else 'int16'
+    dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header) or _is_coherence(header) or \
+                          _is_baseline(header) or _is_lookuptable(header)) else 'int16'
 
     # get subset of metadata relevant to PyRate
     md = collate_metadata(header)
@@ -835,15 +959,33 @@ def collate_metadata(header):
                   ifc.DATA_UNITS]:
             md.update({k: str(header[k])})
         if header[ifc.PYRATE_INSAR_PROCESSOR] == GAMMA:
-            for k in [ifc.FIRST_TIME, ifc.SECOND_TIME, ifc.PYRATE_INCIDENCE_DEGREES]:
+            for k in [ifc.FIRST_TIME, ifc.SECOND_TIME,
+                      ifc.PYRATE_NROWS, ifc.PYRATE_NCOLS,
+                      ifc.PYRATE_INCIDENCE_DEGREES, ifc.PYRATE_HEADING_DEGREES,
+                      ifc.PYRATE_AZIMUTH_DEGREES, ifc.PYRATE_RANGE_PIX_METRES,
+                      ifc.PYRATE_RANGE_N, ifc.PYRATE_RANGE_LOOKS,
+                      ifc.PYRATE_AZIMUTH_PIX_METRES, ifc.PYRATE_AZIMUTH_N,
+                      ifc.PYRATE_AZIMUTH_LOOKS, ifc.PYRATE_PRF_HERTZ,
+                      ifc.PYRATE_NEAR_RANGE_METRES, ifc.PYRATE_SAR_EARTH_METRES,
+                      ifc.PYRATE_SEMI_MAJOR_AXIS_METRES, ifc.PYRATE_SEMI_MINOR_AXIS_METRES]:
                 md.update({k: str(header[k])})
+            if ifc.PYRATE_BASELINE_T in header:
+                for k in [ifc.PYRATE_BASELINE_T, ifc.PYRATE_BASELINE_C,
+                          ifc.PYRATE_BASELINE_N, ifc.PYRATE_BASELINE_RATE_T,
+                          ifc.PYRATE_BASELINE_RATE_C, ifc.PYRATE_BASELINE_RATE_N]:
+                    md.update({k: str(header[k])})
 
     if _is_coherence(header):
         __common_ifg_coh_update(header, md)
         md.update({ifc.DATA_TYPE: ifc.COH})
+    elif _is_baseline(header):
+        __common_ifg_coh_update(header, md)
+        md.update({ifc.DATA_TYPE: ifc.BASE})
     elif _is_interferogram(header):
         __common_ifg_coh_update(header, md)
         md.update({ifc.DATA_TYPE: ifc.ORIG})
+    elif _is_lookuptable(header):
+        md.update({ifc.DATA_TYPE: ifc.LT})
     elif _is_incidence(header):
         md.update({ifc.DATA_TYPE: ifc.INCIDENCE})
     else:  # must be dem
@@ -852,7 +994,7 @@ def collate_metadata(header):
     return md
 
 
-def _data_format(ifg_proc, is_ifg, ncols):
+def data_format(ifg_proc, is_ifg, ncols):
     """
     Convenience function to determine the bytesize and format of input files
     """
@@ -915,7 +1057,6 @@ def write_unw_from_data_or_geotiff(geotif_or_data, dest_unw, ifg_proc):
             f.write(col_data)
 
 
-# This function may be able to be deprecated
 def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     # pylint: disable=too-many-arguments
     """
@@ -937,15 +1078,15 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     # set spatial reference for geotiff
     ds.SetGeoTransform(gt)
     ds.SetProjection(wkt)
-    ds.SetMetadataItem(ifc.EPOCH_DATE, str(md[ifc.EPOCH_DATE]))
+
+    # set data type metadata
+    ds.SetMetadataItem(ifc.DATA_TYPE, str(md[ifc.DATA_TYPE]))
 
     # set other metadata
-    ds.SetMetadataItem('DATA_TYPE', str(md['DATA_TYPE']))
-
-    # sequence position for time series products
-
     for k in [ifc.SEQUENCE_POSITION, ifc.PYRATE_REFPIX_X, ifc.PYRATE_REFPIX_Y, ifc.PYRATE_REFPIX_LAT,
-              ifc.PYRATE_REFPIX_LON, ifc.PYRATE_MEAN_REF_AREA, ifc.PYRATE_STDDEV_REF_AREA]:
+              ifc.PYRATE_REFPIX_LON, ifc.PYRATE_MEAN_REF_AREA, ifc.PYRATE_STDDEV_REF_AREA,
+              ifc.EPOCH_DATE, C.LOS_PROJECTION.upper(), C.SIGNAL_POLARITY.upper(),
+              C.VELERROR_NSIG.upper()]:
         if k in md:
             ds.SetMetadataItem(k, str(md[k]))
 
@@ -953,6 +1094,8 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     band = ds.GetRasterBand(1)
     band.SetNoDataValue(nodata)
     band.WriteArray(data, 0, 0)
+
+    del ds
 
 
 def write_geotiff(data, outds, nodata):
@@ -991,6 +1134,7 @@ class GeotiffException(Exception):
     Geotiff exception class
     """
 
+
 def create_tiles(shape, nrows=2, ncols=2):
     """
     Return a list of tiles containing nrows x ncols with each tile preserving
@@ -1018,32 +1162,6 @@ def create_tiles(shape, nrows=2, ncols=2):
     col_arr = np.array_split(range(no_x), ncols)
     row_arr = np.array_split(range(no_y), nrows)
     return [Tile(i, (r[0], c[0]), (r[-1]+1, c[-1]+1)) for i, (r, c) in enumerate(product(row_arr, col_arr))]
-
-
-class Tile():
-    """
-    Tile class for containing a sub-part of an interferogram
-    """
-    def __init__(self, index, top_left, bottom_right):
-        """
-        Parameters
-        ----------
-        index: int
-            identifying index of a tile
-        top_left: tuple
-            ifg index of top left of tile
-        bottom_right: tuple
-            ifg index of bottom right of tile
-        """
-
-        self.index = index
-        self.top_left = top_left
-        self.bottom_right = bottom_right
-        self.top_left_y, self.top_left_x = top_left
-        self.bottom_right_y, self.bottom_right_x = bottom_right
-
-    def __str__(self):
-        return "Convenience Tile class containing tile co-ordinates"
 
 
 def get_tiles(ifg_path, rows, cols) -> List[Tile]:
@@ -1074,10 +1192,10 @@ def nan_and_mm_convert(ifg, params):
 
     :return: None, data modified internally
     """
-    nan_conversion = params[cf.NAN_CONVERSION]
+    nan_conversion = params[C.NAN_CONVERSION]
     if nan_conversion:  # nan conversion happens here in networkx mst
         # if not ifg.nan_converted:
-        ifg.nodata_value = params[cf.NO_DATA_VALUE]
+        ifg.nodata_value = params[C.NO_DATA_VALUE]
         ifg.convert_to_nans()
     if not ifg.mm_converted:
         ifg.convert_to_mm()
@@ -1143,35 +1261,18 @@ class PrereadIfg:
         self.metadata = metadata
 
 
-def _prep_ifg(ifg_path, params):
-    """
-    Wrapper for reading an interferogram file and creating an Ifg object
-
-    :param str ifg_path: Interferogram file path
-    :param dict params: Dictionary of configuration parameters
-
-    :return: ifg: Interferogram class instance
-    :rtype: xxxx (eg flaot)
-    """
-    # Only used in pyrate.scripts.run_pyrate?
-    ifg = Ifg(ifg_path)
-    ifg.open()
-    nan_and_mm_convert(ifg, params)
-    return ifg
-
-
 def save_numpy_phase(ifg_paths, params):
     """
-    Save interferogram phase data as numpy array file on disk.
+    Split interferogram phase data in to tiles (if they exist in the params
+    dict) and save as numpy array files on disk.
 
     :param list ifg_paths: List of strings for interferogram paths
-    :param list tiles: List of pyrate.shared.Tile instances
     :param dict params: Dictionary of configuration parameters
 
-    :return: None, file saved to disk
+    :return: None, numpy file saved to disk
     """
     tiles = params['tiles']
-    outdir = params[cf.TMPDIR]
+    outdir = params[C.TMPDIR]
     if not os.path.exists(outdir):
         mkdir_p(outdir)
     for ifg_path in mpiops.array_split(ifg_paths):
@@ -1187,6 +1288,7 @@ def save_numpy_phase(ifg_paths, params):
                     arr=p_data)
         ifg.close()
     mpiops.comm.barrier()
+    log.debug(f'Finished writing phase_data to numpy files in {outdir}')
 
 
 def get_geotiff_header_info(ifg_path):
@@ -1287,19 +1389,19 @@ def mpi_vs_multiprocess_logging(step, params):
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
         log.info(f"Running '{step}' step with MPI using {mpiops.size} processes")
         log.warning("Disabling joblib parallel processing (setting parallel = 0)")
-        params[cf.PARALLEL] = 0
+        params[C.PARALLEL] = 0
     else:
-        if params[cf.PARALLEL] == 1:
-            log.info(f"Running '{step}' step in parallel using {params[cf.PROCESSES]} processes")
+        if params[C.PARALLEL] == 1:
+            log.info(f"Running '{step}' step in parallel using {params[C.PROCESSES]} processes")
         else:
             log.info(f"Running '{step}' step in serial")
 
 
-def dem_or_ifg(data_path):
+def dem_or_ifg(data_path: str) -> Union[Ifg, DEM]:
     """
     Returns an Ifg or DEM class object from input geotiff file.
 
-    :param str data_path: file path name
+    :param data_path: file path name
 
     :return: Interferogram or DEM object from input file
     :rtype: Ifg or DEM class object
@@ -1310,11 +1412,12 @@ def dem_or_ifg(data_path):
         return Ifg(data_path)
     else:
         return DEM(data_path)
+    ds = None  # close the dataset
 
 
 def join_dicts(dicts: List[dict]) -> dict:
     """
-    Function to concatenate dictionaries
+    Function to concatenate a list of dictionaries of distinct keys.
     """
     if dicts is None:  # pragma: no cover
         return {}
@@ -1322,27 +1425,50 @@ def join_dicts(dicts: List[dict]) -> dict:
     return assembled_dict
 
 
-def tiles_split(func, params, *args, **kwargs):
-    tiles = params[cf.TILES]
-    process_tiles = mpiops.array_split(tiles)
-    if params[cf.PARALLEL]:
-        Parallel(n_jobs=params[cf.PROCESSES], verbose=joblib_log_level(cf.LOG_LEVEL))(
-            delayed(func)(t, params, *args, **kwargs) for t in process_tiles)
+def iterable_split(func: Callable, iterable: Iterable, params: dict, *args, **kwargs) -> np.ndarray:
+    """
+    # TODO: a faster version using buffer-provider objects via the uppercase communication method
+    A faster version of iterable/tiles_split is possible when the return values from each process is of the same size
+    and will be addressed in future. In this case a buffer-provider object can be sent between processes using the
+    uppercase communication (like Gather instead of gather) methods which can be significantly faster.
+    """
+    if params[C.PARALLEL]:
+        ret_combined = {}
+        rets = Parallel(
+            n_jobs=params[C.PROCESSES],
+            verbose=joblib_log_level(C.LOG_LEVEL)
+        )(delayed(func)(t, params, *args, **kwargs) for t in iterable)
+        for i, r in enumerate(rets):
+            ret_combined[i] = r
     else:
-        for t in process_tiles:
-            func(t, params, *args, **kwargs)
+        iterable_with_index = list(enumerate(iterable))
+        process_iterables = mpiops.array_split(iterable_with_index)
+        ret_combined = {}
+        for i, t in process_iterables:
+            ret_combined[i] = func(t, params, *args, **kwargs)
+        ret_combined = join_dicts(mpiops.comm.allgather(ret_combined))
+    ret = np.array([v[1] for v in ret_combined.items()], dtype=object)
     mpiops.comm.barrier()
+    return ret
 
 
-def output_tiff_filename(inpath, outpath):
+def tiles_split(func: Callable, params: dict, *args, **kwargs) -> np.ndarray:
+    """
+    Function to pass tiles of a full array to an array processing function call.
+    :param func: Name of function to pass tiles to.
+    :param params: Dictionary of PyRate configuration parameters; must contain a 'tiles' list
+    """
+    tiles = params[C.TILES]
+    return iterable_split(func, tiles, params, *args, **kwargs)
+
+
+def output_tiff_filename(inpath: str, outpath: str) -> str:
     """
     Output geotiff filename for a given input filename.
 
-    :param str inpath: path of input file location
-    :param str outpath: path of output file location
-
-    :return: Geotiff filename for the given file.
-    :rtype: str
+    :param inpath: Path of input file location.
+    :param outpath: Path of output file location.
+    :return: name: Geotiff filename for the given file.
     """
     fname, ext = os.path.basename(inpath).split('.')
     outpath = os.path.dirname(inpath) if outpath is None else outpath
@@ -1351,3 +1477,14 @@ def output_tiff_filename(inpath, outpath):
     else:
         name = os.path.join(outpath, fname + '_' + ext + '.tif')
     return name
+
+
+def remove_file_if_exists(filename: str) -> None:
+    """
+    Function to remove a file if it already exists.
+    :param filename: Name of file to be removed.
+    """
+    try:
+        os.remove(filename)
+    except OSError:
+        pass

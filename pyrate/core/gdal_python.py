@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2020 Geoscience Australia
+#   Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -30,11 +30,11 @@ gdal.SetCacheMax(2**15)
 GDAL_WARP_MEMORY_LIMIT = 2**10
 LOW_FLOAT32 = np.finfo(np.float32).min*1e-10
 all_mlooked_types = [ifc.MLOOKED_COH_MASKED_IFG, ifc.MULTILOOKED, ifc.MULTILOOKED_COH,
-                     ifc.MLOOKED_DEM, ifc.MLOOKED_INC]
+                     ifc.MLOOKED_DEM]
 
 
-def coherence_masking(input_gdal_dataset: Dataset, coherence_file_path: str,
-                      coherence_thresh: float) -> None:
+def coherence_masking(input_gdal_dataset: Dataset, coh_file_path: str,
+                      coh_thr: float) -> None:
     """
     Perform coherence masking on raster in-place.
 
@@ -45,20 +45,20 @@ def coherence_masking(input_gdal_dataset: Dataset, coherence_file_path: str,
     --NoDataValue=-999
     """
 
-    coherence_ds = gdal.Open(coherence_file_path, gdalconst.GA_ReadOnly)
+    coherence_ds = gdal.Open(coh_file_path, gdalconst.GA_ReadOnly)
     coherence_band = coherence_ds.GetRasterBand(1)
     src_band = input_gdal_dataset.GetRasterBand(1)
     ndv = np.nan
     coherence = coherence_band.ReadAsArray()
     src = src_band.ReadAsArray()
-    var = {"coh": coherence, "src": src, "t": coherence_thresh, "ndv": ndv}
+    var = {"coh": coherence, "src": src, "t": coh_thr, "ndv": ndv}
     formula = "where(coh>=t, src, ndv)"
     res = ne.evaluate(formula, local_dict=var)
     src_band.WriteArray(res)
     # update metadata
     input_gdal_dataset.GetRasterBand(1).SetNoDataValue(ndv)
     input_gdal_dataset.FlushCache()  # write on the disc
-    log.info(f"Applied coherence masking using coh file {coherence_file_path}")
+    log.info(f"Masking ifg using file {coh_file_path} and coherence threshold: {coh_thr}")
 
 
 def world_to_pixel(geo_transform, x, y):
@@ -84,8 +84,6 @@ def world_to_pixel(geo_transform, x, y):
     line = int(np.round((ul_y - y) / abs(yres))) # yres has negative size
 
     return col, line
-
-
 
 
 def resample_nearest_neighbour(input_tif, extents, new_res, output_file):
@@ -234,12 +232,10 @@ def crop_resample_average(
                 md.update({ifc.DATA_TYPE: ifc.MULTILOOKED_COH})
             elif v == ifc.DEM:
                 md.update({ifc.DATA_TYPE: ifc.MLOOKED_DEM})
-            elif v == ifc.INCIDENCE:
-                md.update({ifc.DATA_TYPE: ifc.MLOOKED_INC})
             else:
                 raise TypeError(f'Data Type metadata {v} not recognised')
 
-    add_looks_and_crop_from_header(hdr, md)
+    _add_looks_and_crop_from_header(hdr, md, coherence_thresh)
 
     # In-memory GDAL driver doesn't support compression so turn it off.
     creation_opts = ['compress=packbits'] if out_driver_type != 'MEM' else []
@@ -248,14 +244,14 @@ def crop_resample_average(
                                  crs=wkt, geotransform=gt, creation_opts=creation_opts)
 
     if out_driver_type != 'MEM':
-        shared.write_geotiff(resampled_average, out_ds, np.nan)
         log.info(f"Writing geotiff: {output_file}")
+        shared.write_geotiff(resampled_average, out_ds, np.nan)
     else:
         out_ds.GetRasterBand(1).WriteArray(resampled_average)
     return resampled_average, out_ds
 
 
-def add_looks_and_crop_from_header(hdr, md):
+def _add_looks_and_crop_from_header(hdr, md, coh_thr):
     """
     function to add prepfig options to geotiff metadata
     """
@@ -267,6 +263,10 @@ def add_looks_and_crop_from_header(hdr, md):
             md[ifc.IFG_LKSY] = hdr[ifc.IFG_LKSY]
         if ifc.IFG_CROP in hdr:
             md[ifc.IFG_CROP] = hdr[ifc.IFG_CROP]
+
+    # add coherence threshold to metadata, if used for masking ifgs
+    if md[ifc.DATA_TYPE] == ifc.MLOOKED_COH_MASKED_IFG:
+        md[ifc.COH_THRESH] = coh_thr
 
 
 def _alignment(input_tif, new_res, resampled_average, src_ds_mem,

@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2020 Geoscience Australia
+#   Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -23,7 +23,9 @@ import pickle as cp
 from scipy.linalg import solve, cholesky, qr, inv
 from numpy import nan, isnan, sqrt, diag, delete, array, float32, size
 import numpy as np
-from pyrate.core import config as cf, shared
+
+import pyrate.constants as C
+from pyrate.core import shared
 from pyrate.core.shared import tiles_split
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration
@@ -55,8 +57,7 @@ def stack_rate_array(ifgs, params, vcmt, mst=None):
         for j in range(cols):
             rate[i, j], error[i, j], samples[i, j] = stack_rate_pixel(obs[:, i, j], mst[:, i, j], vcmt, span, nsig, pthresh)
 
-    return rate, error, samples
-
+    return rate, params[C.VELERROR_NSIG]*error, samples
 
 def mask_rate(rate, error, maxsig):
     """
@@ -72,7 +73,6 @@ def mask_rate(rate, error, maxsig):
     :return: error: Masked error (standard deviation) map
     :rtype: ndarray
     """
-    log.info('Masking stack rate and error maps where sigma is greater than {} millimetres'.format(maxsig))
     # initialise mask array with existing NaNs
     mask = ~isnan(error)
     # original Nan count
@@ -171,9 +171,9 @@ def _stack_setup(ifgs, mst, params):
     """
     # stack rate parameters from config file
     # n-sigma ratio used to threshold 'model minus observation' residuals
-    nsig = params[cf.LR_NSIG]
+    nsig = params[C.LR_NSIG]
     # Pixel threshold; minimum number of observations for a pixel
-    pthresh = params[cf.LR_PTHRESH]
+    pthresh = params[C.LR_PTHRESH]
     rows, cols = ifgs[0].phase_data.shape
     # make 3D block of observations
     obs = array([np.where(isnan(x.phase_data), 0, x.phase_data) for x in ifgs])
@@ -198,9 +198,9 @@ def stack_calc_wrapper(params):
     log.info('Calculating rate map via stacking')
     if not Configuration.vcmt_path(params).exists():
         raise FileNotFoundError("VCMT is not found on disc. Have you run the 'correct' step?")
-    params[cf.PREREAD_IFGS] = cp.load(open(Configuration.preread_ifgs(params), 'rb'))
-    params[cf.VCMT] = np.load(Configuration.vcmt_path(params))
-    params[cf.TILES] = Configuration.get_tiles(params)
+    params[C.PREREAD_IFGS] = cp.load(open(Configuration.preread_ifgs(params), 'rb'))
+    params[C.VCMT] = np.load(Configuration.vcmt_path(params))
+    params[C.TILES] = Configuration.get_tiles(params)
     tiles_split(_stacking_for_tile, params)
     log.debug("Finished stacking calc!")
 
@@ -209,10 +209,10 @@ def _stacking_for_tile(tile, params):
     """
     Wrapper for stacking calculation on a single tile
     """
-    preread_ifgs = params[cf.PREREAD_IFGS]
-    vcmt = params[cf.VCMT]
-    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[cf.INTERFEROGRAM_FILES]]
-    output_dir = params[cf.TMPDIR]
+    preread_ifgs = params[C.PREREAD_IFGS]
+    vcmt = params[C.VCMT]
+    ifg_paths = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
+    output_dir = params[C.TMPDIR]
     log.debug(f"Stacking of tile {tile.index}")
     ifg_parts = [shared.IfgPart(p, tile, preread_ifgs, params) for p in ifg_paths]
     mst_tile = np.load(Configuration.mst_path(params, tile.index))

@@ -24,21 +24,25 @@ Dependencies
 
 The following system dependencies are required by PyRate:
 
-- `Python <https://www.python.org/downloads/>`_, versions 3.6, 3.7 or 3.8.
+- `Python <https://www.python.org/downloads/>`_, versions 3.7, 3.8 or 3.9.
 - `GDAL <https://gdal.org/download.html>`_, versions 3.0.2 or 3.0.4
+
+The following optional dependency is required for MPI processing capability:
+
 - `Open MPI <https://www.open-mpi.org/software/ompi/v4.0/>`_, versions 2.1.6, 3.0.4, 3.1.4 or 4.0.2
 
 The versions of each package stated above have been tested to work using `GitHub Actions <https://github.com/GeoscienceAustralia/PyRate/actions>`_ continuous integration testing.
 
 Python dependencies for PyRate are::
 
-    joblib==0.14.1
+    joblib==1.0.0
     mpi4py==3.0.3
-    networkx==2.4
-    numpy==1.18.3
-    pyproj==2.6.0
-    scipy==1.4.1
-    numexpr==2.7.1
+    networkx==2.5
+    numpy==1.19.4
+    pyproj==3.0.0
+    scipy==1.5.4
+    numexpr==2.7.2
+    nptyping==1.4.0
 
 Install
 -------

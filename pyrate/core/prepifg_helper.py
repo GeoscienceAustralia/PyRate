@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package
 #
-#   Copyright 2020 Geoscience Australia
+#   Copyright 2021 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -20,19 +20,23 @@ multilooking/downsampling and cropping operations to reduce the size of
 the computational problem.
 """
 # pylint: disable=too-many-arguments,invalid-name
+import re
 from collections import namedtuple
+from os.path import split
+
 from math import modf
 from numbers import Number
 from decimal import Decimal
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Callable
 from numpy import array, nan, isnan, nanmean, float32, zeros, sum as nsum
 
+from pyrate.constants import sixteen_digits_pattern, COHERENCE_FILE_PATHS, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY
+from pyrate.configuration import ConfigException
 from pyrate.core.gdal_python import crop_resample_average
 from pyrate.core.shared import dem_or_ifg, Ifg, DEM
 from pyrate.core.logger import pyratelogger as log
 
 CustomExts = namedtuple('CustExtents', ['xfirst', 'yfirst', 'xlast', 'ylast'])
-
 
 # Constants
 MINIMUM_CROP = 1
@@ -70,10 +74,6 @@ def get_analysis_extent(crop_opt: int, rasters: List[Union[Ifg, DEM]], xlooks: i
         elif len(user_exts) == 4:  # check for non floats
             if not all([_is_number(z) for z in user_exts]):
                 raise PreprocessError('Custom extents must be 4 numbers')
-
-    for raster in rasters:
-        if not raster.is_open:
-            raster.open()
 
     _check_looks(xlooks, ylooks)
     _check_resolution(rasters)
@@ -113,13 +113,18 @@ def _check_looks(xlooks, ylooks):
         log.warning('X and Y multi-look factors are not equal')
 
 
-def _check_resolution(ifgs):
+def _check_resolution(ifgs: List[Union[Ifg, DEM]]):
     """
     Convenience function to verify Ifg resolutions are equal.
     """
 
     for var in ['x_step', 'y_step']:
-        values = array([getattr(i, var) for i in ifgs])
+        values = []
+        for i in ifgs:
+            i.open()
+            values.append(getattr(i, var))
+            i.close()
+        values = array(values)
         if not (values == values[0]).all():  # pragma: no cover
             msg = "Grid resolution does not match for %s" % var
             raise PreprocessError(msg)
@@ -134,9 +139,9 @@ def _get_extents(ifgs, crop_opt, user_exts=None):
     ALREADY_SAME_SIZE = 4
     """
     if crop_opt == MINIMUM_CROP:
-        extents = _min_bounds(ifgs)
+        extents = __bounds(ifgs, min)
     elif crop_opt == MAXIMUM_CROP:
-        extents = _max_bounds(ifgs)
+        extents = __bounds(ifgs, max)
     elif crop_opt == CUSTOM_CROP:
         extents = _custom_bounds(ifgs, *user_exts)
         # only need to check crop coords when custom bounds are supplied
@@ -225,34 +230,35 @@ def _resample(data, xscale, yscale, thresh):
     # with excess NaNs)
     for x in range(xres):
         for y in range(yres):
-            tile = data[y * yscale: (y+1) * yscale, x * xscale: (x+1) * xscale]
+            tile = data[y * yscale: (y + 1) * yscale, x * xscale: (x + 1) * xscale]
             nan_fraction = nsum(isnan(tile)) / float(tile_cell_count)
             if nan_fraction < thresh or (nan_fraction == 0 and thresh == 0):
                 dest[y, x] = nanmean(tile)
     return dest
 
 
-def _min_bounds(ifgs: List[Ifg]) -> Tuple[float, float, float, float]:
-    """
-    Returns bounds for overlapping area of the given interferograms.
-    """
-
-    xmin = max([i.x_first for i in ifgs])
-    ymax = min([i.y_first for i in ifgs])
-    xmax = min([i.x_last for i in ifgs])
-    ymin = max([i.y_last for i in ifgs])
-    return xmin, ymin, xmax, ymax
-
-
-def _max_bounds(ifgs: List[Ifg]) -> Tuple[float, float, float, float]:
+def __bounds(ifgs: List[Ifg], func: Callable) -> Tuple[float, float, float, float]:
     """
     Returns bounds for the total area covered by the given interferograms.
     """
+    assert func in [min, max]  # no other func allowed
+    opposite_func = min if func is max else max
+    x_firsts = []
+    y_firsts = []
+    x_lasts = []
+    y_lasts = []
+    for i in ifgs:
+        i.open()
+        x_firsts.append(i.x_first)
+        y_firsts.append(i.y_first)
+        x_lasts.append(i.x_last)
+        y_lasts.append(i.y_last)
+        i.close()
 
-    xmin = min([i.x_first for i in ifgs])
-    ymax = max([i.y_first for i in ifgs])
-    xmax = max([i.x_last for i in ifgs])
-    ymin = min([i.y_last for i in ifgs])
+    xmin = opposite_func(x_firsts)
+    ymax = func(y_firsts)
+    xmax = func(x_lasts)
+    ymin = opposite_func(y_lasts)
     return xmin, ymin, xmax, ymax
 
 
@@ -260,15 +266,18 @@ def _get_same_bounds(ifgs: List[Ifg]) -> Tuple[float, float, float, float]:
     """
     Check and return bounding box for ALREADY_SAME_SIZE option.
     """
-
-    tfs = [i.dataset.GetGeoTransform() for i in ifgs]
+    tfs = []
+    for i in ifgs:
+        i.open()
+        tfs.append(i.dataset.GetGeoTransform())
+        i.close()
 
     equal = []
 
     for t in tfs[1:]:
-        for i,tf in enumerate(tfs[0]):
+        for i, tf in enumerate(tfs[0]):
 
-            if round(Decimal (tf),4) == round(Decimal (t[i]),4):
+            if round(Decimal(tf), 4) == round(Decimal(t[i]), 4):
                 equal.append(True)
             else:
                 equal.append(False)
@@ -277,9 +286,10 @@ def _get_same_bounds(ifgs: List[Ifg]) -> Tuple[float, float, float, float]:
         msg = 'Ifgs do not have the same bounding box for crop option: %s'
         raise PreprocessError(msg % ALREADY_SAME_SIZE)
     ifg = ifgs[0]
+    ifg.open()
     xmin, xmax = ifg.x_first, ifg.x_last
     ymin, ymax = ifg.y_first, ifg.y_last
-
+    ifg.close()
     # swap y_first & y_last when using southern hemisphere -ve coords
     if ymin > ymax:
         ymin, ymax = ymax, ymin
@@ -295,6 +305,7 @@ def _custom_bounds(ifgs, xw, ytop, xe, ybot):
     # pylint: disable=too-many-branches
     msg = 'Cropped image bounds are outside the original image bounds'
     i = ifgs[0]
+    i.open()
 
     if ytop < ybot:
         raise PreprocessError('ERROR Custom crop bounds: '
@@ -333,6 +344,8 @@ def _custom_bounds(ifgs, xw, ytop, xe, ybot):
         else:
             raise ValueError('Value error in supplied custom bounds')
 
+    i.close()
+
     if y2 > y1:
         ymin = y1
         ymax = y2
@@ -350,6 +363,7 @@ def _check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
 
     # NB: assumption is the first Ifg is correct, so only test against it
     i = ifgs[0]
+    i.open()
 
     for par, crop, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
                                [xmin, xmax, ymax, ymin],
@@ -364,9 +378,56 @@ def _check_crop_coords(ifgs, xmin, ymin, xmax, ymax):
         if (remainder > GRID_TOL) and (remainder < (1 - GRID_TOL)):  # pragma: no cover
             msg = "%s crop extent not within %s of grid coordinate"
             raise PreprocessError(msg % (par, GRID_TOL))
+    i.close()
 
 
 class PreprocessError(Exception):
     """
     Preprocess exception
     """
+
+
+def transform_params(params):
+    """
+    Returns subset of all parameters for cropping and multilooking.
+
+    :param dict params: Parameter dictionary
+
+    :return: xlooks, ylooks, crop
+    :rtype: int
+    """
+
+    t_params = [IFG_LKSX, IFG_LKSY, IFG_CROP_OPT]
+    xlooks, ylooks, crop = [params[k] for k in t_params]
+    return xlooks, ylooks, crop
+
+
+def coherence_paths_for(path: str, params: dict, tif=False) -> str:
+    """
+    Returns path to coherence file for given interferogram. Pattern matches
+    based on epoch in filename.
+
+    Example:
+        '20151025-20160501_eqa_filt.cc'
+        Date pair is the epoch.
+
+    Args:
+        path: Path to intergerogram to find coherence file for.
+        params: Parameter dictionary.
+        tif: Find converted tif if True (_cc.tif), else find .cc file.
+
+    Returns:
+        Path to coherence file.
+    """
+    _, filename = split(path)
+    epoch = re.search(sixteen_digits_pattern, filename).group(0)
+    if tif:
+        coh_file_paths = [f.converted_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.converted_path]
+    else:
+        coh_file_paths = [f.unwrapped_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.unwrapped_path]
+
+    if len(coh_file_paths) > 1:
+        raise ConfigException(f"found more than one coherence "
+                              f"file for '{path}'. There must be only one "
+                              f"coherence file per interferogram. Found {coh_file_paths}.")
+    return coh_file_paths[0]
