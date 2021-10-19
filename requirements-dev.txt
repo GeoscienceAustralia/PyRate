@@ -1,10 +1,9 @@
-ghp-import==0.5.5
-sphinx==3.0.3
-sphinx_rtd_theme==0.4.3
-sphinxcontrib-programoutput==0.16
-recommonmark==0.6.0
+ghp-import
+sphinx
+sphinx_rtd_theme
+sphinxcontrib-programoutput
+recommonmark
 m2r2
-mpi4py==3.0.3
 matplotlib
 ipython
 setuptools

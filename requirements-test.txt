@@ -1,5 +1,5 @@
-pytest-cov==2.8.1
-coverage==5.1
-codecov==2.1.0
-tox==3.15.0
-pytest==5.4.2
+pytest-cov
+coverage
+codecov
+tox
+pytest
