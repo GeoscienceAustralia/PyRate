@@ -6,9 +6,11 @@ import datetime
 import sphinx_rtd_theme
 
 # add the top level repo dir to the path
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.append(os.path.abspath('..'))
+sys.path.append(os.path.abspath('../..'))
 
 __version__ = "0.6.0"
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
