@@ -1,67 +1,35 @@
-
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Release History &mdash; PyRate 0.4.0 documentation</title>
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Release History &mdash; PyRate 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Credits" href="authors.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: white" >
-          
-
-          
             <a href="index.html">
-          
-
-          
-            
             <img src="_static/PyRate_logo.png" class="logo" alt="Logo"/>
-          
           </a>
-
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -69,19 +37,9 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
     <li><a href="https://geoscienceaustralia.github.io/PyRate/">Home</a></li>
     
-            
-            
-              
-            
-            
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies">Dependencies</a></li>
@@ -108,15 +66,18 @@
 <li class="toctree-l1"><a class="reference internal" href="modules.html">PyRate Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demerror.html">DEM Error Correction Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry.html">Geometry Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ifgconstants.html">Ifgconstants Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="logger.html">Logging Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mpiops.html">MPI operations Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phase_closure.html">Phase Closure Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="prepifg_helper.html">Prepifg Helper Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ref_phs_est.html">Reference Phase Calculation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
@@ -146,92 +107,104 @@
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id1">0.5.0 (2020-09-08)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id2">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id7">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id12">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id17">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id21">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id26">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id27">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">0.6.0 (2021-10-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id12">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id17">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id22">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id26">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id31">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id32">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
 
-            
-          
 
         </div>
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">PyRate</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html">Docs</a> &raquo;</li>
-        
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
       <li>Release History</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
-  </ul>
-
-  
-  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
-      
-      
-        <a href="authors.html" class="btn btn-neutral float-left" title="Credits" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+  </ul><div class="rst-breadcrumbs-buttons" role="navigation" aria-label="Sequential page navigation">
+        <a href="authors.html" class="btn btn-neutral float-left" title="Credits" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
   </div>
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="release-history">
+             
+  <section id="release-history">
 <h1>Release History<a class="headerlink" href="#release-history" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="id1">
-<h2>0.5.0 (2020-09-08)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="added">
+<section id="id1">
+<h2>0.6.0 (2021-10-18)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<section id="added">
 <h3>Added<a class="headerlink" href="#added" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Geometry and baseline calculations, making use of GAMMA software MLI metadata and baseline files.</p></li>
+<li><p>DEM error estimation and correction functionality (untested prototype).</p></li>
+<li><p>Unwrapping error detection and masking functionality, making use of phase closure loops.</p></li>
+<li><p>Tests to check that the independent and network orbital methods are both able to recover the input parameters in synthetic examples.</p></li>
+<li><p>Tests for temporal and spatial gaussian filter options. Compare PyRate code against <code class="docutils literal notranslate"><span class="pre">scipy.ndimage</span></code> equivalents.</p></li>
+<li><p>More output visualisation scripts in the <code class="docutils literal notranslate"><span class="pre">utils/</span></code> directory, including an interferogram plotting script.</p></li>
+<li><p>New “Crop A” unit test dataset derived from Sentinel-1 data over Mexico City.</p></li>
+<li><p>Scaling factor parameter <code class="docutils literal notranslate"><span class="pre">velerror_nsig</span></code> for uncertainty/error output products.</p></li>
+<li><p>Calculate and output coherence statistics files during <code class="docutils literal notranslate"><span class="pre">prepifg</span></code>.</p></li>
+<li><p>Add line-of-sight projection functionality for output products.</p></li>
+<li><p>Add signal polarity switching functionality for output products.</p></li>
+<li><p>Error handling for more than two MLI.par files in the header list matching an interferograms date-pair.</p></li>
+</ul>
+</section>
+<section id="fixed">
+<h3>Fixed<a class="headerlink" href="#fixed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Fix bugs in the application of NaN masking and radian-to-millimetre conversion of interferogram data in <code class="docutils literal notranslate"><span class="pre">correct</span></code> step.</p></li>
+<li><p>Fix bugs in the implementation of the orbital error network and independent methods.</p></li>
+<li><p>Fix bugs in the implementation of spatial and temporal filters in the APS module.</p></li>
+<li><p>Fix bug in the application of reference phase subtraction that resulted in NaNs in the reference window.</p></li>
+<li><p>Fix file handling behaviour in <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> so that a large number of files are not left open.</p></li>
+</ul>
+</section>
+<section id="changed">
+<h3>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Enabled multi-looking and parallel processing for the independent orbital method.</p></li>
+<li><p>Simplify output filenames produced by PyRate.</p></li>
+<li><p>Move output files to dedicated named sub-directories.</p></li>
+<li><p>Use of the <code class="docutils literal notranslate"><span class="pre">offset</span></code> parameter in orbital module; now renamed to <code class="docutils literal notranslate"><span class="pre">intercept</span></code>.</p></li>
+<li><p>Input rasters to <code class="docutils literal notranslate"><span class="pre">conv2tif</span></code> can now have un-equal X and Y pixel resolutions.</p></li>
+<li><p>Change units of temporal filter from years to days.</p></li>
+<li><p>Moved Continuous Integration from Travis service to GitHub Actions.</p></li>
+<li><p>Made MPI an optional system dependency for PyRate (previously required).</p></li>
+</ul>
+</section>
+<section id="removed">
+<h3>Removed<a class="headerlink" href="#removed" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Remove unused cython, glob2 and pillow dependencies.</p></li>
+<li><p>Remove support for Python 3.6.</p></li>
+<li><p>Remove support for filter types other than Gaussian in the APS module, and associated config options <code class="docutils literal notranslate"><span class="pre">slpfmethod</span></code>, <code class="docutils literal notranslate"><span class="pre">slpforder</span></code>, <code class="docutils literal notranslate"><span class="pre">tlpfmethod</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">config</span></code> module deprecated; functionality moved to <code class="docutils literal notranslate"><span class="pre">configuration</span></code>, <code class="docutils literal notranslate"><span class="pre">shared</span></code> and <code class="docutils literal notranslate"><span class="pre">constants</span></code> modules.</p></li>
+<li><p>Deprecated <code class="docutils literal notranslate"><span class="pre">obs_dir</span></code>, <code class="docutils literal notranslate"><span class="pre">slc_dir</span></code> and <code class="docutils literal notranslate"><span class="pre">coh_file_dir</span></code> configuration parameters.</p></li>
+</ul>
+</section>
+</section>
+<section id="id2">
+<h2>0.5.0 (2020-09-08)<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<section id="id3">
+<h3>Added<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>New functionality “<code class="docutils literal notranslate"><span class="pre">linear_rate</span></code>” to calculate linear regression of
 cumulative displacement time series for every pixel as part of the <code class="docutils literal notranslate"><span class="pre">timeseries</span></code> step.</p></li>
@@ -243,9 +216,9 @@ parameters change between runs.</p></li>
 <li><p>MPI parallelisation of APS spatio-temporal filter correction.</p></li>
 <li><p>Unit test coverage for refpixel lat/lon to x/y conversion and <code class="docutils literal notranslate"><span class="pre">aps</span></code> module.</p></li>
 </ul>
-</div>
-<div class="section" id="fixed">
-<h3>Fixed<a class="headerlink" href="#fixed" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id4">
+<h3>Fixed<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Re-enable <code class="docutils literal notranslate"><span class="pre">ifglksx</span></code> and <code class="docutils literal notranslate"><span class="pre">ifglksy</span></code> to be different values, resulting in different
 resolutions in x and y dimensions in multi-looked interferograms.</p></li>
@@ -253,9 +226,9 @@ resolutions in x and y dimensions in multi-looked interferograms.</p></li>
 resolutions in x and y dimensions during network orbit correction.</p></li>
 <li><p>Screen messages from main process only during MPI runs.</p></li>
 </ul>
-</div>
-<div class="section" id="changed">
-<h3>Changed<a class="headerlink" href="#changed" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id5">
+<h3>Changed<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">process</span></code> step has been renamed <code class="docutils literal notranslate"><span class="pre">correct</span></code>. Stacking and timeseries have been removed from
 this step and are now invoked by separate <code class="docutils literal notranslate"><span class="pre">timeseries</span></code> and <code class="docutils literal notranslate"><span class="pre">stack</span></code> command line options.</p></li>
@@ -268,34 +241,34 @@ tiling framework for <code class="docutils literal notranslate"><span class="pre
 <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> step. Information previously saved in the filename (e.g. <code class="docutils literal notranslate"><span class="pre">ifglksx</span></code>, <code class="docutils literal notranslate"><span class="pre">ifglksy</span></code>,
 and <code class="docutils literal notranslate"><span class="pre">ifgcropopt</span></code> values) is now saved to the geotiff header instead.</p></li>
 </ul>
-</div>
-<div class="section" id="removed">
-<h3>Removed<a class="headerlink" href="#removed" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id6">
+<h3>Removed<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Redundant <code class="docutils literal notranslate"><span class="pre">tscal</span></code> config parameter was deprecated - not needed now there is a <code class="docutils literal notranslate"><span class="pre">timeseries</span></code>
 step invokable on the command line.</p></li>
 <li><p>Unused <code class="docutils literal notranslate"><span class="pre">Pillow</span></code>, <code class="docutils literal notranslate"><span class="pre">cython</span></code> and <code class="docutils literal notranslate"><span class="pre">glob2</span></code> dependencies.</p></li>
 <li><p>Deprecated function <code class="docutils literal notranslate"><span class="pre">pyrate.prepifg_helper.prepare_ifgs</span></code>, which is no longer needed.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="id2">
-<h2>0.4.3 (2020-08-04)<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id3">
-<h3>Added<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="id7">
+<h2>0.4.3 (2020-08-04)<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
+<section id="id8">
+<h3>Added<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Ability to define the order of steps in the <code class="docutils literal notranslate"><span class="pre">process</span></code> workflow
 (default order unchanged).</p></li>
 </ul>
-</div>
-<div class="section" id="id4">
-<h3>Fixed<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id9">
+<h3>Fixed<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Nil</p></li>
 </ul>
-</div>
-<div class="section" id="id5">
-<h3>Changed<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id10">
+<h3>Changed<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">prepifg</span></code> output interferograms are saved as read-only files.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">process</span></code> makes a writable copy of the <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> output data
@@ -305,21 +278,21 @@ at the beginning of each run.</p></li>
 <li><p>Saving of incremental time series (<code class="docutils literal notranslate"><span class="pre">tsincr</span></code>) products is optional,
 controlled by the <code class="docutils literal notranslate"><span class="pre">savetsincr</span></code> configuration parameter (default is on).</p></li>
 </ul>
-</div>
-<div class="section" id="id6">
-<h3>Removed<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id11">
+<h3>Removed<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Removed obsolete InSAR terminology from code, docs and test data
 (changed to <cite>first</cite> and <cite>second</cite> images).</p></li>
 <li><p>Stopped using <code class="docutils literal notranslate"><span class="pre">unittest</span></code> unit test framework in favour of exclusively
 using <code class="docutils literal notranslate"><span class="pre">pytest</span></code>.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="id7">
-<h2>0.4.2 (2020-06-26)<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id8">
-<h3>Added<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="id12">
+<h2>0.4.2 (2020-06-26)<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h2>
+<section id="id13">
+<h3>Added<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Save full-res coherence files to disk in <code class="docutils literal notranslate"><span class="pre">conv2tif</span></code> step if <code class="docutils literal notranslate"><span class="pre">cohmask</span> <span class="pre">=</span> <span class="pre">1</span></code>.</p></li>
 <li><p>Save multi-looked coherence files to disk in <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> step if <code class="docutils literal notranslate"><span class="pre">cohmask</span> <span class="pre">=</span> <span class="pre">1</span></code>.</p></li>
@@ -330,18 +303,18 @@ on data type, i.e. <code class="docutils literal notranslate"><span class="pre">
 lat/lon and x/y values; mean and standard deviation of reference window samples.</p></li>
 <li><p>Quicklook PNG and KML files are generated for the <code class="docutils literal notranslate"><span class="pre">Stack</span> <span class="pre">Rate</span></code> error map by default.</p></li>
 </ul>
-</div>
-<div class="section" id="id9">
-<h3>Fixed<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id14">
+<h3>Fixed<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Ensure <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> treats input data files as <cite>read only</cite>.</p></li>
 <li><p>Fix the way that the reference phase is subtracted from interferograms
 during <code class="docutils literal notranslate"><span class="pre">process</span></code> step.</p></li>
 <li><p>Manual entry of <code class="docutils literal notranslate"><span class="pre">refx/y</span></code> converted to type <code class="docutils literal notranslate"><span class="pre">int</span></code>.</p></li>
 </ul>
-</div>
-<div class="section" id="id10">
-<h3>Changed<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id15">
+<h3>Changed<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>User supplies latitude and longitude values when specifying a reference pixel in
 the config file. Pixel x/y values are calculated and used internally.</p></li>
@@ -359,20 +332,20 @@ generic functions.</p></li>
 the geotiff band.</p></li>
 <li><p>Updated <code class="docutils literal notranslate"><span class="pre">test</span></code> and <code class="docutils literal notranslate"><span class="pre">dev</span></code> requirements.</p></li>
 </ul>
-</div>
-<div class="section" id="id11">
-<h3>Removed<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id16">
+<h3>Removed<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Deprecate unused functions in <code class="docutils literal notranslate"><span class="pre">pyrate.core.config</span></code> and corresponding tests.</p></li>
 <li><p>Static colourmap <code class="docutils literal notranslate"><span class="pre">utils/colourmap.txt</span></code> that was previously used to render
 quicklook PNG images is removed.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="id12">
-<h2>0.4.1 (2020-05-19)<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id13">
-<h3>Added<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="id17">
+<h2>0.4.1 (2020-05-19)<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h2>
+<section id="id18">
+<h3>Added<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Python 3.8 support.</p></li>
 <li><p>Algorithm to automatically calculate rows and columns for tiling.
@@ -381,18 +354,18 @@ specify <code class="docutils literal notranslate"><span class="pre">rows</span>
 <li><p>Improvements to the test suite, including systems-wide tests.</p></li>
 <li><p>Improved logging.</p></li>
 </ul>
-</div>
-<div class="section" id="id14">
-<h3>Fixed<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id19">
+<h3>Fixed<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Fixed bug in resampling/multi-looking when coherence masking is used.
 This bugfix will result in significantly fewer <code class="docutils literal notranslate"><span class="pre">nan</span></code> pixels in the outputs.</p></li>
 <li><p>Fixed a bug in how NaNs are handled during coherence masking and multi-looking.
 Output rasters will contain <code class="docutils literal notranslate"><span class="pre">nan</span></code> as the nodata value.</p></li>
 </ul>
-</div>
-<div class="section" id="id15">
-<h3>Changed<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id20">
+<h3>Changed<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Linear</span> <span class="pre">Rate</span></code> algorithm has been renamed <code class="docutils literal notranslate"><span class="pre">Stack</span> <span class="pre">Rate</span></code>.</p></li>
 <li><p>User supplies full paths to input files in respective file lists.</p></li>
@@ -400,19 +373,19 @@ Output rasters will contain <code class="docutils literal notranslate"><span cla
 <li><p>Renamed <code class="docutils literal notranslate"><span class="pre">slcfilelist</span></code> parameter to <code class="docutils literal notranslate"><span class="pre">hdrfilelist</span></code>.</p></li>
 <li><p>Log files are generated in the <code class="docutils literal notranslate"><span class="pre">outdir</span></code> and every <cite>PyRate</cite> step produces independent log files.</p></li>
 </ul>
-</div>
-<div class="section" id="id16">
-<h3>Removed<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id21">
+<h3>Removed<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Deprecate the use of <code class="docutils literal notranslate"><span class="pre">obsdir</span></code>, <code class="docutils literal notranslate"><span class="pre">slcfiledir</span></code> and <code class="docutils literal notranslate"><span class="pre">cohdir</span></code> configuration variables.</p></li>
 <li><p>Deprecate <code class="docutils literal notranslate"><span class="pre">parallel</span> <span class="pre">=</span> <span class="pre">2</span></code> option; splitting image via rows for parallelisation.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="id17">
-<h2>0.4.0 (2019-10-31)<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id18">
-<h3>Added<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="id22">
+<h2>0.4.0 (2019-10-31)<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h2>
+<section id="id23">
+<h3>Added<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Python 3.7 support.</p></li>
 <li><p>Optional <code class="docutils literal notranslate"><span class="pre">conv2tif</span></code> step.</p></li>
@@ -426,9 +399,9 @@ for options.</p></li>
 <li><p>Add detailed validation and hints for configuration parameters</p></li>
 <li><p>Add system tests for all 3 types of input formats</p></li>
 </ul>
-</div>
-<div class="section" id="id19">
-<h3>Changed<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id24">
+<h3>Changed<a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">linrate</span></code> step has been renamed to <code class="docutils literal notranslate"><span class="pre">process</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">postprocess</span></code> step has been renamed to <code class="docutils literal notranslate"><span class="pre">merge</span></code>.</p></li>
@@ -439,33 +412,33 @@ for options.</p></li>
 and scripts at <code class="docutils literal notranslate"><span class="pre">PyRate/scripts</span></code>.</p></li>
 <li><p>Reference pixel values are expected to be in latitude and longitude values.</p></li>
 </ul>
-</div>
-<div class="section" id="id20">
-<h3>Removed<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id25">
+<h3>Removed<a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Unused luigi code.</p></li>
 <li><p>References to Matlab.</p></li>
 <li><p>Unused tests for legacy api.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="id21">
-<h2>0.3.0 (2019-07-26)<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id22">
-<h3>Added<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h3>
+</section>
+</section>
+<section id="id26">
+<h2>0.3.0 (2019-07-26)<a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h2>
+<section id="id27">
+<h3>Added<a class="headerlink" href="#id27" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">utils/apt_install.sh</span></code> script that lists Ubuntu/apt package requirements.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">utils/load_modules.sh</span></code> script that sets up NCI Raijin HPC environment.</p></li>
 </ul>
-</div>
-<div class="section" id="id23">
-<h3>Fixed<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id28">
+<h3>Fixed<a class="headerlink" href="#id28" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Errors being caused by newer version of <code class="docutils literal notranslate"><span class="pre">networkx</span></code>; v2.3 now supported.</p></li>
 </ul>
-</div>
-<div class="section" id="id24">
-<h3>Removed<a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id29">
+<h3>Removed<a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Unused Python and OS packages.</p></li>
 <li><p>environment.yml - conda env will now be installed using <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code>.</p></li>
@@ -474,9 +447,9 @@ and scripts at <code class="docutils literal notranslate"><span class="pre">PyRa
 <li><p>Luigi functionality - hasn’t been operational and is reported as vulnerable.
 Single machine parallelism is achieved with joblib.</p></li>
 </ul>
-</div>
-<div class="section" id="id25">
-<h3>Changed<a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h3>
+</section>
+<section id="id30">
+<h3>Changed<a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Requirements now managed by <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> file, parsed by <code class="docutils literal notranslate"><span class="pre">setup.py</span></code>.</p></li>
 <li><p>Requirements now split across base <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> and separate files
@@ -488,60 +461,48 @@ for dev (<code class="docutils literal notranslate"><span class="pre">requiremen
 <li><p>Consolidated documentation into <code class="docutils literal notranslate"><span class="pre">PyRate/docs</span></code>.</p></li>
 <li><p>Updated install instructions for Ubuntu and NCI.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="id26">
-<h2>0.2.0 (2017-05-22)<a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h2>
+</section>
+</section>
+<section id="id31">
+<h2>0.2.0 (2017-05-22)<a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Stable beta release.</p></li>
 </ul>
-</div>
-<div class="section" id="id27">
-<h2>0.1.0 (2017-01-31)<a class="headerlink" href="#id27" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="id32">
+<h2>0.1.0 (2017-01-31)<a class="headerlink" href="#id32" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>First release on PyPI.</p></li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
-           
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &copy; Copyright 2020, Geoscience Australia
-
-    </p>
+    <p>&#169; Copyright 2021, Geoscience Australia.</p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
-  
 <p>placeHolderText</p>
         <!-- your html code here -->
  

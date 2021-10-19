@@ -1,68 +1,36 @@
-
-
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>Reference Phase Calculation Module &mdash; PyRate 0.4.0 documentation</title>
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reference Phase Calculation Module &mdash; PyRate 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
-  
-  
-  
-
-  
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Reference Pixel Calculation Module" href="refpixel.html" />
     <link rel="prev" title="Prepifg Helper Module" href="prepifg_helper.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: white" >
-          
-
-          
             <a href="index.html">
-          
-
-          
-            
             <img src="_static/PyRate_logo.png" class="logo" alt="Logo"/>
-          
           </a>
-
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -70,19 +38,9 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
     <li><a href="https://geoscienceaustralia.github.io/PyRate/">Home</a></li>
     
-            
-            
-              
-            
-            
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies">Dependencies</a></li>
@@ -109,15 +67,18 @@
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">PyRate Modules</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="config.html">Config Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demerror.html">DEM Error Correction Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry.html">Geometry Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ifgconstants.html">Ifgconstants Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="logger.html">Logging Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mpiops.html">MPI operations Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phase_closure.html">Phase Closure Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="prepifg_helper.html">Prepifg Helper Module</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Reference Phase Calculation Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
@@ -147,195 +108,77 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.5.0 (2020-09-08)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id17">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id21">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id26">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id27">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.6.0 (2021-10-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id17">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id26">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id31">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id32">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
 </ul>
 
-            
-          
 
         </div>
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">PyRate</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html">Docs</a> &raquo;</li>
-        
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="modules.html">PyRate Modules</a> &raquo;</li>
-        
       <li>Reference Phase Calculation Module</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-            
-        
       </li>
-    
-  </ul>
-
-  
-  <div class="rst-breadcrumbs-buttons" role="navigation" aria-label="breadcrumb navigation">
-      
-        <a href="refpixel.html" class="btn btn-neutral float-right" title="Reference Pixel Calculation Module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="prepifg_helper.html" class="btn btn-neutral float-left" title="Prepifg Helper Module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+  </ul><div class="rst-breadcrumbs-buttons" role="navigation" aria-label="Sequential page navigation">
+        <a href="prepifg_helper.html" class="btn btn-neutral float-left" title="Prepifg Helper Module" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="refpixel.html" class="btn btn-neutral float-right" title="Reference Pixel Calculation Module" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
   </div>
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="module-pyrate.core.ref_phs_est">
-<span id="reference-phase-calculation-module"></span><h1>Reference Phase Calculation Module<a class="headerlink" href="#module-pyrate.core.ref_phs_est" title="Permalink to this headline">¶</a></h1>
-<p>This Python module implements a reference phase estimation algorithm.</p>
-<dl class="py exception">
-<dt id="pyrate.core.ref_phs_est.ReferencePhaseError">
-<em class="property">exception </em><code class="sig-prename descclassname">pyrate.core.ref_phs_est.</code><code class="sig-name descname">ReferencePhaseError</code><a class="reference internal" href="_modules/pyrate/core/ref_phs_est.html#ReferencePhaseError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.ref_phs_est.ReferencePhaseError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generic class for errors in reference phase estimation.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt id="pyrate.core.ref_phs_est.est_ref_phase_ifg_median">
-<code class="sig-prename descclassname">pyrate.core.ref_phs_est.</code><code class="sig-name descname">est_ref_phase_ifg_median</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifg_paths</span></em>, <em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/ref_phs_est.html#est_ref_phase_ifg_median"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.ref_phs_est.est_ref_phase_ifg_median" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reference phase estimation, calculated as the median of the whole
-interferogram image.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifg_paths</strong> (<em>list</em>) – List of interferogram paths or objects</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>ref_phs: Numpy array of reference phase values of size (nifgs, 1)</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>ifgs: Reference phase data is removed interferograms in place</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="pyrate.core.ref_phs_est.est_ref_phase_patch_median">
-<code class="sig-prename descclassname">pyrate.core.ref_phs_est.</code><code class="sig-name descname">est_ref_phase_patch_median</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ifg_paths</span></em>, <em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">refpx</span></em>, <em class="sig-param"><span class="n">refpy</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/ref_phs_est.html#est_ref_phase_patch_median"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.ref_phs_est.est_ref_phase_patch_median" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reference phase estimation, calculated as the median within a patch around
-the supplied reference pixel.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifg_paths</strong> (<em>list</em>) – List of interferogram paths or objects.</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p></li>
-<li><p><strong>refpx</strong> (<em>int</em>) – Reference pixel X found by ref pixel method</p></li>
-<li><p><strong>refpy</strong> (<em>int</em>) – Reference pixel Y found by ref pixel method</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>ref_phs: Numpy array of reference phase values of size (nifgs, 1)</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>ifgs: Reference phase data is removed interferograms in place</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt id="pyrate.core.ref_phs_est.ref_phase_est_wrapper">
-<code class="sig-prename descclassname">pyrate.core.ref_phs_est.</code><code class="sig-name descname">ref_phase_est_wrapper</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/ref_phs_est.html#ref_phase_est_wrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyrate.core.ref_phs_est.ref_phase_est_wrapper" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper for reference phase estimation.</p>
-</dd></dl>
-
-</div>
+             
+  <section id="reference-phase-calculation-module">
+<h1>Reference Phase Calculation Module<a class="headerlink" href="#reference-phase-calculation-module" title="Permalink to this headline">¶</a></h1>
+</section>
 
 
            </div>
-           
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &copy; Copyright 2020, Geoscience Australia
-
-    </p>
+    <p>&#169; Copyright 2021, Geoscience Australia.</p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
-
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
-
-  
-  
-    
-  
 <p>placeHolderText</p>
         <!-- your html code here -->
  

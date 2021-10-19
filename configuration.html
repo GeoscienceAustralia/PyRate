@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuration Module &mdash; PyRate 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Covariance Module" href="covariance.html" />
+    <link rel="prev" title="Atmospheric Phase Screen Module" href="aps.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+            <a href="index.html">
+            <img src="_static/PyRate_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+    <li><a href="https://geoscienceaustralia.github.io/PyRate/">Home</a></li>
+    
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#platforms">Platforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#verify-installation">Verify Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#input-files">Input Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#results-visualisation">Results Visualisation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.correct.html">PyRate Correct Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.main.html">PyRate Main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">PyRate Modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Configuration Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demerror.html">DEM Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry.html">Geometry Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ifgconstants.html">Ifgconstants Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logger.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mpiops.html">MPI operations Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phase_closure.html">Phase Closure Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepifg_helper.html">Prepifg Helper Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stack.html">Stacking Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeseries.html">Time Series Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#incorrect-modules-loaded-on-gadi">Incorrect modules loaded on Gadi</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#types-of-contributions">Types of Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.6.0 (2021-10-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id17">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id26">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id31">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id32">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+</ul>
+
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyRate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">PyRate Modules</a> &raquo;</li>
+      <li>Configuration Module</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul><div class="rst-breadcrumbs-buttons" role="navigation" aria-label="Sequential page navigation">
+        <a href="aps.html" class="btn btn-neutral float-left" title="Atmospheric Phase Screen Module" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="covariance.html" class="btn btn-neutral float-right" title="Covariance Module" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+  </div>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="configuration-module">
+<h1>Configuration Module<a class="headerlink" href="#configuration-module" title="Permalink to this headline">¶</a></h1>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+<p>placeHolderText</p>
+        <!-- your html code here -->
+ 
+
+
+</body>
+</html>

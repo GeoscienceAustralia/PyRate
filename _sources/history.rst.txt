@@ -3,6 +3,50 @@
 Release History
 ===============
 
+0.6.0 (2021-10-18)
+------------------
+Added
++++++
+- Geometry and baseline calculations, making use of GAMMA software MLI metadata and baseline files.
+- DEM error estimation and correction functionality (untested prototype).
+- Unwrapping error detection and masking functionality, making use of phase closure loops.
+- Tests to check that the independent and network orbital methods are both able to recover the input parameters in synthetic examples.
+- Tests for temporal and spatial gaussian filter options. Compare PyRate code against ``scipy.ndimage`` equivalents.
+- More output visualisation scripts in the ``utils/`` directory, including an interferogram plotting script.
+- New "Crop A" unit test dataset derived from Sentinel-1 data over Mexico City.
+- Scaling factor parameter ``velerror_nsig`` for uncertainty/error output products.
+- Calculate and output coherence statistics files during ``prepifg``.
+- Add line-of-sight projection functionality for output products.
+- Add signal polarity switching functionality for output products.
+- Error handling for more than two MLI.par files in the header list matching an interferograms date-pair.
+
+Fixed
++++++
+- Fix bugs in the application of NaN masking and radian-to-millimetre conversion of interferogram data in ``correct`` step.
+- Fix bugs in the implementation of the orbital error network and independent methods.
+- Fix bugs in the implementation of spatial and temporal filters in the APS module.
+- Fix bug in the application of reference phase subtraction that resulted in NaNs in the reference window.
+- Fix file handling behaviour in ``prepifg`` so that a large number of files are not left open.
+
+Changed
++++++++
+- Enabled multi-looking and parallel processing for the independent orbital method.
+- Simplify output filenames produced by PyRate.
+- Move output files to dedicated named sub-directories. 
+- Use of the ``offset`` parameter in orbital module; now renamed to ``intercept``.
+- Input rasters to ``conv2tif`` can now have un-equal X and Y pixel resolutions.
+- Change units of temporal filter from years to days.
+- Moved Continuous Integration from Travis service to GitHub Actions.
+- Made MPI an optional system dependency for PyRate (previously required).
+
+Removed
++++++++
+- Remove unused cython, glob2 and pillow dependencies.
+- Remove support for Python 3.6.
+- Remove support for filter types other than Gaussian in the APS module, and associated config options ``slpfmethod``, ``slpforder``, ``tlpfmethod``.
+- ``config`` module deprecated; functionality moved to ``configuration``, ``shared`` and ``constants`` modules.
+- Deprecated ``obs_dir``, ``slc_dir`` and ``coh_file_dir`` configuration parameters.
+
 0.5.0 (2020-09-08)
 ------------------
 Added

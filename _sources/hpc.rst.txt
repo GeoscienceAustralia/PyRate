@@ -13,15 +13,15 @@ Login to Gadi and clone the `PyRate` repository::
     cd ~
     git clone https://github.com/GeoscienceAustralia/PyRate.git
 
-Create a Python virtual environment::
-
-    python3 -m venv ~/PyRateVenv
-    source ~/PyRateVenv/bin/activate
-
 Load the required Gadi modules (this will also remove the default NCI GDAL
 Python bindings so we can build and use our own)::
 
     source ~/PyRate/scripts/nci_load_modules.sh
+
+Create a Python virtual environment::
+
+    python3 -m venv ~/PyRateVenv
+    source ~/PyRateVenv/bin/activate
 
 Install `PyRate`::
 
@@ -34,7 +34,8 @@ installation, first run an interactive session::
     qsub -I -q express -l walltime=01:00:00,mem=16Gb,ncpus=4,wd
 
 Once the session has started, you will need to reactivate your virtual 
-environment and reload the required modules::
+environment and reload the required modules. 
+There is a call to activate the virtual environment built into the
+script below so this can be completed with a single command::
 
-    source ~/PyRateVenv/bin/activate
     source ~/PyRate/scripts/nci_load_modules.sh
