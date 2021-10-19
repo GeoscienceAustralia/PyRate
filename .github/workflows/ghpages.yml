@@ -13,6 +13,7 @@ jobs:
         uses: ammaraskar/sphinx-action@master
         with:
           docs-folder: "docs/"
+          pre-build-command: "pip install -r requirements-dev.txt"
         #        run: |
         #  pip install -r requirements-dev.txt
         #  echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
