@@ -192,5 +192,3 @@ linkcheck_ignore = [r'http://localhost:\d+/',
                     'https://github.com/Nekroze/PyRate/fork']
 
 
-def setup(app):
-    app.add_stylesheet('css/custom.css')
