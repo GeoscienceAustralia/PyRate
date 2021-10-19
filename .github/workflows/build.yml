@@ -47,39 +47,47 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
       - name: Cache multiple paths
         uses: actions/cache@v2
         with:
           path: |
             /home/runner/gdalinstall
           key: ${{ runner.os }}-cache-GDAL-${{ matrix.GDALVERSION }}-proj-${{ matrix.PROJVERSION }}
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Common set up ${{ matrix.python-version }}
         run: |
           sudo apt update
           sudo apt upgrade
           python -m pip install -U pip wheel
+
       - name: Install packages including openmpi
         if: env.PYTHONVERSION != '3.9'
         run: sudo apt install libhdf5-serial-dev libnetcdf13 libatlas-base-dev gfortran openmpi-bin libopenmpi-dev
+
       - name: Install packages except openmpi libraries
         if: env.PYTHONVERSION == '3.9'
         run: sudo apt install libhdf5-serial-dev libnetcdf13 libatlas-base-dev gfortran
+
       - name: Install proj ${{matrix.PROJVERSION}}
         run: |
           echo "PATH=$GDALINST/gdal-$GDALVERSION/bin:$PATH" >> $GITHUB_ENV
           echo "LD_LIBRARY_PATH=$GDALINST/gdal-$GDALVERSION/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
           source ./scripts/ci_proj_install.sh
+
       - name: Install GDAL ${{matrix.GDALVERSION}}
         run: |
           echo "GDAL_DATA=$GDALINST/gdal-$GDALVERSION/share/gdal" >> $GITHUB_ENV
           echo "PROJ_LIB=$GDALINST/gdal-$GDALVERSION/share/proj" >> $GITHUB_ENV
           echo "LDFLAGS=-L$GDALINST/gdal-$GDALVERSION/lib -Wl,-rpath,$GDALINST/gdal-$GDALVERSION/lib" >> $GITHUB_ENV
           source ./scripts/ci_gdal_install.sh
-      - name: Python ${{ matrix.python-version }} with MPI
+
+      - name: Install PyRate with Python ${{ matrix.python-version }} and with MPI
         if: env.PYTHONVERSION != '3.9'
         run: |
           python setup.py install
@@ -87,7 +95,8 @@ jobs:
           echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
           chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif  # makes the file readonly, used in a test
           pip install -r requirements-dev.txt -r requirements-test.txt
-      - name: Python ${{ matrix.python-version }} without MPI
+
+      - name: Install PyRate with Python ${{ matrix.python-version }} and without MPI
         if: env.PYTHONVERSION == '3.9'
         run: |
           python setup.py install
@@ -95,16 +104,20 @@ jobs:
           echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
           chmod 444 tests/test_data/small_test/tif/geo_070709-070813_unw.tif  # makes the file readonly, used in a test
           pip install -r requirements-test.txt
-      - name: Test Pyrate in Python ${{ matrix.python-version }} with MPI
+
+      - name: Test PyRate in Python ${{ matrix.python-version }} with MPI
         if: env.PYTHONVERSION != '3.9'
         run: |
           pytest tests/ -m "slow"
           mpirun -n 3 pytest tests/test_shared.py -k test_tiles_split -s
           pytest --cov-config=.coveragerc --cov-report xml --cov=pyrate tests/ -m "not slow"
-      - name: Test Pyrate in Python ${{ matrix.python-version }} without MPI
+
+      - name: Test PyRate in Python ${{ matrix.python-version }} without MPI
         if: env.PYTHONVERSION == '3.9'
         run: |
           pytest tests/ -m "not mpi and slow"
           pytest --cov-config=.coveragerc --cov-report xml --cov=pyrate tests/ -m "not slow and not mpi"
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
+
