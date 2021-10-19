@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Logging Module &mdash; PyRate 0.6.0 documentation</title>
+  <title>Python Module Index &mdash; PyRate 0.6.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
@@ -19,8 +18,9 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="MPI operations Module" href="mpiops.html" />
-    <link rel="prev" title="Ifgconstants Module" href="ifgconstants.html" /> 
+ 
+
+
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,7 +41,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
     <li><a href="https://geoscienceaustralia.github.io/PyRate/">Home</a></li>
     
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies">Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#platforms">Platforms</a></li>
@@ -64,7 +64,7 @@
 <li class="toctree-l2"><a class="reference internal" href="pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">PyRate Modules</a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">PyRate Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration Module</a></li>
@@ -74,7 +74,7 @@
 <li class="toctree-l2"><a class="reference internal" href="geometry.html">Geometry Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ifgconstants.html">Ifgconstants Module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logger.html">Logging Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mpiops.html">MPI operations Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
@@ -136,48 +136,58 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">PyRate Modules</a> &raquo;</li>
-      <li>Logging Module</li>
+      <li>Python Module Index</li>
       <li class="wy-breadcrumbs-aside">
       </li>
-  </ul><div class="rst-breadcrumbs-buttons" role="navigation" aria-label="Sequential page navigation">
-        <a href="ifgconstants.html" class="btn btn-neutral float-left" title="Ifgconstants Module" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="mpiops.html" class="btn btn-neutral float-right" title="MPI operations Module" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-  </div>
+  </ul>
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pyrate.core.logger">
-<span id="logging-module"></span><h1>Logging Module<a class="headerlink" href="#module-pyrate.core.logger" title="Permalink to this headline">¶</a></h1>
-<p>This Python module contains functions to control PyRate log outputs</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="pyrate.core.logger.MPIStreamHandler">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pyrate.core.logger.</span></span><span class="sig-name descname"><span class="pre">MPIStreamHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/logger.html#MPIStreamHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.logger.MPIStreamHandler" title="Permalink to this definition">¶</a></dt>
-<dd><p>Only logs messages from Node 0</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="pyrate.core.logger.MPIStreamHandler.emit">
-<span class="sig-name descname"><span class="pre">emit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/logger.html#MPIStreamHandler.emit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.logger.MPIStreamHandler.emit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Emit a record.</p>
-<p>If a formatter is specified, it is used to format the record.
-The record is then written to the stream with a trailing newline.  If
-exception information is present, it is formatted using
-traceback.print_exception and appended to the stream.  If the stream
-has an ‘encoding’ attribute, it is used to determine how to do the
-output to the stream.</p>
-</dd></dl>
 
-</dd></dl>
+   <h1>Python Module Index</h1>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.logger.warn_with_traceback">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.logger.</span></span><span class="sig-name descname"><span class="pre">warn_with_traceback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">category</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lineno</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/logger.html#warn_with_traceback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.logger.warn_with_traceback" title="Permalink to this definition">¶</a></dt>
-<dd><p>copied from:
-<a class="reference external" href="http://stackoverflow.com/questions/22373927/get-traceback-of-warnings">http://stackoverflow.com/questions/22373927/get-traceback-of-warnings</a></p>
-</dd></dl>
+   <div class="modindex-jumpbox">
+   <a href="#cap-p"><strong>p</strong></a>
+   </div>
 
-</section>
+   <table class="indextable modindextable">
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-p"><td></td><td>
+       <strong>p</strong></td><td></td></tr>
+     <tr>
+       <td><img src="_static/minus.png" class="toggler"
+              id="toggle-1" style="display: none" alt="-" /></td>
+       <td>
+       <code class="xref">pyrate</code></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="ifgconstants.html#module-pyrate.core.ifgconstants"><code class="xref">pyrate.core.ifgconstants</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="logger.html#module-pyrate.core.logger"><code class="xref">pyrate.core.logger</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="mpiops.html#module-pyrate.core.mpiops"><code class="xref">pyrate.core.mpiops</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="phase_closure.html#module-pyrate.core.phase_closure.collect_loops"><code class="xref">pyrate.core.phase_closure.collect_loops</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="phase_closure.html#module-pyrate.core.phase_closure.correct_phase"><code class="xref">pyrate.core.phase_closure.correct_phase</code></a></td><td>
+       <em></em></td></tr>
+   </table>
 
 
            </div>
