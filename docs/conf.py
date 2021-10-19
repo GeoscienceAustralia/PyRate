@@ -3,7 +3,10 @@
 import os
 import datetime
 import sphinx_rtd_theme
+import sys
 
+# add the top level dir to the path
+sys.path.insert(0, os.path.abspath('../..'))
 
 __version__ = "0.6.0"
 # -- General configuration ------------------------------------------------

@@ -12,7 +12,7 @@ jobs:
       - name: Install and Build Html pages
         run: |
           pip install -r requirements-dev.txt
-          echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
+          #echo "PYTHONPATH=$(pwd):$PYTHONPATH" >> $GITHUB_ENV
           #sphinx-build -a docs/ docs/_build/
           cd docs && make html
       - name: Deploy to gh-pages
