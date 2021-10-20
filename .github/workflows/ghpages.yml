@@ -12,7 +12,7 @@ jobs:
       - name: Install and Build Html pages
         run: |
           sudo apt-get update
-          sudo apt-get install gdal-data gdal-bin libgdal-dev mpi
+          sudo apt-get install gdal-data gdal-bin libgdal-dev libopenmpi-dev
           cd docs
           pip install -r requirements.txt
           sphinx-build -E -a -b html . _build
