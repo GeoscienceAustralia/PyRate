@@ -279,7 +279,7 @@ out_type_md_dict = {
 }
 
 error_out_types = {'linear_error', 'stack_error'}
-los_projection_out_types = {'tsincr', 'tscuml', 'linear_rate', 'stack_rate'}
+los_projection_out_types = {'tsincr', 'tscuml', 'linear_rate', 'linear_intercept', 'stack_rate'}
 los_projection_divisors = {
     ifc.LINE_OF_SIGHT: lambda data: 1,
     ifc.PSEUDO_VERTICAL: lambda data: np.cos(data),
