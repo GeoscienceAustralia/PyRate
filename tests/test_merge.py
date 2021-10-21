@@ -119,8 +119,8 @@ class TestLOSConversion:
         los_proj_dir = all_dirs[ifc.LINE_OF_SIGHT]
         pseudo_ver = all_dirs[ifc.PSEUDO_VERTICAL]
         pseudo_hor = all_dirs[ifc.PSEUDO_HORIZONTAL]
-        num_files = 24 if params[C.PHASE_CLOSURE] else 26  # phase closure removes 1 interferogram
-        assert len(list(los_proj_dir.glob('*.tif'))) == num_files  # 12 tsincr, 12 tscuml + 1 stack rate + 1 linear rate
+        num_files = 25 if params[C.PHASE_CLOSURE] else 27  # phase closure removes 1 interferogram
+        assert len(list(los_proj_dir.glob('*.tif'))) == num_files  # 12 tsincr, 12 tscuml + 1 stack rate + 1 linear rate + 1 linear intercept
         signal_polarity_reversed_pseudo_hor = all_dirs[C.SIGNAL_POLARITY]
 
         for tif in los_proj_dir.glob('*.tif'):
