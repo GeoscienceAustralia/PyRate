@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Algorithm Module &mdash; PyRate 0.6.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Atmospheric Phase Screen Module" href="aps.html" />
+    <link rel="prev" title="PyRate Modules" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+            <a href="index.html">
+            <img src="_static/PyRate_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+    <li><a href="https://geoscienceaustralia.github.io/PyRate/">Home</a></li>
+    
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#platforms">Platforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#verify-installation">Verify Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#input-files">Input Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#results-visualisation">Results Visualisation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.prepifg.html">PyRate Prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.correct.html">PyRate Correct Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.merge.html">PyRate Merge Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pyrate.main.html">PyRate Main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">PyRate Modules</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demerror.html">DEM Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry.html">Geometry Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ifgconstants.html">Ifgconstants Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logger.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mpiops.html">MPI operations Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phase_closure.html">Phase Closure Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepifg_helper.html">Prepifg Helper Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stack.html">Stacking Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timeseries.html">Time Series Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#incorrect-modules-loaded-on-gadi">Incorrect modules loaded on Gadi</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#types-of-contributions">Types of Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.6.0 (2021-10-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id17">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id26">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id31">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id32">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+</ul>
+
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyRate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">PyRate Modules</a> &raquo;</li>
+      <li>Algorithm Module</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul><div class="rst-breadcrumbs-buttons" role="navigation" aria-label="Sequential page navigation">
+        <a href="modules.html" class="btn btn-neutral float-left" title="PyRate Modules" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="aps.html" class="btn btn-neutral float-right" title="Atmospheric Phase Screen Module" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+  </div>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-pyrate.core.algorithm">
+<span id="algorithm-module"></span><h1>Algorithm Module<a class="headerlink" href="#module-pyrate.core.algorithm" title="Permalink to this headline">¶</a></h1>
+<p>This Python module contains a collection of generic algorithms used in PyRate</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pyrate.core.algorithm.factorise_integer">
+<span class="sig-prename descclassname"><span class="pre">pyrate.core.algorithm.</span></span><span class="sig-name descname"><span class="pre">factorise_integer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#factorise_integer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.algorithm.factorise_integer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns two factors a and b of a supplied number n such that a * b = n.
+The two factors are evaluated to be as close to each other in size as possible</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<em>int</em>) – Number to factorise</p></li>
+<li><p><strong>memo</strong> (<em>dict</em>) – dictionary of candidate factors</p></li>
+<li><p><strong>left</strong> (<em>int</em>) – operation flag (default = 2)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a, factor one</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>b, factor two</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyrate.core.algorithm.first_second_ids">
+<span class="sig-prename descclassname"><span class="pre">pyrate.core.algorithm.</span></span><span class="sig-name descname"><span class="pre">first_second_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#first_second_ids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.algorithm.first_second_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dictionary of ‘date:unique ID’ for each date in ‘dates’.
+IDs are ordered from oldest to newest, starting at 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dates</strong> (<em>list</em>) – List of dates</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>unique dates IDs</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyrate.core.algorithm.get_all_epochs">
+<span class="sig-prename descclassname"><span class="pre">pyrate.core.algorithm.</span></span><span class="sig-name descname"><span class="pre">get_all_epochs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifgs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#get_all_epochs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.algorithm.get_all_epochs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a sequence of all image dates used to form given interferograms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ifgs</strong> (<em>list</em>) – List of interferogram objects</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of all image dates</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyrate.core.algorithm.get_epochs">
+<span class="sig-prename descclassname"><span class="pre">pyrate.core.algorithm.</span></span><span class="sig-name descname"><span class="pre">get_epochs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifgs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Iterable</span><span class="p"><span class="pre">,</span> </span><span class="pre">Dict</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="shared.html#pyrate.core.shared.EpochList" title="pyrate.core.shared.EpochList"><span class="pre">pyrate.core.shared.EpochList</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#get_epochs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.algorithm.get_epochs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an EpochList derived from the given interferograms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ifgs</strong> – List of interferogram objects</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>EpochList</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyrate.core.algorithm.ifg_date_index_lookup">
+<span class="sig-prename descclassname"><span class="pre">pyrate.core.algorithm.</span></span><span class="sig-name descname"><span class="pre">ifg_date_index_lookup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifgs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_pair</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#ifg_date_index_lookup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.algorithm.ifg_date_index_lookup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Interferogram index which has the first and second image
+dates given in ‘date_pair’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ifgs</strong> (<em>list</em>) – List of interferogram objects to search</p></li>
+<li><p><strong>date_pair</strong> (<em>tuple</em>) – A (datetime.date, datetime.date)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>interferogram index</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyrate.core.algorithm.ifg_date_lookup">
+<span class="sig-prename descclassname"><span class="pre">pyrate.core.algorithm.</span></span><span class="sig-name descname"><span class="pre">ifg_date_lookup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifgs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_pair</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#ifg_date_lookup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.algorithm.ifg_date_lookup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Interferogram which has the first and second dates given
+in ‘date_pair’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ifgs</strong> (<em>list</em>) – List of interferogram objects to search</p></li>
+<li><p><strong>date_pair</strong> (<em>tuple</em>) – A (datetime.date, datetime.date)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>interferogram list</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyrate.core.algorithm.is_square">
+<span class="sig-prename descclassname"><span class="pre">pyrate.core.algorithm.</span></span><span class="sig-name descname"><span class="pre">is_square</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#is_square"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.algorithm.is_square" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines whether an array is square or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>arr</strong> (<em>ndarray</em>) – numpy array</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>condition</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyrate.core.algorithm.least_squares_covariance">
+<span class="sig-prename descclassname"><span class="pre">pyrate.core.algorithm.</span></span><span class="sig-name descname"><span class="pre">least_squares_covariance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#least_squares_covariance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.algorithm.least_squares_covariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Least squares solution in the presence of known covariance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>A</strong> (<em>ndarray</em>) – Design matrix</p></li>
+<li><p><strong>b</strong> (<em>ndarray</em>) – Observations (vector of phase values)</p></li>
+<li><p><strong>v</strong> (<em>ndarray</em>) – Covariances (vector of weights)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>solution</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyrate.core.algorithm.los_conversion">
+<span class="sig-prename descclassname"><span class="pre">pyrate.core.algorithm.</span></span><span class="sig-name descname"><span class="pre">los_conversion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phase_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit_vec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#los_conversion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.algorithm.los_conversion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts phase from line-of-sight (LOS) to horizontal/vertical components.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>phase_data</strong> (<em>ndarray</em>) – Phase band data array (eg. ifg.phase_data)</p></li>
+<li><p><strong>unit_vec</strong> (<em>tuple</em>) – 3 component unit vector e.g. (EW, NS, vertical)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>converted_phase</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyrate.core.algorithm.unit_vector">
+<span class="sig-prename descclassname"><span class="pre">pyrate.core.algorithm.</span></span><span class="sig-name descname"><span class="pre">unit_vector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incidence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">azimuth</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/algorithm.html#unit_vector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.algorithm.unit_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns unit vector tuple (east_west, north_south, vertical).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>incidence</strong> (<em>float</em>) – incidence angle w.r.t. nadir</p></li>
+<li><p><strong>azimuth</strong> (<em>float</em>) – azimuth of looking vector</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Unit vector (EW, NS, vertical).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+<p>placeHolderText</p>
+        <!-- your html code here -->
+ 
+
+
+</body>
+</html>

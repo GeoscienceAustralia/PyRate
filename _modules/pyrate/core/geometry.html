@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyrate.core.geometry &mdash; PyRate 0.6.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/plot_directive.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+            <a href="../../../index.html">
+            <img src="../../../_static/PyRate_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+    <li><a href="https://geoscienceaustralia.github.io/PyRate/">Home</a></li>
+    
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#platforms">Platforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#verify-installation">Verify Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#input-files">Input Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#results-visualisation">Results Visualisation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.prepifg.html">PyRate Prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.correct.html">PyRate Correct Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.merge.html">PyRate Merge Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.main.html">PyRate Main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">PyRate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../configuration.html">Configuration Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../demerror.html">DEM Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../geometry.html">Geometry Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../ifgconstants.html">Ifgconstants Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../logger.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../mpiops.html">MPI operations Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../phase_closure.html">Phase Closure Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../prepifg_helper.html">Prepifg Helper Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stack.html">Stacking Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../timeseries.html">Time Series Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#incorrect-modules-loaded-on-gadi">Incorrect modules loaded on Gadi</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing.html#types-of-contributions">Types of Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.6.0 (2021-10-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id17">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id26">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id31">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id32">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+</ul>
+
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">PyRate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>pyrate.core.geometry</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyrate.core.geometry</h1><div class="highlight"><pre>
+<span></span><span class="c1">#   This Python module is part of the PyRate software package.</span>
+<span class="c1">#</span>
+<span class="c1">#   Copyright 2021 Geoscience Australia</span>
+<span class="c1">#</span>
+<span class="c1">#   Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1">#   you may not use this file except in compliance with the License.</span>
+<span class="c1">#   You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#       http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1">#   Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1">#   distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1">#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1">#   See the License for the specific language governing permissions and</span>
+<span class="c1">#   limitations under the License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This Python module implements the calculation and output of the per-pixel vector of the radar viewing geometry</span>
+<span class="sd">(i.e. local angles, incidence angles and azimuth angles) as well as the calculation of per-pixel baseline values</span>
+<span class="sd">used for correcting interferograms for residual topographic effects (a.k.a. DEM errors).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># pylint: disable=invalid-name, too-many-locals, too-many-arguments</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">pyrate.constants</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="k">import</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.gamma</span> <span class="k">import</span> <span class="n">read_lookup_table</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="k">import</span> <span class="n">Ifg</span><span class="p">,</span> <span class="n">IfgPart</span><span class="p">,</span> <span class="n">MemGeometry</span>
+
+
+<div class="viewcode-block" id="get_lonlat_coords"><a class="viewcode-back" href="../../../geometry.html#pyrate.core.geometry.get_lonlat_coords">[docs]</a><span class="k">def</span> <span class="nf">get_lonlat_coords</span><span class="p">(</span><span class="n">ifg</span><span class="p">:</span> <span class="n">Ifg</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">MemGeometry</span><span class="p">,</span> <span class="n">MemGeometry</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to get longitude and latitude coordinates for each pixel in the multi-looked.</span>
+<span class="sd">    interferogram dataset. Coordinates are identical for each interferogram in the stack.</span>
+<span class="sd">    :param ifg: pyrate.core.shared.Ifg Class object.</span>
+<span class="sd">    :return: lon: Longitude for each pixel (decimal degrees)</span>
+<span class="sd">    :return: lat: Latitude for each pixel (decimal degrees)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># assume all interferograms have same projection and will share the same transform</span>
+    <span class="n">transform</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">GetGeoTransform</span><span class="p">()</span>
+    <span class="c1"># number of rows and columns in dataset</span>
+    <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span> <span class="o">=</span> <span class="n">ifg</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">yOrigin</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">pixelHeight</span> <span class="o">=</span> <span class="o">-</span><span class="n">transform</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+    <span class="n">xOrigin</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">pixelWidth</span> <span class="o">=</span> <span class="n">transform</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">lons</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ncols</span><span class="p">)</span> <span class="o">*</span> <span class="n">pixelWidth</span> <span class="o">+</span> <span class="n">xOrigin</span>
+    <span class="n">lats</span> <span class="o">=</span> <span class="n">yOrigin</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nrows</span><span class="p">)</span> <span class="o">*</span> <span class="n">pixelHeight</span>
+    <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">lons</span><span class="p">,</span> <span class="n">lats</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">MemGeometry</span><span class="p">(</span><span class="n">lon</span><span class="p">),</span> <span class="n">MemGeometry</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="calc_radar_coords"><a class="viewcode-back" href="../../../geometry.html#pyrate.core.geometry.calc_radar_coords">[docs]</a><span class="k">def</span> <span class="nf">calc_radar_coords</span><span class="p">(</span><span class="n">ifg</span><span class="p">:</span> <span class="n">Ifg</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">xmin</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">xmax</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                      <span class="n">ymin</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ymax</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to calculate radar coordinates for each pixel in the multi-looked</span>
+<span class="sd">    interferogram dataset. Radar coordinates are identical for each interferogram</span>
+<span class="sd">    in the stack. Uses the Gamma lookup table defined in the configuration file.</span>
+<span class="sd">    :param ifg: pyrate.core.shared.Ifg Class object.</span>
+<span class="sd">    :param params: Dictionary of PyRate configuration parameters.</span>
+<span class="sd">    :param xmin: Minimum longitude of cropped image (decimal degrees).</span>
+<span class="sd">    :param xmax: Maximum longitude of cropped image (decimal degrees)</span>
+<span class="sd">    :param ymin: Minimum latitude of cropped image (decimal degrees).</span>
+<span class="sd">    :param ymax: Maximum latitude of cropped image (decimal degrees)</span>
+<span class="sd">    :return: lt_az: Radar geometry azimuth coordinate for each pixel.</span>
+<span class="sd">    :return: lt_rg: Radar geometry range coordinate for each pixel.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># lookup table file:</span>
+    <span class="n">lookup_table</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">LT_FILE</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">lookup_table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;No lookup table file supplied: Geometry cannot be computed&quot;</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># PyRate IFG multi-looking factors</span>
+    <span class="n">ifglksx</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">IFG_LKSX</span><span class="p">]</span>
+    <span class="n">ifglksy</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">IFG_LKSY</span><span class="p">]</span>
+    <span class="c1"># transform float lookup table file to np array, min/max pixel coordinates are required for cropping</span>
+    <span class="n">lt_az</span><span class="p">,</span> <span class="n">lt_rg</span> <span class="o">=</span> <span class="n">read_lookup_table</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">lookup_table</span><span class="p">,</span> <span class="n">ifglksx</span><span class="p">,</span> <span class="n">ifglksy</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">)</span>
+    <span class="c1"># replace 0.0 with NaN</span>
+    <span class="n">lt_az</span><span class="p">[</span><span class="n">lt_az</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">lt_rg</span><span class="p">[</span><span class="n">lt_rg</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="k">return</span> <span class="n">lt_az</span><span class="p">,</span> <span class="n">lt_rg</span></div>
+
+
+<div class="viewcode-block" id="get_sat_positions"><a class="viewcode-back" href="../../../geometry.html#pyrate.core.geometry.get_sat_positions">[docs]</a><span class="k">def</span> <span class="nf">get_sat_positions</span><span class="p">(</span><span class="n">lat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">lon</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">look_angle</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">inc_angle</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                      <span class="n">heading</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">look_dir</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to calculate the lon/lat position of the satellite for each pixel.</span>
+<span class="sd">    :param lat: Ground latitude for each pixel (decimal degrees).</span>
+<span class="sd">    :param lon: Ground point longitude for each pixel (decimal degrees).</span>
+<span class="sd">    :param look_angle: Look angle (between nadir and look vector) for each pixel (radians).</span>
+<span class="sd">    :param inc_angle: Local incidence angle (between vertical and look vector) for each pixel (radians).</span>
+<span class="sd">    :param heading: Satellite flight heading (radians).</span>
+<span class="sd">    :param look_dir: Look direction w.r.t. satellite heading; +ve = right looking (radians).</span>
+<span class="sd">    :return: sat_lat: Satellite position latitude for each pixel (decimal degrees).</span>
+<span class="sd">    :return: sat_lon: Satellite position longitude for each pixel (decimal degrees).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># note that the accuracy of satellite lat/lon positions code could be improved by calculating satellite positions</span>
+    <span class="c1"># for each azimuth row from orbital state vectors given in .par file, using the following workflow:</span>
+    <span class="c1"># 1. read orbital state vectors and start/stop times from mli.par</span>
+    <span class="c1"># 2. for each pixel get the corresponding radar row (from matrix az)</span>
+    <span class="c1"># 3. get the corresponding radar time for that row (using linear interpolation)</span>
+    <span class="c1"># 4. calculate the satellite XYZ position for that time by interpolating the time and velocity state vectors</span>
+
+    <span class="c1"># angle at the Earth&#39;s center between se and re</span>
+    <span class="n">epsilon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">look_angle</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">inc_angle</span><span class="p">)</span>
+    <span class="c1"># azimuth of satellite look vector (satellite heading + look direction (+90 deg for right-looking SAR)</span>
+    <span class="n">sat_azi</span> <span class="o">=</span> <span class="n">heading</span> <span class="o">+</span> <span class="n">look_dir</span>
+    <span class="c1"># the following equations are adapted from Section 4.4 (page 4-16) in EARTH-REFERENCED AIRCRAFT NAVIGATION AND</span>
+    <span class="c1"># SURVEILLANCE ANALYSIS (https://ntlrepository.blob.core.windows.net/lib/59000/59300/59358/DOT-VNTSC-FAA-16-12.pdf)</span>
+    <span class="n">sat_lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">epsilon</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">sat_azi</span><span class="p">)))),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat</span><span class="p">))</span> <span class="o">+</span> <span class="n">lon</span>  <span class="c1"># Eq. 103</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">sat_azi</span> <span class="o">+</span> <span class="n">sat_lon</span> <span class="o">-</span> <span class="n">lon</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">sat_azi</span> <span class="o">-</span> <span class="n">sat_lon</span> <span class="o">+</span> <span class="n">lon</span><span class="p">))),</span> \
+                       <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">lat</span> <span class="o">-</span> <span class="n">epsilon</span><span class="p">)))</span>  <span class="c1"># Eq. 104</span>
+    <span class="n">sat_lat</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">sat_lat</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">sat_lon</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="calc_pixel_geometry"><a class="viewcode-back" href="../../../geometry.html#pyrate.core.geometry.calc_pixel_geometry">[docs]</a><span class="k">def</span> <span class="nf">calc_pixel_geometry</span><span class="p">(</span><span class="n">ifg</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Ifg</span><span class="p">,</span> <span class="n">IfgPart</span><span class="p">],</span> <span class="n">rg</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">lon</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">lat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                        <span class="n">dem_height</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to calculate angular satellite to ground geometries and distance for each pixel.</span>
+<span class="sd">    :param ifg: pyrate.core.shared.Ifg Class object.</span>
+<span class="sd">    :param rg: Range image coordinate for each pixel.</span>
+<span class="sd">    :param lon: Longitude for each pixel (decimal degrees).</span>
+<span class="sd">    :param lat: Latitude for each pixel (decimal degrees).</span>
+<span class="sd">    :param dem_height: Height from DEM for each pixel (metres).</span>
+<span class="sd">    :return: look_angle: Look angle (between nadir and look vector) for each pixel (radians).</span>
+<span class="sd">    :return: incidence_angle: Local incidence angle (between vertical and look vector) for each pixel (radians).</span>
+<span class="sd">    :return: azimuth_angle: Geodetic azimuth for each pixel (radians).</span>
+<span class="sd">    :return: range_dist: Distance from satellite to ground for each pixel (metres).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># read relevant metadata from first IFG</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_SEMI_MAJOR_AXIS_METRES</span><span class="p">])</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_SEMI_MINOR_AXIS_METRES</span><span class="p">])</span>
+    <span class="n">se</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_SAR_EARTH_METRES</span><span class="p">])</span>
+    <span class="c1"># near range of primary image is stored in the interferogram metadata</span>
+    <span class="n">near_range</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_NEAR_RANGE_METRES</span><span class="p">])</span>
+    <span class="n">rps</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_RANGE_PIX_METRES</span><span class="p">])</span>
+    <span class="n">heading</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_HEADING_DEGREES</span><span class="p">])</span>
+    <span class="c1"># direction of look vector w.r.t. satellite heading. </span>
+    <span class="c1"># Gamma convention: +ve = right; -ve = left.</span>
+    <span class="n">look_dir</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_AZIMUTH_DEGREES</span><span class="p">])</span>
+
+    <span class="c1"># convert to radians</span>
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lon</span><span class="p">)</span>
+    <span class="n">lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+    <span class="n">heading</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">heading</span><span class="p">)</span>
+    <span class="n">look_dir</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">look_dir</span><span class="p">)</span>
+
+    <span class="c1"># Earth radius at given latitude</span>
+    <span class="n">re</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">a</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat</span><span class="p">))</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">b</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat</span><span class="p">)),</span>
+                           <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat</span><span class="p">))</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lat</span><span class="p">))))</span>
+
+    <span class="c1"># range measurement at pixel ij</span>
+    <span class="n">range_dist</span> <span class="o">=</span> <span class="n">near_range</span> <span class="o">+</span> <span class="n">rps</span> <span class="o">*</span> <span class="n">rg</span>
+
+    <span class="c1"># look angle at pixel ij -&gt; law of cosines in &quot;satellite - Earth centre - ground pixel&quot; triangle</span>
+    <span class="c1"># see e.g. Section 2 in https://www.cs.uaf.edu/~olawlor/ref/asf/sar_equations_2006_08_17.pdf</span>
+    <span class="n">look_angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">se</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">range_dist</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">re</span><span class="p">),</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">se</span> <span class="o">*</span> <span class="n">range_dist</span><span class="p">))</span>
+
+    <span class="c1"># add per-pixel height to the earth radius to obtain a more accurate ground pixel position for</span>
+    <span class="c1"># incidence angle calculation</span>
+    <span class="n">re</span> <span class="o">=</span> <span class="n">re</span> <span class="o">+</span> <span class="n">dem_height</span>
+
+    <span class="c1"># incidence angle at pixel ij -&gt; law of cosines in &quot;satellite - Earth centre - ground pixel&quot; triangle</span>
+    <span class="c1"># see e.g. Section 2 in https://www.cs.uaf.edu/~olawlor/ref/asf/sar_equations_2006_08_17.pdf</span>
+    <span class="n">incidence_angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">range_dist</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">re</span><span class="p">)</span> <span class="o">-</span> <span class="n">se</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span>
+                                                  <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">range_dist</span><span class="p">,</span> <span class="n">re</span><span class="p">)))</span>
+
+    <span class="c1"># calculate satellite positions for each pixel</span>
+    <span class="n">sat_lat</span><span class="p">,</span> <span class="n">sat_lon</span> <span class="o">=</span> <span class="n">get_sat_positions</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">look_angle</span><span class="p">,</span> <span class="n">incidence_angle</span><span class="p">,</span> <span class="n">heading</span><span class="p">,</span> <span class="n">look_dir</span><span class="p">)</span>
+
+    <span class="c1"># # calc azimuth angle using Vincenty&#39;s equations</span>
+    <span class="n">azimuth_angle</span> <span class="o">=</span> <span class="n">vincinv</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">sat_lat</span><span class="p">,</span> <span class="n">sat_lon</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">look_angle</span><span class="p">,</span> <span class="n">incidence_angle</span><span class="p">,</span> <span class="n">azimuth_angle</span><span class="p">,</span> <span class="n">range_dist</span></div>
+
+
+<div class="viewcode-block" id="calc_local_baseline"><a class="viewcode-back" href="../../../geometry.html#pyrate.core.geometry.calc_local_baseline">[docs]</a><span class="k">def</span> <span class="nf">calc_local_baseline</span><span class="p">(</span><span class="n">ifg</span><span class="p">:</span> <span class="n">Ifg</span><span class="p">,</span> <span class="n">az</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">look_angle</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to calculate perpendicular baseline values for each pixel.</span>
+<span class="sd">    :param ifg: pyrate.core.shared.Ifg Class object</span>
+<span class="sd">    :param az: Azimuth image coordinate for each pixel</span>
+<span class="sd">    :param look_angle: Look angle for each pixel (radians)</span>
+<span class="sd">    :return: bperp: Perpendicular baseline for each pixel (metres)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># open ifg object</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ifg</span><span class="o">.</span><span class="n">is_open</span><span class="p">:</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+
+    <span class="c1"># read relevant metadata from IFG</span>
+    <span class="n">prf</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_PRF_HERTZ</span><span class="p">])</span>
+    <span class="n">az_looks</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_AZIMUTH_LOOKS</span><span class="p">])</span>
+    <span class="n">az_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_AZIMUTH_N</span><span class="p">])</span>
+    <span class="n">base_C</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_BASELINE_C</span><span class="p">])</span>
+    <span class="n">base_N</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_BASELINE_N</span><span class="p">])</span>
+    <span class="n">baserate_C</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_BASELINE_RATE_C</span><span class="p">])</span>
+    <span class="n">baserate_N</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_BASELINE_RATE_N</span><span class="p">])</span>
+
+    <span class="c1"># calculate per pixel baseline vectors across track (C) and normal to the track (N)</span>
+    <span class="n">mean_az</span> <span class="o">=</span> <span class="n">az_n</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="mf">0.5</span>  <span class="c1"># mean azimuth line</span>
+    <span class="n">prf</span> <span class="o">=</span> <span class="n">prf</span> <span class="o">/</span> <span class="n">az_looks</span>  <span class="c1"># Pulse Repetition Frequency needs to be adjusted according to GAMMA azimuth looks</span>
+    <span class="n">base_C_local</span> <span class="o">=</span> <span class="n">base_C</span> <span class="o">+</span> <span class="n">baserate_C</span> <span class="o">*</span> <span class="p">(</span><span class="n">az</span> <span class="o">-</span> <span class="n">mean_az</span><span class="p">)</span> <span class="o">/</span> <span class="n">prf</span>
+    <span class="n">base_N_local</span> <span class="o">=</span> <span class="n">base_N</span> <span class="o">+</span> <span class="n">baserate_N</span> <span class="o">*</span> <span class="p">(</span><span class="n">az</span> <span class="o">-</span> <span class="n">mean_az</span><span class="p">)</span> <span class="o">/</span> <span class="n">prf</span>
+
+    <span class="c1"># calculate the per-pixel perpendicular baseline (see Eq. 3.5 in Baehr, 2012 available here:</span>
+    <span class="c1"># http://www.dgk.badw.de/fileadmin/user_upload/Files/DGK/docs/c-719.pdf)</span>
+    <span class="n">bperp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">base_C_local</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">look_angle</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">base_N_local</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">look_angle</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">bperp</span></div>
+
+
+<div class="viewcode-block" id="vincinv"><a class="viewcode-back" href="../../../geometry.html#pyrate.core.geometry.vincinv">[docs]</a><span class="k">def</span> <span class="nf">vincinv</span><span class="p">(</span><span class="n">lat1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">lon1</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">lat2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">lon2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+            <span class="n">semimaj</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">semimin</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Vincenty&#39;s Inverse Formula, adapted from GeodePy function vincinv</span>
+<span class="sd">    (see https://github.com/GeoscienceAustralia/GeodePy/blob/master/geodepy/geodesy.py)</span>
+<span class="sd">    - only relevant parts of the Geodepy to retrieve the azimuth angle have been used</span>
+<span class="sd">    - vectorised the function for use with numpy arrays</span>
+<span class="sd">    :param lat1: Latitude of Point 1 (radians)</span>
+<span class="sd">    :param lon1: Longitude of Point 1 (radians)</span>
+<span class="sd">    :param lat2: Latitude of Point 2 (radians)</span>
+<span class="sd">    :param lon2: Longitude of Point 2 (radians)</span>
+<span class="sd">    :param semimaj: semi-major axis of ellipsoid</span>
+<span class="sd">    :param semimin: semi-minor axis of ellipsoid</span>
+<span class="sd">    :return: azimuth1to2: Azimuth from Point 1 to 2 (Decimal Degrees)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Exit if any of the two sets of input points are the same</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">lat1</span> <span class="o">==</span> <span class="n">lat2</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">lon1</span> <span class="o">==</span> <span class="n">lon2</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="c1"># calculate flattening</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="p">(</span><span class="n">semimaj</span> <span class="o">-</span> <span class="n">semimin</span><span class="p">)</span> <span class="o">/</span> <span class="n">semimaj</span>
+    <span class="c1"># Equation numbering is from the GDA2020 Tech Manual v1.0</span>
+    <span class="c1"># Eq. 71</span>
+    <span class="n">u1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">f</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">lat1</span><span class="p">))</span>
+    <span class="c1"># Eq. 72</span>
+    <span class="n">u2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">f</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">lat2</span><span class="p">))</span>
+    <span class="c1"># Eq. 73; initial approximation</span>
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">lon2</span> <span class="o">-</span> <span class="n">lon1</span>
+    <span class="n">omega</span> <span class="o">=</span> <span class="n">lon</span>
+    <span class="c1"># Iterate until the change in lambda, lambda_sigma, is insignificant</span>
+    <span class="c1"># (&lt; 1e-12) or after 1000 iterations have been completed</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
+        <span class="c1"># Eq. 74</span>
+        <span class="n">sin_sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">u2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lon</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">u1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">u2</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">u1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">u2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lon</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># Eq. 75</span>
+        <span class="n">cos_sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">u1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">u2</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">u1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">u2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lon</span><span class="p">)</span>
+        <span class="c1"># Eq. 76</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">sin_sigma</span><span class="p">,</span> <span class="n">cos_sigma</span><span class="p">)</span>
+        <span class="c1"># Eq. 77</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">u1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">u2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lon</span><span class="p">))</span> <span class="o">/</span> <span class="n">sin_sigma</span><span class="p">)</span>
+        <span class="c1"># Eq. 78</span>
+        <span class="n">cos_two_sigma_m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">u1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">u2</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># Eq. 79</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span> <span class="o">/</span> <span class="mi">16</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">+</span> <span class="n">f</span> <span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="c1"># Eq. 80</span>
+        <span class="n">new_lon</span> <span class="o">=</span> <span class="n">omega</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span> <span class="o">*</span> <span class="n">f</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="n">sigma</span> <span class="o">+</span> <span class="n">c</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">cos_two_sigma_m</span> <span class="o">+</span> <span class="n">c</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">cos_two_sigma_m</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)))</span>
+        <span class="p">)</span>
+        <span class="n">delta_lon</span> <span class="o">=</span> <span class="n">new_lon</span> <span class="o">-</span> <span class="n">lon</span>
+        <span class="n">lon</span> <span class="o">=</span> <span class="n">new_lon</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">delta_lon</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-12</span><span class="p">):</span>
+            <span class="k">break</span>
+    <span class="c1"># Calculate the azimuth from point 1 to point 2</span>
+    <span class="n">azimuth1to2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">u2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">lon</span><span class="p">)),</span>
+                             <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">u1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">u2</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">u1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">u2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lon</span><span class="p">)))</span>
+
+    <span class="c1"># add 2 pi in case an angle is below zero</span>
+    <span class="k">for</span> <span class="n">azi</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">nditer</span><span class="p">(</span><span class="n">azimuth1to2</span><span class="p">,</span> <span class="n">op_flags</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;readwrite&#39;</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">azi</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">azi</span><span class="p">[</span><span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">azi</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">azimuth1to2</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+<p>placeHolderText</p>
+        <!-- your html code here -->
+ 
+
+
+</body>
+</html>

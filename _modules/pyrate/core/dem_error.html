@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyrate.core.dem_error &mdash; PyRate 0.6.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/plot_directive.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+            <a href="../../../index.html">
+            <img src="../../../_static/PyRate_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+    <li><a href="https://geoscienceaustralia.github.io/PyRate/">Home</a></li>
+    
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#platforms">Platforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#verify-installation">Verify Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#input-files">Input Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#results-visualisation">Results Visualisation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.prepifg.html">PyRate Prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.correct.html">PyRate Correct Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.merge.html">PyRate Merge Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.main.html">PyRate Main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">PyRate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../configuration.html">Configuration Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../demerror.html">DEM Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../geometry.html">Geometry Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../ifgconstants.html">Ifgconstants Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../logger.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../mpiops.html">MPI operations Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../phase_closure.html">Phase Closure Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../prepifg_helper.html">Prepifg Helper Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stack.html">Stacking Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../timeseries.html">Time Series Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#incorrect-modules-loaded-on-gadi">Incorrect modules loaded on Gadi</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing.html#types-of-contributions">Types of Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.6.0 (2021-10-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id17">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id26">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id31">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id32">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+</ul>
+
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">PyRate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>pyrate.core.dem_error</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyrate.core.dem_error</h1><div class="highlight"><pre>
+<span></span><span class="c1">#   This Python module is part of the PyRate software package.</span>
+<span class="c1">#</span>
+<span class="c1">#   Copyright 2021 Geoscience Australia</span>
+<span class="c1">#</span>
+<span class="c1">#   Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1">#   you may not use this file except in compliance with the License.</span>
+<span class="c1">#   You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#       http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1">#   Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1">#   distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1">#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1">#   See the License for the specific language governing permissions and</span>
+<span class="c1">#   limitations under the License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This Python module implements the calculation of correction for residual topographic effects (a.k.a. as DEM errors).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># pylint: disable=invalid-name, too-many-locals, too-many-arguments</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="k">import</span> <span class="n">join</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">Path</span>
+
+<span class="kn">import</span> <span class="nn">pyrate.constants</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="k">import</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">shared</span><span class="p">,</span> <span class="n">mpiops</span><span class="p">,</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifc</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.logger</span> <span class="k">import</span> <span class="n">pyratelogger</span> <span class="k">as</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="k">import</span> <span class="n">Ifg</span><span class="p">,</span> <span class="n">Geometry</span><span class="p">,</span> <span class="n">DEM</span><span class="p">,</span> <span class="n">Tile</span><span class="p">,</span> <span class="n">tiles_split</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.timeseries</span> <span class="k">import</span> <span class="n">TimeSeriesError</span>
+<span class="kn">from</span> <span class="nn">pyrate.configuration</span> <span class="k">import</span> <span class="n">MultiplePaths</span><span class="p">,</span> <span class="n">Configuration</span>
+<span class="kn">from</span> <span class="nn">pyrate.merge</span> <span class="k">import</span> <span class="n">assemble_tiles</span>
+
+
+<div class="viewcode-block" id="dem_error_calc_wrapper"><a class="viewcode-back" href="../../../demerror.html#pyrate.core.dem_error.dem_error_calc_wrapper">[docs]</a><span class="k">def</span> <span class="nf">dem_error_calc_wrapper</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MPI wrapper for DEM error correction</span>
+<span class="sd">    :param params: Dictionary of PyRate configuration parameters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">DEMERROR</span><span class="p">]:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;DEM error correction not required&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="c1"># geometry information needed to calculate Bperp for each pixel using first IFG in list</span>
+    <span class="n">ifg_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg_path</span><span class="o">.</span><span class="n">tmp_sampled_path</span> <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">INTERFEROGRAM_FILES</span><span class="p">]]</span>
+
+    <span class="c1"># check if DEM error correction is already available</span>
+    <span class="k">if</span> <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">__check_and_apply_demerrors_found_on_disc</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Reusing DEM error correction from previous run!!!&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calculating DEM error correction&quot;</span><span class="p">)</span>
+        <span class="c1"># read and open the first IFG in list</span>
+        <span class="n">ifg0_path</span> <span class="o">=</span> <span class="n">ifg_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ifg0</span> <span class="o">=</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">ifg0_path</span><span class="p">)</span>
+        <span class="n">ifg0</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">readonly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># not currently implemented for ROIPAC data which breaks some tests</span>
+        <span class="c1"># if statement can be deleted once ROIPAC is deprecated from PyRate</span>
+        <span class="k">if</span> <span class="n">ifg0</span><span class="o">.</span><span class="n">meta_data</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_INSAR_PROCESSOR</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ROIPAC&#39;</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Geometry calculations are not implemented for ROI_PAC&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">BASE_FILE_LIST</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No baseline files supplied: DEM error has not been computed&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># todo: subtract other corrections (e.g. orbital) from displacement phase before estimating the DEM error</span>
+
+        <span class="c1"># the following code is a quick way to do the bperp calculation, but is not identical to the GAMMA output</span>
+        <span class="c1"># where the near range of the first SLC is used for each pair.</span>
+        <span class="c1"># calculate look angle for interferograms (using the Near Range of the first SLC)</span>
+        <span class="c1"># look_angle = geometry.calc_local_geometry(ifg0, None, rg, lon, lat, params)</span>
+        <span class="c1"># bperp = geometry.calc_local_baseline(ifg0, az, look_angle)</span>
+
+        <span class="c1"># split full arrays in to tiles for parallel processing</span>
+        <span class="n">tiles_split</span><span class="p">(</span><span class="n">_process_dem_error_per_tile</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+        <span class="n">preread_ifgs</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">PREREAD_IFGS</span><span class="p">]</span>
+        <span class="c1"># write dem error and correction values to file</span>
+        <span class="n">mpiops</span><span class="o">.</span><span class="n">run_once</span><span class="p">(</span><span class="n">_write_dem_errors</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">)</span>
+        <span class="n">shared</span><span class="o">.</span><span class="n">save_numpy_phase</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished DEM error correction step&#39;</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_process_dem_error_per_tile</span><span class="p">(</span><span class="n">tile</span><span class="p">:</span> <span class="n">Tile</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function for processing DEM error in tiles</span>
+<span class="sd">    :param tile: pyrate.core.shared.Tile Class object.</span>
+<span class="sd">    :param params: Dictionary of PyRate configuration parameters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ifg_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg_path</span><span class="o">.</span><span class="n">tmp_sampled_path</span> <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">INTERFEROGRAM_FILES</span><span class="p">]]</span>
+    <span class="n">ifg0_path</span> <span class="o">=</span> <span class="n">ifg_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">ifg0</span> <span class="o">=</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">ifg0_path</span><span class="p">)</span>
+    <span class="n">ifg0</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">readonly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># read lon and lat values of multi-looked ifg (first ifg only)</span>
+    <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">get_lonlat_coords</span><span class="p">(</span><span class="n">ifg0</span><span class="p">)</span>
+    <span class="c1"># read azimuth and range coords and DEM from tif files generated in prepifg</span>
+    <span class="n">geom_files</span> <span class="o">=</span> <span class="n">Configuration</span><span class="o">.</span><span class="n">geometry_files</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">rdc_az_file</span> <span class="o">=</span> <span class="n">geom_files</span><span class="p">[</span><span class="s1">&#39;rdc_azimuth&#39;</span><span class="p">]</span>
+    <span class="n">geom_az</span> <span class="o">=</span> <span class="n">Geometry</span><span class="p">(</span><span class="n">rdc_az_file</span><span class="p">)</span>
+    <span class="n">rdc_rg_file</span> <span class="o">=</span> <span class="n">geom_files</span><span class="p">[</span><span class="s1">&#39;rdc_range&#39;</span><span class="p">]</span>
+    <span class="n">geom_rg</span> <span class="o">=</span> <span class="n">Geometry</span><span class="p">(</span><span class="n">rdc_rg_file</span><span class="p">)</span>
+    <span class="n">dem_file</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">DEM_FILE_PATH</span><span class="p">]</span><span class="o">.</span><span class="n">sampled_path</span>
+    <span class="n">dem</span> <span class="o">=</span> <span class="n">DEM</span><span class="p">(</span><span class="n">dem_file</span><span class="p">)</span>
+    <span class="n">preread_ifgs</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">PREREAD_IFGS</span><span class="p">]</span>
+    <span class="n">threshold</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">DE_PTHR</span><span class="p">]</span>
+    <span class="n">ifg_parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">shared</span><span class="o">.</span><span class="n">IfgPart</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">tile</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ifg_paths</span><span class="p">]</span>
+    <span class="n">lon_parts</span> <span class="o">=</span> <span class="n">lon</span><span class="p">(</span><span class="n">tile</span><span class="p">)</span>
+    <span class="n">lat_parts</span> <span class="o">=</span> <span class="n">lat</span><span class="p">(</span><span class="n">tile</span><span class="p">)</span>
+    <span class="n">az_parts</span> <span class="o">=</span> <span class="n">geom_az</span><span class="p">(</span><span class="n">tile</span><span class="p">)</span>
+    <span class="n">rg_parts</span> <span class="o">=</span> <span class="n">geom_rg</span><span class="p">(</span><span class="n">tile</span><span class="p">)</span>
+    <span class="n">dem_parts</span> <span class="o">=</span> <span class="n">dem</span><span class="p">(</span><span class="n">tile</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Calculating per-pixel baseline for tile </span><span class="si">{tile.index}</span><span class="s2"> during DEM error correction&quot;</span><span class="p">)</span>
+    <span class="n">bperp</span><span class="p">,</span> <span class="n">look_angle</span><span class="p">,</span> <span class="n">range_dist</span> <span class="o">=</span> <span class="n">_calculate_bperp_wrapper</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">,</span> <span class="n">az_parts</span><span class="p">,</span> <span class="n">rg_parts</span><span class="p">,</span>
+                                                             <span class="n">lat_parts</span><span class="p">,</span> <span class="n">lon_parts</span><span class="p">,</span> <span class="n">dem_parts</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Calculating DEM error for tile </span><span class="si">{tile.index}</span><span class="s2"> during DEM error correction&quot;</span><span class="p">)</span>
+
+    <span class="c1"># mst_tile = np.load(Configuration.mst_path(params, tile.index))</span>
+    <span class="c1"># calculate the DEM error estimate and the correction values for each IFG</span>
+    <span class="c1"># current implementation uses the look angle and range distance matrix of the primary SLC in the last IFG</span>
+    <span class="c1"># todo: check the impact of using the same information from another SLC</span>
+    <span class="n">dem_error</span><span class="p">,</span> <span class="n">dem_error_correction</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">calc_dem_errors</span><span class="p">(</span><span class="n">ifg_parts</span><span class="p">,</span> <span class="n">bperp</span><span class="p">,</span> <span class="n">look_angle</span><span class="p">,</span> <span class="n">range_dist</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
+    <span class="c1"># dem_error contains the estimated DEM error for each pixel (i.e. the topographic change relative to the DEM)</span>
+    <span class="c1"># size [row, col]</span>
+    <span class="c1"># dem_error_correction contains the correction value for each interferogram</span>
+    <span class="c1"># size [num_ifg, row, col]</span>
+    <span class="c1"># save tiled data in tmpdir</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="s1">&#39;dem_error_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">dem_error</span><span class="p">)</span>
+    <span class="c1"># swap the axes of 3D array to fit the style used in function assemble_tiles</span>
+    <span class="n">tmp_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">dem_error_correction</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># new dimension is [row, col, num_ifg]</span>
+    <span class="c1"># save tiled data into tmpdir</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="s1">&#39;dem_error_correction_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">tmp_array</span><span class="p">)</span>
+
+    <span class="c1"># Calculate and save the average perpendicular baseline for the tile</span>
+    <span class="n">bperp_avg</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">bperp</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="s1">&#39;bperp_avg_</span><span class="si">{}</span><span class="s1">.npy&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">index</span><span class="p">)),</span> <span class="n">arr</span><span class="o">=</span><span class="n">bperp_avg</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_calculate_bperp_wrapper</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">az_parts</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">rg_parts</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                             <span class="n">lat_parts</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">lon_parts</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">dem_parts</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                             <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper function to calculate the perpendicular baseline for each pixel in each interferogram.</span>
+<span class="sd">    :param ifg_paths: list of pyrate.core.shared.Ifg Class objects.</span>
+<span class="sd">    :param az_parts: azimuth coordinate (i.e. line) for each pixel.</span>
+<span class="sd">    :param rg_parts: range coordinate (i.e. column) for each pixel.</span>
+<span class="sd">    :param lat_parts: latitude for each pixel.</span>
+<span class="sd">    :param lon_parts: longitude for each pixel.</span>
+<span class="sd">    :param dem_parts: DEM height for each pixel.</span>
+<span class="sd">    :return: bperp: perpendicular baseline for each pixel and interferogram.</span>
+<span class="sd">    :return: look_angle: look angle for each pixel.</span>
+<span class="sd">    :return: range_dist: range distance measurement for each pixel.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nifgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)</span>
+    <span class="n">bperp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nifgs</span><span class="p">,</span> <span class="n">lon_parts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lon_parts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="c1"># calculate per-pixel perpendicular baseline for each IFG</span>
+    <span class="c1"># loop could be avoided by approximating the look angle for the first Ifg</span>
+    <span class="k">for</span> <span class="n">ifg_num</span><span class="p">,</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">):</span>
+        <span class="n">ifg</span> <span class="o">=</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">)</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">readonly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># calculate look angle for interferograms (using the Near Range of the primary SLC)</span>
+        <span class="n">look_angle</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">range_dist</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">calc_pixel_geometry</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">rg_parts</span><span class="p">,</span> <span class="n">lon_parts</span><span class="p">,</span> <span class="n">lat_parts</span><span class="p">,</span> <span class="n">dem_parts</span><span class="p">)</span>
+        <span class="n">bperp</span><span class="p">[</span><span class="n">ifg_num</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">calc_local_baseline</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">az_parts</span><span class="p">,</span> <span class="n">look_angle</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">bperp</span><span class="p">,</span> <span class="n">look_angle</span><span class="p">,</span> <span class="n">range_dist</span>
+
+
+<div class="viewcode-block" id="calc_dem_errors"><a class="viewcode-back" href="../../../demerror.html#pyrate.core.dem_error.calc_dem_errors">[docs]</a><span class="k">def</span> <span class="nf">calc_dem_errors</span><span class="p">(</span><span class="n">ifgs</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">bperp</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">look_angle</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">range_dist</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                    <span class="n">threshold</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function to calculate the DEM error for each pixel using least-squares adjustment of phase data and</span>
+<span class="sd">    perpendicular baseline. The least-squares adjustment co-estimates the velocities.</span>
+<span class="sd">    - *nrows* is the number of rows in the ifgs, and</span>
+<span class="sd">    - *ncols* is the  number of columns in the ifgs.</span>
+
+<span class="sd">    :param ifgs: list of interferogram class objects.</span>
+<span class="sd">    :param bperp: Per-pixel perpendicular baseline for each interferogram</span>
+<span class="sd">    :param look_angle: Per-pixel look angle</span>
+<span class="sd">    :param range_dist: Per-pixel range distance measurement</span>
+<span class="sd">    :param threshold: minimum number of redundant phase values at pixel (config parameter de_pthr)</span>
+<span class="sd">    :return: dem_error: estimated per-pixel dem error (nrows x ncols)</span>
+<span class="sd">    :return: dem_error_correction: DEM error correction for each pixel and interferogram (nifgs x nrows x ncols)</span>
+<span class="sd">    :return: vel: velocity estimate for each pixel (nrows x ncols)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ifg_data</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">nrows</span><span class="p">,</span> <span class="n">ifg_time_span</span> <span class="o">=</span> <span class="n">_per_tile_setup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">threshold</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;pixel threshold too low (i.e. &lt;4) resulting in non-redundant DEM error estimation&quot;</span>
+        <span class="k">raise</span> <span class="n">DEMError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="c1"># pixel-by-pixel calculation</span>
+    <span class="c1"># preallocate empty arrays for results</span>
+    <span class="n">dem_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">vel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">([</span><span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="c1"># nested loops to loop over the 2 image dimensions</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ncols</span><span class="p">):</span>
+            <span class="c1"># calc DEM error for each pixel with valid Bperp and ifg phase data</span>
+            <span class="c1"># check pixel for non-redundant ifgs</span>
+            <span class="n">sel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">mst</span><span class="p">[:,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># trues in mst are chosen</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sel</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">:</span>  <span class="c1"># given threshold for number of valid pixels in time series</span>
+                <span class="c1"># phase observations (in mm)</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">ifg_data</span><span class="p">[</span><span class="n">sel</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span>
+                <span class="n">bperp_pix</span> <span class="o">=</span> <span class="n">bperp</span><span class="p">[</span><span class="n">sel</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span>
+                <span class="c1"># If NaN: skip pixel</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">bperp_pix</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                    <span class="k">continue</span>
+                <span class="c1"># using the actual geometry of a particular IFG would be possible but is likely not signif. different</span>
+                <span class="c1"># geom = bperp_pix / (range_dist[row, col] * np.sin(look_angle[row, col]))</span>
+                <span class="n">time_span</span> <span class="o">=</span> <span class="n">ifg_time_span</span><span class="p">[</span><span class="n">sel</span><span class="p">]</span>
+                <span class="c1"># new covariance matrix using actual number of observations</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sel</span><span class="p">)</span>
+                <span class="c1"># Design matrix of least-squares system, velocities are co-estimated as done in StaMPS or MintPy</span>
+                <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">m</span><span class="p">),</span> <span class="n">bperp_pix</span><span class="p">,</span> <span class="n">time_span</span><span class="p">))</span>
+                <span class="c1"># solve ordinary least-squares system using numpy.linalg.lstsq function</span>
+                <span class="n">xhat</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">rnk</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                <span class="c1"># dem error estimate for the pixel is the second parameter (cf. design matrix)</span>
+                <span class="n">dem_error</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">xhat</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="c1"># velocity estimate for the pixel is the third parameter (cf. design matrix)</span>
+                <span class="n">vel</span><span class="p">[</span><span class="n">row</span><span class="p">][</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">xhat</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="c1"># calculate correction value for each IFG by multiplying the least-squares estimate with the Bperp value</span>
+    <span class="n">dem_error_correction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">dem_error</span><span class="p">,</span> <span class="n">bperp</span><span class="p">)</span>
+    <span class="c1"># calculate metric difference to DEM by multiplying the estimate with the per-pixel geometry</span>
+    <span class="c1"># (i.e. range distance and look angle, see Eq. (2.4.12) in Hanssen (2001))</span>
+    <span class="c1"># also scale by -0.001 since the phase observations are in mm with positive values away from the sensor</span>
+    <span class="n">dem_error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">dem_error</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">range_dist</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">look_angle</span><span class="p">)))</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.001</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dem_error</span><span class="p">,</span> <span class="n">dem_error_correction</span><span class="p">,</span> <span class="n">vel</span></div>
+
+
+<span class="k">def</span> <span class="nf">_per_tile_setup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function for setting up DEM error computation parameters</span>
+<span class="sd">    :param ifgs: list of interferogram class objects.</span>
+<span class="sd">    :return: ifg_data: phase observations for each pixel and interferogram</span>
+<span class="sd">    :return: mst: an array of booleans representing valid ifg connections (i.e. the minimum spanning tree)</span>
+<span class="sd">    :return: ncols: number of columns</span>
+<span class="sd">    :return: nrows: number of rows</span>
+<span class="sd">    :return: ifg_time_span: date difference for each interferogram</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Time series requires 2+ interferograms&#39;</span>
+        <span class="k">raise</span> <span class="n">TimeSeriesError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">nrows</span> <span class="o">=</span> <span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nrows</span>
+    <span class="n">ncols</span> <span class="o">=</span> <span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ncols</span>
+    <span class="n">nifgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)</span>
+    <span class="n">ifg_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nifgs</span><span class="p">,</span> <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ifg_num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nifgs</span><span class="p">):</span>
+        <span class="n">ifg_data</span><span class="p">[</span><span class="n">ifg_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">ifgs</span><span class="p">[</span><span class="n">ifg_num</span><span class="p">]</span><span class="o">.</span><span class="n">phase_data</span> <span class="c1"># phase data is read from numpy files</span>
+    <span class="n">mst</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ifg_data</span><span class="p">)</span>
+    <span class="n">ifg_time_span</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nifgs</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">ifg_num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nifgs</span><span class="p">):</span>
+        <span class="n">ifg_time_span</span><span class="p">[</span><span class="n">ifg_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">ifgs</span><span class="p">[</span><span class="n">ifg_num</span><span class="p">]</span><span class="o">.</span><span class="n">time_span</span>
+
+    <span class="k">return</span> <span class="n">ifg_data</span><span class="p">,</span> <span class="n">mst</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">nrows</span><span class="p">,</span> <span class="n">ifg_time_span</span>
+
+
+<span class="k">def</span> <span class="nf">_write_dem_errors</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function for writing DEM error (one file) and DEM error correction for each IFG to disc</span>
+<span class="sd">    :param ifg_paths: List of interferogram class objects.</span>
+<span class="sd">    :param params: Dictionary of PyRate configuration parameters.</span>
+<span class="sd">    :param preread_ifgs: Dictionary of interferogram metadata.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tiles</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">TILES</span><span class="p">]</span>
+
+    <span class="c1"># re-assemble tiles and save into dem_error dir</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">preread_ifgs</span><span class="p">[</span><span class="n">ifg_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># save dem error as geotiff file in out directory</span>
+    <span class="n">gt</span><span class="p">,</span> <span class="n">md</span><span class="p">,</span> <span class="n">wkt</span> <span class="o">=</span> <span class="n">shared</span><span class="o">.</span><span class="n">get_geotiff_header_info</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">md</span><span class="p">[</span><span class="n">ifc</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">]</span> <span class="o">=</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DEM_ERROR</span>
+    <span class="n">dem_error</span> <span class="o">=</span> <span class="n">assemble_tiles</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">out_type</span><span class="o">=</span><span class="s1">&#39;dem_error&#39;</span><span class="p">)</span>
+    <span class="n">dem_error_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">DEM_ERROR_DIR</span><span class="p">],</span> <span class="s1">&#39;dem_error.tif&#39;</span><span class="p">)</span>
+    <span class="n">shared</span><span class="o">.</span><span class="n">remove_file_if_exists</span><span class="p">(</span><span class="n">dem_error_file</span><span class="p">)</span>
+    <span class="n">shared</span><span class="o">.</span><span class="n">write_output_geotiff</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="n">gt</span><span class="p">,</span> <span class="n">wkt</span><span class="p">,</span> <span class="n">dem_error</span><span class="p">,</span> <span class="n">dem_error_file</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+    <span class="c1"># read the average bperp vals for each ifg and each tile</span>
+    <span class="n">bperp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tiles</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tiles</span><span class="p">:</span>
+        <span class="n">bperp_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="s1">&#39;bperp_avg_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.npy&#39;</span><span class="p">))</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">bperp_file</span><span class="p">)</span>
+        <span class="n">bperp</span><span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">arr</span>
+
+    <span class="c1"># loop over all ifgs</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">ifg_paths</span><span class="p">:</span>
+        <span class="n">ifg</span> <span class="o">=</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">)</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+        <span class="n">shared</span><span class="o">.</span><span class="n">nan_and_mm_convert</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="c1"># ensure we have phase data in mm</span>
+        <span class="c1"># read dem error correction file from tmpdir</span>
+        <span class="n">dem_error_correction_ifg</span> <span class="o">=</span> <span class="n">assemble_tiles</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="n">tiles</span><span class="p">,</span> <span class="n">out_type</span><span class="o">=</span><span class="s1">&#39;dem_error_correction&#39;</span><span class="p">,</span>
+                                                  <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">)</span>
+        <span class="c1"># calculate average bperp value across all tiles for the ifg</span>
+        <span class="n">bperp_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">bperp</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">])</span>
+        <span class="n">dem_error_correction_on_disc</span> <span class="o">=</span> <span class="n">MultiplePaths</span><span class="o">.</span><span class="n">dem_error_path</span><span class="p">(</span><span class="n">ifg</span><span class="o">.</span><span class="n">data_path</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">dem_error_correction_on_disc</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="n">dem_error_correction_ifg</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># subtract DEM error from the ifg</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">phase_data</span> <span class="o">-=</span> <span class="n">dem_error_correction_ifg</span>
+        <span class="n">_save_dem_error_corrected_phase</span><span class="p">(</span><span class="n">ifg</span><span class="p">,</span> <span class="n">bperp_val</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">__check_and_apply_demerrors_found_on_disc</span><span class="p">(</span><span class="n">ifg_paths</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function to check if DEM error correction files have already been produced in a previous run</span>
+<span class="sd">    :param ifg_paths: List of interferogram class objects.</span>
+<span class="sd">    :param params: Dictionary of PyRate configuration parameters.</span>
+<span class="sd">    :return: bool value: True if dem error files found on disc, otherwise False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">saved_dem_err_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">MultiplePaths</span><span class="o">.</span><span class="n">dem_error_path</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">ifg_paths</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">saved_dem_err_paths</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">dem_corr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="c1"># are paths</span>
+                <span class="n">ifg</span> <span class="o">=</span> <span class="n">Ifg</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">ifg</span><span class="o">.</span><span class="n">open</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ifg</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="n">ifg</span><span class="o">.</span><span class="n">phase_data</span> <span class="o">-=</span> <span class="n">dem_corr</span>
+            <span class="c1"># set geotiff meta tag and save phase to file</span>
+            <span class="c1"># TODO: calculate avg bperp and add to metadata even for reused DEM error correction</span>
+            <span class="n">_save_dem_error_corrected_phase</span><span class="p">(</span><span class="n">ifg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">saved_dem_err_paths</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_save_dem_error_corrected_phase</span><span class="p">(</span><span class="n">ifg</span><span class="p">:</span> <span class="n">Ifg</span><span class="p">,</span> <span class="n">bperp</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function to update metadata and save latest phase after DEM error correction</span>
+<span class="sd">    :param ifg: pyrate.core.shared.Ifg Class object</span>
+<span class="sd">    :param bperp: perpendicular baseline value for adding to geotiff metadata.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># update geotiff tags after DEM error correction</span>
+    <span class="n">ifg</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_DEM_ERROR</span><span class="p">,</span> <span class="n">ifc</span><span class="o">.</span><span class="n">DEM_ERROR_REMOVED</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bperp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ifg</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">SetMetadataItem</span><span class="p">(</span><span class="n">ifc</span><span class="o">.</span><span class="n">PYRATE_BPERP</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">bperp</span><span class="p">))</span>
+    <span class="n">ifg</span><span class="o">.</span><span class="n">write_modified_phase</span><span class="p">()</span>
+    <span class="n">ifg</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="DEMError"><a class="viewcode-back" href="../../../demerror.html#pyrate.core.dem_error.DEMError">[docs]</a><span class="k">class</span> <span class="nc">DEMError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generic exception for DEM errors.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+<p>placeHolderText</p>
+        <!-- your html code here -->
+ 
+
+
+</body>
+</html>

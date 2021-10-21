@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyrate.configuration &mdash; PyRate 0.6.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/plot_directive.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+            <a href="../../index.html">
+            <img src="../../_static/PyRate_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+    <li><a href="https://geoscienceaustralia.github.io/PyRate/">Home</a></li>
+    
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#platforms">Platforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#verify-installation">Verify Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#input-files">Input Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../usage.html#results-visualisation">Results Visualisation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.prepifg.html">PyRate Prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.correct.html">PyRate Correct Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.merge.html">PyRate Merge Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../pyrate.main.html">PyRate Main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">PyRate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../configuration.html">Configuration Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../demerror.html">DEM Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../geometry.html">Geometry Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ifgconstants.html">Ifgconstants Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../logger.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mpiops.html">MPI operations Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../phase_closure.html">Phase Closure Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../prepifg_helper.html">Prepifg Helper Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../stack.html">Stacking Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../timeseries.html">Time Series Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../troubleshooting.html#incorrect-modules-loaded-on-gadi">Incorrect modules loaded on Gadi</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#types-of-contributions">Types of Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id1">0.6.0 (2021-10-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id2">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id7">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id12">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id17">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id22">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id26">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id31">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../history.html#id32">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+</ul>
+
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PyRate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>pyrate.configuration</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyrate.configuration</h1><div class="highlight"><pre>
+<span></span><span class="c1">#   This Python module is part of the PyRate software package.</span>
+<span class="c1">#</span>
+<span class="c1">#   Copyright 2021 Geoscience Australia</span>
+<span class="c1">#</span>
+<span class="c1">#   Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1">#   you may not use this file except in compliance with the License.</span>
+<span class="c1">#   You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#       http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1">#   Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1">#   distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1">#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1">#   See the License for the specific language governing permissions and</span>
+<span class="c1">#   limitations under the License.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This Python module contains utilities to validate user input parameters</span>
+<span class="sd">parsed in a PyRate configuration file.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">configparser</span> <span class="k">import</span> <span class="n">ConfigParser</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">Path</span><span class="p">,</span> <span class="n">PurePath</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">pyrate.constants</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">from</span> <span class="nn">pyrate.constants</span> <span class="k">import</span> <span class="n">NO_OF_PARALLEL_PROCESSES</span><span class="p">,</span> <span class="n">sixteen_digits_pattern</span><span class="p">,</span> <span class="n">twelve_digits_pattern</span><span class="p">,</span> <span class="n">ORB_ERROR_DIR</span><span class="p">,</span> \
+    <span class="n">DEM_ERROR_DIR</span><span class="p">,</span> <span class="n">TEMP_MLOOKED_DIR</span>
+<span class="kn">from</span> <span class="nn">pyrate.core</span> <span class="k">import</span> <span class="n">ifgconstants</span> <span class="k">as</span> <span class="n">ifg</span>
+<span class="kn">from</span> <span class="nn">pyrate.default_parameters</span> <span class="k">import</span> <span class="n">PYRATE_DEFAULT_CONFIGURATION</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.algorithm</span> <span class="k">import</span> <span class="n">factorise_integer</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="k">import</span> <span class="n">extract_epochs_from_filename</span><span class="p">,</span> <span class="n">InputTypes</span><span class="p">,</span> <span class="n">get_tiles</span>
+
+
+<span class="k">def</span> <span class="nf">set_parameter_value</span><span class="p">(</span><span class="n">data_type</span><span class="p">,</span> <span class="n">input_value</span><span class="p">,</span> <span class="n">default_value</span><span class="p">,</span> <span class="n">required</span><span class="p">,</span> <span class="n">input_name</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_value</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">input_value</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">required</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;A required parameter is missing value in input configuration file: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_name</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">input_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">data_type</span><span class="p">)</span> <span class="ow">in</span> <span class="s2">&quot;path&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">input_value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data_type</span><span class="p">(</span><span class="n">input_value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">default_value</span>
+
+
+<span class="k">def</span> <span class="nf">validate_parameter_value</span><span class="p">(</span><span class="n">input_name</span><span class="p">,</span> <span class="n">input_value</span><span class="p">,</span> <span class="n">min_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">possible_values</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_value</span><span class="p">,</span> <span class="n">PurePath</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">input_value</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Given path: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_value</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; does not exist.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">input_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">min_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">input_value</span> <span class="o">&lt;</span> <span class="n">min_value</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Invalid value for &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; supplied: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span>
+                        <span class="n">input_value</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;. Provide a value greater than or equal to &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">min_value</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">input_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">max_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">input_value</span> <span class="o">&gt;</span> <span class="n">max_value</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Invalid value for &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; supplied: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span>
+                        <span class="n">input_value</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;. Provide a value less than or equal to &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">max_value</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">possible_values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">input_value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">possible_values</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid value for &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">input_name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; supplied: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span>
+                    <span class="n">input_value</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;. Provide one of these values: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">possible_values</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span> <span class="nf">validate_file_list_values</span><span class="p">(</span><span class="n">file_list</span><span class="p">,</span> <span class="n">no_of_epochs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">file_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No value supplied for input file list: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">file_list</span><span class="p">))</span>
+
+    <span class="n">files</span> <span class="o">=</span> <span class="n">parse_namelist</span><span class="p">(</span><span class="n">file_list</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="n">ConfigException</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{f}</span><span class="s2"> does not exist&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">matches</span> <span class="o">=</span> <span class="n">extract_epochs_from_filename</span><span class="p">(</span><span class="n">filename_with_epochs</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">no_of_epochs</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                <span class="k">raise</span> <span class="n">ConfigException</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;the number of epochs in </span><span class="si">{f}</span><span class="s2"> names are less the required number: </span><span class="si">{no_of_epochs}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">MultiplePaths</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">input_type</span><span class="p">:</span> <span class="n">InputTypes</span> <span class="o">=</span> <span class="n">InputTypes</span><span class="o">.</span><span class="n">IFG</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_type</span> <span class="o">=</span> <span class="n">input_type</span>
+        <span class="n">out_dir</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">]</span>
+        <span class="n">tempdir</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">TEMP_MLOOKED_DIR</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tempdir</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">tempdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">tempdir</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">input_type</span> <span class="ow">in</span> <span class="p">[</span><span class="n">InputTypes</span><span class="o">.</span><span class="n">IFG</span><span class="p">,</span> <span class="n">InputTypes</span><span class="o">.</span><span class="n">COH</span><span class="p">]:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">sixteen_digits_pattern</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">d</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># could be 6 digit epoch dates</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">twelve_digits_pattern</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">d</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{input_type.value}</span><span class="s2"> filename does not contain two 8- or 6-digit date strings&quot;</span><span class="p">)</span>
+            <span class="n">filestr</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">group</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">filestr</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+        <span class="n">dir_exists</span> <span class="o">=</span> <span class="n">input_type</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="n">InputTypes</span><span class="o">.</span><span class="n">dir_map</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">anchoring_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">InputTypes</span><span class="o">.</span><span class="n">dir_map</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="n">input_type</span><span class="o">.</span><span class="n">value</span><span class="p">])</span> \
+            <span class="k">if</span> <span class="n">dir_exists</span> <span class="k">else</span> <span class="n">Path</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.tif&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unwrapped_path</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">converted_path</span> <span class="o">=</span> <span class="n">b</span>  <span class="c1"># original file</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sampled_path</span> <span class="o">=</span> <span class="n">anchoring_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">filestr</span> <span class="o">+</span> <span class="n">input_type</span><span class="o">.</span><span class="n">value</span> <span class="o">+</span> <span class="s1">&#39;.tif&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unwrapped_path</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+            <span class="n">converted_path</span> <span class="o">=</span> <span class="n">anchoring_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">b</span><span class="o">.</span><span class="n">suffix</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">&#39;.tif&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sampled_path</span> <span class="o">=</span> <span class="n">converted_path</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="n">filestr</span> <span class="o">+</span> <span class="n">input_type</span><span class="o">.</span><span class="n">value</span> <span class="o">+</span> <span class="s1">&#39;.tif&#39;</span><span class="p">)</span>
+
+        <span class="c1"># tmp_sampled_paths are used after prepifg, during correct steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tmp_sampled_path</span> <span class="o">=</span> <span class="n">tempdir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sampled_path</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">converted_path</span> <span class="o">=</span> <span class="n">converted_path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampled_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampled_path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">orb_error_path</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span> <span class="n">params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">ifg_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">C</span><span class="o">.</span><span class="n">ORB_ERROR_DIR</span><span class="p">,</span>
+                    <span class="n">ifg_path</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span>
+                    <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">ORBITAL_FIT_METHOD</span><span class="p">]),</span>
+                              <span class="nb">str</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">ORBITAL_FIT_DEGREE</span><span class="p">]),</span>
+                              <span class="nb">str</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">ORBITAL_FIT_LOOKS_X</span><span class="p">]),</span>
+                              <span class="nb">str</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">ORBITAL_FIT_LOOKS_Y</span><span class="p">])])</span> <span class="o">+</span>
+                    <span class="s1">&#39;_orbfit.npy&#39;</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">dem_error_path</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span> <span class="n">params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">ifg_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">C</span><span class="o">.</span><span class="n">DEM_ERROR_DIR</span><span class="p">,</span>
+                    <span class="n">ifg_path</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">DE_PTHR</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;_dem_error.npy&#39;</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">aps_error_path</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span> <span class="n">params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">ifg_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">C</span><span class="o">.</span><span class="n">APS_ERROR_DIR</span><span class="p">,</span>
+                    <span class="n">ifg_path</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span>
+                    <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span>
+                        <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">SLPF_CUTOFF</span><span class="p">],</span>
+                        <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">SLPF_NANFILL</span><span class="p">],</span>
+                        <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">SLPF_NANFILL_METHOD</span><span class="p">],</span>
+                        <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">TLPF_CUTOFF</span><span class="p">],</span>
+                        <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">TLPF_PTHR</span><span class="p">]</span>
+                    <span class="p">]</span>
+                              <span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;_aps_error.npy&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unwrapped_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">st</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s2">unwrapped_path = &quot;&quot;&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">unwrapped_path</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">st</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s2">unwrapped_path = None&quot;&quot;&quot;</span>
+        <span class="n">st</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            converted_path = &quot;&quot;&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">converted_path</span> <span class="o">+</span> <span class="s2">&quot;&quot;&quot; </span>
+<span class="s2">            sampled_path = &quot;&quot;&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampled_path</span> <span class="o">+</span> <span class="s2">&quot;&quot;&quot;    </span>
+<span class="s2">            tmp_sampled_path = &quot;&quot;&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmp_sampled_path</span> <span class="o">+</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">st</span>
+
+
+<span class="k">class</span> <span class="nc">Configuration</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file_path</span><span class="p">):</span>
+
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">optionxform</span> <span class="o">=</span> <span class="nb">str</span>
+        <span class="c1"># mimic header to fulfil the requirement for configparser</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+            <span class="n">parser</span><span class="o">.</span><span class="n">read_string</span><span class="p">(</span><span class="s2">&quot;[root]</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">stream</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parser</span><span class="p">[</span><span class="s2">&quot;root&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="c1"># make output path, if not provided will error</span>
+        <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outdir</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># custom correct sequence if &#39;correct&#39; section is provided in config</span>
+        <span class="k">if</span> <span class="s1">&#39;correct&#39;</span> <span class="ow">in</span> <span class="n">parser</span> <span class="ow">and</span> <span class="s1">&#39;steps&#39;</span> <span class="ow">in</span> <span class="n">parser</span><span class="p">[</span><span class="s1">&#39;correct&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s1">&#39;correct&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">parser</span><span class="p">[</span><span class="s1">&#39;correct&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;steps&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s1">&#39;correct&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s1">&#39;orbfit&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;refphase&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;demerror&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;phase_closure&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;mst&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;apscorrect&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;maxvar&#39;</span><span class="p">,</span>
+            <span class="p">]</span>
+
+        <span class="c1"># Validate required parameters exist.</span>
+
+        <span class="n">required</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">PYRATE_DEFAULT_CONFIGURATION</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;Required&#39;</span><span class="p">]}</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">required</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Required configuration parameters: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span>
+                <span class="n">required</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">))</span> <span class="o">+</span> <span class="s2">&quot; are missing from input config file.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># handle control parameters</span>
+        <span class="k">for</span> <span class="n">parameter_name</span> <span class="ow">in</span> <span class="n">PYRATE_DEFAULT_CONFIGURATION</span><span class="p">:</span>
+            <span class="n">param_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">]</span> <span class="k">if</span> <span class="n">parameter_name</span> <span class="ow">in</span> <span class="n">required</span> <span class="ow">or</span> \
+                                                           <span class="n">parameter_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">set_parameter_value</span><span class="p">(</span>
+                <span class="n">PYRATE_DEFAULT_CONFIGURATION</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">][</span><span class="s2">&quot;DataType&quot;</span><span class="p">],</span>
+                <span class="n">param_value</span><span class="p">,</span>
+                <span class="n">PYRATE_DEFAULT_CONFIGURATION</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">][</span><span class="s2">&quot;DefaultValue&quot;</span><span class="p">],</span>
+                <span class="n">PYRATE_DEFAULT_CONFIGURATION</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">][</span><span class="s2">&quot;Required&quot;</span><span class="p">],</span>
+                <span class="n">parameter_name</span><span class="p">)</span>
+            <span class="n">validate_parameter_value</span><span class="p">(</span><span class="n">parameter_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">],</span>
+                                     <span class="n">PYRATE_DEFAULT_CONFIGURATION</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">][</span><span class="s2">&quot;MinValue&quot;</span><span class="p">],</span>
+                                     <span class="n">PYRATE_DEFAULT_CONFIGURATION</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">][</span><span class="s2">&quot;MaxValue&quot;</span><span class="p">],</span>
+                                     <span class="n">PYRATE_DEFAULT_CONFIGURATION</span><span class="p">[</span><span class="n">parameter_name</span><span class="p">][</span><span class="s2">&quot;PossibleValues&quot;</span><span class="p">])</span>
+
+        <span class="c1"># bespoke parameter validation</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">refchipsize</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">refchipsize</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="c1"># Configuration parameters refchipsize must be odd</span>
+                <span class="c1"># values too large (&gt;101) will slow down the process without significant gains in results.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">refchipsize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">refchipsize</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="c1"># calculate rows and cols if not supplied</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rows&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;cols&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">NO_OF_PARALLEL_PROCESSES</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># i.e. mpirun</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">factorise_integer</span><span class="p">(</span><span class="n">NO_OF_PARALLEL_PROCESSES</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallel</span><span class="p">:</span>  <span class="c1"># i.e. joblib parallelism</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">num</span><span class="p">)</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">factorise_integer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">processes</span><span class="p">)]</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># i.e. serial</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span>
+
+        <span class="c1"># create a temporary directory if not supplied</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;tmpdir&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tmpdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outdir</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;tmpdir&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tmpdir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tmpdir</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tmpdir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># create orbfit error dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orb_error_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outdir</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">ORB_ERROR_DIR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orb_error_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">interferogram_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outdir</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">INTERFEROGRAM_DIR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interferogram_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># create DEM error dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dem_error_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outdir</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">DEM_ERROR_DIR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dem_error_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># create aps error dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aps_error_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outdir</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">APS_ERROR_DIR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aps_error_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># create mst dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mst_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outdir</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">MST_DIR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mst_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase_closure_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outdir</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">PHASE_CLOSURE_DIR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phase_closure_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">coherence_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outdir</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">COHERENCE_DIR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coherence_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometry_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outdir</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">GEOMETRY_DIR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometry_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeseries_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outdir</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">TIMESERIES_DIR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timeseries_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocity_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outdir</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">VELOCITY_DIR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">velocity_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># create temp multilooked files dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_mlooked_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outdir</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">TEMP_MLOOKED_DIR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_mlooked_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ref_pixel_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref_pixel_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+
+        <span class="c1"># var no longer used</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">APS_ELEVATION_EXT</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">APS_INCIDENCE_EXT</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apscorrect</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apsmethod</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elevationmap</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">incidencemap</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># define parallel processes that will run</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">NUMEXPR_MAX_THREADS</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">NO_OF_PARALLEL_PROCESSES</span><span class="p">)</span>
+
+        <span class="c1"># Validate file names supplied in list exist and contain correct epochs in file names</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cohfilelist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># if self.processor != 0:  # not roipac</span>
+            <span class="n">validate_file_list_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cohfilelist</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">coherence_file_paths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_files_from_attr</span><span class="p">(</span><span class="s1">&#39;cohfilelist&#39;</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="n">InputTypes</span><span class="o">.</span><span class="n">COH</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">basefilelist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># if self.processor != 0:  # not roipac</span>
+            <span class="n">validate_file_list_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basefilelist</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_file_paths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_files_from_attr</span><span class="p">(</span><span class="s1">&#39;basefilelist&#39;</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="n">InputTypes</span><span class="o">.</span><span class="n">BASE</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">header_file_paths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_files_from_attr</span><span class="p">(</span><span class="s1">&#39;hdrfilelist&#39;</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="n">InputTypes</span><span class="o">.</span><span class="n">HEADER</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">interferogram_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__get_files_from_attr</span><span class="p">(</span><span class="s1">&#39;ifgfilelist&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dem_file</span> <span class="o">=</span> <span class="n">MultiplePaths</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">demfile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="n">InputTypes</span><span class="o">.</span><span class="n">DEM</span><span class="p">)</span>
+
+        <span class="c1"># backward compatibility for string paths</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">PurePath</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">ref_pixel_path</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">])</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
+            <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span>
+                    <span class="s1">&#39;ref_pixel&#39;</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">REFX</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">REFY</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span>
+                        <span class="n">C</span><span class="o">.</span><span class="n">REFNX</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">REFNY</span><span class="p">],</span>
+                    <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">REF_CHIP_SIZE</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">REF_MIN_FRAC</span><span class="p">],</span> <span class="s1">&#39;.npy&#39;</span>
+                <span class="p">]</span>
+                 <span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">mst_path</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">C</span><span class="o">.</span><span class="n">MST_DIR</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;mst_mat_</span><span class="si">{index}</span><span class="s1">.npy&#39;</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">preread_ifgs</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">TMPDIR</span><span class="p">],</span> <span class="s1">&#39;preread_ifgs.pk&#39;</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">vcmt_path</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">],</span> <span class="n">C</span><span class="o">.</span><span class="n">VCMT</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">&#39;.npy&#39;</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">phase_closure_filtered_ifgs_list</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">TEMP_MLOOKED_DIR</span><span class="p">])</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;phase_closure_filtered_ifgs_list&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">refresh_ifg_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>  <span class="c1"># update params dict</span>
+        <span class="n">filtered_ifgs_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">phase_closure_filtered_ifgs_list</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">parse_namelist</span><span class="p">(</span><span class="n">filtered_ifgs_list</span><span class="o">.</span><span class="n">as_posix</span><span class="p">())</span>
+        <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">INTERFEROGRAM_FILES</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">MultiplePaths</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="n">InputTypes</span><span class="o">.</span><span class="n">IFG</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">params</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">ref_phs_file</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+        <span class="n">ref_pixel_path</span> <span class="o">=</span> <span class="n">Configuration</span><span class="o">.</span><span class="n">ref_pixel_path</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="c1"># add ref pixel path as when ref pixel changes - ref phs path should also change</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">OUT_DIR</span><span class="p">])</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
+            <span class="n">ref_pixel_path</span><span class="o">.</span><span class="n">stem</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span>
+            <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;ref_phs&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">REF_EST_METHOD</span><span class="p">]),</span> <span class="s1">&#39;.npy&#39;</span><span class="p">])</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_tiles</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+        <span class="n">ifg_path</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">INTERFEROGRAM_FILES</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sampled_path</span>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;rows&#39;</span><span class="p">],</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;cols&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">get_tiles</span><span class="p">(</span><span class="n">ifg_path</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__get_files_from_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="n">InputTypes</span><span class="o">.</span><span class="n">IFG</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">parse_namelist</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">MultiplePaths</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="n">input_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">closure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">closure_d</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">phase_closure_dir</span><span class="p">)</span>
+
+        <span class="k">class</span> <span class="nc">Closure</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">closure</span> <span class="o">=</span> <span class="n">closure_d</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;closure.npy&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ifgs_breach_count</span> <span class="o">=</span> <span class="n">closure_d</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;ifgs_breach_count.npy&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">num_occurences_each_ifg</span> <span class="o">=</span> <span class="n">closure_d</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;num_occurrences_each_ifg.npy&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">loops</span> <span class="o">=</span> <span class="n">closure_d</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s1">&#39;loops.npy&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Closure</span><span class="p">()</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">coherence_stats</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+        <span class="n">coh_d</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">COHERENCE_DIR</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">coh_d</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;.tif&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="n">ifg</span><span class="o">.</span><span class="n">COH_MEDIAN</span><span class="p">,</span> <span class="n">ifg</span><span class="o">.</span><span class="n">COH_MEAN</span><span class="p">,</span> <span class="n">ifg</span><span class="o">.</span><span class="n">COH_STD</span><span class="p">]}</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">geometry_files</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+        <span class="n">geom_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">GEOMETRY_DIR</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">geom_dir</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;.tif&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">C</span><span class="o">.</span><span class="n">GEOMETRY_OUTPUT_TYPES</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="write_config_parser_file"><a class="viewcode-back" href="../../configuration.html#pyrate.configuration.write_config_parser_file">[docs]</a><span class="k">def</span> <span class="nf">write_config_parser_file</span><span class="p">(</span><span class="n">conf</span><span class="p">:</span> <span class="n">ConfigParser</span><span class="p">,</span> <span class="n">output_conf_file</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;replacement function for write_config_file which uses dict instead of a ConfigParser instance&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_conf_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">configfile</span><span class="p">:</span>
+        <span class="n">conf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">configfile</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="write_config_file"><a class="viewcode-back" href="../../configuration.html#pyrate.configuration.write_config_file">[docs]</a><span class="k">def</span> <span class="nf">write_config_file</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">output_conf_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes a param object and writes the config file. Reverse of get_conf_params.</span>
+
+<span class="sd">    :param dict params: parameter dictionary</span>
+<span class="sd">    :param str output_conf_file: output file name</span>
+
+<span class="sd">    :return: config file</span>
+<span class="sd">    :rtype: list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_conf_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s1">&#39;correct&#39;</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;[&#39;</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="s1">&#39;]&#39;</span> <span class="s1">&#39;:</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;steps = &#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span>
+                    <span class="k">for</span> <span class="n">vv</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">vv</span><span class="p">),</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">MultiplePaths</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">unwrapped_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">vv</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">converted_path</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">vv</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">unwrapped_path</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">vv</span> <span class="o">=</span> <span class="n">v</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="s1">&#39;:</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">vv</span><span class="p">),</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="s1">&#39;:</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">]))</span></div>
+
+
+<div class="viewcode-block" id="parse_namelist"><a class="viewcode-back" href="../../configuration.html#pyrate.configuration.parse_namelist">[docs]</a><span class="k">def</span> <span class="nf">parse_namelist</span><span class="p">(</span><span class="n">nml</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses name list file into array of paths</span>
+
+<span class="sd">    :param str nml: interferogram file list</span>
+
+<span class="sd">    :return: list of interferogram file names</span>
+<span class="sd">    :rtype: list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">nml</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_in</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f_in</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">lines</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ConfigException"><a class="viewcode-back" href="../../configuration.html#pyrate.configuration.ConfigException">[docs]</a><span class="k">class</span> <span class="nc">ConfigException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Default exception class for configuration errors.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+<p>placeHolderText</p>
+        <!-- your html code here -->
+ 
+
+
+</body>
+</html>

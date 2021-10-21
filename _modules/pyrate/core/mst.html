@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyrate.core.mst &mdash; PyRate 0.6.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/plot_directive.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: white" >
+            <a href="../../../index.html">
+            <img src="../../../_static/PyRate_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+    <li><a href="https://geoscienceaustralia.github.io/PyRate/">Home</a></li>
+    
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#platforms">Platforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#verify-installation">Verify Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#workflow">Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#input-files">Input Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#parallel-processing">Parallel Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../usage.html#results-visualisation">Results Visualisation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../scripts.html">PyRate Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.conv2tif.html">PyRate Conv2tif Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.prepifg.html">PyRate Prepifg Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.correct.html">PyRate Correct Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.merge.html">PyRate Merge Script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../pyrate.main.html">PyRate Main Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">PyRate Modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../algorithm.html">Algorithm Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../aps.html">Atmospheric Phase Screen Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../configuration.html">Configuration Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../covariance.html">Covariance Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../demerror.html">DEM Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gamma.html">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../geometry.html">Geometry Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../gdal_python.html">GDAL-Python Bindings Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../ifgconstants.html">Ifgconstants Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../logger.html">Logging Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../mpiops.html">MPI operations Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../mst.html">Minimum Spanning Tree Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../orbital.html">Orbital Error Correction Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../phase_closure.html">Phase Closure Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../prepifg_helper.html">Prepifg Helper Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../ref_phs_est.html">Reference Phase Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../refpixel.html">Reference Pixel Calculation Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../roipac.html">ROI_PAC Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../shared.html">Shared Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../stack.html">Stacking Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../timeseries.html">Time Series Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#valueerror-too-many-values-to-unpack-expected-2">ValueError: too many values to unpack (expected 2)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#stack-rate-map-appears-to-be-blank-empty">Stack Rate map appears to be blank/empty</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#failure-of-aps-spatial-low-pass-filter">Failure of APS spatial low pass filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#out-of-memory-errors">Out of memory errors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../troubleshooting.html#incorrect-modules-loaded-on-gadi">Incorrect modules loaded on Gadi</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing.html#types-of-contributions">Types of Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing.html#get-started">Get Started!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../contributing.html#pull-request-guidelines">Pull Request Guidelines</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../authors.html">Credits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../authors.html#development-lead">Development Lead</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../authors.html#contributors">Contributors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Release History</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id1">0.6.0 (2021-10-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id2">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id7">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id12">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id17">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id22">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id26">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id31">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../history.html#id32">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+</ul>
+
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: white" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">PyRate</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>pyrate.core.mst</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyrate.core.mst</h1><div class="highlight"><pre>
+<span></span><span class="c1">#   This Python module is part of the PyRate software package.</span>
+<span class="c1">#</span>
+<span class="c1">#   Copyright 2021 Geoscience Australia</span>
+<span class="c1">#</span>
+<span class="c1">#   Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1">#   you may not use this file except in compliance with the License.</span>
+<span class="c1">#   You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#       http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1">#   Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1">#   distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1">#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1">#   See the License for the specific language governing permissions and</span>
+<span class="c1">#   limitations under the License.</span>
+<span class="c1"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This Python module implements the minimum spanning tree</span>
+<span class="sd">functionality for selecting interferometric observations.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># pylint: disable=invalid-name</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">product</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">array</span><span class="p">,</span> <span class="n">nan</span><span class="p">,</span> <span class="n">isnan</span><span class="p">,</span> <span class="n">float32</span><span class="p">,</span> <span class="n">empty</span><span class="p">,</span> <span class="nb">sum</span> <span class="k">as</span> <span class="n">nsum</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">networkx.classes.reportviews</span> <span class="k">import</span> <span class="n">EdgeView</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">joblib</span> <span class="k">import</span> <span class="n">Parallel</span><span class="p">,</span> <span class="n">delayed</span>
+
+<span class="kn">import</span> <span class="nn">pyrate.constants</span> <span class="k">as</span> <span class="nn">C</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.algorithm</span> <span class="k">import</span> <span class="n">ifg_date_lookup</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.algorithm</span> <span class="k">import</span> <span class="n">ifg_date_index_lookup</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="k">import</span> <span class="n">IfgPart</span><span class="p">,</span> <span class="n">create_tiles</span><span class="p">,</span> <span class="n">tiles_split</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.shared</span> <span class="k">import</span> <span class="n">joblib_log_level</span><span class="p">,</span> <span class="n">Tile</span>
+<span class="kn">from</span> <span class="nn">pyrate.core.logger</span> <span class="k">import</span> <span class="n">pyratelogger</span> <span class="k">as</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">pyrate.configuration</span> <span class="k">import</span> <span class="n">Configuration</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">seterr</span><span class="p">(</span><span class="n">invalid</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>  <span class="c1"># stops RuntimeWarning in nan conversion</span>
+
+
+<span class="c1"># TODO: may need to implement memory saving row-by-row access</span>
+<span class="c1"># TODO: document weighting by either Nan fraction OR variance</span>
+
+
+<div class="viewcode-block" id="mst_from_ifgs"><a class="viewcode-back" href="../../../mst.html#pyrate.core.mst.mst_from_ifgs">[docs]</a><span class="k">def</span> <span class="nf">mst_from_ifgs</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a Minimum Spanning Tree (MST) network from the given interferograms</span>
+<span class="sd">    using Kruskal&#39;s algorithm. The MST is calculated using a weighting based</span>
+<span class="sd">    on the number of NaN cells in the phase band.</span>
+
+<span class="sd">    :param list ifgs: List of interferogram objects (Ifg class)</span>
+
+<span class="sd">    :return: edges: The number of network connections</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    :return: is_tree: A boolean that is True if network is a tree</span>
+<span class="sd">    :rtype: bool</span>
+<span class="sd">    :return: ntrees: The number of disconnected trees</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    :return: mst_ifgs: Minimum Spanning Tree network of interferograms</span>
+<span class="sd">    :rtype: list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">edges_with_weights_for_networkx</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="o">.</span><span class="n">first</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">second</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">nan_fraction</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span>
+    <span class="n">g_nx</span> <span class="o">=</span> <span class="n">_build_graph_networkx</span><span class="p">(</span><span class="n">edges_with_weights_for_networkx</span><span class="p">)</span>
+    <span class="n">mst</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">minimum_spanning_tree</span><span class="p">(</span><span class="n">g_nx</span><span class="p">)</span>
+    <span class="c1"># mst_edges, is tree?, number of trees</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">mst</span><span class="o">.</span><span class="n">edges</span><span class="p">()</span>
+    <span class="n">ifg_sub</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg_date_index_lookup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">edges</span><span class="p">]</span>
+    <span class="n">mst_ifgs</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ifg_sub</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">mst</span><span class="o">.</span><span class="n">edges</span><span class="p">(),</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_tree</span><span class="p">(</span><span class="n">mst</span><span class="p">),</span> <span class="n">nx</span><span class="o">.</span><span class="n">number_connected_components</span><span class="p">(</span><span class="n">mst</span><span class="p">),</span> <span class="n">mst_ifgs</span></div>
+
+
+<div class="viewcode-block" id="mst_parallel"><a class="viewcode-back" href="../../../mst.html#pyrate.core.mst.mst_parallel">[docs]</a><span class="k">def</span> <span class="nf">mst_parallel</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper function for calculating MST matrix in non-MPI runs.</span>
+
+<span class="sd">    :param list ifgs: List of interferogram objects (Ifg class)</span>
+<span class="sd">    :param dict params: Dictionary of parameters</span>
+
+<span class="sd">    :return: result: 3-dimensional Minimum Spanning Tree matrix</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating MST in tiles&#39;</span><span class="p">)</span>
+    <span class="n">ncpus</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">PROCESSES</span><span class="p">]</span>
+    <span class="n">no_ifgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)</span>
+    <span class="n">no_y</span><span class="p">,</span> <span class="n">no_x</span> <span class="o">=</span> <span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">phase_data</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">tiles</span> <span class="o">=</span> <span class="n">create_tiles</span><span class="p">(</span><span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">no_tiles</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tiles</span><span class="p">)</span>
+    <span class="c1"># need to break up the ifg class as multiprocessing does not allow pickling</span>
+    <span class="c1"># don&#39;t read in all the phase data at once</span>
+    <span class="c1"># use data paths and locally read in each core/process,</span>
+    <span class="c1"># gdal read is very fast</span>
+    <span class="n">ifg_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">data_path</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">no_ifgs</span><span class="p">,</span> <span class="n">no_y</span><span class="p">,</span> <span class="n">no_x</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">PARALLEL</span><span class="p">]:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating MST using </span><span class="si">{}</span><span class="s1"> tiles in parallel using </span><span class="si">{}</span><span class="s1"> &#39;</span> \
+                 <span class="s1">&#39;processes&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">no_tiles</span><span class="p">,</span> <span class="n">ncpus</span><span class="p">))</span>
+        <span class="n">t_msts</span> <span class="o">=</span> <span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">PROCESSES</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="n">joblib_log_level</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">LOG_LEVEL</span><span class="p">))(</span>
+            <span class="n">delayed</span><span class="p">(</span><span class="n">mst_multiprocessing</span><span class="p">)(</span><span class="n">t</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tiles</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">tile</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tiles</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[:,</span> <span class="n">tile</span><span class="o">.</span><span class="n">top_left_y</span><span class="p">:</span><span class="n">tile</span><span class="o">.</span><span class="n">bottom_right_y</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">top_left_x</span><span class="p">:</span> <span class="n">tile</span><span class="o">.</span><span class="n">bottom_right_x</span><span class="p">]</span> <span class="o">=</span> <span class="n">t_msts</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating MST using </span><span class="si">{}</span><span class="s1"> tiles in serial&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">no_tiles</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">tile</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tiles</span><span class="p">):</span>
+            <span class="n">result</span><span class="p">[:,</span> <span class="n">tile</span><span class="o">.</span><span class="n">top_left_y</span><span class="p">:</span><span class="n">tile</span><span class="o">.</span><span class="n">bottom_right_y</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">top_left_x</span><span class="p">:</span> <span class="n">tile</span><span class="o">.</span><span class="n">bottom_right_x</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="n">mst_multiprocessing</span><span class="p">(</span><span class="n">tile</span><span class="p">,</span> <span class="n">ifg_paths</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="mst_multiprocessing"><a class="viewcode-back" href="../../../mst.html#pyrate.core.mst.mst_multiprocessing">[docs]</a><span class="k">def</span> <span class="nf">mst_multiprocessing</span><span class="p">(</span><span class="n">tile</span><span class="p">,</span> <span class="n">ifgs_or_paths</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper function for calculating MST matrix for a tile</span>
+
+<span class="sd">    :param ndarray tile: Tile class instance</span>
+<span class="sd">    :param list ifgs_or_paths: All interferograms paths of the problem.</span>
+<span class="sd">        List of strings</span>
+<span class="sd">    :param dict preread_ifgs: Dictionary of interferogram metadata</span>
+
+<span class="sd">    :return: mst_tile: MST matrix tile. An array of booleans representing</span>
+<span class="sd">        valid ifg connections</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># The memory requirement during MPI MST computation is determined by the</span>
+    <span class="c1"># number of interferograms times size of IfgPart. Note that we need all</span>
+    <span class="c1"># interferogram header information (like first/second image dates) for MST</span>
+    <span class="c1"># computation. To manage memory we need smaller tiles (IfgPart) as number</span>
+    <span class="c1"># of interferograms increases</span>
+
+    <span class="n">ifg_parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">IfgPart</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">tile</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">ifgs_or_paths</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">mst_boolean_array</span><span class="p">(</span><span class="n">ifg_parts</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_build_graph_networkx</span><span class="p">(</span><span class="n">edges_with_weights</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience graph builder function: returns a new graph object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">add_weighted_edges_from</span><span class="p">(</span><span class="n">edges_with_weights</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">g</span>
+
+
+<div class="viewcode-block" id="mst_boolean_array"><a class="viewcode-back" href="../../../mst.html#pyrate.core.mst.mst_boolean_array">[docs]</a><span class="k">def</span> <span class="nf">mst_boolean_array</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a 3D array of booleans constituting valid interferogram connections</span>
+<span class="sd">    in the Minimum Spanning Tree matrix.</span>
+
+<span class="sd">    :param list ifgs: Sequence of interferogram objects</span>
+
+<span class="sd">    :return: result: Array of booleans representing valid ifg connections</span>
+<span class="sd">    :rtype: ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># The MSTs are stripped of connecting edge info, leaving just the ifgs.</span>
+    <span class="n">nifgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)</span>
+    <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span> <span class="o">=</span> <span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">phase_data</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">nifgs</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">mst</span> <span class="ow">in</span> <span class="n">mst_matrix_networkx</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
+        <span class="c1"># mst is a list of datetime.date tuples</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mst</span><span class="p">,</span> <span class="n">EdgeView</span><span class="p">):</span>
+            <span class="n">ifg_sub</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg_date_index_lookup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">mst</span><span class="p">]</span>
+            <span class="n">ifg_sub_bool</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifg_sub</span> <span class="k">else</span> <span class="kc">False</span>
+                            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nifgs</span><span class="p">)]</span>  <span class="c1"># boolean conversion</span>
+            <span class="n">result</span><span class="p">[:,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ifg_sub_bool</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[:,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nifgs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+<span class="k">def</span> <span class="nf">_mst_matrix_ifgs_only</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Alternative method for producing 3D MST array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Currently not used</span>
+    <span class="c1"># The MSTs are stripped of connecting edge info, leaving just the ifgs.</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">phase_data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">mst</span> <span class="ow">in</span> <span class="n">mst_matrix_networkx</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mst</span><span class="p">,</span> <span class="n">EdgeView</span><span class="p">):</span>
+            <span class="n">ifg_sub</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg_date_lookup</span><span class="p">(</span><span class="n">ifgs</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">mst</span><span class="p">]</span>
+            <span class="n">result</span><span class="p">[(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ifg_sub</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)]</span> <span class="o">=</span> <span class="n">mst</span>  <span class="c1"># usually NaN</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">_mst_matrix_as_array</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Alternative method for producing 3D MST array</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Currently not used</span>
+    <span class="c1"># Each pixel contains an MST (with connecting edges etc).</span>
+    <span class="n">mst_result</span> <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">phase_data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">mst</span> <span class="ow">in</span> <span class="n">mst_matrix_networkx</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
+        <span class="n">mst_result</span><span class="p">[</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span> <span class="o">=</span> <span class="n">mst</span>
+    <span class="k">return</span> <span class="n">mst_result</span>
+
+
+<span class="c1"># TODO: custom edge weighting could be included with an additional</span>
+<span class="c1"># &#39;weights&#39; arg if some other weighting criterion is required later</span>
+<div class="viewcode-block" id="mst_matrix_networkx"><a class="viewcode-back" href="../../../mst.html#pyrate.core.mst.mst_matrix_networkx">[docs]</a><span class="k">def</span> <span class="nf">mst_matrix_networkx</span><span class="p">(</span><span class="n">ifgs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates MST network for a single pixel for the given ifgs using</span>
+<span class="sd">    NetworkX-package algorithms.</span>
+
+<span class="sd">    :param list ifgs: Sequence of interferogram objects</span>
+
+<span class="sd">    :return: y: pixel y coordinate</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    :return: x: pixel x coordinate</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    :return: mst: list of tuples for edges in the minimum spanning tree</span>
+<span class="sd">    :rtype: list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># make default MST to optimise result when no Ifg cells in a stack are nans</span>
+    <span class="n">edges_with_weights</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="o">.</span><span class="n">first</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">second</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">nan_fraction</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span>
+    <span class="n">edges</span><span class="p">,</span> <span class="n">g_nx</span> <span class="o">=</span> <span class="n">_minimum_spanning_edges_from_mst</span><span class="p">(</span><span class="n">edges_with_weights</span><span class="p">)</span>
+    <span class="c1"># TODO: memory efficiencies can be achieved here with tiling</span>
+
+    <span class="n">list_of_phase_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">phase_data</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ifgs</span><span class="p">]</span>
+    <span class="n">data_stack</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">list_of_phase_data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="c1"># create MSTs for each pixel in the ifg data stack</span>
+    <span class="n">nifgs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ifgs</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nrows</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">ifgs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ncols</span><span class="p">)):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">data_stack</span><span class="p">[:,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">]</span>  <span class="c1"># vertical stack of ifg values for a pixel</span>
+        <span class="n">nan_count</span> <span class="o">=</span> <span class="n">nsum</span><span class="p">(</span><span class="n">isnan</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+
+        <span class="c1"># optimisations: use pre-created results for all nans/no nans</span>
+        <span class="k">if</span> <span class="n">nan_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">edges</span>
+            <span class="k">continue</span>
+        <span class="k">elif</span> <span class="n">nan_count</span> <span class="o">==</span> <span class="n">nifgs</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">nan</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># dynamically modify graph to reuse a single graph: this should avoid</span>
+        <span class="c1"># repeatedly creating new graph objs &amp; reduce RAM use</span>
+        <span class="n">ebunch_add</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ebunch_delete</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">value</span><span class="p">,</span> <span class="n">edge</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">edges_with_weights</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">isnan</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">g_nx</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                    <span class="n">ebunch_add</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">g_nx</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                    <span class="n">ebunch_delete</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ebunch_add</span><span class="p">:</span>
+            <span class="n">g_nx</span><span class="o">.</span><span class="n">add_weighted_edges_from</span><span class="p">(</span><span class="n">ebunch_add</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ebunch_delete</span><span class="p">:</span>
+            <span class="n">g_nx</span><span class="o">.</span><span class="n">remove_edges_from</span><span class="p">(</span><span class="n">ebunch_delete</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">minimum_spanning_tree</span><span class="p">(</span><span class="n">g_nx</span><span class="p">)</span><span class="o">.</span><span class="n">edges</span><span class="p">()</span></div>
+
+
+<span class="k">def</span> <span class="nf">_minimum_spanning_edges_from_mst</span><span class="p">(</span><span class="n">edges</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience function to determine MST edges</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">g_nx</span> <span class="o">=</span> <span class="n">_build_graph_networkx</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">minimum_spanning_tree</span><span class="p">(</span><span class="n">g_nx</span><span class="p">)</span>  <span class="c1"># step ifglist_mst in make_mstmat.m</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">edges</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">edges</span><span class="p">,</span> <span class="n">g_nx</span>
+
+
+<div class="viewcode-block" id="mst_calc_wrapper"><a class="viewcode-back" href="../../../mst.html#pyrate.core.mst.mst_calc_wrapper">[docs]</a><span class="k">def</span> <span class="nf">mst_calc_wrapper</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    MPI wrapper function for MST calculation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Calculating minimum spanning tree matrix&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_save_mst_tile</span><span class="p">(</span><span class="n">tile</span><span class="p">:</span> <span class="n">Tile</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convenient inner loop for mst tile saving</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">preread_ifgs</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">PREREAD_IFGS</span><span class="p">]</span>
+        <span class="n">dest_tifs</span> <span class="o">=</span> <span class="p">[</span><span class="n">ifg_path</span><span class="o">.</span><span class="n">tmp_sampled_path</span> <span class="k">for</span> <span class="n">ifg_path</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">INTERFEROGRAM_FILES</span><span class="p">]]</span>
+        <span class="n">mst_file_process_n</span> <span class="o">=</span> <span class="n">Configuration</span><span class="o">.</span><span class="n">mst_path</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">tile</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mst_file_process_n</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">return</span>
+        <span class="n">mst_tile</span> <span class="o">=</span> <span class="n">mst_multiprocessing</span><span class="p">(</span><span class="n">tile</span><span class="p">,</span> <span class="n">dest_tifs</span><span class="p">,</span> <span class="n">preread_ifgs</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="c1"># locally save the mst_mat</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">mst_file_process_n</span><span class="p">,</span> <span class="n">arr</span><span class="o">=</span><span class="n">mst_tile</span><span class="p">)</span>
+
+    <span class="n">tiles_split</span><span class="p">(</span><span class="n">_save_mst_tile</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Finished minimum spanning tree calculation&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+<p>placeHolderText</p>
+        <!-- your html code here -->
+ 
+
+
+</body>
+</html>
