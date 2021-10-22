@@ -114,8 +114,6 @@ def _merge_linrate(params: dict) -> None:
     # read and assemble tile outputs
     out_types = ['linear_' + x for x in ['rate', 'rsquared', 'error', 'intercept', 'samples']]
     process_out_types = mpiops.array_split(out_types)
-
-
     
     for p_out_type in process_out_types:
         out = assemble_tiles(shape, params[C.TMPDIR], tiles, out_type=p_out_type)
