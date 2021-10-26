@@ -123,7 +123,7 @@ def _merge_linrate(params: dict) -> None:
  
     ## Add metadata to output files
 
-    # Get Reference pixel coordinates from first IFG metadata in corrected IFG directory
+    # Get reference pixel coordinates from first IFG metadata in corrected IFG directory
     src = gdal.Open(params[C.INTERFEROGRAM_FILES][0].tmp_sampled_path, gdal.GA_ReadOnly)
     metadata = src.GetMetadata()
     lon = metadata["REF_PIX_LON"]
@@ -140,7 +140,7 @@ def _merge_linrate(params: dict) -> None:
     else:        
         azimuth_median = "NOT COMPUTED"
 
-    # Add reference pixel coordinates to output GeoTIFF metadata in velocity directory
+    # Add metadata details to final output GeoTIFFs in velocity directory
     for file in glob.glob(f'{params[C.VELOCITY_DIR]}/*tif'):
 
         src = gdal.Open(file)
