@@ -20,6 +20,7 @@ of the interferometric reference pixel
 import os
 from os.path import join
 from typing import Tuple
+from osgeo import gdal
 
 from itertools import product
 
@@ -393,13 +394,20 @@ def __validate_supplied_lat_lon(params: dict) -> None:
     lon, lat = params[C.REFX], params[C.REFY]
     if lon == -1 or lat == -1:
         return
-    xmin, ymin, xmax, ymax = prepifg_helper.get_analysis_extent(
-        crop_opt=params[C.IFG_CROP_OPT],
-        rasters=[prepifg_helper.dem_or_ifg(p.sampled_path) for p in params[C.INTERFEROGRAM_FILES]],
-        xlooks=params[C.IFG_LKSX], ylooks=params[C.IFG_LKSY],
-        user_exts=(params[C.IFG_XFIRST], params[C.IFG_YFIRST], params[
-            C.IFG_XLAST], params[C.IFG_YLAST])
-    )
+    
+    # Get extent of first IFG
+    src = gdal.Open(params[C.INTERFEROGRAM_FILES][0].sampled_path, gdal.GA_ReadOnly)
+    x_upleft, x_post, _, y_upleft, _, y_post  = src.GetGeoTransform()
+    
+    # Assign coordinates
+    xmin = x_upleft
+    ymax = y_upleft
+    xmax = x_upleft + (src.RasterXSize * x_post)
+    ymin = y_upleft + (src.RasterYSize * y_post)
+    
+    # Close IFG file
+    src = None
+
     msg = "Supplied {} value is outside the bounds of the interferogram data"
     lat_lon_txt = ''
     if (lon < xmin) or (lon > xmax):
