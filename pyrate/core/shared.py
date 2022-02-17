@@ -40,11 +40,8 @@ import pkg_resources
 
 import pyrate.constants as C
 
-try:
-    from osgeo import osr, gdal
-    from osgeo.gdalconst import GA_Update, GA_ReadOnly
-except ImportError:
-    import gdal
+from osgeo import osr, gdal
+from osgeo.gdalconst import GA_Update, GA_ReadOnly
 
 from pyrate.core import ifgconstants as ifc, mpiops
 from pyrate.core.logger import pyratelogger as log
