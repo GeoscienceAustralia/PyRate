@@ -313,7 +313,7 @@ def _custom_bounds(ifgs, xw, ytop, xe, ybot):
 
     if xe < xw:
         raise PreprocessError('ERROR Custom crop bounds: '
-                              'ifgxfirst must be less than ifgxlast')
+                              'ifgxfirst must be greater than ifgxlast')
 
     for par, crop, orig, step in zip(['x_first', 'x_last', 'y_first', 'y_last'],
                                      [xw, xe, ytop, ybot],

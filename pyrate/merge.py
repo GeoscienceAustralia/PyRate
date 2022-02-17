@@ -24,8 +24,6 @@ from osgeo import gdal
 import subprocess
 from pathlib import Path
 from typing import Optional, Tuple
-import glob
-import math
 
 import pyrate.constants as C
 from pyrate.core import shared, stack, ifgconstants as ifc, mpiops
@@ -114,39 +112,11 @@ def _merge_linrate(params: dict) -> None:
     # read and assemble tile outputs
     out_types = ['linear_' + x for x in ['rate', 'rsquared', 'error', 'intercept', 'samples']]
     process_out_types = mpiops.array_split(out_types)
-    
     for p_out_type in process_out_types:
         out = assemble_tiles(shape, params[C.TMPDIR], tiles, out_type=p_out_type)
         __save_merged_files(ifgs_dict, params, out, p_out_type, savenpy=params["savenpy"])
     mpiops.comm.barrier()
 
- 
-    ## Add metadata to output files
-
-    # Get reference pixel coordinates from first IFG metadata in corrected IFG directory
-    src = gdal.Open(params[C.INTERFEROGRAM_FILES][0].tmp_sampled_path, gdal.GA_ReadOnly)
-    metadata = src.GetMetadata()
-    lon = metadata["REF_PIX_LON"]
-    lat = metadata["REF_PIX_LAT"] 
-    src = None
-
-    # Get median azimuth direction of LOS vector from azimuth_angle.tif if exists
-    if isfile(f'{params[C.GEOMETRY_DIR]}/azimuth_angle.tif'):
-        src = gdal.Open(f'{params[C.GEOMETRY_DIR]}/azimuth_angle.tif')
-        data = src.ReadAsArray()
-        azimuth_median = np.nanmedian(data)*(180/math.pi)
-        src = None
-
-    else:        
-        azimuth_median = "NOT COMPUTED"
-
-    # Add metadata details to final output GeoTIFFs in velocity directory
-    for file in glob.glob(f'{params[C.VELOCITY_DIR]}/*tif'):
-
-        src = gdal.Open(file)
-        src.SetMetadata({"REF_PIX_LON": str(lon), "REF_PIX_LAT": str(lat), "MEDIAN_AZIMUTH": str(azimuth_median)})
-        src = None
-    
 
 def _merge_timeseries(params: dict, tstype: str) -> None:
     """
@@ -309,7 +279,7 @@ out_type_md_dict = {
 }
 
 error_out_types = {'linear_error', 'stack_error'}
-los_projection_out_types = {'tsincr', 'tscuml', 'linear_rate', 'linear_intercept', 'stack_rate'}
+los_projection_out_types = {'tsincr', 'tscuml', 'linear_rate', 'stack_rate'}
 los_projection_divisors = {
     ifc.LINE_OF_SIGHT: lambda data: 1,
     ifc.PSEUDO_VERTICAL: lambda data: np.cos(data),
