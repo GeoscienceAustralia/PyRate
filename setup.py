@@ -20,7 +20,7 @@ from setuptools.command.develop import develop
 from subprocess import check_output, run
 import platform
 import setuptools
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 
 # Get requirements (and dev requirements for testing) from requirements
 #  txt files. Also ensure we are using correct GDAL version.
