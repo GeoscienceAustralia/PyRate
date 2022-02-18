@@ -61,7 +61,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt upgrade
-          python -m pip install -U pip wheel
+          python -m pip install -U pip wheel setuptools==58.0
       - name: Install packages including openmpi
         if: env.PYTHONVERSION != '3.9'
         run: sudo apt install libhdf5-serial-dev libnetcdf13 libatlas-base-dev gfortran openmpi-bin libopenmpi-dev
