@@ -20,7 +20,9 @@ To allow flexibility in the file types that can be processed, `PyRate` requires
 file lists to be provided. This allows `PyRate` to identify files of each
 type without relying on file extensions. The file path to these lists are 
 provided under ``ifgfilelist``, ``hdrfilelist``, ``cohfilelist`` and 
-``basefilelist`` keywords in the configuration file.
+``basefilelist`` keywords in the configuration file. These lists can be created manually 
+or generated using the script ``list_creator.sh`` located in the ``utils`` folder.
+This script may need to be slightly modified depending on the output paths of your input data.
 
 .. note::
 
