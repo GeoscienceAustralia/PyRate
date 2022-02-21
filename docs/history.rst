@@ -14,6 +14,7 @@ Fixed
 - Fix wrong sign in Y-intercept output file.
 - Fix and simplify how user supplied reference pixel is validated and cropping issue.
 - Add metadata for reference pixel latitude and longitude to output files.
+- Fix non-determinism in unit tests that use array comparison by running them single threaded.
 
 
 0.6.0 (2021-10-18)
