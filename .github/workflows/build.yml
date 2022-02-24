@@ -103,10 +103,6 @@ jobs:
           pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/ -m "not slow"
         env:
              OMP_NUM_THREADS: 1
-             OPENBLAS_NUM_THREADS: 1
-             MKL_NUM_THREADS: 1
-             VECLIB_MAXIMUM_THREADS: 1
-             NUMEXPR_NUM_THREADS: 1
       - name: Test Pyrate in Python ${{ matrix.python-version }} without MPI
         if: env.PYTHONVERSION == '3.9'
         run: |
@@ -114,8 +110,4 @@ jobs:
           pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/ -m "not slow and not mpi"
         env:
              OMP_NUM_THREADS: 1
-             OPENBLAS_NUM_THREADS: 1
-             MKL_NUM_THREADS: 1
-             VECLIB_MAXIMUM_THREADS: 1
-             NUMEXPR_NUM_THREADS: 1
         
