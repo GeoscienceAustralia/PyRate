@@ -1,6 +1,6 @@
 #   This Python module is part of the PyRate software package.
 #
-#   Copyright 2021 Geoscience Australia
+#   Copyright 2022 Geoscience Australia
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -40,11 +40,8 @@ import pkg_resources
 
 import pyrate.constants as C
 
-try:
-    from osgeo import osr, gdal
-    from osgeo.gdalconst import GA_Update, GA_ReadOnly
-except ImportError:
-    import gdal
+from osgeo import osr, gdal
+from osgeo.gdalconst import GA_Update, GA_ReadOnly
 
 from pyrate.core import ifgconstants as ifc, mpiops
 from pyrate.core.logger import pyratelogger as log

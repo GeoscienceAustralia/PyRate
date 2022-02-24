@@ -61,7 +61,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt upgrade
-          python -m pip install -U pip wheel
+          python -m pip install -U pip wheel setuptools==58.0
       - name: Install packages including openmpi
         if: env.PYTHONVERSION != '3.9'
         run: sudo apt install libhdf5-serial-dev libnetcdf13 libatlas-base-dev gfortran openmpi-bin libopenmpi-dev
@@ -101,8 +101,13 @@ jobs:
           pytest tests/ -m "slow"
           mpirun -n 3 pytest tests/test_shared.py -k test_tiles_split -s
           pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/ -m "not slow"
+        env:
+             OMP_NUM_THREADS: 1
       - name: Test Pyrate in Python ${{ matrix.python-version }} without MPI
         if: env.PYTHONVERSION == '3.9'
         run: |
           pytest tests/ -m "not mpi and slow"
           pytest --cov-config=.coveragerc --cov-report term-missing:skip-covered --cov=pyrate tests/ -m "not slow and not mpi"
+        env:
+             OMP_NUM_THREADS: 1
+        
