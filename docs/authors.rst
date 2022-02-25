@@ -33,3 +33,4 @@ Thanks to `all the contributors`_ who helped to build the ship and raise the sai
 * Garrick Paskos (GA)
 * Nahidul Samrat (GA)
 * Richard Taylor (GA)
+* Sean Minhui Tashi Chua (GA)  
