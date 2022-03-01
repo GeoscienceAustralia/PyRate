@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Reference Phase Calculation Module &mdash; PyRate 0.6.0 documentation</title>
@@ -149,71 +149,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pyrate.core.ref_phs_est">
-<span id="reference-phase-calculation-module"></span><h1>Reference Phase Calculation Module<a class="headerlink" href="#module-pyrate.core.ref_phs_est" title="Permalink to this headline">¶</a></h1>
-<p>This Python module implements a reference phase estimation algorithm.</p>
-<dl class="py exception">
-<dt class="sig sig-object py" id="pyrate.core.ref_phs_est.ReferencePhaseError">
-<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">pyrate.core.ref_phs_est.</span></span><span class="sig-name descname"><span class="pre">ReferencePhaseError</span></span><a class="reference internal" href="_modules/pyrate/core/ref_phs_est.html#ReferencePhaseError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.ref_phs_est.ReferencePhaseError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generic class for errors in reference phase estimation.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.ref_phs_est.est_ref_phase_ifg_median">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.ref_phs_est.</span></span><span class="sig-name descname"><span class="pre">est_ref_phase_ifg_median</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifg_paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/ref_phs_est.html#est_ref_phase_ifg_median"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.ref_phs_est.est_ref_phase_ifg_median" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reference phase estimation, calculated as the median of the whole
-interferogram image.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifg_paths</strong> (<em>list</em>) – List of interferogram paths or objects</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>ref_phs: Numpy array of reference phase values of size (nifgs, 1)</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>ifgs: Reference phase data is removed interferograms in place</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.ref_phs_est.est_ref_phase_patch_median">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.ref_phs_est.</span></span><span class="sig-name descname"><span class="pre">est_ref_phase_patch_median</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifg_paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refpy</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/ref_phs_est.html#est_ref_phase_patch_median"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.ref_phs_est.est_ref_phase_patch_median" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reference phase estimation, calculated as the median within a patch around
-the supplied reference pixel.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifg_paths</strong> (<em>list</em>) – List of interferogram paths or objects.</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p></li>
-<li><p><strong>refpx</strong> (<em>int</em>) – Reference pixel X found by ref pixel method</p></li>
-<li><p><strong>refpy</strong> (<em>int</em>) – Reference pixel Y found by ref pixel method</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>ref_phs: Numpy array of reference phase values of size (nifgs, 1)</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>ifgs: Reference phase data is removed interferograms in place</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.ref_phs_est.ref_phase_est_wrapper">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.ref_phs_est.</span></span><span class="sig-name descname"><span class="pre">ref_phase_est_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/ref_phs_est.html#ref_phase_est_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.ref_phs_est.ref_phase_est_wrapper" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper for reference phase estimation.</p>
-</dd></dl>
-
+  <section id="reference-phase-calculation-module">
+<h1>Reference Phase Calculation Module<a class="headerlink" href="#reference-phase-calculation-module" title="Permalink to this headline">¶</a></h1>
 </section>
 
 
@@ -224,7 +161,7 @@ the supplied reference pixel.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+    <p>&#169; Copyright 2022, Geoscience Australia.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

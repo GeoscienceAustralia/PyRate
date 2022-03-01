@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Geometry Module &mdash; PyRate 0.6.0 documentation</title>
@@ -149,92 +149,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pyrate.core.geometry">
-<span id="geometry-module"></span><h1>Geometry Module<a class="headerlink" href="#module-pyrate.core.geometry" title="Permalink to this headline">¶</a></h1>
-<p>This Python module implements the calculation and output of the per-pixel vector of the radar viewing geometry
-(i.e. local angles, incidence angles and azimuth angles) as well as the calculation of per-pixel baseline values
-used for correcting interferograms for residual topographic effects (a.k.a. DEM errors).</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.geometry.calc_local_baseline">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.geometry.</span></span><span class="sig-name descname"><span class="pre">calc_local_baseline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="shared.html#pyrate.core.shared.Ifg" title="pyrate.core.shared.Ifg"><span class="pre">pyrate.core.shared.Ifg</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">az</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">look_angle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference internal" href="_modules/pyrate/core/geometry.html#calc_local_baseline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.geometry.calc_local_baseline" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to calculate perpendicular baseline values for each pixel.
-:param ifg: pyrate.core.shared.Ifg Class object
-:param az: Azimuth image coordinate for each pixel
-:param look_angle: Look angle for each pixel (radians)
-:return: bperp: Perpendicular baseline for each pixel (metres)</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.geometry.calc_pixel_geometry">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.geometry.</span></span><span class="sig-name descname"><span class="pre">calc_pixel_geometry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="shared.html#pyrate.core.shared.Ifg" title="pyrate.core.shared.Ifg"><span class="pre">pyrate.core.shared.Ifg</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="shared.html#pyrate.core.shared.IfgPart" title="pyrate.core.shared.IfgPart"><span class="pre">pyrate.core.shared.IfgPart</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dem_height</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/pyrate/core/geometry.html#calc_pixel_geometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.geometry.calc_pixel_geometry" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to calculate angular satellite to ground geometries and distance for each pixel.
-:param ifg: pyrate.core.shared.Ifg Class object.
-:param rg: Range image coordinate for each pixel.
-:param lon: Longitude for each pixel (decimal degrees).
-:param lat: Latitude for each pixel (decimal degrees).
-:param dem_height: Height from DEM for each pixel (metres).
-:return: look_angle: Look angle (between nadir and look vector) for each pixel (radians).
-:return: incidence_angle: Local incidence angle (between vertical and look vector) for each pixel (radians).
-:return: azimuth_angle: Geodetic azimuth for each pixel (radians).
-:return: range_dist: Distance from satellite to ground for each pixel (metres).</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.geometry.calc_radar_coords">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.geometry.</span></span><span class="sig-name descname"><span class="pre">calc_radar_coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="shared.html#pyrate.core.shared.Ifg" title="pyrate.core.shared.Ifg"><span class="pre">pyrate.core.shared.Ifg</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xmin</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xmax</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ymin</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ymax</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/pyrate/core/geometry.html#calc_radar_coords"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.geometry.calc_radar_coords" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to calculate radar coordinates for each pixel in the multi-looked
-interferogram dataset. Radar coordinates are identical for each interferogram
-in the stack. Uses the Gamma lookup table defined in the configuration file.
-:param ifg: pyrate.core.shared.Ifg Class object.
-:param params: Dictionary of PyRate configuration parameters.
-:param xmin: Minimum longitude of cropped image (decimal degrees).
-:param xmax: Maximum longitude of cropped image (decimal degrees)
-:param ymin: Minimum latitude of cropped image (decimal degrees).
-:param ymax: Maximum latitude of cropped image (decimal degrees)
-:return: lt_az: Radar geometry azimuth coordinate for each pixel.
-:return: lt_rg: Radar geometry range coordinate for each pixel.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.geometry.get_lonlat_coords">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.geometry.</span></span><span class="sig-name descname"><span class="pre">get_lonlat_coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="shared.html#pyrate.core.shared.Ifg" title="pyrate.core.shared.Ifg"><span class="pre">pyrate.core.shared.Ifg</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">pyrate.core.shared.MemGeometry</span><span class="p"><span class="pre">,</span> </span><span class="pre">pyrate.core.shared.MemGeometry</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/pyrate/core/geometry.html#get_lonlat_coords"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.geometry.get_lonlat_coords" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to get longitude and latitude coordinates for each pixel in the multi-looked.
-interferogram dataset. Coordinates are identical for each interferogram in the stack.
-:param ifg: pyrate.core.shared.Ifg Class object.
-:return: lon: Longitude for each pixel (decimal degrees)
-:return: lat: Latitude for each pixel (decimal degrees)</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.geometry.get_sat_positions">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.geometry.</span></span><span class="sig-name descname"><span class="pre">get_sat_positions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">look_angle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inc_angle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heading</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.float64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">look_dir</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.float64</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/pyrate/core/geometry.html#get_sat_positions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.geometry.get_sat_positions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to calculate the lon/lat position of the satellite for each pixel.
-:param lat: Ground latitude for each pixel (decimal degrees).
-:param lon: Ground point longitude for each pixel (decimal degrees).
-:param look_angle: Look angle (between nadir and look vector) for each pixel (radians).
-:param inc_angle: Local incidence angle (between vertical and look vector) for each pixel (radians).
-:param heading: Satellite flight heading (radians).
-:param look_dir: Look direction w.r.t. satellite heading; +ve = right looking (radians).
-:return: sat_lat: Satellite position latitude for each pixel (decimal degrees).
-:return: sat_lon: Satellite position longitude for each pixel (decimal degrees).</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.geometry.vincinv">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.geometry.</span></span><span class="sig-name descname"><span class="pre">vincinv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat1</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon1</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat2</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon2</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">semimaj</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">semimin</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference internal" href="_modules/pyrate/core/geometry.html#vincinv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.geometry.vincinv" title="Permalink to this definition">¶</a></dt>
-<dd><p>Vincenty’s Inverse Formula, adapted from GeodePy function vincinv
-(see <a class="reference external" href="https://github.com/GeoscienceAustralia/GeodePy/blob/master/geodepy/geodesy.py">https://github.com/GeoscienceAustralia/GeodePy/blob/master/geodepy/geodesy.py</a>)
-- only relevant parts of the Geodepy to retrieve the azimuth angle have been used
-- vectorised the function for use with numpy arrays
-:param lat1: Latitude of Point 1 (radians)
-:param lon1: Longitude of Point 1 (radians)
-:param lat2: Latitude of Point 2 (radians)
-:param lon2: Longitude of Point 2 (radians)
-:param semimaj: semi-major axis of ellipsoid
-:param semimin: semi-minor axis of ellipsoid
-:return: azimuth1to2: Azimuth from Point 1 to 2 (Decimal Degrees)</p>
-</dd></dl>
-
+  <section id="geometry-module">
+<h1>Geometry Module<a class="headerlink" href="#geometry-module" title="Permalink to this headline">¶</a></h1>
 </section>
 
 
@@ -245,7 +161,7 @@ interferogram dataset. Coordinates are identical for each interferogram in the s
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+    <p>&#169; Copyright 2022, Geoscience Australia.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

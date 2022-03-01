@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PyRate Prepifg Script &mdash; PyRate 0.6.0 documentation</title>
@@ -149,45 +149,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pyrate.prepifg">
-<span id="pyrate-prepifg-script"></span><h1>PyRate Prepifg Script<a class="headerlink" href="#module-pyrate.prepifg" title="Permalink to this headline">¶</a></h1>
-<p>This Python script applies optional multilooking and cropping to input
-interferogram geotiff files.</p>
-<p>There are two modes of running prepifg using pyrate:
-1. A python/numpy version, which is also the default version, and
-2. a <cite>largetifs</cite> option which can be activated using the config option largetifs: 1</p>
-<p>The python/numpy version is recommended when the both the input interferogram and multilooked interferogram can fit
-into the memory allocated to the process.</p>
-<p>When dealing with relatively large (compared to memory available to the process) interferogram, the largetif option
-can be used. This option uses a slightly modified version of the <cite>gdal_calc.py</cite> included with pyrate. Arbitrarily
-large interferograms can be multilooked using largetifs.</p>
-<p>The <cite>largetifs</cite> option uses system calls to gdal utilities and avoid loading large chunks of memory. Our tests
-(tests/test_prepifg_largetifs_vs_python.py::test_prepifg_largetifs_vs_python) indicate that for two different small
-datasets included in our test suite, the <cite>largetifs</cite> option exactly match the output of the numpy version. However,
-on large practical datasets we have observed numerical differences in the multilooked output in the 3rd and 4th decimal
-places (in sub mm range).</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.prepifg.do_prepifg">
-<span class="sig-prename descclassname"><span class="pre">pyrate.prepifg.</span></span><span class="sig-name descname"><span class="pre">do_prepifg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">multi_paths</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">pyrate.configuration.MultiplePaths</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exts</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/pyrate/prepifg.html#do_prepifg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.prepifg.do_prepifg" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prepare interferograms by applying multilooking/cropping operations.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.prepifg.find_header">
-<span class="sig-prename descclassname"><span class="pre">pyrate.prepifg.</span></span><span class="sig-name descname"><span class="pre">find_header</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pyrate.configuration.MultiplePaths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/pyrate/prepifg.html#find_header"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.prepifg.find_header" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.prepifg.main">
-<span class="sig-prename descclassname"><span class="pre">pyrate.prepifg.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/prepifg.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.prepifg.main" title="Permalink to this definition">¶</a></dt>
-<dd><p>Main workflow function for preparing interferograms for PyRate.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>params</strong> (<em>dict</em>) – Parameters dictionary read in from the config file</p>
-</dd>
-</dl>
-</dd></dl>
-
+  <section id="pyrate-prepifg-script">
+<h1>PyRate Prepifg Script<a class="headerlink" href="#pyrate-prepifg-script" title="Permalink to this headline">¶</a></h1>
 </section>
 
 
@@ -198,7 +161,7 @@ places (in sub mm range).</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+    <p>&#169; Copyright 2022, Geoscience Australia.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

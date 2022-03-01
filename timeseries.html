@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Time Series Module &mdash; PyRate 0.6.0 documentation</title>
@@ -149,161 +149,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pyrate.core.timeseries">
-<span id="time-series-module"></span><h1>Time Series Module<a class="headerlink" href="#module-pyrate.core.timeseries" title="Permalink to this headline">¶</a></h1>
-<p>This Python module contains functions for computing a time series
-inversion in PyRate.</p>
-<dl class="py exception">
-<dt class="sig sig-object py" id="pyrate.core.timeseries.TimeSeriesError">
-<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">pyrate.core.timeseries.</span></span><span class="sig-name descname"><span class="pre">TimeSeriesError</span></span><a class="reference internal" href="_modules/pyrate/core/timeseries.html#TimeSeriesError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.timeseries.TimeSeriesError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generic exception for time series errors.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.timeseries.linear_rate_array">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.timeseries.</span></span><span class="sig-name descname"><span class="pre">linear_rate_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tscuml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ifgs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/timeseries.html#linear_rate_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.timeseries.linear_rate_array" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function loops over all pixels in a 3-dimensional cumulative
-time series array and calculates the linear rate (line of best fit)
-for each pixel using linear regression.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>tscuml</strong> (<em>ndarray</em>) – 3-dimensional cumulative time series array</p></li>
-<li><p><strong>ifgs</strong> (<em>list</em>) – list of interferogram class objects.</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Configuration parameters</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>linrate: Linear rate map from linear regression</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>intercept: Array of Y-axis intercepts from linear regression</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>rsquared: Array of R-squared value of the linear regression</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>error: Array of standard errors of the linear regression</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>samples: Number of observations used in linear regression for each pixel</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.timeseries.linear_rate_pixel">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.timeseries.</span></span><span class="sig-name descname"><span class="pre">linear_rate_pixel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/timeseries.html#linear_rate_pixel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.timeseries.linear_rate_pixel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate best fitting linear rate to cumulative displacement
-time series for one pixel using linear regression.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>y</strong> (<em>ndarray</em>) – 1-dimensional vector of cumulative displacement time series</p></li>
-<li><p><strong>t</strong> (<em>ndarray</em>) – 1-dimensional vector of cumulative time at each epoch</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>linrate: Linear rate; gradient of fitted line.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-<dt class="field-even">Return intercept</dt>
-<dd class="field-even"><p>Y-axis intercept of fitted line at t = 0</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>rsquared: R-squared value of the linear regression</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>error: Standard error of the linear regression</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>samples: Number of observations used in linear regression</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.timeseries.time_series">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.timeseries.</span></span><span class="sig-name descname"><span class="pre">time_series</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifgs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vcmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mst</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/timeseries.html#time_series"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.timeseries.time_series" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates the displacement time series from the given interferogram
-network. Solves the linear least squares system using either the SVD
-method (similar to the SBAS method implemented by Berardino et al. 2002)
-or a Finite Difference method using a Laplacian Smoothing operator
-(similar to the method implemented by Schmidt and Burgmann 2003).
-The returned outputs are multi-dimensional arrays of
-size(nrows, ncols, nepochs-1), where:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><em>nrows</em> is the number of rows in the ifgs,</p></li>
-<li><p><em>ncols</em> is the  number of columns in the ifgs, and</p></li>
-<li><p><em>nepochs</em> is the number of unique epochs (dates)</p></li>
-</ul>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifgs</strong> (<em>list</em>) – list of interferogram class objects.</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p></li>
-<li><p><strong>vcmt</strong> (<em>ndarray</em>) – Positive definite temporal variance covariance matrix</p></li>
-<li><p><strong>mst</strong> (<em>ndarray</em>) – [optional] Minimum spanning tree array.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>tsincr: incremental displacement time series.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>tscuml: cumulative displacement time series.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>tsvel_matrix: velocity for each epoch interval.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.timeseries.timeseries_calc_wrapper">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.timeseries.</span></span><span class="sig-name descname"><span class="pre">timeseries_calc_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/timeseries.html#timeseries_calc_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.timeseries.timeseries_calc_wrapper" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper for time series calculation on a set of tiles.</p>
-</dd></dl>
-
+  <section id="time-series-module">
+<h1>Time Series Module<a class="headerlink" href="#time-series-module" title="Permalink to this headline">¶</a></h1>
 </section>
 
 
@@ -314,7 +161,7 @@ size(nrows, ncols, nepochs-1), where:</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+    <p>&#169; Copyright 2022, Geoscience Australia.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

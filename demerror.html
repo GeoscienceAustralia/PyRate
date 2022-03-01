@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DEM Error Correction Module &mdash; PyRate 0.6.0 documentation</title>
@@ -149,51 +149,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pyrate.core.dem_error">
-<span id="dem-error-correction-module"></span><h1>DEM Error Correction Module<a class="headerlink" href="#module-pyrate.core.dem_error" title="Permalink to this headline">¶</a></h1>
-<p>This Python module implements the calculation of correction for residual topographic effects (a.k.a. as DEM errors).</p>
-<dl class="py exception">
-<dt class="sig sig-object py" id="pyrate.core.dem_error.DEMError">
-<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">pyrate.core.dem_error.</span></span><span class="sig-name descname"><span class="pre">DEMError</span></span><a class="reference internal" href="_modules/pyrate/core/dem_error.html#DEMError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.dem_error.DEMError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generic exception for DEM errors.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.dem_error.calc_dem_errors">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.dem_error.</span></span><span class="sig-name descname"><span class="pre">calc_dem_errors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifgs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bperp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">look_angle</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_dist</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/pyrate/core/dem_error.html#calc_dem_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.dem_error.calc_dem_errors" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to calculate the DEM error for each pixel using least-squares adjustment of phase data and
-perpendicular baseline. The least-squares adjustment co-estimates the velocities.
-- <em>nrows</em> is the number of rows in the ifgs, and
-- <em>ncols</em> is the  number of columns in the ifgs.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifgs</strong> – list of interferogram class objects.</p></li>
-<li><p><strong>bperp</strong> – Per-pixel perpendicular baseline for each interferogram</p></li>
-<li><p><strong>look_angle</strong> – Per-pixel look angle</p></li>
-<li><p><strong>range_dist</strong> – Per-pixel range distance measurement</p></li>
-<li><p><strong>threshold</strong> – minimum number of redundant phase values at pixel (config parameter de_pthr)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>dem_error: estimated per-pixel dem error (nrows x ncols)</p>
-</dd>
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>dem_error_correction: DEM error correction for each pixel and interferogram (nifgs x nrows x ncols)</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>vel: velocity estimate for each pixel (nrows x ncols)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.dem_error.dem_error_calc_wrapper">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.dem_error.</span></span><span class="sig-name descname"><span class="pre">dem_error_calc_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/pyrate/core/dem_error.html#dem_error_calc_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.dem_error.dem_error_calc_wrapper" title="Permalink to this definition">¶</a></dt>
-<dd><p>MPI wrapper for DEM error correction
-:param params: Dictionary of PyRate configuration parameters.</p>
-</dd></dl>
-
+  <section id="dem-error-correction-module">
+<h1>DEM Error Correction Module<a class="headerlink" href="#dem-error-correction-module" title="Permalink to this headline">¶</a></h1>
 </section>
 
 
@@ -204,7 +161,7 @@ perpendicular baseline. The least-squares adjustment co-estimates the velocities
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+    <p>&#169; Copyright 2022, Geoscience Australia.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

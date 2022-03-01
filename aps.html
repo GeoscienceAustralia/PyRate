@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Atmospheric Phase Screen Module &mdash; PyRate 0.6.0 documentation</title>
@@ -149,79 +149,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pyrate.core.aps">
-<span id="atmospheric-phase-screen-module"></span><h1>Atmospheric Phase Screen Module<a class="headerlink" href="#module-pyrate.core.aps" title="Permalink to this headline">¶</a></h1>
-<p>This Python module implements a spatio-temporal filter method
-for correcting interferograms for atmospheric phase screen (APS)
-signals.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.aps.gaussian_spatial_filter">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.aps.</span></span><span class="sig-name descname"><span class="pre">gaussian_spatial_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nanfill</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fillmethod</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'nearest'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference internal" href="_modules/pyrate/core/aps.html#gaussian_spatial_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.aps.gaussian_spatial_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to apply a Gaussian spatial low-pass filter to a 2D image with
-unequal pixel resolution in x and y dimensions. Performs filtering in the
-Fourier domain. Any NaNs in the image are interpolated prior to Fourier
-transformation, with NaNs being replaced in to the filtered output image.
-:param image: 2D image to be filtered
-:param cutoff: filter cutoff in kilometres
-:param x_size: pixel size in x dimension, in metres
-:param y_size: pixel size in y dimension, in metres
-:param nanfill: interpolate image to fill NaNs
-:param fillmethod: interpolation method (‘nearest’, ‘cubic’, or ‘linear’)
-:return: filt: Gaussian low-pass filtered 2D image</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.aps.gaussian_temporal_filter">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.aps.</span></span><span class="sig-name descname"><span class="pre">gaussian_temporal_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tsincr</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thr</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference internal" href="_modules/pyrate/core/aps.html#gaussian_temporal_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.aps.gaussian_temporal_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to apply a Gaussian temporal low-pass filter to a 1D time-series
-vector for one pixel with irregular temporal sampling.
-:param tsincr: 1D time-series vector to be filtered.
-:param cutoff: filter cutoff in years.
-:param span: 1D vector of cumulative time spans, in years.
-:param thr: threshold for non-NaN values in tsincr.
-:return: ts_lp: Low-pass filtered time series vector.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.aps.spatial_low_pass_filter">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.aps.</span></span><span class="sig-name descname"><span class="pre">spatial_low_pass_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ts_hp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ifg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="shared.html#pyrate.core.shared.Ifg" title="pyrate.core.shared.Ifg"><span class="pre">pyrate.core.shared.Ifg</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference internal" href="_modules/pyrate/core/aps.html#spatial_low_pass_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.aps.spatial_low_pass_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filter time series data spatially using a Gaussian low-pass
-filter defined by a cut-off distance. If the cut-off distance is
-defined as zero in the parameters dictionary then it is calculated for
-each time step using the pyrate.covariance.cvd_from_phase method.
-:param ts_hp: Array of temporal high-pass time series data, shape (ifg.shape, n_epochs)
-:param ifg: pyrate.core.shared.Ifg Class object.
-:param params: Dictionary of PyRate configuration parameters.
-:return: ts_lp: Low-pass filtered time series data of shape (ifg.shape, n_epochs).</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.aps.spatio_temporal_filter">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.aps.</span></span><span class="sig-name descname"><span class="pre">spatio_temporal_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/pyrate/core/aps.html#spatio_temporal_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.aps.spatio_temporal_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Applies a spatio-temporal filter to remove the atmospheric phase screen
-(APS) and saves the corrected interferograms. Firstly the incremental
-time series is computed using the SVD method, before a cascade of temporal
-then spatial Gaussian filters is applied. The resulting APS corrections are
-saved to disc before being subtracted from each interferogram.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>params</strong> – Dictionary of PyRate configuration parameters.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.aps.temporal_high_pass_filter">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.aps.</span></span><span class="sig-name descname"><span class="pre">temporal_high_pass_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tsincr</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochlist</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="shared.html#pyrate.core.shared.EpochList" title="pyrate.core.shared.EpochList"><span class="pre">pyrate.core.shared.EpochList</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference internal" href="_modules/pyrate/core/aps.html#temporal_high_pass_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.aps.temporal_high_pass_filter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Isolate high-frequency components of time series data by subtracting
-low-pass components obtained using a Gaussian filter defined by a
-cut-off time period (in days).
-:param tsincr: Array of incremental time series data of shape (ifg.shape, n_epochs).
-:param epochlist: A pyrate.core.shared.EpochList Class instance.
-:param params: Dictionary of PyRate configuration parameters.
-:return: ts_hp: Filtered high frequency time series data; shape (ifg.shape, nepochs).</p>
-</dd></dl>
-
+  <section id="atmospheric-phase-screen-module">
+<h1>Atmospheric Phase Screen Module<a class="headerlink" href="#atmospheric-phase-screen-module" title="Permalink to this headline">¶</a></h1>
 </section>
 
 
@@ -232,7 +161,7 @@ cut-off time period (in days).
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+    <p>&#169; Copyright 2022, Geoscience Australia.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

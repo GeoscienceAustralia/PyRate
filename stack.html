@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Stacking Module &mdash; PyRate 0.6.0 documentation</title>
@@ -149,118 +149,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pyrate.core.stack">
-<span id="stacking-module"></span><h1>Stacking Module<a class="headerlink" href="#module-pyrate.core.stack" title="Permalink to this headline">¶</a></h1>
-<p>This Python module implements pixel-by-pixel rate
-(velocity) estimation using an iterative weighted least-squares
-stacking method.</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.stack.mask_rate">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.stack.</span></span><span class="sig-name descname"><span class="pre">mask_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxsig</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/stack.html#mask_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.stack.mask_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to mask pixels in the rate and error arrays when the error
-is greater than the error threshold ‘maxsig’.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>rate</strong> (<em>ndarray</em>) – array of pixel rates derived by stacking</p></li>
-<li><p><strong>error</strong> (<em>ndarray</em>) – array of errors for the pixel rates</p></li>
-<li><p><strong>maxsig</strong> (<em>int</em>) – error threshold for masking (in millimetres).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>rate: Masked rate (velocity) map</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>error: Masked error (standard deviation) map</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.stack.stack_calc_wrapper">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.stack.</span></span><span class="sig-name descname"><span class="pre">stack_calc_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/stack.html#stack_calc_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.stack.stack_calc_wrapper" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper for stacking on a set of tiles.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.stack.stack_rate_array">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.stack.</span></span><span class="sig-name descname"><span class="pre">stack_rate_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifgs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vcmt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mst</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/stack.html#stack_rate_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.stack.stack_rate_array" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function loops over all interferogram pixels in a 3-dimensional array and estimates
-the pixel rate (velocity) by applying the iterative weighted least-squares stacking
-algorithm ‘pyrate.core.stack.stack_rate_pixel’.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifgs</strong> (<em>Ifg.object</em>) – Sequence of objects containing the interferometric observations</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Configuration parameters</p></li>
-<li><p><strong>vcmt</strong> (<em>ndarray</em>) – Derived positive definite temporal variance covariance matrix</p></li>
-<li><p><strong>mst</strong> (<em>ndarray</em>) – Pixel-wise matrix describing the minimum spanning tree network</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>rate: Rate (velocity) map</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>error: Standard deviation of the rate map</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>samples: Number of observations used in rate calculation for each pixel</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.stack.stack_rate_pixel">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.stack.</span></span><span class="sig-name descname"><span class="pre">stack_rate_pixel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vcmt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pthresh</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/stack.html#stack_rate_pixel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.stack.stack_rate_pixel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Algorithm to estimate the rate (velocity) for a single pixel using iterative
-weighted least-squares stacking method.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>obs</strong> (<em>ndarray</em>) – Vector of interferometric phase observations for the pixel</p></li>
-<li><p><strong>mst</strong> (<em>ndarray</em>) – Vector describing the minimum spanning tree network for the pixel</p></li>
-<li><p><strong>vcmt</strong> (<em>ndarray</em>) – Derived positive definite temporal variance covariance matrix</p></li>
-<li><p><strong>span</strong> (<em>ndarray</em>) – Vector of interferometric time spans</p></li>
-<li><p><strong>nsig</strong> (<em>int</em>) – Threshold for iterative removal of interferometric observations</p></li>
-<li><p><strong>pthresh</strong> (<em>int</em>) – Threshold for minimum number of observations for the pixel</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>rate: Estimated rate (velocity) for the pixel</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float64</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>error: Standard deviation of the observations with respect to the estimated rate</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float64</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>samples: Number of observations used in the rate estimation for the pixel</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
+  <section id="stacking-module">
+<h1>Stacking Module<a class="headerlink" href="#stacking-module" title="Permalink to this headline">¶</a></h1>
 </section>
 
 
@@ -271,7 +161,7 @@ weighted least-squares stacking method.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+    <p>&#169; Copyright 2022, Geoscience Australia.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

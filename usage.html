@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Usage &mdash; PyRate 0.6.0 documentation</title>
@@ -174,7 +174,7 @@ with each name on a separate line.</p></li>
 <li><p>Filenames should only have a single period (“.”) delimiting the file extension.
 Multiple periods in a filename will raise an error during runtime.</p></li>
 </ul>
-</div>
+</aside>
 <p>The <code class="docutils literal notranslate"><span class="pre">ifgfilelist</span></code> gives the list of interferograms to be processed.
 Example of an interferogram file list for <cite>GAMMA</cite> flat-binary files:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">absolute</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="mi">20150702</span><span class="o">-</span><span class="mf">20150920.</span><span class="n">unw</span>
@@ -189,7 +189,7 @@ Example of an interferogram file list for <cite>GAMMA</cite> flat-binary files:<
 Any naming convention is appropriate as long as an epoch pair of format
 <code class="docutils literal notranslate"><span class="pre">YYYYMMDD-YYYYMMDD</span></code> or <code class="docutils literal notranslate"><span class="pre">YYMMDD-YYMMDD</span></code> exists in the filename.</p></li>
 </ul>
-</div>
+</aside>
 <p>The <code class="docutils literal notranslate"><span class="pre">hdrfilelist</span></code> gives the list of <cite>GAMMA</cite> Multi-Look Intensity (MLI) header
 text files. Example of a <cite>GAMMA</cite> MLI header file list:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/</span><span class="n">absolute</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="mi">20150702</span><span class="n">_mli</span><span class="o">.</span><span class="n">par</span>
@@ -210,7 +210,7 @@ the geometry calculations in <code class="docutils literal notranslate"><span cl
 the DEM Error correction step in <code class="docutils literal notranslate"><span class="pre">correct</span></code> will not work. Both require
 parameters valid for the multi-looked radar-coded interferograms.</p></li>
 </ul>
-</div>
+</aside>
 <p>The <code class="docutils literal notranslate"><span class="pre">cohfilelist</span></code> is an optional list which contains the pool of all available
 coherence files to be used for optional coherence masking.
 Example of a coherence file list for <cite>GAMMA</cite> flat-binary files:</p>
@@ -226,7 +226,7 @@ Example of a coherence file list for <cite>GAMMA</cite> flat-binary files:</p>
 The epoch pair must be in the format <code class="docutils literal notranslate"><span class="pre">YYYYMMDD-YYYYMMDD</span></code> or
 <code class="docutils literal notranslate"><span class="pre">YYMMDD-YYMMDD</span></code>. Otherwise, any naming convention is appropriate.</p></li>
 </ul>
-</div>
+</aside>
 <p>The <code class="docutils literal notranslate"><span class="pre">basefilelist</span></code> is an optional list which contains the pool of all
 available GAMMA baseline vector files. These are only needed if the user
 wants to use the DEM error correction functionality.
@@ -333,7 +333,7 @@ are still required by <code class="docutils literal notranslate"><span class="pr
 <li><p>If a DEM is to be processed by <code class="docutils literal notranslate"><span class="pre">prepifg</span></code>, it’s file format should match the
 input interferograms (e.g. geotiff or flat-binary files).</p></li>
 </ul>
-</div>
+</aside>
 <p>Upon completion of <code class="docutils literal notranslate"><span class="pre">conv2tif</span></code> geotiff formatted copies of the input files will be placed
 in the <code class="docutils literal notranslate"><span class="pre">&lt;outdir&gt;</span></code> directory defined in the configuration file.</p>
 <div class="admonition note">
@@ -342,7 +342,7 @@ in the <code class="docutils literal notranslate"><span class="pre">&lt;outdir&g
 <li><p><code class="docutils literal notranslate"><span class="pre">conv2tif</span></code> will not perform the conversion if geotiffs for the provided
 input files already exist.</p></li>
 </ul>
-</div>
+</aside>
 </section>
 <section id="prepifg-preparing-input-interferograms">
 <h3><code class="docutils literal notranslate"><span class="pre">prepifg</span></code>: Preparing input interferograms<a class="headerlink" href="#prepifg-preparing-input-interferograms" title="Permalink to this headline">¶</a></h3>
@@ -365,7 +365,7 @@ Pixels with coherence values below <code class="docutils literal notranslate"><s
 <li><p>The number of pixels with numeric phase values (i.e. pixels not equal to NaN)
 will be different in each interferogram after coherence masking.</p></li>
 </ul>
-</div>
+</aside>
 <p>The available coherence files need to be specified in a list file as described above
 and defined in the <code class="docutils literal notranslate"><span class="pre">cohfilelist</span></code> parameter.</p>
 <div class="admonition note">
@@ -378,7 +378,7 @@ even if coherence masking is not applied (i.e. <code class="docutils literal not
 each pixel is calculated and saved as part of <code class="docutils literal notranslate"><span class="pre">prepifg</span></code>.</p></li>
 <li><p>All coherence files are saved to the <code class="docutils literal notranslate"><span class="pre">&lt;outdir&gt;\coherence_dir</span></code> directory.</p></li>
 </ul>
-</div>
+</aside>
 <p><strong>Multi-looking</strong></p>
 <p>The <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> step will perform optional multi-looking (image sub-sampling)
 of the input interferograms in geotiff format. The purpose of multi-looking is twofold:</p>
@@ -402,7 +402,7 @@ A value of <code class="docutils literal notranslate"><span class="pre">1</span>
 or greater), and subsequently reduce the multi-looking factor once the user
 has experience with processing a particular dataset.</p></li>
 </ul>
-</div>
+</aside>
 <p><strong>Cropping</strong></p>
 <p>The <code class="docutils literal notranslate"><span class="pre">prepifg</span></code> step will perform optional spatial cropping of the input interferograms.
 This is useful if you are focussing on a specific area of interest within the full
@@ -419,7 +419,7 @@ calculated using metadata from the <cite>GAMMA</cite> MLI parameter files.</p>
 <ul class="simple">
 <li><p>Geometry calculations are only implemented for <cite>GAMMA</cite> format input data.</p></li>
 </ul>
-</div>
+</aside>
 <p>The output arrays are saved to <code class="docutils literal notranslate"><span class="pre">&lt;outdir&gt;/geometry_dir</span></code> and contain as follows:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">rdc_azimuth.tif</span></code>: azimuth coordinate in range-doppler system;</p></li>
@@ -498,7 +498,7 @@ The velocity from stacking (<code class="docutils literal notranslate"><span cla
 <li><p>Both <code class="docutils literal notranslate"><span class="pre">timeseries</span></code> and <code class="docutils literal notranslate"><span class="pre">stack</span></code> are optional and independent steps
 that can be computed in either order.</p></li>
 </ul>
-</div>
+</aside>
 </section>
 <section id="merge-reassemble-the-tiles">
 <h3><code class="docutils literal notranslate"><span class="pre">merge</span></code>: Reassemble the tiles<a class="headerlink" href="#merge-reassemble-the-tiles" title="Permalink to this headline">¶</a></h3>
@@ -522,7 +522,7 @@ recovered with InSAR data from a single LOS viewing geometry.</p></li>
 both ascending and descending orbits), signal decomposition can be
 carried out after PyRate analysis as a post-processing step.</p></li>
 </ul>
-</div>
+</aside>
 <p>If necessary, the user can switch the polarity of the final output products
 by setting <code class="docutils literal notranslate"><span class="pre">signal_polarity:</span> <span class="pre">-1</span></code>.</p>
 <p>The error products produced by <cite>PyRate</cite> can be scaled by n-sigma using the
@@ -567,7 +567,7 @@ using the “PyRate export” function in <cite>SNAP</cite>. Then users should f
 for time series analysis of large InSAR stacks in <cite>PyRate</cite> is planned
 for a future version of <cite>SNAP</cite>.</p></li>
 </ul>
-</div>
+</aside>
 </section>
 <section id="roi-pac">
 <h3><cite>ROI_PAC</cite><a class="headerlink" href="#roi-pac" title="Permalink to this headline">¶</a></h3>
@@ -585,7 +585,7 @@ The DEM absolute path and filename are set with the <code class="docutils litera
 <li><p>Support and development of <cite>ROI_PAC</cite> has been discontinued.</p></li>
 <li><p><cite>ROI_PAC</cite> support in <cite>PyRate</cite> will be deprecated in a future release.</p></li>
 </ul>
-</div>
+</aside>
 </section>
 </section>
 <section id="parallel-processing">
@@ -615,7 +615,7 @@ by using <code class="docutils literal notranslate"><span class="pre">mpirun</sp
 <li><p>In the case that <cite>PyRate</cite> is run using <code class="docutils literal notranslate"><span class="pre">mpirun</span></code>, standard multi-threading is
 automatically disabled (i.e. equivalent to setting <code class="docutils literal notranslate"><span class="pre">parallel:</span> <span class="pre">0</span></code>).</p></li>
 </ul>
-</div>
+</aside>
 <p>During <code class="docutils literal notranslate"><span class="pre">conv2tif</span></code> and <code class="docutils literal notranslate"><span class="pre">prepifg</span></code>, parallelism is achieved by sending sub-lists of input
 files to each process.
 Parallelism in the <code class="docutils literal notranslate"><span class="pre">correct</span></code>, <code class="docutils literal notranslate"><span class="pre">timeseries</span></code> and <code class="docutils literal notranslate"><span class="pre">stack</span></code> steps is achieved by splitting
@@ -656,7 +656,7 @@ user visually inspect the output products of <cite>PyRate</cite>:</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+    <p>&#169; Copyright 2022, Geoscience Australia.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

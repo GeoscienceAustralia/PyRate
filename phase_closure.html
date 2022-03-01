@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Phase Closure Module &mdash; PyRate 0.6.0 documentation</title>
@@ -307,54 +307,9 @@ masked, but this spatial area has not been masked in other ifgs. In this case,
 the algorithm has been successfully able to attribute the source of the unwrapping
 error to this single ifg. The ability to do this depends on the parameter
 settings chosen.</p>
-<span class="target" id="module-pyrate.core.phase_closure.closure_check"></span><dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.closure_check.discard_loops_containing_max_ifg_count">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.phase_closure.closure_check.</span></span><span class="sig-name descname"><span class="pre">discard_loops_containing_max_ifg_count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loops</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#pyrate.core.phase_closure.mst_closure.WeightedLoop" title="pyrate.core.phase_closure.mst_closure.WeightedLoop"><span class="pre">pyrate.core.phase_closure.mst_closure.WeightedLoop</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#pyrate.core.phase_closure.mst_closure.WeightedLoop" title="pyrate.core.phase_closure.mst_closure.WeightedLoop"><span class="pre">pyrate.core.phase_closure.mst_closure.WeightedLoop</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/pyrate/core/phase_closure/closure_check.html#discard_loops_containing_max_ifg_count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.phase_closure.closure_check.discard_loops_containing_max_ifg_count" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function will discard loops when each ifg participating in a loop has met the max loop count criteria.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>loops</strong> – list of loops</p></li>
-<li><p><strong>params</strong> – params dict</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>selected loops satisfying MAX_LOOP_REDUNDANCY criteria</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.closure_check.iterative_closure_check">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.phase_closure.closure_check.</span></span><span class="sig-name descname"><span class="pre">iterative_closure_check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">nptyping.types._ndarray.NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span> </span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span> </span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span> </span><span class="pre">nptyping.types._number.UInt</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">nptyping.types._ndarray.NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span> </span><span class="pre">nptyping.types._number.UInt</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/pyrate/core/phase_closure/closure_check.html#iterative_closure_check"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.phase_closure.closure_check.iterative_closure_check" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function iterates the closure check until a stable list of interferogram files is returned.
-:param config: Configuration class instance
-:param interactive_plot: bool, whether to plot sum closures of loops
-:return: stable list of ifg files, their ifgs_breach_count, and number of occurrences of ifgs in loops</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.closure_check.mask_pixels_with_unwrapping_errors">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.phase_closure.closure_check.</span></span><span class="sig-name descname"><span class="pre">mask_pixels_with_unwrapping_errors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifgs_breach_count</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">nptyping.types._ndarray.NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span> </span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span> </span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span> </span><span class="pre">nptyping.types._number.UInt</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_occurrences_each_ifg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">nptyping.types._ndarray.NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span> </span><span class="pre">nptyping.types._number.UInt</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/pyrate/core/phase_closure/closure_check.html#mask_pixels_with_unwrapping_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.phase_closure.closure_check.mask_pixels_with_unwrapping_errors" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find pixels in the phase data that breach closure_thr, and mask
-(assign NaNs) to those pixels in those ifgs.
-:param ifgs_breach_count: unwrapping issues at pixels in all loops
-:param num_occurrences_each_ifg:  frequency of ifgs appearing in all loops
-:param params: params dict</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.closure_check.update_ifg_list">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.phase_closure.closure_check.</span></span><span class="sig-name descname"><span class="pre">update_ifg_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifg_files</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_paths</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">pyrate.configuration.MultiplePaths</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">pyrate.configuration.MultiplePaths</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/pyrate/core/phase_closure/closure_check.html#update_ifg_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.phase_closure.closure_check.update_ifg_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to extract full paths for a subsetted list of interferograms
-:param ifg_files: list of interferograms to subset
-:param multi_paths: list of full paths for list of original interferograms
-:return: filtered_multi_paths: list of full paths for the subset</p>
-</dd></dl>
-
 <span class="target" id="module-pyrate.core.phase_closure.collect_loops"></span><dl class="py function">
 <dt class="sig sig-object py" id="pyrate.core.phase_closure.collect_loops.dedupe_loops">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.phase_closure.collect_loops.</span></span><span class="sig-name descname"><span class="pre">dedupe_loops</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loops</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="reference internal" href="_modules/pyrate/core/phase_closure/collect_loops.html#dedupe_loops"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.phase_closure.collect_loops.dedupe_loops" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyrate.core.phase_closure.collect_loops.</span></span><span class="sig-name descname"><span class="pre">dedupe_loops</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loops</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="reference internal" href="_modules/pyrate/core/phase_closure/collect_loops.html#dedupe_loops"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.phase_closure.collect_loops.dedupe_loops" title="Permalink to this definition">¶</a></dt>
 <dd><p>Deduplication of loops with same members.</p>
 <p>For example: for nodes 1, 2, 3 in the graph below</p>
 <blockquote>
@@ -405,82 +360,7 @@ Adapted from <a class="reference external" href="https://www.geeksforgeeks.org/p
 <dd><p>Counts and collects loops of a defined length in an undirected and connected graph</p>
 </dd></dl>
 
-<span class="target" id="module-pyrate.core.phase_closure.correct_phase"></span><span class="target" id="module-pyrate.core.phase_closure.mst_closure"></span><dl class="py class">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.mst_closure.Edge">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pyrate.core.phase_closure.mst_closure.</span></span><span class="sig-name descname"><span class="pre">Edge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyrate.core.phase_closure.mst_closure.Edge" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py attribute">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.mst_closure.Edge.first">
-<span class="sig-name descname"><span class="pre">first</span></span><a class="headerlink" href="#pyrate.core.phase_closure.mst_closure.Edge.first" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.mst_closure.Edge.second">
-<span class="sig-name descname"><span class="pre">second</span></span><a class="headerlink" href="#pyrate.core.phase_closure.mst_closure.Edge.second" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 1</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.mst_closure.WeightedLoop">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pyrate.core.phase_closure.mst_closure.</span></span><span class="sig-name descname"><span class="pre">WeightedLoop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">pyrate.core.phase_closure.mst_closure.SignedWeightedEdge</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/phase_closure/mst_closure.html#WeightedLoop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.phase_closure.mst_closure.WeightedLoop" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loop with weight equal to the sum of the edge weights, where edge weights are the ifg duration in days</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.mst_closure.sort_loops_based_on_weights_and_date">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.phase_closure.mst_closure.</span></span><span class="sig-name descname"><span class="pre">sort_loops_based_on_weights_and_date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#pyrate.core.phase_closure.mst_closure.WeightedLoop" title="pyrate.core.phase_closure.mst_closure.WeightedLoop"><span class="pre">pyrate.core.phase_closure.mst_closure.WeightedLoop</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/pyrate/core/phase_closure/mst_closure.html#sort_loops_based_on_weights_and_date"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.phase_closure.mst_closure.sort_loops_based_on_weights_and_date" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>params</strong> – dict of params</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>list of sorted, signed, and weighted loops</p>
-</dd>
-</dl>
-</dd></dl>
-
-<span class="target" id="module-pyrate.core.phase_closure.plot_closure"></span><span class="target" id="module-pyrate.core.phase_closure.sum_closure"></span><dl class="py class">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.sum_closure.IfgPhase">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pyrate.core.phase_closure.sum_closure.</span></span><span class="sig-name descname"><span class="pre">IfgPhase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phase_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/phase_closure/sum_closure.html#IfgPhase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.phase_closure.sum_closure.IfgPhase" title="Permalink to this definition">¶</a></dt>
-<dd><p>workaround class to only hold phase data for mpi SwigPyObject pickle error</p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.sum_closure.IndexedIfg">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pyrate.core.phase_closure.sum_closure.</span></span><span class="sig-name descname"><span class="pre">IndexedIfg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IfgPhase</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyrate.core.phase_closure.sum_closure.IndexedIfg" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py attribute">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.sum_closure.IndexedIfg.IfgPhase">
-<span class="sig-name descname"><span class="pre">IfgPhase</span></span><a class="headerlink" href="#pyrate.core.phase_closure.sum_closure.IndexedIfg.IfgPhase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 1</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.sum_closure.IndexedIfg.index">
-<span class="sig-name descname"><span class="pre">index</span></span><a class="headerlink" href="#pyrate.core.phase_closure.sum_closure.IndexedIfg.index" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.sum_closure.sum_phase_closures">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.phase_closure.sum_closure.</span></span><span class="sig-name descname"><span class="pre">sum_phase_closures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifg_files</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loops</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#pyrate.core.phase_closure.mst_closure.WeightedLoop" title="pyrate.core.phase_closure.mst_closure.WeightedLoop"><span class="pre">pyrate.core.phase_closure.mst_closure.WeightedLoop</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">nptyping.types._ndarray.NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span> </span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span> </span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span> </span><span class="pre">nptyping.types._number.Float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">nptyping.types._ndarray.NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span> </span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span> </span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span> </span><span class="pre">nptyping.types._number.UInt</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">nptyping.types._ndarray.NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span> </span><span class="pre">nptyping.types._number.UInt</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/pyrate/core/phase_closure/sum_closure.html#sum_phase_closures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.phase_closure.sum_closure.sum_phase_closures" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute the closure sum for each pixel in each loop, and count the number of times a pixel
-contributes to a failed closure loop (where the summed closure is above/below the
-CLOSURE_THR threshold).
-:param ifg_files: list of ifg files
-:param loops: list of loops
-:param params: params dict
-:return: Tuple of closure, ifgs_breach_count, num_occurrences_each_ifg
-closure: summed closure for each loop.
-ifgs_breach_count: shape=(ifg.shape, n_ifgs) number of times a pixel in an ifg fails the closure
-check (i.e., has unwrapping error) in all loops under investigation.
-num_occurrences_each_ifg: frequency of ifg appearance in all loops.</p>
-</dd></dl>
-
-</section>
+<span class="target" id="module-pyrate.core.phase_closure.correct_phase"></span></section>
 </section>
 
 
@@ -491,7 +371,7 @@ num_occurrences_each_ifg: frequency of ifg appearance in all loops.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+    <p>&#169; Copyright 2022, Geoscience Australia.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

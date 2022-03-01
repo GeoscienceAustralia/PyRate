@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PyRate Correct Script &mdash; PyRate 0.6.0 documentation</title>
@@ -149,55 +149,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pyrate.correct">
-<span id="pyrate-correct-script"></span><h1>PyRate Correct Script<a class="headerlink" href="#module-pyrate.correct" title="Permalink to this headline">¶</a></h1>
-<p>This Python module runs the main PyRate correction workflow</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.correct.correct_ifgs">
-<span class="sig-prename descclassname"><span class="pre">pyrate.correct.</span></span><span class="sig-name descname"><span class="pre">correct_ifgs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pyrate.configuration.Configuration</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/pyrate/correct.html#correct_ifgs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.correct.correct_ifgs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Top level function to perform PyRate workflow on given interferograms</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.correct.main">
-<span class="sig-prename descclassname"><span class="pre">pyrate.correct.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/correct.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.correct.main" title="Permalink to this definition">¶</a></dt>
-<dd><p>Top level function to perform PyRate workflow on given interferograms</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>refpt: tuple of reference pixel x and y position</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>tuple</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>maxvar: array of maximum variance values of interferograms</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>vcmt: Variance-covariance matrix array</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.correct.phase_closure_wrapper">
-<span class="sig-prename descclassname"><span class="pre">pyrate.correct.</span></span><span class="sig-name descname"><span class="pre">phase_closure_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">pyrate.configuration.Configuration</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="_modules/pyrate/correct.html#phase_closure_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.correct.phase_closure_wrapper" title="Permalink to this definition">¶</a></dt>
-<dd><p>This wrapper will run the iterative phase closure check to return a stable
-list of checked interferograms, and then mask pixels in interferograms that
-exceed the unwrapping error threshold.
-:param params: Dictionary of PyRate configuration parameters.
-:param config: Configuration class instance.
-:return: params: Updated dictionary of PyRate configuration parameters.</p>
-</dd></dl>
-
+  <section id="pyrate-correct-script">
+<h1>PyRate Correct Script<a class="headerlink" href="#pyrate-correct-script" title="Permalink to this headline">¶</a></h1>
 </section>
 
 
@@ -208,7 +161,7 @@ exceed the unwrapping error threshold.
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+    <p>&#169; Copyright 2022, Geoscience Australia.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

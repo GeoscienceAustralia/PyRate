@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Covariance Module &mdash; PyRate 0.6.0 documentation</title>
@@ -149,118 +149,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pyrate.core.covariance">
-<span id="covariance-module"></span><h1>Covariance Module<a class="headerlink" href="#module-pyrate.core.covariance" title="Permalink to this headline">¶</a></h1>
-<p>This Python module implements covariance calculation and
-Variance/Covariance matrix functionality.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="pyrate.core.covariance.RDist">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pyrate.core.covariance.</span></span><span class="sig-name descname"><span class="pre">RDist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/covariance.html#RDist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.covariance.RDist" title="Permalink to this definition">¶</a></dt>
-<dd><p>RDist class used for caching r_dist during maxvar/alpha computation</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.covariance.cvd">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.covariance.</span></span><span class="sig-name descname"><span class="pre">cvd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifg_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_dist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calc_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_vals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_acg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/covariance.html#cvd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.covariance.cvd" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate the 1D covariance function of an entire interferogram as the
-radial average of its 2D autocorrelation.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifg_path</strong> (<em>str</em>) – An interferogram file path. OR</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – Dictionary of configuration parameters</p></li>
-<li><p><strong>r_dist</strong> (<em>ndarray</em>) – Array of distance values from the image centre
-(See Rdist class for more details)</p></li>
-<li><p><strong>calc_alpha</strong> (<em>bool</em>) – If True calculate alpha</p></li>
-<li><p><strong>write_vals</strong> (<em>bool</em>) – If True write maxvar and alpha values to
-interferogram metadata</p></li>
-<li><p><strong>save_acg</strong> (<em>bool</em>) – If True write autocorrelation and radial distance
-data to numpy array file on disk</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>maxvar: The maximum variance (at zero lag)</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>alpha: the exponential length-scale of decay factor</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.covariance.cvd_from_phase">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.covariance.</span></span><span class="sig-name descname"><span class="pre">cvd_from_phase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phase</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ifg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_dist</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calc_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_acg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/covariance.html#cvd_from_phase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.covariance.cvd_from_phase" title="Permalink to this definition">¶</a></dt>
-<dd><p>A convenience function used to compute radial autocovariance from phase
-data</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>phase</strong> (<em>ndarray</em>) – An array of interferogram phase data</p></li>
-<li><p><strong>ifg</strong> (<em>Ifg class</em>) – A pyrate.shared.Ifg class instance</p></li>
-<li><p><strong>r_dist</strong> (<em>ndarray</em>) – Array of distance values from the image centre
-(See Rdist class for more details)</p></li>
-<li><p><strong>calc_alpha</strong> (<em>bool</em>) – If True calculate alpha</p></li>
-<li><p><strong>save_acg</strong> (<em>bool</em>) – If True write autocorrelation and radial distance
-data to numpy array file on disk</p></li>
-<li><p><strong>params</strong> (<em>dict</em>) – [optional] Dictionary of configuration parameters;
-Must be provided if save_acg=True</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>maxvar: The maximum variance (at zero lag)</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>alpha: the exponential length-scale of decay factor</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.covariance.get_vcmt">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.covariance.</span></span><span class="sig-name descname"><span class="pre">get_vcmt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ifgs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxvar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/covariance.html#get_vcmt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.covariance.get_vcmt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assembles a temporal variance/covariance matrix using the method
-described by Biggs et al., Geophys. J. Int, 2007. Matrix elements are
-evaluated according to sig_i * sig_j * C_ij where i and j are two
-interferograms and C is a matrix of coefficients:</p>
-<p>C = 1 if the first and second epochs of i and j are equal
-C = 0.5 if have i and j share either a common first or second epoch
-C = -0.5 if the first of i or j equals the second of the other
-C = 0 otherwise</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>ifgs</strong> (<em>list</em>) – A list of pyrate.shared.Ifg class objects.</p></li>
-<li><p><strong>maxvar</strong> (<em>ndarray</em>) – numpy array of maximum variance values for the
-interferograms.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>vcm_t: temporal variance-covariance matrix</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.covariance.maxvar_vcm_calc_wrapper">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.covariance.</span></span><span class="sig-name descname"><span class="pre">maxvar_vcm_calc_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/covariance.html#maxvar_vcm_calc_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.covariance.maxvar_vcm_calc_wrapper" title="Permalink to this definition">¶</a></dt>
-<dd><p>MPI wrapper for maxvar and vcmt computation</p>
-</dd></dl>
-
+  <section id="covariance-module">
+<h1>Covariance Module<a class="headerlink" href="#covariance-module" title="Permalink to this headline">¶</a></h1>
 </section>
 
 
@@ -271,7 +161,7 @@ interferograms.</p></li>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+    <p>&#169; Copyright 2022, Geoscience Australia.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

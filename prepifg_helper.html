@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Prepifg Helper Module &mdash; PyRate 0.6.0 documentation</title>
@@ -149,122 +149,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pyrate.core.prepifg_helper">
-<span id="prepifg-helper-module"></span><h1>Prepifg Helper Module<a class="headerlink" href="#module-pyrate.core.prepifg_helper" title="Permalink to this headline">¶</a></h1>
-<p>This Python module converts interferogram input files to a common geotiff
-format with PyRate specific metadata headers. The module also implements
-multilooking/downsampling and cropping operations to reduce the size of
-the computational problem.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyrate.core.prepifg_helper.CustomExts">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.prepifg_helper.</span></span><span class="sig-name descname"><span class="pre">CustomExts</span></span><a class="headerlink" href="#pyrate.core.prepifg_helper.CustomExts" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">pyrate.core.prepifg_helper.CustExtents</span></code></p>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="pyrate.core.prepifg_helper.PreprocessError">
-<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">pyrate.core.prepifg_helper.</span></span><span class="sig-name descname"><span class="pre">PreprocessError</span></span><a class="reference internal" href="_modules/pyrate/core/prepifg_helper.html#PreprocessError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.prepifg_helper.PreprocessError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Preprocess exception</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.prepifg_helper.coherence_paths_for">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.prepifg_helper.</span></span><span class="sig-name descname"><span class="pre">coherence_paths_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tif</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/pyrate/core/prepifg_helper.html#coherence_paths_for"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.prepifg_helper.coherence_paths_for" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns path to coherence file for given interferogram. Pattern matches
-based on epoch in filename.</p>
-<p class="rubric">Example</p>
-<p>‘20151025-20160501_eqa_filt.cc’
-Date pair is the epoch.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>path</strong> – Path to intergerogram to find coherence file for.</p></li>
-<li><p><strong>params</strong> – Parameter dictionary.</p></li>
-<li><p><strong>tif</strong> – Find converted tif if True (_cc.tif), else find .cc file.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Path to coherence file.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.prepifg_helper.get_analysis_extent">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.prepifg_helper.</span></span><span class="sig-name descname"><span class="pre">get_analysis_extent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crop_opt</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rasters</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="shared.html#pyrate.core.shared.Ifg" title="pyrate.core.shared.Ifg"><span class="pre">pyrate.core.shared.Ifg</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="shared.html#pyrate.core.shared.DEM" title="pyrate.core.shared.DEM"><span class="pre">pyrate.core.shared.DEM</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlooks</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylooks</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_exts</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">,</span> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/pyrate/core/prepifg_helper.html#get_analysis_extent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.prepifg_helper.get_analysis_extent" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function checks prepifg parameters and returns extents/bounding box.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>crop_opt</strong> (<em>int</em>) – Cropping option</p></li>
-<li><p><strong>rasters</strong> (<em>list</em>) – List of either Ifg or DEM class objects</p></li>
-<li><p><strong>xlooks</strong> (<em>int</em>) – Number of multi-looks in x</p></li>
-<li><p><strong>ylooks</strong> (<em>int</em>) – Number of multi-looks in y</p></li>
-<li><p><strong>user_exts</strong> (<em>tuple</em>) – Tuple of user defined cropping coordinates</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>extents: tuple of four bounding coordinates</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>tuple</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.prepifg_helper.prepare_ifg">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.prepifg_helper.</span></span><span class="sig-name descname"><span class="pre">prepare_ifg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raster_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlooks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylooks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_opt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_to_disk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coherence_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coherence_thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/prepifg_helper.html#prepare_ifg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.prepifg_helper.prepare_ifg" title="Permalink to this definition">¶</a></dt>
-<dd><p>Open, resample, crop and optionally save to disk an interferogram or DEM.
-Returns are only given if write_to_disk=False</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>raster_path</strong> (<em>str</em>) – Input raster file path name</p></li>
-<li><p><strong>xlooks</strong> (<em>int</em>) – Number of multi-looks in x; 5 is 5 times smaller,
-1 is no change</p></li>
-<li><p><strong>ylooks</strong> (<em>int</em>) – Number of multi-looks in y</p></li>
-<li><p><strong>exts</strong> (<em>tuple</em>) – Tuple of user defined georeferenced extents for
-new file: (xfirst, yfirst, xlast, ylast)cropping coordinates</p></li>
-<li><p><strong>thresh</strong> (<em>float</em>) – NaN fraction threshold below which resampled_data is assigned NaNs</p></li>
-<li><p><strong>crop_opt</strong> (<em>int</em>) – Crop option</p></li>
-<li><p><strong>write_to_disk</strong> (<em>bool</em>) – Write new data to disk</p></li>
-<li><p><strong>out_path</strong> (<em>str</em>) – Path for output file</p></li>
-<li><p><strong>header</strong> (<em>dict</em>) – dictionary of metadata from header file</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>resampled_data: output cropped and resampled image</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>out_ds: destination gdal dataset object</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>gdal.Dataset</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.prepifg_helper.transform_params">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.prepifg_helper.</span></span><span class="sig-name descname"><span class="pre">transform_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/prepifg_helper.html#transform_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.prepifg_helper.transform_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns subset of all parameters for cropping and multilooking.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>params</strong> (<em>dict</em>) – Parameter dictionary</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>xlooks, ylooks, crop</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
+  <section id="prepifg-helper-module">
+<h1>Prepifg Helper Module<a class="headerlink" href="#prepifg-helper-module" title="Permalink to this headline">¶</a></h1>
 </section>
 
 
@@ -275,7 +161,7 @@ new file: (xfirst, yfirst, xlast, ylast)cropping coordinates</p></li>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+    <p>&#169; Copyright 2022, Geoscience Australia.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

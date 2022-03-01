@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PyRate Merge Script &mdash; PyRate 0.6.0 documentation</title>
@@ -149,43 +149,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pyrate.merge">
-<span id="pyrate-merge-script"></span><h1>PyRate Merge Script<a class="headerlink" href="#module-pyrate.merge" title="Permalink to this headline">¶</a></h1>
-<p>This Python module does post-processing steps to assemble the
-stack rate and time series outputs and save as geotiff files</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.merge.assemble_tiles">
-<span class="sig-prename descclassname"><span class="pre">pyrate.merge.</span></span><span class="sig-name descname"><span class="pre">assemble_tiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tiles</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="shared.html#pyrate.core.shared.Tile" title="pyrate.core.shared.Tile"><span class="pre">pyrate.core.shared.Tile</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_type</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">numpy.ndarray</span></span></span><a class="reference internal" href="_modules/pyrate/merge.html#assemble_tiles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.merge.assemble_tiles" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to reassemble tiles from numpy files in to a merged array</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>s</strong> – shape for merged array.</p></li>
-<li><p><strong>dir</strong> – path to directory containing numpy tile files.</p></li>
-<li><p><strong>tiles</strong> – pyrate.core.shared.Tile Class object.</p></li>
-<li><p><strong>out_type</strong> – product type string, used to construct numpy tile file name.</p></li>
-<li><p><strong>index</strong> – array third dimension index to extract from 3D time series array tiles.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>merged_array: array assembled from all tiles.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.merge.create_png_and_kml_from_tif">
-<span class="sig-prename descclassname"><span class="pre">pyrate.merge.</span></span><span class="sig-name descname"><span class="pre">create_png_and_kml_from_tif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_folder_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_type</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/pyrate/merge.html#create_png_and_kml_from_tif"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.merge.create_png_and_kml_from_tif" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function to create a preview PNG format image from a geotiff, and a KML file</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.merge.main">
-<span class="sig-prename descclassname"><span class="pre">pyrate.merge.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/pyrate/merge.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.merge.main" title="Permalink to this definition">¶</a></dt>
-<dd><p>PyRate merge main function. Assembles product tiles in to
-single geotiff files</p>
-</dd></dl>
-
+  <section id="pyrate-merge-script">
+<h1>PyRate Merge Script<a class="headerlink" href="#pyrate-merge-script" title="Permalink to this headline">¶</a></h1>
 </section>
 
 
@@ -196,7 +161,7 @@ single geotiff files</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+    <p>&#169; Copyright 2022, Geoscience Australia.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

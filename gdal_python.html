@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GDAL-Python Bindings Module &mdash; PyRate 0.6.0 documentation</title>
@@ -149,133 +149,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pyrate.core.gdal_python">
-<span id="gdal-python-bindings-module"></span><h1>GDAL-Python Bindings Module<a class="headerlink" href="#module-pyrate.core.gdal_python" title="Permalink to this headline">¶</a></h1>
-<p>This Python module contains bindings for the GDAL library</p>
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.gdal_python.coherence_masking">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.gdal_python.</span></span><span class="sig-name descname"><span class="pre">coherence_masking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_gdal_dataset</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">osgeo.gdal.Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coh_file_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coh_thr</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#coherence_masking"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.gdal_python.coherence_masking" title="Permalink to this definition">¶</a></dt>
-<dd><p>Perform coherence masking on raster in-place.</p>
-<p>Based on gdal_calc formula provided by Nahidul:
-gdal_calc.py -A 20151127-20151209_VV_8rlks_flat_eqa.cc.tif
--B 20151127-20151209_VV_8rlks_eqa.unw.tif
-–outfile=test_v1.tif –calc=”B*(A&gt;=0.8)-999*(A&lt;0.8)”
-–NoDataValue=-999</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.gdal_python.crop_resample_average">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.gdal_python.</span></span><span class="sig-name descname"><span class="pre">crop_resample_average</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_tif</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extents</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hdr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_driver_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'GTiff'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match_pyrate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coherence_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coherence_thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#crop_resample_average"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.gdal_python.crop_resample_average" title="Permalink to this definition">¶</a></dt>
-<dd><p>Crop, resample, and average a geotiff image.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>input_tif</strong> (<em>str</em>) – Path to input geotiff to resample/crop</p></li>
-<li><p><strong>extents</strong> (<em>tuple</em>) – Cropping extents (xfirst, yfirst, xlast, ylast)</p></li>
-<li><p><strong>new_res</strong> (<em>list</em>) – [xres, yres] resolution of output image</p></li>
-<li><p><strong>output_file</strong> (<em>str</em>) – Path to output resampled/cropped geotiff</p></li>
-<li><p><strong>thresh</strong> (<em>float</em>) – NaN fraction threshold</p></li>
-<li><p><strong>out_driver_type</strong> (<em>str</em>) – The output driver; <cite>MEM</cite> or <cite>GTiff</cite> (optional)</p></li>
-<li><p><strong>match_pyrate</strong> (<em>bool</em>) – Match Legacy output (optional)</p></li>
-<li><p><strong>hdr</strong> (<em>dict</em>) – dictionary of metadata</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>resampled_average: output cropped and resampled image</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>out_ds: destination gdal dataset object</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>gdal.Dataset</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.gdal_python.gdal_average">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.gdal_python.</span></span><span class="sig-name descname"><span class="pre">gdal_average</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dst_ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_ds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_ds_mem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#gdal_average"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.gdal_python.gdal_average" title="Permalink to this definition">¶</a></dt>
-<dd><p>Perform subsampling of an image by averaging values</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dst_ds</strong> (<em>gdal.Dataset</em>) – Destination gdal dataset object</p></li>
-<li><p><strong>input_tif</strong> (<em>str</em>) – Input geotif</p></li>
-<li><p><strong>thresh</strong> (<em>float</em>) – NaN fraction threshold</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return resampled_average</dt>
-<dd class="field-even"><p>resampled image data</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-<dt class="field-even">Return src_ds_mem</dt>
-<dd class="field-even"><p>Modified in memory src_ds with nan_fraction in Band2. The nan_fraction
-is computed efficiently here in gdal in the same step as the that of
-the resampled average (band 1). This results is huge memory and
-computational efficiency</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>gdal.Dataset</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.gdal_python.resample_nearest_neighbour">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.gdal_python.</span></span><span class="sig-name descname"><span class="pre">resample_nearest_neighbour</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_tif</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_res</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#resample_nearest_neighbour"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.gdal_python.resample_nearest_neighbour" title="Permalink to this definition">¶</a></dt>
-<dd><p>Nearest neighbor resampling and cropping of an image.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>input_tif</strong> (<em>str</em>) – input geotiff file path</p></li>
-<li><p><strong>extents</strong> (<em>list</em>) – new extents for cropping</p></li>
-<li><p><strong>new_res</strong> (<em>list</em><em>[</em><em>float</em><em>]</em>) – new resolution for resampling</p></li>
-<li><p><strong>output_file</strong> (<em>str</em>) – output geotiff file path</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>dst: resampled image</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.gdal_python.world_to_pixel">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.gdal_python.</span></span><span class="sig-name descname"><span class="pre">world_to_pixel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geo_transform</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/gdal_python.html#world_to_pixel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.gdal_python.world_to_pixel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Uses a gdal geomatrix (gdal.GetGeoTransform()) to calculate
-the pixel location of a geospatial coordinate;
-see: <a class="reference external" href="http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html">http://pcjericks.github.io/py-gdalogr-cookbook/raster_layers.html</a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>geo_transform</strong> (<em>list</em>) – Affine transformation coefficients</p></li>
-<li><p><strong>x</strong> (<em>float</em>) – longitude coordinate</p></li>
-<li><p><strong>y</strong> (<em>float</em>) – latitude coordinate</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>col: pixel column number</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>line: pixel line number</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
+  <section id="gdal-python-bindings-module">
+<h1>GDAL-Python Bindings Module<a class="headerlink" href="#gdal-python-bindings-module" title="Permalink to this headline">¶</a></h1>
 </section>
 
 
@@ -286,7 +161,7 @@ see: <a class="reference external" href="http://pcjericks.github.io/py-gdalogr-c
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Geoscience Australia.</p>
+    <p>&#169; Copyright 2022, Geoscience Australia.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
