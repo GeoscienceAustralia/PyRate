@@ -4,10 +4,11 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Phase Closure Module &mdash; PyRate 0.6.0 documentation</title>
+  <title>Phase Closure Module &mdash; PyRate 0.6.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -108,15 +109,22 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.6.0 (2021-10-18)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.5.0 (2020-09-08)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id17">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id26">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id31">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id32">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.6.1 (2022-02-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.6.0 (2021-10-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id5">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id20">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id25">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id29">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id34">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id35">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="release.html">Releasing a version</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="release.html#prepare-the-release">Prepare the release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release.html#review-and-publish-on-github">Review and publish on GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release.html#publish-release-to-pypi">Publish release to PyPi</a></li>
 </ul>
 </li>
 </ul>
@@ -307,60 +315,7 @@ masked, but this spatial area has not been masked in other ifgs. In this case,
 the algorithm has been successfully able to attribute the source of the unwrapping
 error to this single ifg. The ability to do this depends on the parameter
 settings chosen.</p>
-<span class="target" id="module-pyrate.core.phase_closure.collect_loops"></span><dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.collect_loops.dedupe_loops">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.phase_closure.collect_loops.</span></span><span class="sig-name descname"><span class="pre">dedupe_loops</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loops</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="reference internal" href="_modules/pyrate/core/phase_closure/collect_loops.html#dedupe_loops"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.phase_closure.collect_loops.dedupe_loops" title="Permalink to this definition">¶</a></dt>
-<dd><p>Deduplication of loops with same members.</p>
-<p>For example: for nodes 1, 2, 3 in the graph below</p>
-<blockquote>
-<div><dl class="simple">
-<dt>[</dt><dd><p>[0, 1, 1],
-[1, 0, 1],
-[1, 1, 0],</p>
-</dd>
-</dl>
-<p>]</p>
-</div></blockquote>
-<p>Loops of length 3 are 0-&gt;1-&gt;2 and 0-&gt;2-&gt;1. We only retain 1 of these loops after dedupe.</p>
-<p>Example 2:
-For the following graph:</p>
-<blockquote>
-<div><dl class="simple">
-<dt>[</dt><dd><p>[0, 1, 1, 1],
-[1, 0, 1, 1],
-[1, 1, 0, 1],
-[1, 1, 1, 0],</p>
-</dd>
-</dl>
-<p>]</p>
-</div></blockquote>
-<p>Pictorially this is the network
-1 ———2
-| *      * |
-|    *     |
-|  *    *  |
-4———-3</p>
-<dl class="simple">
-<dt>Loops of length 4 are:</dt><dd><p>[[0, 1, 2, 3], [0, 1, 3, 2], [0, 2, 1, 3], [0, 2, 3, 1], [0, 3, 1, 2], [0, 3, 2, 1]]</p>
-</dd>
-</dl>
-<p>After deduplication we will only retain [0, 1, 2, 3]</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.collect_loops.dfs">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.phase_closure.collect_loops.</span></span><span class="sig-name descname"><span class="pre">dfs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marked</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vert</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_loops</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/phase_closure/collect_loops.html#dfs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.phase_closure.collect_loops.dfs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Depth First Search algorithm to count loops of length n in a given graph.
-Adapted from <a class="reference external" href="https://www.geeksforgeeks.org/print-all-the-cycles-in-an-undirected-graph/">https://www.geeksforgeeks.org/print-all-the-cycles-in-an-undirected-graph/</a></p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.phase_closure.collect_loops.find_loops">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.phase_closure.collect_loops.</span></span><span class="sig-name descname"><span class="pre">find_loops</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop_length</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/phase_closure/collect_loops.html#find_loops"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.phase_closure.collect_loops.find_loops" title="Permalink to this definition">¶</a></dt>
-<dd><p>Counts and collects loops of a defined length in an undirected and connected graph</p>
-</dd></dl>
-
-<span class="target" id="module-pyrate.core.phase_closure.correct_phase"></span></section>
+</section>
 </section>
 
 

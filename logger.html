@@ -4,10 +4,11 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Logging Module &mdash; PyRate 0.6.0 documentation</title>
+  <title>Logging Module &mdash; PyRate 0.6.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -108,15 +109,22 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Release History</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.6.0 (2021-10-18)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.5.0 (2020-09-08)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id7">0.4.3 (2020-08-04)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id12">0.4.2 (2020-06-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id17">0.4.1 (2020-05-19)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id22">0.4.0 (2019-10-31)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id26">0.3.0 (2019-07-26)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id31">0.2.0 (2017-05-22)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="history.html#id32">0.1.0 (2017-01-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id1">0.6.1 (2022-02-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id2">0.6.0 (2021-10-18)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id5">0.5.0 (2020-09-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id10">0.4.3 (2020-08-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id15">0.4.2 (2020-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id20">0.4.1 (2020-05-19)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id25">0.4.0 (2019-10-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id29">0.3.0 (2019-07-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id34">0.2.0 (2017-05-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="history.html#id35">0.1.0 (2017-01-31)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="release.html">Releasing a version</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="release.html#prepare-the-release">Prepare the release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release.html#review-and-publish-on-github">Review and publish on GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="release.html#publish-release-to-pypi">Publish release to PyPi</a></li>
 </ul>
 </li>
 </ul>
@@ -149,34 +157,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-pyrate.core.logger">
-<span id="logging-module"></span><h1>Logging Module<a class="headerlink" href="#module-pyrate.core.logger" title="Permalink to this headline">¶</a></h1>
-<p>This Python module contains functions to control PyRate log outputs</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="pyrate.core.logger.MPIStreamHandler">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyrate.core.logger.</span></span><span class="sig-name descname"><span class="pre">MPIStreamHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/logger.html#MPIStreamHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.logger.MPIStreamHandler" title="Permalink to this definition">¶</a></dt>
-<dd><p>Only logs messages from Node 0</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="pyrate.core.logger.MPIStreamHandler.emit">
-<span class="sig-name descname"><span class="pre">emit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/logger.html#MPIStreamHandler.emit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.logger.MPIStreamHandler.emit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Emit a record.</p>
-<p>If a formatter is specified, it is used to format the record.
-The record is then written to the stream with a trailing newline.  If
-exception information is present, it is formatted using
-traceback.print_exception and appended to the stream.  If the stream
-has an ‘encoding’ attribute, it is used to determine how to do the
-output to the stream.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="pyrate.core.logger.warn_with_traceback">
-<span class="sig-prename descclassname"><span class="pre">pyrate.core.logger.</span></span><span class="sig-name descname"><span class="pre">warn_with_traceback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">category</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lineno</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">line</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyrate/core/logger.html#warn_with_traceback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#pyrate.core.logger.warn_with_traceback" title="Permalink to this definition">¶</a></dt>
-<dd><p>copied from:
-<a class="reference external" href="http://stackoverflow.com/questions/22373927/get-traceback-of-warnings">http://stackoverflow.com/questions/22373927/get-traceback-of-warnings</a></p>
-</dd></dl>
-
+  <section id="logging-module">
+<h1>Logging Module<a class="headerlink" href="#logging-module" title="Permalink to this headline">¶</a></h1>
 </section>
 
 
