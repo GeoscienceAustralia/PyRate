@@ -1,0 +1,22 @@
+name: Build and deploy documentation to gh-pages
+on: 
+  push:
+    branches:
+      - master
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install and Build Html pages
+        run: |
+          sudo apt-get update
+          sudo apt-get install gdal-data gdal-bin libgdal-dev libopenmpi-dev
+          cd docs
+          pip install -r requirements.txt
+          sphinx-build -E -a -b html . _build
+      - name: Deploy to gh-pages
+        uses: JamesIves/github-pages-deploy-action@4.1.5
+        with:
+          branch: gh-pages # The branch the action should deploy to.
+          folder: docs/_build/ # The folder the action should deploy.

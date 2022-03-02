@@ -5,7 +5,7 @@ import datetime
 import sphinx_rtd_theme
 
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -34,9 +34,6 @@ templates_path = ['_templates']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
-#
-from recommonmark.parser import CommonMarkParser
-source_parsers = {'.md': CommonMarkParser}
 source_suffix = ['.rst', '.md']
 # source_suffix = '.rst'
 
