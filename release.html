@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GAMMA Module &mdash; PyRate 0.6.0 documentation</title>
+  <title>Releasing a version &mdash; PyRate 0.6.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/plot_directive.css" type="text/css" />
@@ -19,8 +19,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Geometry Module" href="geometry.html" />
-    <link rel="prev" title="DEM Error Correction Module" href="demerror.html" /> 
+    <link rel="prev" title="Release History" href="history.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -64,13 +63,13 @@
 <li class="toctree-l2"><a class="reference internal" href="pyrate.main.html">PyRate Main Script</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">PyRate Modules</a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">PyRate Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aps.html">Atmospheric Phase Screen Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration.html">Configuration Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="covariance.html">Covariance Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="demerror.html">DEM Error Correction Module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">GAMMA Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gamma.html">GAMMA Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="geometry.html">Geometry Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gdal_python.html">GDAL-Python Bindings Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ifgconstants.html">Ifgconstants Module</a></li>
@@ -120,10 +119,10 @@
 <li class="toctree-l2"><a class="reference internal" href="history.html#id35">0.1.0 (2017-01-31)</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="release.html">Releasing a version</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="release.html#prepare-the-release">Prepare the release</a></li>
-<li class="toctree-l2"><a class="reference internal" href="release.html#review-and-publish-on-github">Review and publish on GitHub</a></li>
-<li class="toctree-l2"><a class="reference internal" href="release.html#publish-release-to-pypi">Publish release to PyPi</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Releasing a version</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prepare-the-release">Prepare the release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#review-and-publish-on-github">Review and publish on GitHub</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#publish-release-to-pypi">Publish release to PyPi</a></li>
 </ul>
 </li>
 </ul>
@@ -143,21 +142,71 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">PyRate Modules</a> &raquo;</li>
-      <li>GAMMA Module</li>
+      <li>Releasing a version</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul><div class="rst-breadcrumbs-buttons" role="navigation" aria-label="Sequential page navigation">
-        <a href="demerror.html" class="btn btn-neutral float-left" title="DEM Error Correction Module" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="geometry.html" class="btn btn-neutral float-right" title="Geometry Module" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="history.html" class="btn btn-neutral float-left" title="Release History" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
   </div>
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="gamma-module">
-<h1>GAMMA Module<a class="headerlink" href="#gamma-module" title="Permalink to this headline">¶</a></h1>
+  <section id="releasing-a-version">
+<h1>Releasing a version<a class="headerlink" href="#releasing-a-version" title="Permalink to this headline">¶</a></h1>
+<p>These are instructions on how to make a <cite>PyRate</cite> Release.</p>
+<section id="prepare-the-release">
+<h2>Prepare the release<a class="headerlink" href="#prepare-the-release" title="Permalink to this headline">¶</a></h2>
+<section id="what-to-merge">
+<h3>What to merge<a class="headerlink" href="#what-to-merge" title="Permalink to this headline">¶</a></h3>
+<p>Decide whether develop will be merged with master, or some other release branch forking off develop will be merged with master.
+For a small release with not much active development by multiple people, merging develop directly in to master is a reasonable approach.</p>
+</section>
+<section id="level-of-release">
+<h3>Level of release<a class="headerlink" href="#level-of-release" title="Permalink to this headline">¶</a></h3>
+<p>Decide on level of release (major, semi-major, minor) and increment version number accordingly.</p>
+<p>Read up on <a class="reference external" href="https://semver.org/">semantic versioning</a> if you are unfamiliar.</p>
+<p>Update the variable __version__ accordingly in this <a class="reference external" href="https://github.com/GeoscienceAustralia/PyRate/blob/develop/setup.py">file</a> and commit change.</p>
+</section>
+<section id="update-documentation">
+<h3>Update Documentation<a class="headerlink" href="#update-documentation" title="Permalink to this headline">¶</a></h3>
+<p>Review, update and commit changes to the documentation based on changes in the release including the <a class="reference external" href="https://github.com/GeoscienceAustralia/PyRate/blob/master/docs/authors.rst">authors</a> and <a class="reference external" href="https://github.com/GeoscienceAustralia/PyRate/blob/master/docs/history.rst">changelog</a>:</p>
+<ul class="simple">
+<li><p>Edit .rst files in docs/ dir.</p></li>
+<li><p>pip install -r requirements-dev.txt</p></li>
+<li><p>cd into pyrate/docs and run make html to build the html pages,</p></li>
+<li><p>copy the new _build dir to Windows</p></li>
+<li><p>review html files in a browser.</p></li>
+</ul>
+<p>If the year has changed: update the year in all of the code files that contain this copyright line, and commit changes:</p>
+<p>#   Copyright 2021 Geoscience Australia</p>
+<p>This can be achieved using this command line code from the main PyRate folder, replace the years appropriately:</p>
+<blockquote>
+<div><p><cite>find . -type f -exec sed -i ‘s/2021(.*Geoscience*)/20221/’ {} +</cite></p>
+</div></blockquote>
+</section>
+</section>
+<section id="review-and-publish-on-github">
+<h2>Review and publish on GitHub<a class="headerlink" href="#review-and-publish-on-github" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Lodge a <a class="reference external" href="https://github.com/GeoscienceAustralia/PyRate/pulls">Pull Request</a> (PR) that will merge to master (draft). Add the changelog in to the details of the PR. Seek peer review from appropriate team members, does the software function as expected? Has anything broken?</p></li>
+<li><p><a class="reference external" href="https://github.com/GeoscienceAustralia/PyRate/releases">Draft a new release</a> in GitHub. Add the changelog content to the release notes.</p></li>
+<li><p>After addressing any review comments in the PR and after all CI tests are passing, merge the PR.</p></li>
+<li><p>Publish the draft release in GitHub and point it to the tip of master (this will tag that commit with the release number).</p></li>
+<li><p>Check that the html link to tar.gz Source Code file from github release page matches download_url in setup.py. Commit if you change it.</p></li>
+<li><p>Merging to master should trigger Actions CI to build and deploy the web documentation. Monitor CI for its progress, then check the web pages have been <a class="reference external" href="https://geoscienceaustralia.github.io/PyRate/">updated</a>.</p></li>
+</ul>
+</section>
+<section id="publish-release-to-pypi">
+<h2>Publish release to PyPi<a class="headerlink" href="#publish-release-to-pypi" title="Permalink to this headline">¶</a></h2>
+<p>The following steps will prepare the package and upload it to the Python Package Index. The final upload step requires log-in credentials, contact the core development team for assistance with this.</p>
+<p><cite>pip install -r requirements-dev.txt – install dependencies</cite></p>
+<p><cite>python3 setup.py sdist bdist_wheel - prepare package</cite></p>
+<p><cite>python3 -m twine upload dist/*</cite></p>
+<p>To check it worked visit the packages PyPi <a class="reference external" href="https://pypi.org/project/Py-Rate/">page</a></p>
+<p>Following this <cite>PyRate`can be installed using the command `pip install Py-Rate</cite>.</p>
+</section>
 </section>
 
 

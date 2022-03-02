@@ -57,6 +57,7 @@ Contents:
    contributing
    authors
    history
+   release
 
 .. _Home: https://geoscienceaustralia.github.io/PyRate/
 
