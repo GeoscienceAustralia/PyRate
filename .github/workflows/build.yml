@@ -5,15 +5,17 @@ on:
   pull_request:
     branches:
       - 'master'
+      - 'develop'
   push:
     branches:
-      - '**'
+      - 'master'
+      - 'develop'
 
 jobs:
   build:
     if: ${{ ! (contains(github.event.head_commit.message, 'ci skip') || contains(github.event.head_commit.message, 'skip ci'))}}
     runs-on: ubuntu-18.04
-    name: Python ${{ matrix.python }}
+    name: Python ${{ matrix.python-version }}, GDAL ${{ matrix.GDALVERSION }}
     strategy:
       matrix:
         include:
