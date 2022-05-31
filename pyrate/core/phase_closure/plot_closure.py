@@ -16,32 +16,42 @@
 
 
 from typing import List
-import numpy as np
 from pathlib import Path
+import numpy as np
 
 from pyrate.core.phase_closure.mst_closure import WeightedLoop
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import Configuration
 
 
-def plot_closure(closure: np.ndarray, loops: List[WeightedLoop],
-                    config: Configuration, thr: float, iteration: int):
+def plot_closure(
+    closure: np.ndarray,
+    loops: List[WeightedLoop],
+    config: Configuration,
+    thr: float,
+    iteration: int
+):
+    """
+    Produces a set of graphial plots for the closure loops.
+
+    The plots will be saved into the `config.phase_closure_dir` directory.
+    """
     thr = thr * np.pi
     try:
         import matplotlib.pyplot as plt
         import matplotlib as mpl
         from mpl_toolkits.axes_grid1 import make_axes_locatable
         cmap = mpl.cm.Spectral
-    except ImportError as e:
-        log.warn(ImportError(e))
+    except ImportError as error:
+        log.warn(ImportError(error))
         log.warn("Required plotting packages are not found in environment. "
                  "Closure loop plot will not be generated!!!")
         return
 
-    nrows, ncols, n_loops = closure.shape
+    _, _, n_loops = closure.shape
 
     # 49 ifgs per fig
-    plt_rows = 7 
+    plt_rows = 7
     plt_cols = 7
     plots_per_fig = plt_rows * plt_cols
     n_figs = n_loops // plots_per_fig + (n_loops % plots_per_fig > 0)
@@ -52,14 +62,14 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop],
         this_fig_plots = 0
         for p_r in range(plt_rows):
             for p_c in range(plt_cols):
-                if all_fig_plots == n_loops + 1:   
+                if all_fig_plots == n_loops + 1:
                     break
-                    
+
                 ax = fig.add_subplot(plt_rows, plt_cols, plt_cols * p_r + p_c + 1)
                 data = closure[:, :, plt_cols * p_r + p_c + fig_i * plots_per_fig]
                 loop = loops[plt_cols * p_r + p_c + fig_i * plots_per_fig]
                 title = ',\n'.join([repr(l) for l in loop.loop])
-                im = ax.imshow(data, vmin=-thr, vmax=thr, cmap=cmap)
+                image = ax.imshow(data, vmin=-thr, vmax=thr, cmap=cmap)
                 plt.tick_params(axis='both', which='major', labelsize=12)
                 text = ax.set_title(title)
                 text.set_fontsize(16)
@@ -67,13 +77,14 @@ def plot_closure(closure: np.ndarray, loops: List[WeightedLoop],
 
                 divider = make_axes_locatable(ax)
                 cax = divider.append_axes("right", size="5%", pad=0.05)
-                plt.colorbar(im, cax=cax)
+                plt.colorbar(image, cax=cax)
                 this_fig_plots += 1
                 all_fig_plots += 1
 
         fig.tight_layout()
 
-        closure_plot_file = Path(config.phase_closure_dir).joinpath(f'closure_loops_iteration_{iteration}_fig_{fig_i}.png')
+        closure_plot_file = f'closure_loops_iteration_{iteration}_fig_{fig_i}.png'
+        closure_plot_file = Path(config.phase_closure_dir) / closure_plot_file
         plt.savefig(closure_plot_file, dpi=100)
         plt.close(fig)
         log.info(f'{this_fig_plots} closure loops plotted in {closure_plot_file}')

@@ -21,8 +21,6 @@ import shutil
 import os
 from pathlib import Path
 import pickle as cp
-from typing import List
-import sys
 
 import pyrate.constants as C
 from pyrate.core import (shared, algorithm, mpiops)
@@ -31,14 +29,14 @@ from pyrate.core.covariance import maxvar_vcm_calc_wrapper
 from pyrate.core.mst import mst_calc_wrapper
 from pyrate.core.orbital import orb_fit_calc_wrapper
 from pyrate.core.dem_error import dem_error_calc_wrapper
-from pyrate.core.phase_closure.closure_check import iterative_closure_check, mask_pixels_with_unwrapping_errors, \
-    update_ifg_list
+from pyrate.core.phase_closure.closure_check import iterative_closure_check, \
+    mask_pixels_with_unwrapping_errors, update_ifg_list
 from pyrate.core.ref_phs_est import ref_phase_est_wrapper
 from pyrate.core.refpixel import ref_pixel_calc_wrapper
-from pyrate.core.shared import PrereadIfg, Ifg, get_tiles, mpi_vs_multiprocess_logging, join_dicts, \
-        nan_and_mm_convert, save_numpy_phase
+from pyrate.core.shared import PrereadIfg, Ifg, get_tiles, mpi_vs_multiprocess_logging, \
+    join_dicts, nan_and_mm_convert, save_numpy_phase
 from pyrate.core.logger import pyratelogger as log
-from pyrate.configuration import Configuration, MultiplePaths, ConfigException
+from pyrate.configuration import Configuration, ConfigException
 
 MAIN_PROCESS = 0
 
@@ -56,7 +54,7 @@ def _create_ifg_dict(params):
                 interferograms that are used later in workflow
     :rtype: dict
     """
-    dest_tifs = [ifg_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
+    dest_tifs = list(params[C.INTERFEROGRAM_FILES])
     ifgs_dict = {}
     process_tifs = mpiops.array_split(dest_tifs)
     for d in process_tifs:
@@ -78,13 +76,16 @@ def _create_ifg_dict(params):
         ifg.close()
     ifgs_dict = join_dicts(mpiops.comm.allgather(ifgs_dict))
 
-    ifgs_dict = mpiops.run_once(__save_ifgs_dict_with_headers_and_epochs, dest_tifs, ifgs_dict, params, process_tifs)
+    ifgs_dict = mpiops.run_once(
+        _save_ifgs_dict_with_headers_and_epochs,
+        dest_tifs, ifgs_dict, params, process_tifs
+    )
 
     params[C.PREREAD_IFGS] = ifgs_dict
     return ifgs_dict
 
 
-def __save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, process_tifs):
+def _save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, process_tifs):
     tmpdir = params[C.TMPDIR]
     if not os.path.exists(tmpdir):
         shared.mkdir_p(tmpdir)
@@ -94,13 +95,14 @@ def __save_ifgs_dict_with_headers_and_epochs(dest_tifs, ifgs_dict, params, proce
     # add some extra information that's also useful later
     gt, md, wkt = shared.get_geotiff_header_info(process_tifs[0].tmp_sampled_path)
     epochlist = algorithm.get_epochs(ifgs_dict)[0]
-    log.info('Found {} unique epochs in the {} interferogram network'.format(len(epochlist.dates), nifgs))
+    log.info(f'Found {len(epochlist.dates)} unique epochs in the {nifgs} interferogram network')
     ifgs_dict['epochlist'] = epochlist
     ifgs_dict['gt'] = gt
     ifgs_dict['md'] = md
     ifgs_dict['wkt'] = wkt
     # dump ifgs_dict file for later use
-    cp.dump(ifgs_dict, open(preread_ifgs_file, 'wb'))
+    with open(preread_ifgs_file, 'wb') as file:
+        cp.dump(ifgs_dict, file)
 
     for k in ['gt', 'epochlist', 'md', 'wkt']:
         ifgs_dict.pop(k)
@@ -116,9 +118,10 @@ def _copy_mlooked(params):
     log.info("Copying input files into tempdir for manipulation during 'correct' steps")
     mpaths = params[C.INTERFEROGRAM_FILES]
     process_mpaths = mpiops.array_split(mpaths)
-    for p in process_mpaths:
-        shutil.copy(p.sampled_path, p.tmp_sampled_path)
-        Path(p.tmp_sampled_path).chmod(0o664)  # assign write permission as prepifg output is readonly
+    for path in process_mpaths:
+        shutil.copy(path.sampled_path, path.tmp_sampled_path)
+        # assign write permission as prepifg output is readonly
+        Path(path.tmp_sampled_path).chmod(0o664)
 
 
 def main(config):
@@ -155,21 +158,21 @@ def phase_closure_wrapper(params: dict, config: Configuration) -> dict:
     This wrapper will run the iterative phase closure check to return a stable
     list of checked interferograms, and then mask pixels in interferograms that
     exceed the unwrapping error threshold.
-    :param params: Dictionary of PyRate configuration parameters. 
+    :param params: Dictionary of PyRate configuration parameters.
     :param config: Configuration class instance.
     :return: params: Updated dictionary of PyRate configuration parameters.
     """
 
     if not params[C.PHASE_CLOSURE]:
         log.info("Phase closure correction is not required!")
-        return
+        return None
 
     rets = iterative_closure_check(config)
     if rets is None:
         log.info("Zero loops are returned from the iterative closure check.")
         log.warning("Abandoning phase closure correction without modifying the interferograms.")
-        return
-        
+        return None
+
     ifg_files, ifgs_breach_count, num_occurences_each_ifg = rets
 
     # update params with closure checked ifg list
@@ -177,7 +180,7 @@ def phase_closure_wrapper(params: dict, config: Configuration) -> dict:
         mpiops.run_once(update_ifg_list, ifg_files, params[C.INTERFEROGRAM_FILES])
 
     if mpiops.rank == 0:
-        with open(config.phase_closure_filtered_ifgs_list(params), 'w') as f:
+        with open(config.phase_closure_filtered_ifgs_list(params), 'w', encoding="utf-8") as f:
             lines = [p.converted_path + '\n' for p in params[C.INTERFEROGRAM_FILES]]
             f.writelines(lines)
 
@@ -236,6 +239,6 @@ def correct_ifgs(config: Configuration) -> None:
 
 def __validate_correct_steps(params):
     for step in params['correct']:
-        if step not in correct_steps.keys():
+        if step not in correct_steps:
             raise ConfigException(f"{step} is not a supported 'correct' step. \n"
                                   f"Supported steps are {correct_steps.keys()}")

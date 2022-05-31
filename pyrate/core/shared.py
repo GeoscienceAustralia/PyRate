@@ -20,11 +20,10 @@ all other PyRate modules
 """
 # pylint: disable=too-many-lines
 import re
-from typing import List, Union, Optional, Iterable, Callable, Dict
+from typing import List, Union, Iterable, Callable
 
 import errno
 import math
-from joblib import Parallel, delayed
 from math import floor
 import os
 from os.path import basename, join
@@ -33,15 +32,16 @@ import struct
 from datetime import date
 from itertools import product
 from enum import Enum
+from joblib import Parallel, delayed
 import numpy as np
 from numpy import where, nan, isnan, sum as nsum, isclose
 import pyproj
 import pkg_resources
 
-import pyrate.constants as C
-
 from osgeo import osr, gdal
 from osgeo.gdalconst import GA_Update, GA_ReadOnly
+
+import pyrate.constants as C
 
 from pyrate.core import ifgconstants as ifc, mpiops
 from pyrate.core.logger import pyratelogger as log
@@ -66,13 +66,14 @@ GDAL_Y_FIRST = 3
 
 
 class InputTypes(Enum):
+    """An enum of the types of input files & directories"""
     IFG = 'ifg'
     COH = 'coh'
     BASE = 'base'
     LT = 'lt'
     DEM = 'dem'
     HEADER = 'header'
-    dir_map = {
+    DIR_MAP = {
         IFG: C.INTERFEROGRAM_DIR,
         COH: C.COHERENCE_DIR,
         DEM: C.GEOMETRY_DIR,
@@ -82,11 +83,11 @@ class InputTypes(Enum):
 def joblib_log_level(level: str) -> int:
     """
     Convert python log level to joblib int verbosity.
-    """ 
+    """
     if level == 'INFO':
         return 0
-    else:
-        return 60
+
+    return 60
 
 def mkdir_p(path):
     """
@@ -105,7 +106,7 @@ def mkdir_p(path):
             raise
 
 
-class RasterBase(object):
+class RasterBase:
     """
     Base class for PyRate GeoTIFF based raster datasets.
     """
@@ -127,22 +128,24 @@ class RasterBase(object):
 
     def __str__(self):
         name = self.__class__.__name__
-        return "%s('%s')" % (name, self.data_path)
+        return f"{name}('{self.data_path}')"
 
     def __repr__(self):
         name = self.__class__.__name__
-        return "%s('%s')" % (name, self.data_path)
+        return f"{name}('{self.data_path}')"
 
     def open(self, readonly=None):
         """
         Opens generic raster dataset.
         """
         if self.dataset is not None:
-            msg = "open() already called for %s" % self
+            msg = f"open() already called for {self}"
             raise RasterException(msg)
 
         if not os.path.exists(self.data_path):
-            raise IOError('The file {path} does not exist. Consider first running prepifg'.format(path=self.data_path))
+            raise IOError(
+                f'The file {self.data_path} does not exist. Consider first running prepifg'
+            )
 
         # unless read only, by default open files as writeable
         if readonly not in [True, False, None]:
@@ -154,7 +157,7 @@ class RasterBase(object):
         flag = GA_ReadOnly if self._readonly else GA_Update
         self.dataset = gdal.Open(self.data_path, flag)
         if self.dataset is None:
-            raise RasterException("Error opening %s" % self.data_path)
+            raise RasterException(f"Error opening {self.data_path}")
 
         self.add_geographic_data()
 
@@ -168,7 +171,9 @@ class RasterBase(object):
         self.lat_centre = self.y_first + (self.y_step * self.y_centre)
         self.long_centre = self.x_first + (self.x_step * self.x_centre)
         # use cell size from centre of scene
-        self.x_size, self.y_size = cell_size(self.lat_centre, self.long_centre, self.x_step, self.y_step)
+        self.x_size, self.y_size = cell_size(
+            self.lat_centre, self.long_centre, self.x_step, self.y_step
+        )
 
     @property
     def ncols(self):
@@ -238,10 +243,10 @@ class RasterBase(object):
         """
         Total number of pixels in raster dataset
         """
-        if self.is_open:
-            return self.dataset.RasterXSize * self.dataset.RasterYSize
-        else:
+        if not self.is_open:
             raise RasterException('Dataset not open')
+
+        return self.dataset.RasterXSize * self.dataset.RasterYSize
 
     @property
     def is_open(self):
@@ -272,10 +277,10 @@ class RasterBase(object):
 
         :param int band: number of band, starting at 1
         """
-        if self.dataset is not None:
-            return self.dataset.GetRasterBand(band)
-        else:
-            raise RasterException("Raster %s has not been opened" % self.data_path)
+        if self.dataset is None:
+            raise RasterException(f"Raster {self.data_path} has not been opened")
+
+        return self.dataset.GetRasterBand(band)
 
 
 class Ifg(RasterBase):
@@ -336,7 +341,7 @@ class Ifg(RasterBase):
             self.first, self.second = [_to_date(s) for s in datestrs]
             self.time_span = (self.second - self.first).days/ifc.DAYS_PER_YEAR
         else:
-            msg = 'Missing first and/or second date in %s' % self.data_path
+            msg = f'Missing first and/or second date in {self.data_path}'
             raise IfgException(msg)
 
     def convert_to_nans(self):
@@ -349,21 +354,21 @@ class Ifg(RasterBase):
                   'Use ifg.nodata_value = NoDataValue to set nodata_value'
             log.warning(msg)
             raise RasterException(msg)
+
         if ((self.dataset.GetMetadataItem(ifc.NAN_STATUS) == ifc.NAN_CONVERTED)
                 or self.nan_converted):
             self.phase_data = self.phase_data
             self.nan_converted = True
-            msg = '{}: ignored as previous nan ' \
-                  'conversion detected'.format(self.data_path)
+            msg = f'{self.data_path}: ignored as previous nan conversion detected'
             log.debug(msg)
             return
-        else:
-            self.phase_data = where(
-                isclose(self.phase_data, self._nodata_value, atol=1e-6),
-                nan,
-                self.phase_data)
-            self.meta_data[ifc.NAN_STATUS] = ifc.NAN_CONVERTED
-            self.nan_converted = True
+
+        self.phase_data = where(
+            isclose(self.phase_data, self._nodata_value, atol=1e-6),
+            nan,
+            self.phase_data)
+        self.meta_data[ifc.NAN_STATUS] = ifc.NAN_CONVERTED
+        self.nan_converted = True
 
         # self.write_modified_phase(self.phase_data)
 
@@ -408,10 +413,8 @@ class Ifg(RasterBase):
         """
         if self.dataset.GetMetadataItem(ifc.DATA_UNITS) == MILLIMETRES:
             self.mm_converted = True
-            msg = '{}: ignored as phase units are already ' \
-                  'millimetres'.format(self.data_path)
+            msg = f'{self.data_path}: ignored as phase units are already millimetres'
             log.debug(msg)
-            return
         elif self.dataset.GetMetadataItem(ifc.DATA_UNITS) == RADIANS:
             self.phase_data = convert_radians_to_mm(self.phase_data, self.wavelength)
             self.meta_data[ifc.DATA_UNITS] = MILLIMETRES
@@ -420,9 +423,8 @@ class Ifg(RasterBase):
             # otherwise NaN's don't write to bytecode properly
             # and numpy complains
             # self.dataset.FlushCache()
-            msg = '{}: converted phase units to millimetres'.format(self.data_path)
+            msg = f'{self.data_path}: converted phase units to millimetres'
             log.debug(msg)
-            return
         else:  # pragma: no cover
             msg = 'Phase units are not millimetres or radians'
             raise IfgException(msg)
@@ -437,15 +439,12 @@ class Ifg(RasterBase):
             self.phase_data = convert_mm_to_radians(self.phase_data, wavelength=self.wavelength)
             self.meta_data[ifc.DATA_UNITS] = RADIANS
             self.mm_converted = False
-            msg = '{}: converted phase units to radians'.format(self.data_path)
+            msg = f'{self.data_path}: converted phase units to radians'
             log.debug(msg)
-            return
         elif self.meta_data[ifc.DATA_UNITS] == RADIANS:
             self.mm_converted = False
-            msg = '{}: ignored as phase units are already ' \
-                  'radians'.format(self.data_path)
+            msg = f'{self.data_path}: ignored as phase units are already radians'
             log.debug(msg)
-            return
         else:  # pragma: no cover
             msg = 'Phase units are not millimetres or radians'
             raise IfgException(msg)
@@ -516,6 +515,7 @@ class Ifg(RasterBase):
         self.dataset.FlushCache()
 
     def add_metadata(self, **kwargs):
+        """Adds metadata to the interferogram's geotiff file"""
         if (not self.is_open) or self.is_read_only:
             raise IOError("Ifg not open or readonly. Cannot write!")
 
@@ -550,7 +550,7 @@ class Tile:
         return "Convenience Tile class containing tile co-ordinates"
 
 
-class IfgPart(object):
+class IfgPart:
     """
     Create a tile (subset) of an Ifg data object
     """
@@ -571,7 +571,7 @@ class IfgPart(object):
             self.first = ifg.first
             self.second = ifg.second
             self.time_span = ifg.time_span
-            phase_file = 'phase_data_{}_{}.npy'.format(basename(ifg_or_path).split('.')[0], tile.index)
+            phase_file = f'phase_data_{basename(ifg_or_path).split(".")[0]}_{tile.index}.npy'
             self.phase_data = np.load(join(params[C.TMPDIR], phase_file))
         else:
             # check if Ifg was sent.
@@ -674,6 +674,7 @@ class Incidence(RasterBase):   # pragma: no cover
 
 
 class TileMixin:
+    """A mixin class that makes the inheriting class callable to subscript by a tile region"""
     def __call__(self, tile: Tile):
         t = tile
         return self.data[t.top_left_y:t.bottom_right_y, t.top_left_x:t.bottom_right_x]
@@ -714,7 +715,7 @@ class DEM(RasterBase, TileMixin):
 
 
 class MemGeometry(TileMixin):
-
+    """A simple class which holds geometry data in memory"""
     def __init__(self, data):
         """
         Set phase data value
@@ -723,6 +724,9 @@ class MemGeometry(TileMixin):
 
     @property
     def data(self):
+        """
+        Returns the geometry band as an array.
+        """
         return self._data
 
 
@@ -741,7 +745,7 @@ class RasterException(Exception):
     """
 
 
-class EpochList(object):
+class EpochList:
     """
     Metadata container for epoch related information.
     """
@@ -755,10 +759,10 @@ class EpochList(object):
         self.spans = spans  # time span from earliest ifg
 
     def __str__(self):
-        return "EpochList: %s" % str(self.dates)
+        return f"EpochList: {str(self.dates)}"
 
     def __repr__(self):
-        return "EpochList: %s" % repr(self.dates)
+        return f"EpochList: {repr(self.dates)}"
 
 
 def convert_radians_to_mm(data, wavelength):
@@ -801,8 +805,9 @@ def nanmedian(x):
     version = [int(i) for i in pkg_resources.get_distribution("numpy").version.split('.')[:2]]
     if version[0] == 1 and version[1] > 9:
         return np.nanmedian(x)
-    else:   # pragma: no cover
-        return np.median(x[~np.isnan(x)])
+
+    # pragma: no cover
+    return np.median(x[~np.isnan(x)])
 
 
 def _is_interferogram(hdr):
@@ -870,23 +875,32 @@ def write_fullres_geotiff(header, data_path, dest, nodata):
         _check_raw_data(bytes_per_col, data_path, ncols, nrows)
 
     # position and projection data
-    gt = [header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0, header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]]
+    gt = [
+        header[ifc.PYRATE_LONG], header[ifc.PYRATE_X_STEP], 0,
+        header[ifc.PYRATE_LAT], 0, header[ifc.PYRATE_Y_STEP]
+    ]
     srs = osr.SpatialReference()
     res = srs.SetWellKnownGeogCS(header[ifc.PYRATE_DATUM])
     if res:
-        msg = 'Unrecognised projection: %s' % header[ifc.PYRATE_DATUM]
+        msg = f'Unrecognised projection: {header[ifc.PYRATE_DATUM]}'
         raise GeotiffException(msg)
 
     wkt = srs.ExportToWkt()
-    dtype = 'float32' if (_is_interferogram(header) or _is_incidence(header) or _is_coherence(header) or \
-                          _is_baseline(header) or _is_lookuptable(header)) else 'int16'
+    is_float = _is_interferogram(header)
+    is_float |= _is_incidence(header)
+    is_float |= _is_coherence(header)
+    is_float |= _is_baseline(header)
+    is_float |= _is_lookuptable(header)
+    dtype = 'float32' if is_float else 'int16'
 
     # get subset of metadata relevant to PyRate
     md = collate_metadata(header)
 
     # create GDAL object
     ds = gdal_dataset(
-        dest, ncols, nrows, driver="GTiff", bands=1, dtype=dtype, metadata=md, crs=wkt, geotransform=gt,
+        dest, ncols, nrows,
+        driver="GTiff", bands=1, dtype=dtype,
+        metadata=md, crs=wkt, geotransform=gt,
         creation_opts=["compress=packbits"]
     )
 
@@ -947,7 +961,7 @@ def collate_metadata(header):
 
     :return: dict of relevant metadata for PyRate
     """
-    md = dict()
+    md = {}
 
     def __common_ifg_coh_update(header, md):
         for k in [ifc.PYRATE_WAVELENGTH_METRES, ifc.PYRATE_TIME_SPAN,
@@ -1006,7 +1020,7 @@ def data_format(ifg_proc, is_ifg, ncols):
             fmtstr = '<' + ('h' * ncols)  # roipac DEM is little endian signed int16
             bytes_per_col = 2
     else:  # pragma: no cover
-        msg = 'Unrecognised InSAR Processor: %s' % ifg_proc
+        msg = f'Unrecognised InSAR Processor: {ifg_proc}'
         raise GeotiffException(msg)
     return bytes_per_col, fmtstr
 
@@ -1080,10 +1094,14 @@ def write_output_geotiff(md, gt, wkt, data, dest, nodata):
     ds.SetMetadataItem(ifc.DATA_TYPE, str(md[ifc.DATA_TYPE]))
 
     # set other metadata
-    for k in [ifc.SEQUENCE_POSITION, ifc.PYRATE_REFPIX_X, ifc.PYRATE_REFPIX_Y, ifc.PYRATE_REFPIX_LAT,
-              ifc.PYRATE_REFPIX_LON, ifc.PYRATE_MEAN_REF_AREA, ifc.PYRATE_STDDEV_REF_AREA,
-              ifc.EPOCH_DATE, C.LOS_PROJECTION.upper(), C.SIGNAL_POLARITY.upper(),
-              C.VELERROR_NSIG.upper()]:
+    metadata = [
+        ifc.SEQUENCE_POSITION, ifc.PYRATE_REFPIX_X, ifc.PYRATE_REFPIX_Y, ifc.PYRATE_REFPIX_LAT,
+        ifc.PYRATE_REFPIX_LON, ifc.PYRATE_MEAN_REF_AREA, ifc.PYRATE_STDDEV_REF_AREA,
+        ifc.EPOCH_DATE, C.LOS_PROJECTION.upper(), C.SIGNAL_POLARITY.upper(),
+        C.VELERROR_NSIG.upper()
+    ]
+
+    for k in metadata:
         if k in md:
             ds.SetMetadataItem(k, str(md[k]))
 
@@ -1108,9 +1126,9 @@ def write_geotiff(data, outds, nodata):
     """
     # only support "2 <= dims <= 3"
     if data.ndim == 3:
-        count, height, width = data.shape
+        _, _, _ = data.shape
     elif data.ndim == 2:
-        height, width = data.shape
+        _, _ = data.shape
     else:
         msg = "Only support dimensions of '2 <= dims <= 3'."
         raise GeotiffException(msg)
@@ -1156,9 +1174,11 @@ def create_tiles(shape, nrows=2, ncols=2):
 
     if ncols > no_x or nrows > no_y:
         raise ValueError('nrows/cols must be greater than ifg dimensions')
-    col_arr = np.array_split(range(no_x), ncols)
-    row_arr = np.array_split(range(no_y), nrows)
-    return [Tile(i, (r[0], c[0]), (r[-1]+1, c[-1]+1)) for i, (r, c) in enumerate(product(row_arr, col_arr))]
+    cols = np.array_split(range(no_x), ncols)
+    rows = np.array_split(range(no_y), nrows)
+    return [
+        Tile(i, (r[0], c[0]), (r[-1]+1, c[-1]+1)) for i, (r, c) in enumerate(product(rows, cols))
+    ]
 
 
 def get_tiles(ifg_path, rows, cols) -> List[Tile]:
@@ -1280,7 +1300,7 @@ def save_numpy_phase(ifg_paths, params):
         for t in tiles:
             p_data = phase_data[t.top_left_y:t.bottom_right_y,
                                 t.top_left_x:t.bottom_right_x]
-            phase_file = 'phase_data_{}_{}.npy'.format(bname, t.index)
+            phase_file = f'phase_data_{bname}_{t.index}.npy'
             np.save(file=join(outdir, phase_file),
                     arr=p_data)
         ifg.close()
@@ -1341,7 +1361,7 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
     def close_all(ifgs):
         for ifg in ifgs:
             ifg.close()
-    
+
     if not isinstance(ifgs[0], Ifg):
         ifgs = [Ifg(ifg_path) for ifg_path in ifgs]
 
@@ -1353,20 +1373,21 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
     if all(flags):
         log.info('Skipped: interferograms already corrected')
         return True
-    elif not all(flags) and any(flags):
+
+    if not all(flags) and any(flags):
         log.debug('Detected mix of corrected and uncorrected interferograms')
-        for i, flag in zip(ifgs, flags):
+        for flag in flags:
             if flag:
-                msg = '{}: correction detected'.format(i.data_path)
+                msg = '{i.data_path}: correction detected'
             else:
-                msg = '{}: correction NOT detected'.format(i.data_path)
+                msg = '{i.data_path}: correction NOT detected'
             log.debug(msg)
             close_all(ifgs)
             raise CorrectionStatusError(msg)
-    else:
-        log.debug('Calculating corrections')
-        close_all(ifgs)
-        return False
+
+    log.debug('Calculating corrections')
+    close_all(ifgs)
+    return False
 
 
 class CorrectionStatusError(Exception):
@@ -1376,6 +1397,7 @@ class CorrectionStatusError(Exception):
 
 
 def extract_epochs_from_filename(filename_with_epochs: str) -> List[str]:
+    """Extract the 8 or 6 digit epochs from IFG filenames"""
     src_epochs = re.findall(r"(\d{8})", str(filename_with_epochs))
     if not len(src_epochs) > 0:
         src_epochs = re.findall(r"(\d{6})", str(filename_with_epochs))
@@ -1383,6 +1405,7 @@ def extract_epochs_from_filename(filename_with_epochs: str) -> List[str]:
 
 
 def mpi_vs_multiprocess_logging(step, params):
+    """Logs the state of job processing (MPI vs. parallel)"""
     if mpiops.size > 1:  # Over-ride input options if this is an MPI job
         log.info(f"Running '{step}' step with MPI using {mpiops.size} processes")
         log.warning("Disabling joblib parallel processing (setting parallel = 0)")
@@ -1405,11 +1428,10 @@ def dem_or_ifg(data_path: str) -> Union[Ifg, DEM]:
     """
     ds = gdal.Open(data_path)
     md = ds.GetMetadata()
-    if ifc.FIRST_DATE in md:  # ifg
-        return Ifg(data_path)
-    else:
-        return DEM(data_path)
+    is_ifg = ifc.FIRST_DATE in md
     ds = None  # close the dataset
+
+    return Ifg(data_path) if is_ifg else DEM(data_path)
 
 
 def join_dicts(dicts: List[dict]) -> dict:
@@ -1425,9 +1447,10 @@ def join_dicts(dicts: List[dict]) -> dict:
 def iterable_split(func: Callable, iterable: Iterable, params: dict, *args, **kwargs) -> np.ndarray:
     """
     # TODO: a faster version using buffer-provider objects via the uppercase communication method
-    A faster version of iterable/tiles_split is possible when the return values from each process is of the same size
-    and will be addressed in future. In this case a buffer-provider object can be sent between processes using the
-    uppercase communication (like Gather instead of gather) methods which can be significantly faster.
+    A faster version of iterable/tiles_split is possible when the return values from each process
+    is of the same size and will be addressed in future. In this case a buffer-provider object can
+    be sent between processes using the uppercase communication (like Gather instead of gather)
+    methods which can be significantly faster.
     """
     if params[C.PARALLEL]:
         ret_combined = {}

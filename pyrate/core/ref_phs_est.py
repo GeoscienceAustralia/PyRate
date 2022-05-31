@@ -17,8 +17,6 @@
 """
 This Python module implements a reference phase estimation algorithm.
 """
-from pathlib import Path
-from typing import List
 from joblib import Parallel, delayed
 import numpy as np
 
@@ -69,13 +67,15 @@ def est_ref_phase_patch_median(ifg_paths, params, refpx, refpy):
         else:
             ref_phs = np.zeros(len(ifgs))
             for n, ifg in enumerate(ifgs):
-                ref_phs[n] = _est_ref_phs_patch_median(phase_data[n], half_chip_size, refpx, refpy, thresh)
+                ref_phs[n] = _est_ref_phs_patch_median(
+                    phase_data[n], half_chip_size, refpx, refpy, thresh
+                )
 
         return ref_phs
-    
+
     process_ifgs_paths = mpiops.array_split(ifg_paths)
     ref_phs = _inner(process_ifgs_paths)
-    return ref_phs   
+    return ref_phs
 
 
 def _est_ref_phs_patch_median(phase_data, half_chip_size, refpx, refpy, thresh):
@@ -87,10 +87,12 @@ def _est_ref_phs_patch_median(phase_data, half_chip_size, refpx, refpy, thresh):
     patch = np.reshape(patch, newshape=(-1, 1), order='F')
     nanfrac = np.sum(~np.isnan(patch))
     if nanfrac < thresh:
-        raise ReferencePhaseError('The data window at the reference pixel '
-                                  'does not have enough valid observations. '
-                                  'Actual = {}, Threshold = {}.'.format(
-                                          nanfrac, thresh))
+        msg = 'The data window at the reference pixel ' \
+              'does not have enough valid observations. ' \
+              f'Actual = {nanfrac}, Threshold = {thresh}.'
+
+        raise ReferencePhaseError(msg)
+
     ref_ph = nanmedian(patch)
     return ref_ph
 
@@ -125,9 +127,7 @@ def est_ref_phase_ifg_median(ifg_paths, params):
         return ifg_phase_data_sum
 
     def _inner(proc_ifgs, phase_data_sum):
-        if isinstance(proc_ifgs[0], Ifg):
-            proc_ifgs = proc_ifgs
-        else:
+        if not isinstance(proc_ifgs[0], Ifg):
             proc_ifgs = [Ifg(ifg_path) for ifg_path in proc_ifgs]
 
         for ifg in proc_ifgs:
@@ -184,15 +184,14 @@ def _update_phase_and_metadata(ifgs, ref_phs, params):
         ifg.close()
 
     log.info("Correcting ifgs by subtracting reference phase")
-    for i, rp in zip(mpiops.array_split(ifgs), mpiops.array_split(ref_phs)):
-        __inner(i, rp)
+    for ifg, ref_phase in zip(mpiops.array_split(ifgs), mpiops.array_split(ref_phs)):
+        __inner(ifg, ref_phase)
 
 
 class ReferencePhaseError(Exception):
     """
     Generic class for errors in reference phase estimation.
     """
-    pass
 
 
 def ref_phase_est_wrapper(params):
@@ -203,14 +202,14 @@ def ref_phase_est_wrapper(params):
     refpx, refpy = params[C.REFX_FOUND], params[C.REFY_FOUND]
     if len(ifg_paths) < 2:
         raise ReferencePhaseError(
-            "At least two interferograms required for reference phase correction ({len_ifg_paths} "
-            "provided).".format(len_ifg_paths=len(ifg_paths))
+            f"At least two interferograms required for reference"
+            f" phase correction ({len(ifg_paths)} provided)."
         )
 
     # this is not going to be true as we now start with fresh multilooked ifg copies - remove?
     if mpiops.run_once(shared.check_correction_status, ifg_paths, ifc.PYRATE_REF_PHASE):
         log.warning('Reference phase correction already applied to ifgs; returning')
-        return
+        return None
 
     ifgs = [Ifg(ifg_path) for ifg_path in ifg_paths]
     # Save reference phase numpy arrays to disk.
@@ -228,7 +227,9 @@ def ref_phase_est_wrapper(params):
         log.info("Calculating reference phase as median of interferogram")
         ref_phs = est_ref_phase_ifg_median(ifg_paths, params)
     elif params[C.REF_EST_METHOD] == 2:
-        log.info('Calculating reference phase in a patch surrounding pixel (x, y): ({}, {})'.format(refpx, refpy))
+        log.info(
+            f'Calculating reference phase in a patch surrounding pixel (x, y): ({refpx}, {refpy})'
+        )
         ref_phs = est_ref_phase_patch_median(ifg_paths, params, refpx, refpy)
     else:
         raise ReferencePhaseError("No such option, set parameter 'refest' to '1' or '2'.")

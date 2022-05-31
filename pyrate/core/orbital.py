@@ -18,9 +18,8 @@ This Python module implements residual orbital corrections for interferograms.
 """
 # pylint: disable=invalid-name
 import tempfile
-from typing import Optional, List, Dict, Iterable
+from typing import Optional, List
 from collections import OrderedDict
-from pathlib import Path
 from numpy import empty, isnan, reshape, float32, squeeze
 from numpy import dot, vstack, zeros, meshgrid
 import numpy as np
@@ -29,7 +28,7 @@ from numpy.linalg import pinv, cond
 import pyrate.constants as C
 from pyrate.core.algorithm import first_second_ids, get_all_epochs
 from pyrate.core import shared, ifgconstants as ifc, prepifg_helper, mst, mpiops
-from pyrate.core.shared import nanmedian, Ifg, InputTypes, iterable_split
+from pyrate.core.shared import nanmedian, Ifg, iterable_split
 from pyrate.core.logger import pyratelogger as log
 from pyrate.prepifg import find_header
 from pyrate.configuration import MultiplePaths
@@ -86,14 +85,14 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
     orbfitlksy = params[C.ORBITAL_FIT_LOOKS_Y]
 
     # Sanity check of the orbital params
-    if type(orbfitlksx) != int or type(orbfitlksy) != int:
-        msg = f"Multi-look factors for orbital correction should be of type: int"
+    if not isinstance(orbfitlksx, int) or not isinstance(orbfitlksy, int):
+        msg = "Multi-look factors for orbital correction should be of type: int"
         raise OrbitalError(msg)
     if degree not in [PLANAR, QUADRATIC, PART_CUBIC]:
-        msg = "Invalid degree of %s for orbital correction" % C.ORB_DEGREE_NAMES.get(degree)
+        msg = f"Invalid degree of {C.ORB_DEGREE_NAMES.get(degree)} for orbital correction"
         raise OrbitalError(msg)
     if method not in [NETWORK_METHOD, INDEPENDENT_METHOD]:
-        msg = "Invalid method of %s for orbital correction" % C.ORB_METHOD_NAMES.get(method)
+        msg = f"Invalid method of {C.ORB_METHOD_NAMES.get(method)} for orbital correction"
         raise OrbitalError(msg)
 
     # Give informative log messages based on selected options
@@ -129,7 +128,9 @@ def remove_orbital_error(ifgs: List, params: dict) -> None:
 
 def __create_multilooked_datasets(params):
     exts, ifg_paths, multi_paths = __extents_from_params(params)
-    mlooked_datasets = [_create_mlooked_dataset(m, i, exts, params) for m, i in zip(multi_paths, ifg_paths)]
+    mlooked_datasets = [
+        _create_mlooked_dataset(m, i, exts, params) for m, i in zip(multi_paths, ifg_paths)
+    ]
 
     mlooked = [Ifg(m) for m in mlooked_datasets]
     for m in mlooked:
@@ -159,8 +160,9 @@ def _create_mlooked_dataset(multi_path, ifg_path, exts, params):
     xlooks = params[C.ORBITAL_FIT_LOOKS_X]
     ylooks = params[C.ORBITAL_FIT_LOOKS_Y]
     out_path = tempfile.mktemp()
-    log.debug(f'Multi-looking {ifg_path} with factors X = {xlooks} and Y = {ylooks} for orbital correction')
-    resampled_data, out_ds = prepifg_helper.prepare_ifg(
+    log.debug(f'Multi-looking {ifg_path} with factors' \
+                'X = {xlooks} and Y = {ylooks} for orbital correction')
+    _, out_ds = prepifg_helper.prepare_ifg(
         ifg_path, xlooks, ylooks, exts, thresh, crop_opt, header, False, out_path
     )
     return out_ds
@@ -175,8 +177,8 @@ def _validate_mlooked(mlooked, ifgs):
         msg = "Mismatching # ifgs and # multilooked ifgs"
         raise OrbitalError(msg)
 
-    if not all([hasattr(i, 'phase_data') for i in mlooked]):
-        msg = "Mismatching types in multilooked ifgs arg:\n%s" % mlooked
+    if not all(hasattr(i, 'phase_data') for i in mlooked):
+        msg = f"Mismatching types in multilooked ifgs arg:\n{mlooked}"
         raise OrbitalError(msg)
 
 
@@ -192,8 +194,7 @@ def _get_num_params(degree, intercept: Optional[bool] = False):
     elif degree == PART_CUBIC:
         nparams = 6
     else:
-        msg = "Invalid orbital model degree: %s" \
-              % C.ORB_DEGREE_NAMES.get(degree)
+        msg = f"Invalid orbital model degree: {C.ORB_DEGREE_NAMES.get(degree)}"
         raise OrbitalError(msg)
 
     # NB: independent method only, network method handles intercept terms differently
@@ -255,7 +256,9 @@ def independent_orbital_correction(ifg_path, params):
         mlooked_dm = get_design_matrix(ifg, degree, intercept=intercept)
 
         # invert to obtain the correction image (forward model) at full-res
-        orbital_correction = __orb_correction(fullres_dm, mlooked_dm, fullres_phase, vphase, offset=offset)
+        orbital_correction = __orb_correction(
+            fullres_dm, mlooked_dm, fullres_phase, vphase, offset=offset
+        )
 
         # save correction to disc
         if not orb_on_disc.parent.exists():
@@ -309,7 +312,8 @@ def network_orbital_correction(ifg_paths, params, m_ifgs: Optional[List] = None)
 
     :param list ifg_paths: List of Ifg class objects reduced to a minimum spanning tree network
     :param dict params: dictionary of configuration parameters
-    :param list m_ifgs: list of multilooked Ifg class objects (sequence must be multilooked versions of 'ifgs' arg)
+    :param list m_ifgs: The list of multilooked Ifg class objects
+        (sequence must be multilooked versions of 'ifg_paths' arg)
 
     :return: None - interferogram phase data is updated and saved to disk
     """
@@ -374,11 +378,11 @@ def calc_network_orb_correction(src_ifgs, degree, scale, nepochs, intercept=Fals
     :param intercept: whether to include a constant offset to fit to each ifg. This
     intercept is discarded and not returned.
 
-    :return coefs: a list of coefficient lists, indexed by epoch. The coefficient lists are in the following order:
-
-    PLANAR - x, y
-    QUADRATIC - x^2, y^2, x*y, x, y
-    PART_CUBIC - x*y^2, x^2, y^2, x*y, x, y
+    :return coefs: a list of coefficient lists, indexed by epoch.
+        The coefficient lists are in the following order:
+        PLANAR - x, y
+        QUADRATIC - x^2, y^2, x*y, x, y
+        PART_CUBIC - x*y^2, x^2, y^2, x*y, x, y
     """
     vphase = vstack([i.phase_data.reshape((i.num_cells, 1)) for i in src_ifgs])
     vphase = squeeze(vphase)
@@ -434,8 +438,11 @@ def _save_orbital_error_corrected_phase(ifg, params):
     orbital fit correction
     """
     # set orbfit tags after orbital error correction
-    ifg.dataset.SetMetadataItem(ifc.PYRATE_ORB_METHOD, __methods_as_string(params[C.ORBITAL_FIT_METHOD]))
-    ifg.dataset.SetMetadataItem(ifc.PYRATE_ORB_DEG, __degrees_as_string(params[C.ORBITAL_FIT_DEGREE]))
+    fit_method = __methods_as_string(params[C.ORBITAL_FIT_METHOD])
+    fit_degree = __degrees_as_string(params[C.ORBITAL_FIT_DEGREE])
+
+    ifg.dataset.SetMetadataItem(ifc.PYRATE_ORB_METHOD, fit_method)
+    ifg.dataset.SetMetadataItem(ifc.PYRATE_ORB_DEG, fit_degree)
     ifg.dataset.SetMetadataItem(ifc.PYRATE_ORB_XLOOKS, str(params[C.ORBITAL_FIT_LOOKS_X]))
     ifg.dataset.SetMetadataItem(ifc.PYRATE_ORB_YLOOKS, str(params[C.ORBITAL_FIT_LOOKS_Y]))
     ifg.dataset.SetMetadataItem(ifc.PYRATE_ORBITAL_ERROR, ifc.ORB_REMOVED)
@@ -540,7 +547,7 @@ def get_network_design_matrix(ifgs, degree, scale, intercept=True):
     nifgs = len(ifgs)
     if nifgs < 1:
         # can feasibly do correction on a single Ifg/2 epochs
-        raise OrbitalError("Invalid number of Ifgs: %s" % nifgs)
+        raise OrbitalError(f"Invalid number of Ifgs: {nifgs}")
 
     # init sparse network design matrix
     nepochs = len(set(get_all_epochs(ifgs)))

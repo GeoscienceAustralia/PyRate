@@ -21,17 +21,18 @@ There are two modes of running prepifg using pyrate:
 1. A python/numpy version, which is also the default version, and
 2. a `largetifs` option which can be activated using the config option largetifs: 1
 
-The python/numpy version is recommended when the both the input interferogram and multilooked interferogram can fit
-into the memory allocated to the process.
+The python/numpy version is recommended when the both the input interferogram and multilooked
+interferogram can fit into the memory allocated to the process.
 
-When dealing with relatively large (compared to memory available to the process) interferogram, the largetif option
-can be used. This option uses a slightly modified version of the `gdal_calc.py` included with pyrate. Arbitrarily
-large interferograms can be multilooked using largetifs.
+When dealing with relatively large (compared to memory available to the process) interferogram,
+the largetif option can be used. This option uses a slightly modified version of the `gdal_calc.py`
+included with pyrate. Arbitrarily large interferograms can be multilooked using largetifs.
 
-The `largetifs` option uses system calls to gdal utilities and avoid loading large chunks of memory. Our tests
-(tests/test_prepifg_largetifs_vs_python.py::test_prepifg_largetifs_vs_python) indicate that for two different small
-datasets included in our test suite, the `largetifs` option exactly match the output of the numpy version. However,
-on large practical datasets we have observed numerical differences in the multilooked output in the 3rd and 4th decimal
+The `largetifs` option uses system calls to gdal utilities and avoid loading large chunks of
+memory. Our tests (tests/test_prepifg_largetifs_vs_python.py::test_prepifg_largetifs_vs_python)
+indicate that for two different small datasets included in our test suite, the `largetifs` option
+exactly match the output of the numpy version. However, on large practical datasets we have
+observed numerical differences in the multilooked output in the 3rd and 4th decimal
 places (in sub mm range).
 
 """
@@ -51,8 +52,7 @@ from pyrate.core.prepifg_helper import PreprocessError, coherence_paths_for, tra
 from pyrate.core.logger import pyratelogger as log
 from pyrate.configuration import MultiplePaths, Configuration
 from pyrate.core.shared import Ifg, DEM
-from pyrate.core.refpixel import convert_geographic_coordinate_to_pixel_value
-from pyrate.core import ifgconstants as ifg
+from pyrate.core.refpixel import convert_lat_lon_to_pixel_coord
 
 
 GAMMA = 1
@@ -125,7 +125,8 @@ def __calc_coherence_stats(params, ifg_path):
     phase_data = np.stack([i.phase_data for i in ifgs])
     coh_stats = Configuration.coherence_stats(params)
 
-    for stat_func, out_type in zip([np.nanmedian, np.nanmean, np.nanstd], [ifg.COH_MEDIAN, ifg.COH_MEAN, ifg.COH_STD]):
+    stats = zip([np.nanmedian, np.nanmean, np.nanstd], [ifc.COH_MEDIAN, ifc.COH_MEAN, ifc.COH_STD])
+    for stat_func, out_type in stats:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
             arr = stat_func(phase_data, axis=0)
@@ -134,7 +135,9 @@ def __calc_coherence_stats(params, ifg_path):
         __save_geom_files(ifg_path, dest, arr, out_type)
 
 
-def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float, float], params: dict) -> None:
+def do_prepifg(
+    multi_paths: List[MultiplePaths], exts: Tuple[float, float, float, float], params: dict
+) -> None:
     """
     Prepare interferograms by applying multilooking/cropping operations.
 
@@ -146,8 +149,10 @@ def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float
 
     for f in multi_paths:
         if not os.path.isfile(f.converted_path):
-            raise FileNotFoundError("Can not find geotiff: " + str(f) + ". Ensure you have converted your "
-                                    "interferograms to geotiffs.")
+            raise FileNotFoundError(
+                f"Can not find geotiff: {f}. "
+                "Ensure you have converted your interferograms to geotiffs."
+            )
 
     if params[C.LARGE_TIFS]:
         log.info("Using gdal system calls to execute 'prepifg' step")
@@ -158,7 +163,9 @@ def do_prepifg(multi_paths: List[MultiplePaths], exts: Tuple[float, float, float
         res_str = ' '.join([str(e) for e in res_str])
         if parallel:
             Parallel(n_jobs=params[C.PROCESSES], verbose=50)(
-                delayed(__prepifg_system)(exts, gtiff_path, params, res_str) for gtiff_path in multi_paths)
+                delayed(__prepifg_system)(
+                    exts, gtiff_path, params, res_str) for gtiff_path in multi_paths
+                )
         else:
             for m_path in multi_paths:
                 __prepifg_system(exts, m_path, params, res_str)
@@ -180,42 +187,48 @@ GDAL_CALC = 'gdal_calc_local.py'
 
 def __prepifg_system(exts, gtiff, params, res):
     thresh = params[C.NO_DATA_AVERAGING_THRESHOLD]
-    p, c, l = _prepifg_multiprocessing(gtiff, exts, params)
-    log.info("Multilooking {p} into {l}".format(p=p, l=l))
+    ifg_path, coh, sampled = _prepifg_multiprocessing(gtiff, exts, params)
+    log.info(f"Multilooking {ifg_path} into {sampled}")
     extents = ' '.join([str(e) for e in exts])
+    opts=COMMON_OPTIONS
 
-    if isinstance(prepifg_helper.dem_or_ifg(p), shared.DEM):
-        check_call('gdalwarp {co} -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}\n'.format(
-            co=COMMON_OPTIONS, extents=extents, res=res, p=p, l=l), shell=True)
-        __update_meta_data(p, c, l, params)
+    if isinstance(prepifg_helper.dem_or_ifg(ifg_path), shared.DEM):
+        check_call(
+            f'gdalwarp {opts} -te\t{extents}\t-tr\t{res}\t-r\taverage \t{ifg_path}\t{sampled}\n',
+            shell=True
+        )
+        __update_meta_data(ifg_path, coh, sampled, params)
         return
 
-    p_unset = Path(params[C.OUT_DIR]).joinpath(Path(p).name).with_suffix('.unset.tif')
-    # change nodataval from zero, also leave input geotifs unchanged if one supplies conv2tif output/geotifs
-    check_call('gdal_translate {co} -a_nodata nan\t{p}\t{q}'.format(co=COMMON_OPTIONS, p=p, q=p_unset),
-               shell=True)
+    p_unset = Path(params[C.OUT_DIR]).joinpath(Path(ifg_path).name).with_suffix('.unset.tif')
+    # change nodataval from zero, also leave input geotifs unchanged if one supplies
+    # conv2tif output/geotifs
+    check_call(f'gdal_translate {opts} -a_nodata nan\t{ifg_path}\t{p_unset}', shell=True)
 
     # calculate nan-fraction
     # TODO: use output options and datatypes to reduce size of the next two tifs
-    nan_frac = Path(l).with_suffix('.nanfrac.tif')
-    nan_frac_avg = Path(l).with_suffix('.nanfrac.avg.tif')
+    nan_frac = Path(sampled).with_suffix('.nanfrac.tif')
+    nan_frac_avg = Path(sampled).with_suffix('.nanfrac.avg.tif')
     corrected_p = Path(p_unset).with_suffix('.corrected.tif')
 
-    if c is not None:
+    if coh is not None:
         # find all the nans
-        log.info(f"applying coherence + nodata masking on {p}")
-        check_call(f'{GDAL_CALC} {COMMON_OPTIONS2} -A {p_unset} -B {c} --outfile={nan_frac}\t'
-                   f'--calc=\"logical_or((B<{params[C.COH_THRESH]}), isclose(A,0,atol=0.000001))\"\t'
-                   f'--NoDataValue=nan', shell=True)
+        log.info(f"applying coherence + nodata masking on {ifg_path}")
+        check_call(
+            f'{GDAL_CALC} {COMMON_OPTIONS2} -A {p_unset} -B {coh} --outfile={nan_frac}\t'
+            f'--calc=\"logical_or((B<{params[C.COH_THRESH]}), isclose(A,0,atol=0.000001))\"\t'
+            f'--NoDataValue=nan',
+            shell=True
+        )
 
         # coh masking
-        check_call(f'{GDAL_CALC} {COMMON_OPTIONS2} --overwrite -A {p_unset} -B {c}\t'
+        check_call(f'{GDAL_CALC} {COMMON_OPTIONS2} --overwrite -A {p_unset} -B {coh}\t'
                    f'--calc=\"A*(B>={params[C.COH_THRESH]}) - '
                    f'99999*logical_or((B<{params[C.COH_THRESH]}), isclose(A,0,atol=0.000001))\"\t'
                    f'--outfile={corrected_p}\t'
                    f'--NoDataValue=nan', shell=True)
     else:
-        log.info(f"applying nodata masking on {p}")
+        log.info(f"applying nodata masking on {ifg_path}")
         check_call(f'{GDAL_CALC} {COMMON_OPTIONS2} --overwrite -A {p_unset}\t'
                    f'--calc=\"isclose(A,0,atol=0.000001)\"\t'
                    f'--outfile={nan_frac}\t'
@@ -226,19 +239,23 @@ def __prepifg_system(exts, gtiff, params, res):
                    f'--NoDataValue=nan', shell=True)
 
     # crop resample/average multilooking of nan-fraction
-    check_call('gdalwarp {co} -te\t{extents}\t-tr\t{res}\t-r\taverage\t{p}\t{out_file}'.format(
-        co=COMMON_OPTIONS, extents=extents, res=res, p=nan_frac, out_file=nan_frac_avg), shell=True)
+    check_call(
+        f'gdalwarp {opts} -te\t{extents}\t-tr\t{res}\t-r\taverage\t{nan_frac}\t{nan_frac_avg}',
+        shell=True
+    )
 
     # crop resample/average multilooking of raster
-    check_call('gdalwarp {co} -te\t{extents}\t-tr\t{res}\t-r\taverage \t{p}\t{l}'.format(
-        co=COMMON_OPTIONS, extents=extents, res=res, p=corrected_p, l=l), shell=True)
+    check_call(
+        f'gdalwarp {opts} -te\t{extents}\t-tr\t{res}\t-r\taverage \t{corrected_p}\t{sampled}',
+        shell=True
+    )
 
-    check_call(f'{GDAL_CALC} {COMMON_OPTIONS2} --overwrite -A {nan_frac_avg}\t-B {l}\t'
+    check_call(f'{GDAL_CALC} {COMMON_OPTIONS2} --overwrite -A {nan_frac_avg}\t-B {sampled}\t'
                f'--calc=\"B*(A < {thresh}) -99999*(A >= {thresh})\"\t'
-               f'--outfile={l}\t'
+               f'--outfile={sampled}\t'
                f'--NoDataValue=nan', shell=True)
 
-    __update_meta_data(p_unset.as_posix(), c, l, params)
+    __update_meta_data(p_unset.as_posix(), coh, sampled, params)
 
     # clean up
     nan_frac_avg.unlink()
@@ -247,7 +264,7 @@ def __prepifg_system(exts, gtiff, params, res):
     p_unset.unlink()
 
 
-def __update_meta_data(p_unset, c, l, params):
+def __update_meta_data(p_unset, coh, sampled, params):
     # update metadata
     ds = gdal.Open(p_unset)
     md = ds.GetMetadata()
@@ -257,26 +274,32 @@ def __update_meta_data(p_unset, c, l, params):
     md[ifc.IFG_LKSY] = str(params[C.IFG_LKSY])
     md[ifc.IFG_CROP] = str(params[C.IFG_CROP_OPT])
     # update data type
-    if c is not None:  # it's a interferogram when COH_MASK=1
-        md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MLOOKED_COH_MASKED_IFG)
+    if coh is not None:  # it's a interferogram when COH_MASK=1
+        md_str = f'-mo {ifc.DATA_TYPE}={ifc.MLOOKED_COH_MASKED_IFG}'
         md[ifc.COH_THRESH] = str(params[C.COH_THRESH])
     else:
         if v == ifc.DEM:  # it's a dem
-            md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MLOOKED_DEM)
+            md_str = f'-mo {ifc.DATA_TYPE}={ifc.MLOOKED_DEM}'
         elif v == ifc.COH:
-            md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MULTILOOKED_COH)
+            md_str = f'-mo {ifc.DATA_TYPE}={ifc.MULTILOOKED_COH}'
         else:  # it's an ifg
-            md_str = '-mo {k}={v}'.format(k=ifc.DATA_TYPE, v=ifc.MULTILOOKED)
-    for k, v in md.items():
-        md_str += ' -mo {k}={v}'.format(k=k.replace(' ', '_'), v=v.replace(' ', '_'))
-    check_call('gdal_edit.py -unsetmd {md} {f}'.format(md=md_str, f=l), shell=True)
+            md_str = f'-mo {ifc.DATA_TYPE}={ifc.MULTILOOKED}'
+    for key, val in md.items():
+        key = key.replace(' ', '_')
+        val = val.replace(' ', '_')
+        md_str += ' -mo {key}={val}'
+    check_call(f'gdal_edit.py -unsetmd {md_str} {sampled}', shell=True)
     ds = None
 
     # make prepifg output readonly
-    Path(l).chmod(0o444)  # readonly output
+    Path(sampled).chmod(0o444)  # readonly output
 
 
-def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, float, float], params: dict):
+def _prepifg_multiprocessing(
+    m_path: MultiplePaths,
+    exts: Tuple[float, float, float, float],
+    params: dict
+):
     """
     Multiprocessing wrapper for prepifg
     """
@@ -298,20 +321,30 @@ def _prepifg_multiprocessing(m_path: MultiplePaths, exts: Tuple[float, float, fl
 
     if params[C.LARGE_TIFS]:
         return m_path.converted_path, coherence_path, m_path.sampled_path
-    else:
-        prepifg_helper.prepare_ifg(m_path.converted_path, xlooks, ylooks, exts, thresh, crop,
-                                   out_path=m_path.sampled_path, header=hdr, coherence_path=coherence_path,
-                                   coherence_thresh=coherence_thresh)
-        Path(m_path.sampled_path).chmod(0o444)  # readonly output
+
+    prepifg_helper.prepare_ifg(
+        m_path.converted_path, xlooks, ylooks, exts, thresh, crop,
+        out_path=m_path.sampled_path,
+        header=hdr,
+        coherence_path=coherence_path,
+        coherence_thresh=coherence_thresh
+    )
+    Path(m_path.sampled_path).chmod(0o444)  # readonly output
+
+    # FIXME: I'm not sure how this has ever worked? (guessing params[C.LARGE_TIFS] is always true?)
+    # - we're supposed to return stuff here..?
 
 
 def find_header(path: MultiplePaths, params: dict) -> Dict[str, str]:
+    """
+    Extract the header information out of an interferogram path,
+    attempting to automatically handle the differences between data file types
+    """
     processor = params[C.PROCESSOR]  # roipac, gamma or geotif
     tif_path = path.converted_path
-    if (processor == GAMMA) or (processor == GEOTIF):
+    if processor in (GAMMA, GEOTIF):
         header = gamma.gamma_header(tif_path, params)
     elif processor == ROIPAC:
-        import warnings
         warnings.warn("Warning: ROI_PAC support will be deprecated in a future PyRate release",
                       category=DeprecationWarning)
         header = roipac.roipac_header(tif_path, params)
@@ -348,22 +381,23 @@ def __write_geometry_files(params: dict, exts: Tuple[float, float, float, float]
     # using metadata of the first image in the stack
     # get pixel values of crop (needed to crop lookup table file)
     # pixel extent of cropped area (original IFG input)
-    xmin, ymax = convert_geographic_coordinate_to_pixel_value(exts[0], exts[1], transform)
-    xmax, ymin = convert_geographic_coordinate_to_pixel_value(exts[2], exts[3], transform)
+    xmin, ymax = convert_lat_lon_to_pixel_coord(exts[0], exts[1], transform)
+    xmax, ymin = convert_lat_lon_to_pixel_coord(exts[2], exts[3], transform)
     # xmin, xmax: columns of crop
     # ymin, ymax: rows of crop
 
     # calculate per-pixel radar coordinates
-    az, rg = geometry.calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax)
+    az_loc, rg_loc = geometry.calc_radar_coords(ifg, params, xmin, xmax, ymin, ymax)
 
     # Read height data from DEM
     dem_file = params[C.DEM_FILE_PATH].sampled_path
     dem = DEM(dem_file)
     # calculate per-pixel look angle (also calculates and saves incidence and azimuth angles)
-    lk_ang, inc_ang, az_ang, rg_dist = geometry.calc_pixel_geometry(ifg, rg, lon.data, lat.data, dem.data)
+    geom = geometry.calc_pixel_geometry(ifg, rg_loc, lon.data, lat.data, dem.data)
+    lk_ang, inc_ang, az_ang, rg_dist = geom
 
     # save radar coordinates and angles to geotiff files
-    combinations = zip([az, rg, lk_ang, inc_ang, az_ang, rg_dist], C.GEOMETRY_OUTPUT_TYPES)
+    combinations = zip([az_loc, rg_loc, lk_ang, inc_ang, az_ang, rg_dist], C.GEOMETRY_OUTPUT_TYPES)
     shared.iterable_split(__parallelly_write, combinations, params, ifg_path)
 
 
@@ -392,7 +426,7 @@ def __save_geom_files(ifg_path, dest, array, out_type):
     """
     Convenience function to save geometry geotiff files
     """
-    log.debug('Saving PyRate outputs {}'.format(out_type))
+    log.debug(f'Saving PyRate outputs {out_type}')
     gt, md, wkt = shared.get_geotiff_header_info(ifg_path)
     md[ifc.DATA_TYPE] = out_type_md_dict[out_type]
     shared.remove_file_if_exists(dest)

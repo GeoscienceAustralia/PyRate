@@ -18,13 +18,11 @@ This Python module contains MPI convenience functions for PyRate
 """
 # pylint: disable=no-member
 # pylint: disable=invalid-name
-import logging
-import pickle
 from typing import Callable, Any, Iterable
 import numpy as np
 
 
-"""For MPI compatibility"""
+# For MPI compatibility
 try:
     from mpi4py import MPI
     MPI_INSTALLED = True
@@ -41,6 +39,9 @@ try:
     # the rank of the node.
     rank = comm.Get_rank()
 except ImportError:
+    # pylint: disable=missing-function-docstring,missing-class-docstring,unused-argument
+    # JUSTIFICATION: This is a mock for a thirdparty API which has documentation already
+
     MPI_INSTALLED = False
     size = 1
     rank = 0
@@ -87,10 +88,13 @@ except ImportError:
 
 
 class MPIException(Exception):
-    pass
+    """Base class for MPI related exceptions"""
 
 
 def validate_mpi():
+    """
+    Validates that MPI has been installed in the running environment, raising an exception if not.
+    """
     if not MPI_INSTALLED:
         raise MPIException("MPI needs to be installed in order to use this module")
 
@@ -113,6 +117,7 @@ def run_once(f: Callable, *args, **kwargs) -> Any:
             # and these processes never exit, i.e., this MPI call hangs in case process 0 errors.
             try:
                 f_result = f(*args, **kwargs)
+            # pylint: disable=broad-except
             except Exception as e:
                 f_result = e
         else:
@@ -120,10 +125,10 @@ def run_once(f: Callable, *args, **kwargs) -> Any:
         result = comm.bcast(f_result, root=0)
         if isinstance(result, Exception):
             raise result
-        else:
-            return result
-    else:
-        return f(*args, **kwargs)
+
+        return result
+
+    return f(*args, **kwargs)
 
 
 def array_split(arr: Iterable, process: int = None) -> Iterable:
@@ -145,11 +150,13 @@ def array_split(arr: Iterable, process: int = None) -> Iterable:
 
 
 def sum_vars(x, y, dtype):
+    """Simple wrapper for `numpy.sum()` for usage with MPI"""
     s = np.sum([x, y], axis=0)
     return s
 
 
 def sum_axis_0(x, y, dtype):
+    """Simple wrapper for `numpy.sum(numpy.stack())` for usage with MPI"""
     s = np.sum(np.stack((x, y)), axis=0)
     return s
 

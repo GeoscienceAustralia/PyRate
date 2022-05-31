@@ -25,24 +25,26 @@ from pyrate.core.mpiops import size, rank, run_once
 
 
 pyratelogger = logging.getLogger(__name__)
-formatter = logging.Formatter("%(asctime)s %(module)s:%(lineno)d %(process)d %(levelname)s " + str(rank) + "/" + str(
-    size-1)+" %(message)s", "%H:%M:%S")
-
+formatter = logging.Formatter(
+    f"%(asctime)s %(module)s:%(lineno)d %(process)d %(levelname)s {rank}/{size-1} %(message)s",
+    "%H:%M:%S"
+)
 
 def configure_stage_log(verbosity, step_name, log_file_name='pyrate.log.'):
 
-    log_file_name = run_once(str.__add__, log_file_name, step_name + '.' + datetime.now().isoformat())
+    timestamp = datetime.now().isoformat()
+    log_file_name = run_once(str.__add__, log_file_name, step_name + '.' + timestamp)
 
-    ch = MPIStreamHandler()
-    ch.setLevel(verbosity)
-    ch.setFormatter(formatter)
+    stream_handler = MPIStreamHandler()
+    stream_handler.setLevel(verbosity)
+    stream_handler.setFormatter(formatter)
 
-    fh = logging.FileHandler(log_file_name)
-    fh.setLevel(verbosity)
-    fh.setFormatter(formatter)
+    file_handler = logging.FileHandler(log_file_name)
+    file_handler.setLevel(verbosity)
+    file_handler.setFormatter(formatter)
 
-    pyratelogger.addHandler(ch)
-    pyratelogger.addHandler(fh)
+    pyratelogger.addHandler(stream_handler)
+    pyratelogger.addHandler(file_handler)
 
 
 def warn_with_traceback(message, category, filename, lineno, line=None):

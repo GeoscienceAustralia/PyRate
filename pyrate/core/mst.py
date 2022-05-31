@@ -19,7 +19,6 @@ This Python module implements the minimum spanning tree
 functionality for selecting interferometric observations.
 """
 # pylint: disable=invalid-name
-from pathlib import Path
 from itertools import product
 from numpy import array, nan, isnan, float32, empty, sum as nsum
 import numpy as np
@@ -95,18 +94,20 @@ def mst_parallel(ifgs, params):
     result = empty(shape=(no_ifgs, no_y, no_x), dtype=np.bool)
 
     if params[C.PARALLEL]:
-        log.info('Calculating MST using {} tiles in parallel using {} ' \
-                 'processes'.format(no_tiles, ncpus))
+        log.info(f'Calculating MST using {no_tiles} tiles in parallel using {ncpus} processes')
         t_msts = Parallel(n_jobs=params[C.PROCESSES], verbose=joblib_log_level(C.LOG_LEVEL))(
             delayed(mst_multiprocessing)(t, ifg_paths, params=params) for t in tiles
         )
         for k, tile in enumerate(tiles):
-            result[:, tile.top_left_y:tile.bottom_right_y, tile.top_left_x: tile.bottom_right_x] = t_msts[k]
+            y_slice = slice(tile.top_left_y, tile.bottom_right_y)
+            x_slice = slice(tile.top_left_x, tile.bottom_right_x)
+            result[:, y_slice, x_slice] = t_msts[k]
     else:
-        log.info('Calculating MST using {} tiles in serial'.format(no_tiles))
+        log.info(f'Calculating MST using {no_tiles} tiles in serial')
         for k, tile in enumerate(tiles):
-            result[:, tile.top_left_y:tile.bottom_right_y, tile.top_left_x: tile.bottom_right_x] = \
-                mst_multiprocessing(tile, ifg_paths, params=params)
+            y_slice = slice(tile.top_left_y, tile.bottom_right_y)
+            x_slice = slice(tile.top_left_x, tile.bottom_right_x)
+            result[:, y_slice, x_slice] = mst_multiprocessing(tile, ifg_paths, params=params)
 
     return result
 
@@ -155,15 +156,15 @@ def mst_boolean_array(ifgs):
     """
     # The MSTs are stripped of connecting edge info, leaving just the ifgs.
     nifgs = len(ifgs)
-    ny, nx = ifgs[0].phase_data.shape
-    result = empty(shape=(nifgs, ny, nx), dtype=np.bool)
+    height, width = ifgs[0].phase_data.shape
+    result = empty(shape=(nifgs, height, width), dtype=np.bool)
 
     for y, x, mst in mst_matrix_networkx(ifgs):
         # mst is a list of datetime.date tuples
         if isinstance(mst, EdgeView):
             ifg_sub = [ifg_date_index_lookup(ifgs, d) for d in mst]
-            ifg_sub_bool = [True if i in ifg_sub else False
-                            for i in range(nifgs)]  # boolean conversion
+            # boolean conversion
+            ifg_sub_bool = [(i in ifg_sub) for i in range(nifgs)]
             result[:, y, x] = np.array(ifg_sub_bool)
         else:
             result[:, y, x] = np.zeros(nifgs, dtype=bool)
@@ -235,7 +236,8 @@ def mst_matrix_networkx(ifgs):
         if nan_count == 0:
             yield y, x, edges
             continue
-        elif nan_count == nifgs:
+
+        if nan_count == nifgs:
             yield y, x, nan
             continue
 

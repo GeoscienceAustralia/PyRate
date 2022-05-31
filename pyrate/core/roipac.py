@@ -115,9 +115,9 @@ def parse_header(hdr_file):
         if is_dem and DATUM not in headers:
             msg = 'No "DATUM" parameter in DEM header/resource file'
             raise RoipacException(msg)
-    except ValueError:
+    except ValueError as error:
         msg = "Unable to parse content of %s. Is it a ROIPAC header file?"
-        raise RoipacException(msg % hdr_file)
+        raise RoipacException(msg % hdr_file) from error
 
     for k in headers.keys():
         if k in INT_HEADERS:
@@ -173,14 +173,17 @@ def _parse_dates_from(filename):
     p = re.compile(r'\d{6}-\d{6}')  # match 2 sets of 6 digits separated by '-'
     m = p.search(filename)
 
-    if m:
-        s = m.group()
-        min_date_len = 13  # assumes "nnnnnn-nnnnnn" format
-        if len(s) == min_date_len:
-            return parse_date(s)
-    else:  # pragma: no cover
-        msg = "Filename does not include first/second image dates: %s"
-        raise RoipacException(msg % filename)
+    if not m:  # pragma: no cover
+        msg = f"Filename does not include first/second image dates: {filename}"
+        raise RoipacException(msg)
+
+    s = m.group()
+    min_date_len = 13  # assumes "nnnnnn-nnnnnn" format
+    if len(s) != min_date_len:  # pragma: no cover
+        msg = f"Filename does not match expected yymmdd-yymmdd format: {filename}"
+        raise RoipacException(msg)
+
+    return parse_date(s)
 
 
 def manage_header(header_file, projection):
@@ -201,13 +204,13 @@ def manage_header(header_file, projection):
     return header
 
 
-def roipac_header(file_path, params):
+def roipac_header(file_path: Path, params):
     """
     Function to obtain a header for roipac interferogram file or converted
     geotiff.
     """
     rsc_file = params[C.DEM_HEADER_FILE]
-    p = Path(file_path)
+
     if rsc_file is not None:
         projection = parse_header(rsc_file)[ifc.PYRATE_DATUM]
     else:
@@ -216,15 +219,15 @@ def roipac_header(file_path, params):
         header_file = os.path.join(params[C.DEM_HEADER_FILE])
     elif file_path.endswith('unw_ifg.tif') or file_path.endswith('unw.tif'):
         # TODO: improve this
-        interferogram_epoches = extract_epochs_from_filename(p.name)
+        interferogram_epoches = extract_epochs_from_filename(Path(file_path).name)
         for header_path in params[C.HEADER_FILE_PATHS]:
-            h = Path(header_path.unwrapped_path)
-            header_epochs = extract_epochs_from_filename(h.name)
+            unwrapped_path = Path(header_path.unwrapped_path)
+            header_epochs = extract_epochs_from_filename(unwrapped_path.name)
             if set(header_epochs).__eq__(set(interferogram_epoches)):
                 header_file = header_path.unwrapped_path
                 break
     else:
-        header_file = "%s%s" % (file_path, ROI_PAC_HEADER_FILE_EXT)
+        header_file = f"{file_path}{ROI_PAC_HEADER_FILE_EXT}"
 
     header = manage_header(header_file, projection)
 

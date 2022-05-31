@@ -163,6 +163,8 @@ def _remove_rank_def_rows(b_mat, nvelpar, ifgv, sel):
     """
     _, _, e_var = qr(b_mat, mode='economic', pivoting=True)
     licols = e_var[matrix_rank(b_mat):nvelpar]
+    # pylint: disable=unbalanced-tuple-unpacking
+    # JUSTIFICATION: pylint is wrong here (due to numpy's python stub code being wrong)
     [rmrow, _] = where(b_mat[:, licols] != 0)
     b_mat = delete(b_mat, rmrow, axis=0)
     ifgv = delete(ifgv, rmrow)
@@ -312,19 +314,19 @@ def linear_rate_pixel(y, t):
     # Mask to exclude nan elements
     mask = ~isnan(y)
     # remove nan elements from both arrays
-    y = y[mask]    
+    y = y[mask]
     try:
         t = t[mask]
-    except IndexError:
-        raise TimeSeriesError("linear_rate_pixel: y and t are not equal length")
+    except IndexError as error:
+        raise TimeSeriesError("linear_rate_pixel: y and t are not equal length") from error
 
     # break out of func if not enough time series obs for line fitting
     nsamp = len(y)
     if nsamp < 2:
         return nan, nan, nan, nan, nan
 
-    # compute linear regression of tscuml 
-    linrate, intercept, r_value, p_value, std_err = linregress(t, y)
+    # compute linear regression of tscuml
+    linrate, intercept, r_value, _, std_err = linregress(t, y)
 
     return linrate, intercept, r_value**2, std_err, int(nsamp)
 
@@ -350,9 +352,7 @@ def linear_rate_array(tscuml, ifgs, params):
     :return: samples: Number of observations used in linear regression for each pixel
     :rtype: ndarray
     """
-    b0_mat, interp, p_thresh, sm_factor, sm_order, ts_method, ifg_data, mst, \
-        ncols, nrows, nvelpar, span, tsvel_matrix = \
-        _time_series_setup(ifgs, params)
+    _, _, _, _, _, _, _, _, ncols, nrows, _, _, _ = _time_series_setup(ifgs, params)
 
     epochlist = get_epochs(ifgs)[0]
     # get cumulative time per epoch
@@ -383,7 +383,7 @@ def _missing_option_error(option):
     """
     Convenience function for raising similar missing option errors.
     """
-    msg = "Missing '%s' option in config file" % option
+    msg = f"Missing '{option}' option in config file"
     raise ConfigException(msg)
 
 
@@ -422,16 +422,15 @@ def __calc_time_series_for_tile(tile, params):
     ifg_parts = [shared.IfgPart(p, tile, preread_ifgs, params) for p in ifg_paths]
     mst_tile = np.load(Configuration.mst_path(params, tile.index))
     tsincr, tscuml, _ = time_series(ifg_parts, params, vcmt, mst_tile)
-    np.save(file=os.path.join(output_dir, 'tscuml_{}.npy'.format(tile.index)), arr=tscuml)
+    np.save(file=os.path.join(output_dir, f'tscuml_{tile.index}.npy'), arr=tscuml)
     # optional save of tsincr npy tiles
     if params["savetsincr"] == 1:
-        np.save(file=os.path.join(output_dir, 'tsincr_{}.npy'.format(tile.index)), arr=tsincr)
+        np.save(file=os.path.join(output_dir, f'tsincr_{tile.index}.npy'), arr=tsincr)
     tscuml = np.insert(tscuml, 0, 0, axis=2)  # add zero epoch to tscuml 3D array
     log.info('Calculating linear regression of cumulative time series')
     linrate, intercept, r_squared, std_err, samples = linear_rate_array(tscuml, ifg_parts, params)
-    np.save(file=os.path.join(output_dir, 'linear_rate_{}.npy'.format(tile.index)), arr=linrate)
-    np.save(file=os.path.join(output_dir, 'linear_intercept_{}.npy'.format(tile.index)), arr=intercept)
-    np.save(file=os.path.join(output_dir, 'linear_rsquared_{}.npy'.format(tile.index)), arr=r_squared)
-    np.save(file=os.path.join(output_dir, 'linear_error_{}.npy'.format(tile.index)), arr=std_err)
-    np.save(file=os.path.join(output_dir, 'linear_samples_{}.npy'.format(tile.index)), arr=samples)
-
+    np.save(file=os.path.join(output_dir, f'linear_rate_{tile.index}.npy'), arr=linrate)
+    np.save(file=os.path.join(output_dir, f'linear_intercept_{tile.index}.npy'), arr=intercept)
+    np.save(file=os.path.join(output_dir, f'linear_rsquared_{tile.index}.npy'), arr=r_squared)
+    np.save(file=os.path.join(output_dir, f'linear_error_{tile.index}.npy'), arr=std_err)
+    np.save(file=os.path.join(output_dir, f'linear_samples_{tile.index}.npy'), arr=samples)

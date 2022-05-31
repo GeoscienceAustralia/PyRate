@@ -50,51 +50,87 @@ def update_params_due_to_ifg_selection(config):
     return params
 
 
+# pylint: disable=too-many-statements
+# JUSTIFICATION: extracting statements into separate functions would make it harder to understand.
 def main():
+    """The main PyRate runner program, refer to `docs/index.rst` and `--help`"""
     start_time = time.time()
 
-    parser = argparse.ArgumentParser(prog='pyrate', description=CLI_DESCRIPTION, add_help=True,
-                                     formatter_class=RawTextHelpFormatter)
-    parser.add_argument('-v', '--verbosity', type=str, default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
-                        help="Increase output verbosity")
+    parser = argparse.ArgumentParser(
+        prog='pyrate', description=CLI_DESCRIPTION, add_help=True,
+        formatter_class=RawTextHelpFormatter
+    )
+    parser.add_argument(
+        '-v', '--verbosity', type=str,
+        default='INFO', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
+        help="Increase output verbosity"
+    )
 
     subparsers = parser.add_subparsers(dest='command')
     subparsers.required = True
 
-    parser_conv2tif = subparsers.add_parser('conv2tif', help='<Optional> Convert interferograms to geotiff.',
-                                            add_help=True)
-
-    parser_prepifg = subparsers.add_parser(
-        'prepifg', help='Perform multilooking, cropping and coherence masking to interferogram geotiffs.',
-        add_help=True)
-
-    parser_correct = subparsers.add_parser(
-        'correct', help='Calculate and apply corrections to interferogram phase data.',
-        add_help=True)
-
-    parser_ts = subparsers.add_parser(
-        'timeseries', help='<Optional> Timeseries inversion of interferogram phase data.', add_help=True
+    parser_conv2tif = subparsers.add_parser(
+        'conv2tif',
+        help='<Optional> Convert interferograms to geotiff.',
+        add_help=True
     )
 
-    parser_stack = subparsers.add_parser('stack', help='<Optional> Stacking of interferogram phase data.',
-                                         add_help=True)
+    parser_prepifg = subparsers.add_parser(
+        'prepifg',
+        help='Perform multilooking, cropping and coherence masking to interferogram geotiffs.',
+        add_help=True
+    )
+
+    parser_correct = subparsers.add_parser(
+        'correct',
+        help='Calculate and apply corrections to interferogram phase data.',
+        add_help=True
+    )
+
+    parser_ts = subparsers.add_parser(
+        'timeseries',
+        help='<Optional> Timeseries inversion of interferogram phase data.',
+        add_help=True
+    )
+
+    parser_stack = subparsers.add_parser(
+        'stack',
+        help='<Optional> Stacking of interferogram phase data.',
+        add_help=True
+    )
 
     parser_merge = subparsers.add_parser(
-        'merge', help="Reassemble computed tiles and save as geotiffs.",
-        add_help=True)
+        'merge',
+        help="Reassemble computed tiles and save as geotiffs.",
+        add_help=True
+    )
 
     parser_workflow = subparsers.add_parser(
-        'workflow', help="<Optional> Sequentially run all the PyRate processing steps.",
-        add_help=True)
-    for p in [parser_conv2tif, parser_prepifg, parser_correct, parser_merge, parser_ts, parser_stack, parser_workflow]:
-        p.add_argument('-f', '--config_file', action="store", type=str, default=None,
+        'workflow',
+        help="<Optional> Sequentially run all the PyRate processing steps.",
+        add_help=True
+    )
+
+    sub_parsers = [
+        parser_conv2tif,
+        parser_prepifg,
+        parser_correct,
+        parser_merge,
+        parser_ts,
+        parser_stack,
+        parser_workflow
+    ]
+
+    for sub_parser in sub_parsers:
+        sub_parser.add_argument('-f', '--config_file', action="store", type=str, default=None,
                        help="Pass configuration file", required=False)
 
     args = parser.parse_args()
 
     params = mpiops.run_once(_params_from_conf, args.config_file)
 
-    configure_stage_log(args.verbosity, args.command, Path(params[C.OUT_DIR]).joinpath('pyrate.log.').as_posix())
+    log_path = Path(params[C.OUT_DIR]).joinpath('pyrate.log.').as_posix()
+    configure_stage_log(args.verbosity, args.command, log_path)
 
     log.debug("Starting PyRate")
     log.debug("Arguments supplied at command line: ")
@@ -102,7 +138,7 @@ def main():
 
     if args.verbosity:
         log.setLevel(args.verbosity)
-        log.info("Verbosity set to " + str(args.verbosity) + ".")
+        log.info(f"Verbosity set to {args.verbosity}.")
 
     if args.command == "conv2tif":
         conv2tif.main(params)
@@ -154,10 +190,12 @@ def main():
         params = mpiops.run_once(_params_from_conf, args.config_file)
         merge.main(params)
 
-    log.info("--- Runtime = %s seconds ---" % (time.time() - start_time))
+    elapsed_secs = time.time() - start_time
+    log.info(f"--- Runtime = {elapsed_secs} seconds ---")
 
 
 def timeseries(config: Configuration) -> None:
+    """The runner command for calculating the timeseries of a file set"""
     params = config.__dict__
     mpi_vs_multiprocess_logging("timeseries", params)
     params = update_params_due_to_ifg_selection(config=config)
@@ -165,6 +203,7 @@ def timeseries(config: Configuration) -> None:
 
 
 def stack(config: Configuration) -> None:
+    """The runner command for stacking a set of files"""
     params = config.__dict__
     mpi_vs_multiprocess_logging("stack", params)
     params = update_params_due_to_ifg_selection(config=config)

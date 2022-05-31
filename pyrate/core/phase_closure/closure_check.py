@@ -15,13 +15,14 @@
 #   limitations under the License.
 
 from collections import defaultdict
-from typing import List, Dict, Tuple, Any
+from typing import List, Tuple, Any
 from nptyping import NDArray, UInt16, Float32
 import numpy as np
 
 import pyrate.constants as C
 from pyrate.core import mpiops
-from pyrate.core.phase_closure.mst_closure import sort_loops_based_on_weights_and_date, WeightedLoop, Edge
+from pyrate.core.phase_closure.mst_closure import sort_loops_based_on_weights_and_date, \
+    WeightedLoop, Edge
 from pyrate.configuration import Configuration, MultiplePaths
 from pyrate.core.phase_closure.sum_closure import sum_phase_closures
 from pyrate.core.phase_closure.plot_closure import plot_closure
@@ -29,9 +30,11 @@ from pyrate.core.shared import Ifg, nan_and_mm_convert
 from pyrate.core.logger import pyratelogger as log
 
 
-def mask_pixels_with_unwrapping_errors(ifgs_breach_count: NDArray[(Any, Any, Any), UInt16],
-                                       num_occurrences_each_ifg: NDArray[(Any,), UInt16],
-                                       params: dict) -> None:
+def mask_pixels_with_unwrapping_errors(
+    ifgs_breach_count: NDArray[(Any, Any, Any), UInt16],
+    num_occurrences_each_ifg: NDArray[(Any,), UInt16],
+    params: dict
+):
     """
     Find pixels in the phase data that breach closure_thr, and mask
     (assign NaNs) to those pixels in those ifgs.
@@ -41,7 +44,9 @@ def mask_pixels_with_unwrapping_errors(ifgs_breach_count: NDArray[(Any, Any, Any
     """
     log.debug("Masking phase data of retained ifgs")
 
-    for i, m_p in enumerate(params[C.INTERFEROGRAM_FILES]):
+    ifg_files = params[C.INTERFEROGRAM_FILES]
+
+    for i, m_p in enumerate(ifg_files):
         pix_index = ifgs_breach_count[:, :, i] == num_occurrences_each_ifg[i]
         ifg = Ifg(m_p.tmp_sampled_path)
         ifg.open()
@@ -49,14 +54,15 @@ def mask_pixels_with_unwrapping_errors(ifgs_breach_count: NDArray[(Any, Any, Any
         ifg.phase_data[pix_index] = np.nan
         ifg.write_modified_phase()
 
-    log.info(f"Masked phase data of {i + 1} retained ifgs after phase closure")
-    return None
+    log.info(f"Masked phase data of {len(ifg_files)} retained ifgs after phase closure")
 
 
-def __drop_ifgs_if_not_part_of_any_loop(ifg_files: List[str], loops: List[WeightedLoop], params: dict) -> List[str]:
+def __drop_ifgs_if_not_part_of_any_loop(
+    ifg_files: List[str], loops: List[WeightedLoop], params: dict
+) -> List[str]:
     """
-    Check if an ifg is part of any of the loops, otherwise drop it from the list of interferograms for further PyRate
-    processing.
+    Check if an ifg is part of any of the loops, otherwise drop it from the list of interferograms
+    for further PyRate processing.
     """
     loop_ifgs = set()
     for weighted_loop in loops:
@@ -77,7 +83,9 @@ def __drop_ifgs_if_not_part_of_any_loop(ifg_files: List[str], loops: List[Weight
     return selected_ifg_files
 
 
-def __drop_ifgs_exceeding_threshold(orig_ifg_files: List[str], ifgs_breach_count, num_occurences_each_ifg, params):
+def __drop_ifgs_exceeding_threshold(
+    orig_ifg_files: List[str], ifgs_breach_count, num_occurences_each_ifg, params
+):
     """
     Function to identify and drop ifgs, based on two thresholds.
     We demand two thresholds to be breached before an ifg is dropped:
@@ -85,19 +93,21 @@ def __drop_ifgs_exceeding_threshold(orig_ifg_files: List[str], ifgs_breach_count
                           enough loops to accurately check for unwrapping errors?
     2. The second threshold is an average check of pixels breached taking all loops into account.
        It is evaluated as follows:
-        (i) ifgs_breach_count contains the number of loops where this pixel in this ifg had a closure exceeding closure_thr.
-        (b) sum(ifgs_breach_count[:, :, i]) is the number of pixels in ifg exceeding closure_thr over all loops
-        (c) divide by loop_count_of_this_ifg and num of cells (nrows x ncols) for a normalised  measure of threshold.
+        (i) ifgs_breach_count contains the number of loops where this pixel in this ifg had
+            a closure exceeding closure_thr.
+        (b) sum(ifgs_breach_count[:, :, i]) is the number of pixels in ifg exceeding closure_thr
+            over all loops
+        (c) divide by loop_count_of_this_ifg and num of cells (nrows x ncols) for a normalised
+            measure of threshold.
     """
     orig_ifg_files.sort()
-    nrows, ncols, n_ifgs = ifgs_breach_count.shape
+    nrows, ncols, _ = ifgs_breach_count.shape
     selected_ifg_files = []
     for i, ifg_file in enumerate(orig_ifg_files):
         loop_count_of_this_ifg = num_occurences_each_ifg[i]
         if loop_count_of_this_ifg:  # if the ifg participated in at least one loop
-            ifg_remove_threshold_breached = \
-                np.sum(ifgs_breach_count[:, :, i] == loop_count_of_this_ifg) / (nrows * ncols) > params[
-                    C.IFG_DROP_THR]
+            ifg_breached = np.sum(ifgs_breach_count[:, :, i] == loop_count_of_this_ifg)
+            ifg_remove_threshold_breached = ifg_breached / (nrows * ncols) > params[C.IFG_DROP_THR]
 
             if not (
                     # min loops count # check 1
@@ -110,13 +120,15 @@ def __drop_ifgs_exceeding_threshold(orig_ifg_files: List[str], ifgs_breach_count
     return selected_ifg_files
 
 
-def iterative_closure_check(config, interactive_plot=True) -> \
-        Tuple[List[str], NDArray[(Any, Any, Any), UInt16], NDArray[(Any,), UInt16]]:
+def iterative_closure_check(
+    config, interactive_plot=True
+) -> Tuple[List[str], NDArray[(Any, Any, Any), UInt16], NDArray[(Any,), UInt16]]:
     """
     This function iterates the closure check until a stable list of interferogram files is returned.
     :param config: Configuration class instance
     :param interactive_plot: bool, whether to plot sum closures of loops
-    :return: stable list of ifg files, their ifgs_breach_count, and number of occurrences of ifgs in loops
+    :return: stable list of ifg files, their ifgs_breach_count, and
+        number of occurrences of ifgs in loops
     """
     params = config.__dict__
     ifg_files = [ifg_path.tmp_sampled_path for ifg_path in params[C.INTERFEROGRAM_FILES]]
@@ -126,7 +138,8 @@ def iterative_closure_check(config, interactive_plot=True) -> \
         log.info(f"Closure check iteration #{i}: working on {len(ifg_files)} ifgs")
         rets = __wrap_closure_check(config)
         if rets is None:
-            return
+            return None
+
         new_ifg_files, closure, ifgs_breach_count, num_occurences_each_ifg, loops = rets
         if interactive_plot:
             if mpiops.rank == 0:
@@ -134,19 +147,25 @@ def iterative_closure_check(config, interactive_plot=True) -> \
                              thr=params[C.CLOSURE_THR], iteration=i)
         if len(ifg_files) == len(new_ifg_files):
             break
-        else:
-            i += 1
-            ifg_files = new_ifg_files  # exit condition could be some other check like number_of_loops
+
+        i += 1
+        ifg_files = new_ifg_files
+        # exit condition could be some other check like number_of_loops
 
     mpiops.comm.barrier()
 
-    log.info(f"Stable list of ifgs achieved after iteration #{i}. {len(ifg_files)} ifgs are retained")
+    log.info(
+        f"Stable list of ifgs achieved after iteration #{i}. {len(ifg_files)} ifgs are retained"
+    )
     return ifg_files, ifgs_breach_count, num_occurences_each_ifg
 
 
-def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) -> List[WeightedLoop]:
+def discard_loops_containing_max_ifg_count(
+    loops: List[WeightedLoop], params
+) -> List[WeightedLoop]:
     """
-    This function will discard loops when each ifg participating in a loop has met the max loop count criteria.
+    This function will discard loops when each ifg participating in a loop has met the
+    max loop count criteria.
 
     :param loops: list of loops
     :param params: params dict
@@ -158,8 +177,8 @@ def discard_loops_containing_max_ifg_count(loops: List[WeightedLoop], params) ->
         edge_appearances = np.array([ifg_counter[e] for e in loop.edges])
         if not np.all(edge_appearances > params[C.MAX_LOOP_REDUNDANCY]):
             selected_loops.append(loop)
-            for e in loop.edges:
-                ifg_counter[e] += 1
+            for edge in loop.edges:
+                ifg_counter[edge] += 1
         else:
             log.debug(f"Loop {loop.loop} ignored: all constituent ifgs have been in a loop "
                       f"{params[C.MAX_LOOP_REDUNDANCY]} times or more")
@@ -190,18 +209,25 @@ def __wrap_closure_check(config: Configuration) -> \
     if len(sorted_signed_loops) < 1:
         return None
 
-    retained_loops = mpiops.run_once(discard_loops_containing_max_ifg_count,
-                                     sorted_signed_loops, params)
-    ifgs_with_loops = mpiops.run_once(__drop_ifgs_if_not_part_of_any_loop, ifg_files, retained_loops, params)
+    retained_loops = mpiops.run_once(
+        discard_loops_containing_max_ifg_count,
+        sorted_signed_loops, params
+    )
+
+    ifgs_with_loops = mpiops.run_once(
+        __drop_ifgs_if_not_part_of_any_loop,
+        ifg_files, retained_loops, params
+    )
 
     msg = f"After applying MAX_LOOP_REDUNDANCY = {params[C.MAX_LOOP_REDUNDANCY]} criteria, " \
           f"{len(retained_loops)} loops are retained"
     if len(retained_loops) < 1:
         return None
-    else:
-        log.info(msg)
 
-    closure, ifgs_breach_count, num_occurences_each_ifg = sum_phase_closures(ifgs_with_loops, retained_loops, params)
+    log.info(msg)
+
+    closure_sum = sum_phase_closures(ifgs_with_loops, retained_loops, params)
+    closure, ifgs_breach_count, num_occurences_each_ifg = closure_sum
 
     if mpiops.rank == 0:
         closure_ins = config.closure()
@@ -210,8 +236,10 @@ def __wrap_closure_check(config: Configuration) -> \
         np.save(closure_ins.num_occurences_each_ifg, num_occurences_each_ifg)
         np.save(closure_ins.loops, retained_loops, allow_pickle=True)
 
-    selected_ifg_files = mpiops.run_once(__drop_ifgs_exceeding_threshold,
-                                         ifgs_with_loops, ifgs_breach_count, num_occurences_each_ifg, params)
+    selected_ifg_files = mpiops.run_once(
+        __drop_ifgs_exceeding_threshold,
+        ifgs_with_loops, ifgs_breach_count, num_occurences_each_ifg, params
+    )
 
     # update the ifg list in the parameters dictionary
     params[C.INTERFEROGRAM_FILES] = \
@@ -219,7 +247,6 @@ def __wrap_closure_check(config: Configuration) -> \
     return selected_ifg_files, closure, ifgs_breach_count, num_occurences_each_ifg, retained_loops
 
 
-# TODO: Consider whether this helper function is better homed in a generic module and used more widely
 def update_ifg_list(ifg_files: List[str], multi_paths: List[MultiplePaths]) -> List[MultiplePaths]:
     """
     Function to extract full paths for a subsetted list of interferograms

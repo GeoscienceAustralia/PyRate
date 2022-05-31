@@ -78,6 +78,8 @@ def least_squares_covariance(A, b, v):
     V = diag(1.0 / v.squeeze())
     q, r = qr(A)  # Orthogonal-triangular Decomposition
     efg = dot(q.T, dot(V, q))  # TODO: round it??
+    # pylint: disable=invalid-sequence-index
+    # JUSTIFICATION: Pylint is just wrong here, even if we cast to int(n) it complains...
     g = efg[n:, n:]  # modified to 0 indexing
     cd = dot(q.T, b)  # q.T * b
     f = efg[:n, n:]  # TODO: check +1/indexing
@@ -147,15 +149,14 @@ def ifg_date_lookup(ifgs, date_pair):
         # and not in order
         if date_pair[0] > date_pair[1]:
             date_pair = date_pair[1], date_pair[0]
-    except:
-        raise ValueError("Bad date_pair arg to ifg_date_lookup()")
+    except Exception as error:
+        raise ValueError("Bad date_pair arg to ifg_date_lookup()") from error
 
     for i in ifgs:
         if date_pair == (i.first, i.second):
             return i
 
-    raise ValueError("Cannot find Ifg with first/second"
-                     "image dates of %s" % str(date_pair))
+    raise ValueError(f"Cannot find Ifg with first/second image dates of {date_pair}")
 
 
 def ifg_date_index_lookup(ifgs, date_pair):
@@ -178,14 +179,14 @@ def ifg_date_index_lookup(ifgs, date_pair):
     try:
         if date_pair[0] > date_pair[1]:
             date_pair = date_pair[1], date_pair[0]
-    except:
-        raise ValueError("Bad date_pair arg to ifg_date_lookup()")
+    except Exception as error:
+        raise ValueError("Bad date_pair arg to ifg_date_lookup()") from error
 
     for i, _ in enumerate(ifgs):
         if date_pair == (ifgs[i].first, ifgs[i].second):
             return i
 
-    raise ValueError("Cannot find Ifg with first/second image dates of %s" % str(date_pair))
+    raise ValueError(f"Cannot find Ifg with first/second image dates of {date_pair}")
 
 
 def get_epochs(ifgs: Union[Iterable, Dict]) -> Tuple[EpochList, int]:
@@ -234,10 +235,10 @@ def first_second_ids(dates):
     """
 
     dset = sorted(set(dates))
-    return dict([(date_, i) for i, date_ in enumerate(dset)])
+    return { date_:i for i, date_ in enumerate(dset) }
 
 
-def factorise_integer(n, memo={}, left=2):
+def factorise_integer(n, memo=None, left=2):
     """
     Returns two factors a and b of a supplied number n such that a * b = n.
     The two factors are evaluated to be as close to each other in size as possible
@@ -252,26 +253,26 @@ def factorise_integer(n, memo={}, left=2):
     :rtype: int
     """
     n = int(n)
-    if (n, left) in memo:
+    if memo is not None and (n, left) in memo:
         return memo[(n, left)]
     if left == 1:
         return n, [n]
     i = 2
     best = n
-    bestTuple = [n]
+    best_tuple = [n]
     while i * i <= n:
         if n % i == 0:
             rem = factorise_integer(n / i, memo, left - 1)
             if rem[0] + i < best:
                 best = rem[0] + i
-                bestTuple = [i] + rem[1]
+                best_tuple = [i] + rem[1]
         i += 1
 
     # handle edge case when only one processor is available
-    if bestTuple == [4]:
+    if best_tuple == [4]:
         return 2, 2
 
-    if len(bestTuple) == 1:
-        bestTuple.append(1)
+    if len(best_tuple) == 1:
+        best_tuple.append(1)
 
-    return int(bestTuple[0]), int(bestTuple[1])
+    return int(best_tuple[0]), int(best_tuple[1])

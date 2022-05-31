@@ -22,6 +22,7 @@ import os
 from os.path import split
 from pathlib import Path
 from datetime import date, time, timedelta
+import struct
 import numpy as np
 
 import pyrate.constants as C
@@ -30,7 +31,6 @@ import pyrate.core.ifgconstants as ifc
 from pyrate.constants import sixteen_digits_pattern, BASELINE_FILE_PATHS, BASE_FILE_DIR
 from pyrate.core.shared import extract_epochs_from_filename, data_format
 from pyrate.core.logger import pyratelogger as log
-import struct
 
 
 # constants
@@ -68,7 +68,7 @@ GAMMA = 'GAMMA'
 
 def _parse_header(path):
     """Parses all GAMMA header file fields into a dictionary"""
-    with open(path) as f:
+    with open(path, "r", encoding="utf-8") as f:
         text = f.read().splitlines()
         raw_segs = [line.split() for line in text if ':' in line]
 
@@ -80,11 +80,17 @@ def parse_epoch_header(path):
     """
     Returns dictionary of epoch metadata required for PyRate
 
-    :param str path: Full path to GAMMA mli.par file. Note that the mli.par is required as input since the baseline calculations require the input values valid for the GAMMA multi-looked products and also the GAMMA lookup table gives radar coordinates for the multi-looked geometry.
+    :param str path: Full path to GAMMA mli.par file.
+        Note that the mli.par is required as input since the baseline calculations require the
+        input values valid for the GAMMA multi-looked products and also the GAMMA lookup table
+        gives radar coordinates for the multi-looked geometry.
 
     :return: subset: subset of full metadata
     :rtype: dict
     """
+    # pylint: disable=too-many-statements
+    # JUSTIFICATION: keeping the validation code together makes it the easiest to understand,
+    # splitting it apart is premature at this stage, would eventually make sense if it grew too big
     lookup = _parse_header(path)
     subset = _parse_date_time(lookup)
 
@@ -177,21 +183,21 @@ def _parse_date_time(lookup):
         year, month, day, = [int(float(i)) for i in lookup[GAMMA_DATE][:3]]
         if lookup.get(GAMMA_TIME) is not None:
             t = lookup[GAMMA_TIME][0]
-            h, m, s = str(timedelta(seconds=float(t))).split(":")
-            hour = int(h)
-            min = int(m)
-            sec = int(s.split(".")[0])
+            hour, mins, sec = str(timedelta(seconds=float(t))).split(":")
+            hour = int(hour)
+            mins = int(mins)
+            sec = int(sec.split(".")[0])
         else:
             # Occasionally GAMMA header has no time information - default to midnight
-            hour, min, sec = 0, 0, 0
+            hour, mins, sec = 0, 0, 0
     elif len(lookup[GAMMA_DATE]) == 6:
-        year, month, day, hour, min, sec = [int(float(i)) for i in lookup[GAMMA_DATE][:6]]
+        year, month, day, hour, mins, sec = [int(float(i)) for i in lookup[GAMMA_DATE][:6]]
     else:  # pragma: no cover
         msg = "Date and time information not complete in GAMMA headers"
         raise GammaException(msg)
 
     subset[ifc.FIRST_DATE] = date(year, month, day)
-    subset[ifc.FIRST_TIME] = time(hour, min, sec)
+    subset[ifc.FIRST_TIME] = time(hour, mins, sec)
 
     return subset
 
@@ -208,7 +214,10 @@ def parse_dem_header(path):
     lookup = _parse_header(path)
 
     # NB: many lookup fields have multiple elements, eg ['1000', 'Hz']
-    subset = {ifc.PYRATE_NCOLS: int(lookup[GAMMA_WIDTH][0]), ifc.PYRATE_NROWS: int(lookup[GAMMA_NROWS][0])}
+    subset = {
+        ifc.PYRATE_NCOLS: int(lookup[GAMMA_WIDTH][0]),
+        ifc.PYRATE_NROWS: int(lookup[GAMMA_NROWS][0])
+    }
 
     expected = ['decimal', 'degrees']
     for k in [GAMMA_CORNER_LAT, GAMMA_CORNER_LONG, GAMMA_X_STEP, GAMMA_Y_STEP]:
@@ -287,7 +296,11 @@ def combine_headers(hdr0, hdr1, dem_hdr, base_hdr=None):
     :return: chdr: combined metadata
     :rtype: dict
     """
-    if not all([isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr]]):
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    # JUSTIFICATION: keeping the validation code together makes it the easiest to understand,
+    # splitting it apart is premature at this stage, would eventually make sense if it grew too big
+
+    if not all(isinstance(a, dict) for a in [hdr0, hdr1, dem_hdr]):
         raise GammaException('Header args need to be dicts')
 
     if base_hdr and not isinstance(base_hdr, dict):
@@ -296,7 +309,7 @@ def combine_headers(hdr0, hdr1, dem_hdr, base_hdr=None):
     date0, date1 = hdr0[ifc.FIRST_DATE], hdr1[ifc.FIRST_DATE]
     if date0 == date1:
         raise GammaException("Can't combine headers for the same day")
-    elif date1 < date0:
+    if date1 < date0:
         raise GammaException("Wrong date order")
 
     chdr = {ifc.PYRATE_TIME_SPAN: (date1 - date0).days / ifc.DAYS_PER_YEAR,
@@ -461,7 +474,9 @@ def manage_headers(dem_header_file, header_paths, baseline_paths=None):
         else:
             combined_header = combine_headers(hdrs[0], hdrs[1], dem_header)
     elif len(header_paths) > 2:
-        msg = f'There are too many parameter files for one interferogram; there should only be two. {len(header_paths)} parameter files have been given: {header_paths}.'
+        msg = 'There are too many parameter files for one interferogram;' \
+               ' there should only be two. {len(header_paths)} parameter files' \
+               f' have been given: {header_paths}.'
         raise GammaException(msg)
     else:
         # probably have DEM or incidence file
@@ -476,7 +491,8 @@ def get_header_paths(input_file, slc_file_list):
     Function that matches input GAMMA file names with GAMMA header file names
 
     :param str input_file: input GAMMA image file.
-    :param slc_file_list: file listing the pool of available header files (GAMMA: slc.par, ROI_PAC: .rsc)
+    :param slc_file_list: file listing the pool of available header files
+        Example: slc.par (for GAMMA) or .rsc (for ROI_PAC)
     :return: list of matching header files
     :rtype: list
     """
@@ -490,14 +506,14 @@ def get_header_paths(input_file, slc_file_list):
 def gamma_header(ifg_file_path, params):
     """
     Function to obtain combined Gamma headers for image file
-    
+
     Args:
         ifg_file_path: Path to interferogram file to find headers for.
         params: PyRate parameters dictionary.
 
     Returns:
         A combined header dictionary containing metadata from matching
-        gamma headers and DEM header.   
+        gamma headers and DEM header.
     """
     dem_hdr_path = params[C.DEM_HEADER_FILE]
     header_paths = get_header_paths(ifg_file_path, params[C.HDR_FILE_LIST])
@@ -517,7 +533,6 @@ def gamma_header(ifg_file_path, params):
 
 
 def read_lookup_table(head, data_path, xlooks, ylooks, xmin, xmax, ymin, ymax):
-    # pylint: disable = too - many - statements
     """
     Creates a copy of input lookup table file in a numpy array and applies the ifg ML factors
 
@@ -544,7 +559,8 @@ def read_lookup_table(head, data_path, xlooks, ylooks, xmin, xmax, ymin, ymax):
 
     ifg_proc = head.meta_data[ifc.PYRATE_INSAR_PROCESSOR]
     # get dimensions of lookup table file
-    bytes_per_col, fmtstr = data_format(ifg_proc, True, ncols_lt*2) # float complex data set containing value tupels
+    # float complex data set containing value tuples
+    bytes_per_col, fmtstr = data_format(ifg_proc, True, ncols_lt*2)
 
     # check if lookup table has the correct size
     small_size = _check_raw_data(bytes_per_col * 2, data_path, ncols_lt, nrows_lt)
@@ -576,12 +592,13 @@ def read_lookup_table(head, data_path, xlooks, ylooks, xmin, xmax, ymin, ymax):
             idx_start = ymin + int((ylooks - 1) / 2)
         row_idx = np.arange(idx_start, ymax, ylooks)
 
-        # read the binary lookup table file and save the range/azimuth value pair for each position in the cropped and
-        # multi-looked data set
+        # read the binary lookup table file and save the range/azimuth value pair for each
+        # position in the cropped and multi-looked data set
         log.debug(f"Reading lookup table file {data_path}")
         with open(data_path, 'rb') as f:
             for y in range(nrows_lt): # loop through all lines in file
-                # this could potentially be made quicker by skipping unwanted bytes in the f.read command?
+                # this could potentially be made quicker by skipping unwanted bytes
+                # in the f.read command?
                 data = struct.unpack(fmtstr, f.read(row_bytes))
                 # but only read data from lines in row index:
                 if y in row_idx:
@@ -606,8 +623,10 @@ def _check_raw_data(bytes_per_col, data_path, ncols, nrows):
             # test data set doesn't currently fit the lookup table size, stop further calculation
             # todo: delete this if statement once a new test data set has been introduced
             return True
-        else:
-            raise GammaException(msg % (data_path, size, act_size))
+
+        raise GammaException(msg % (data_path, size, act_size))
+
+    return False
 
 
 class GammaException(Exception):
@@ -635,10 +654,13 @@ def baseline_paths_for(path: str, params: dict) -> str:
     _, filename = split(path)
     try:
         epoch = re.search(sixteen_digits_pattern, filename).group(0)
-    except: # catch cases where filename does not have two epochs, e.g. DEM file
+    # pylint: disable=bare-except
+    # JUSTIFICATION: intentionally catch when filename does not have two epochs, e.g. DEM file
+    except:
         return None
 
-    base_file_paths = [f.unwrapped_path for f in params[BASELINE_FILE_PATHS] if epoch in f.unwrapped_path]
+    base_file_paths = params[BASELINE_FILE_PATHS]
+    base_file_paths = [f.unwrapped_path for f in base_file_paths if epoch in f.unwrapped_path]
 
     if len(base_file_paths) > 1:
         raise ConfigException(f"'{BASE_FILE_DIR}': found more than one baseline "
