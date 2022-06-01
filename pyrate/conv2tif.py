@@ -14,15 +14,16 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-This Python script converts ROI_PAC or GAMMA format input interferograms 
+This Python script converts ROI_PAC or GAMMA format input interferograms
 into geotiff format files
 """
 # -*- coding: utf-8 -*-
 import os
 from typing import Tuple, List
+from pathlib import Path
+
 from joblib import Parallel, delayed
 import numpy as np
-from pathlib import Path
 
 import pyrate.constants as C
 from pyrate.core.prepifg_helper import PreprocessError
@@ -52,7 +53,7 @@ def main(params):
 
     if params[C.PROCESSOR] == 2:  # if geotif
         log.warning("'conv2tif' step not required for geotiff!")
-        return
+        return None
 
     mpi_vs_multiprocess_logging("conv2tif", params)
 
@@ -80,7 +81,7 @@ def do_geotiff(unw_paths: List[MultiplePaths], params: dict) -> List[str]:
     parallel = params[C.PARALLEL]
 
     if parallel:
-        log.info("Running geotiff conversion in parallel with {} processes".format(params[C.PROCESSES]))
+        log.info("Running geotiff conversion in parallel with {params[C.PROCESSES]} processes")
         dest_base_ifgs = Parallel(n_jobs=params[C.PROCESSES], verbose=shared.joblib_log_level(
             C.LOG_LEVEL))(
             delayed(_geotiff_multiprocessing)(p, params) for p in unw_paths)
@@ -99,19 +100,19 @@ def _geotiff_multiprocessing(unw_path: MultiplePaths, params: dict) -> Tuple[str
     processor = params[C.PROCESSOR]  # roipac or gamma
 
     # Create full-res geotiff if not already on disk
-    if not os.path.exists(dest):
-        if processor == GAMMA:
-            header = gamma.gamma_header(unw_path.unwrapped_path, params)
-        elif processor == ROIPAC:
-            log.info("Warning: ROI_PAC support will be deprecated in a future PyRate release")
-            header = roipac.roipac_header(unw_path.unwrapped_path, params)
-        else:
-            raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
-        header[ifc.INPUT_TYPE] = unw_path.input_type
-        shared.write_fullres_geotiff(header, unw_path.unwrapped_path, dest, nodata=params[
-            C.NO_DATA_VALUE])
-        Path(dest).chmod(0o444)  # readonly output
-        return dest, True
-    else:
+    if os.path.exists(dest):
         log.warning(f"Full-res geotiff already exists in {dest}! Returning existing geotiff!")
         return dest, False
+
+    if processor == GAMMA:
+        header = gamma.gamma_header(unw_path.unwrapped_path, params)
+    elif processor == ROIPAC:
+        log.info("Warning: ROI_PAC support will be deprecated in a future PyRate release")
+        header = roipac.roipac_header(unw_path.unwrapped_path, params)
+    else:
+        raise PreprocessError('Processor must be ROI_PAC (0) or GAMMA (1)')
+    header[ifc.INPUT_TYPE] = unw_path.input_type
+    shared.write_fullres_geotiff(header, unw_path.unwrapped_path, dest, nodata=params[
+        C.NO_DATA_VALUE])
+    Path(dest).chmod(0o444)  # readonly output
+    return dest, True

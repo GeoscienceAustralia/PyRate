@@ -1,14 +1,14 @@
-import os
 import re
 from pathlib import Path
 import numpy as np
+from pyrate.core.mpiops import comm
 
 PYRATEPATH = Path(__file__).parent.parent
 
 
 __version__ = "0.6.0"
 CLI_DESCRIPTION = """
-PyRate workflow: 
+PyRate workflow:
 
     Step 1: conv2tif
     Step 2: prepifg
@@ -20,8 +20,6 @@ PyRate workflow:
 Refer to https://geoscienceaustralia.github.io/PyRate/usage.html for 
 more details.
 """
-
-from pyrate.core.mpiops import comm
 
 NO_OF_PARALLEL_PROCESSES = comm.Get_size()
 
@@ -107,13 +105,20 @@ INPUT_IFG_PROJECTION = 'projection'
 NO_DATA_VALUE = 'noDataValue'
 #: FLOAT; No data averaging threshold for prepifg
 NO_DATA_AVERAGING_THRESHOLD = 'noDataAveragingThreshold'
-# BOOL (1/2/3); Re-project data from Line of sight, 1 = vertical, 2 = horizontal, 3 = no conversion
+# INT (1/2/3); Re-project data from Line of sight
+# 1 = vertical
+# 2 = horizontal
+# 3 = no conversion
 # REPROJECTION = 'prjflag' # NOT CURRENTLY USED
 #: BOOL (0/1): Convert no data values to Nan
 NAN_CONVERSION = 'nan_conversion'
 
 # Prepifg parameters
-#: BOOL (1/2/3/4); Method for cropping interferograms, 1 = minimum overlapping area (intersection), 2 = maximum area (union), 3 = customised area, 4 = all ifgs already same size
+#: INT (1/2/3/4); Method for cropping interferograms
+# 1 = minimum overlapping area (intersection)
+# 2 = maximum area (union)
+# 3 = customised area
+# 4 = all ifgs already same size
 IFG_CROP_OPT = 'ifgcropopt'
 #: INT; Multi look factor for interferogram preparation in x dimension
 IFG_LKSX = 'ifglksx'
@@ -141,9 +146,12 @@ REFNX = "refnx"
 REFNY = "refny"
 #: INT; Dimension of reference pixel search window (in number of pixels)
 REF_CHIP_SIZE = 'refchipsize'
-#: FLOAT; Minimum fraction of observations required in search window for pixel to be a viable reference pixel
+#: FLOAT; Minimum fraction of observations required in search window for pixel to be
+# a viable reference pixel
 REF_MIN_FRAC = 'refminfrac'
-#: BOOL (1/2); Reference phase estimation method (1: median of the whole interferogram, 2: median within the window surrounding the reference pixel)
+#: INT (1/2); Reference phase estimation method
+# 1: median of the whole interferogram
+# 2: median within the window surrounding the reference pixel)
 REF_EST_METHOD = 'refest'
 
 MAXVAR = 'maxvar'
@@ -166,7 +174,8 @@ BASE_FILE_DIR = 'basefiledir'
 #: STR; Name of the file list containing the pool of available baseline files
 BASE_FILE_LIST = 'basefilelist'
 
-#: STR; Name of the file containing the GAMMA lookup table between lat/lon and radar coordinates (row/col)
+#: STR; Name of the file containing the GAMMA lookup table between lat/lon and
+# radar coordinates (row/col)
 LT_FILE = 'ltfile'
 
 # atmospheric error correction parameters NOT CURRENTLY USED
@@ -190,9 +199,12 @@ SUBTRACT_MEDIAN = 'subtract_median'
 # orbital error correction/parameters
 #: BOOL (1/0); Perform orbital error correction (1: yes, 0: no)
 ORBITAL_FIT = 'orbfit'
-#: BOOL (1/2); Method for orbital error correction (1: independent, 2: network)
+#: INT (1/2); Method for orbital error correction (1: independent, 2: network)
 ORBITAL_FIT_METHOD = 'orbfitmethod'
-#: BOOL (1/2/3) Polynomial order of orbital error model (1: planar in x and y - 2 parameter model, 2: quadratic in x and y - 5 parameter model, 3: quadratic in x and cubic in y - part-cubic 6 parameter model)
+#: INT (1/2/3) Polynomial order of orbital error model
+# 1: planar in x and y - 2 parameter model
+# 2: quadratic in x and y - 5 parameter model
+# 3: quadratic in x and cubic in y - part-cubic 6 parameter model
 ORBITAL_FIT_DEGREE = 'orbfitdegrees'
 #: INT; Multi look factor for orbital error calculation in x dimension
 ORBITAL_FIT_LOOKS_X = 'orbfitlksx'
@@ -205,7 +217,9 @@ ORBFIT_SCALE = 'orbfitscale'
 ORBFIT_INTERCEPT = 'orbfitintercept'
 
 # Stacking parameters
-#: FLOAT; Threshold ratio between 'model minus observation' residuals and a-priori observation standard deviations for stacking estimate acceptance (otherwise remove furthest outlier and re-iterate)
+#: FLOAT; Threshold ratio between 'model minus observation' residuals and a-priori observation
+# standard deviations for stacking estimate acceptance
+# (otherwise remove furthest outlier and re-iterate)
 LR_NSIG = 'nsig'
 #: INT; Number of required observations per pixel for stacking to occur
 LR_PTHRESH = 'pthr'
@@ -230,7 +244,8 @@ TLPF_PTHR = 'tlpfpthr'
 SLPF_CUTOFF = 'slpfcutoff'
 #: INT (1/0); Do spatial interpolation at NaN locations (1 for interpolation, 0 for zero fill)
 SLPF_NANFILL = 'slpnanfill'
-#: #: STR; Method for spatial interpolation (one of: linear, nearest, cubic), only used when slpnanfill=1
+#: #: STR; Method for spatial interpolation (one of: linear, nearest, cubic),
+# only used when slpnanfill=1
 SLPF_NANFILL_METHOD = 'slpnanfill_method'
 
 # DEM error correction parameters
@@ -251,7 +266,10 @@ TIME_SERIES_SM_FACTOR = 'smfactor'
 # tsinterp is automatically assigned in the code; not needed in conf file
 # TIME_SERIES_INTERP = 'tsinterp'
 
-#: BOOL (0/1/2); Use parallelisation/Multi-threading (0: in serial, 1: in parallel by rows, 2: in parallel by pixel)
+#: INT (0/1/2); Use parallelisation/Multi-threading
+# 0: in serial
+# 1: in parallel by rows
+# 2: in parallel by pixel
 PARALLEL = 'parallel'
 #: INT; Number of processes for multi-threading
 PROCESSES = 'processes'
@@ -271,7 +289,9 @@ ORB_DEGREE_NAMES = {PLANAR: 'PLANAR',
                     PART_CUBIC: 'PART CUBIC'}
 
 # geometry outputs
-GEOMETRY_OUTPUT_TYPES = ['rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle', 'range_dist']
+GEOMETRY_OUTPUT_TYPES = [
+    'rdc_azimuth', 'rdc_range', 'look_angle', 'incidence_angle', 'azimuth_angle', 'range_dist'
+]
 
 # sign convention for phase data
 SIGNAL_POLARITY = 'signal_polarity'
@@ -302,4 +322,3 @@ INTERFEROGRAM_DIR = 'interferogram_dir'
 GEOMETRY_DIR = 'geometry_dir'
 TIMESERIES_DIR = 'timeseries_dir'
 VELOCITY_DIR = 'velocity_dir'
-

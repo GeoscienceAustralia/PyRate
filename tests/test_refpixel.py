@@ -30,7 +30,7 @@ import pyrate.configuration
 import pyrate.constants as C
 import pyrate.core.refpixel
 from pyrate.core.refpixel import ref_pixel, _step, RefPixelError, ref_pixel_calc_wrapper, \
-    convert_geographic_coordinate_to_pixel_value, convert_pixel_value_to_geographic_coordinate
+    convert_lat_lon_to_pixel_coord, convert_pixel_coord_to_lat_lon
 from pyrate.core import shared, ifgconstants as ifc
 from pyrate import correct, conv2tif, prepifg
 from pyrate.configuration import Configuration, ConfigException
@@ -477,7 +477,7 @@ def x_y_pixel():
 def test_convert_pixel_value_to_geographic_coordinate(x_y_pixel):
     transform = dem_transform()
     for x, y in x_y_pixel:
-        lon, lat = convert_pixel_value_to_geographic_coordinate(x, y, transform)
+        lon, lat = convert_pixel_coord_to_lat_lon(x, y, transform)
         out = run(f"gdallocationinfo -geoloc {SML_TEST_DEM_TIF} {lon} {lat}", shell=True, universal_newlines=True,
                   stdout=PIPE).stdout
         xs = (x, x+1, x-1)
@@ -495,6 +495,6 @@ def dem_transform():
 def test_convert_geographic_coordinate_to_pixel_value(x_y_pixel):
     transform = dem_transform()
     for x, y in x_y_pixel:
-        lon, lat = convert_pixel_value_to_geographic_coordinate(x, y, transform)
-        xp, yp = convert_geographic_coordinate_to_pixel_value(lon, lat, transform)
+        lon, lat = convert_pixel_coord_to_lat_lon(x, y, transform)
+        xp, yp = convert_lat_lon_to_pixel_coord(lon, lat, transform)
         assert (xp == x) & (yp == y)

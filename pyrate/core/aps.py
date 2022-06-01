@@ -158,7 +158,7 @@ def _make_aps_corrections(ts_aps: np.ndarray, ifgs: List[Ifg], params: dict) -> 
     :param params: Dictionary of PyRate configuration parameters.
     """
     log.debug('Reconstructing interferometric observations from time series')
-    # get first and second image indices 
+    # get first and second image indices
     _ , n = mpiops.run_once(get_epochs, ifgs)
     index_first, index_second = n[:len(ifgs)], n[len(ifgs):]
 
@@ -305,7 +305,7 @@ def gaussian_spatial_filter(image: np.ndarray, cutoff: float, x_size: float,
 
     # Estimate sigma value for Gaussian kernel function in spectral domain
     # by converting cutoff distance to wavenumber and applying a scaling
-    # factor based on fixed kernel window size. 
+    # factor based on fixed kernel window size.
     sigma = np.std(dist) * (1 / cutoff)
     # Calculate kernel weights
     wgt = _kernel(dist, sigma)
@@ -333,7 +333,7 @@ def temporal_high_pass_filter(tsincr: np.ndarray, epochlist: EpochList,
     log.info('Applying temporal high-pass filter')
     threshold = params[C.TLPF_PTHR]
     cutoff_day = params[C.TLPF_CUTOFF]
-    if cutoff_day < 1 or type(cutoff_day) != int:
+    if cutoff_day < 1 or not isinstance(cutoff_day, int):
         raise ValueError(f'tlpf_cutoff must be an integer greater than or '
                          f'equal to 1 day. Value provided = {cutoff_day}')
 

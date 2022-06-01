@@ -7,7 +7,7 @@ import pytest
 import pyrate.constants as C
 from pyrate.core import ifgconstants as ifc
 from pyrate.core.geometry import get_lonlat_coords, get_sat_positions, vincinv
-from pyrate.core.refpixel import convert_pixel_value_to_geographic_coordinate
+from pyrate.core.refpixel import convert_pixel_coord_to_lat_lon
 from tests import common
 from pyrate.configuration import Configuration
 from subprocess import run, PIPE
@@ -31,7 +31,7 @@ def get_lonlat_coords_slow(ifg: Ifg) -> Tuple[np.ndarray, np.ndarray]:
     lat = np.zeros((nrows, ncols))  # pre-allocate 2D numpy array
     for i in range(0, nrows):  # rows are y-direction
         for j in range(0, ncols):  # cols are x-direction
-            lon[i, j], lat[i, j] = convert_pixel_value_to_geographic_coordinate(j, i, transform)
+            lon[i, j], lat[i, j] = convert_pixel_coord_to_lat_lon(j, i, transform)
 
     return lon, lat
 

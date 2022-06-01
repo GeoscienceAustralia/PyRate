@@ -109,7 +109,8 @@ def _save_cvd_data(acg, r_dist, ifg_path, outdir):
     Function to save numpy array of autocorrelation data to disk
     """
     data = np.column_stack((acg, r_dist))
-    data_file = join(outdir, 'cvd_data_{b}.npy'.format(b=basename(ifg_path).split('.')[0]))
+    suffix = basename(ifg_path).split('.')[0]
+    data_file = join(outdir, f'cvd_data_{suffix}.npy')
     np.save(file=data_file, arr=data)
 
 
@@ -188,12 +189,11 @@ def cvd_from_phase(phase, ifg, r_dist, calc_alpha, save_acg=False, params=None):
         alphaguess = 2 / (maxbin * bin_width)
         alpha = fmin(_pendiffexp, x0=alphaguess, args=(cvdav,), disp=False,
                      xtol=1e-6, ftol=1e-6)
-        log.debug("1st guess alpha {}, converged "
-                 "alpha: {}".format(alphaguess, alpha))
+        log.debug(f"1st guess alpha {alphaguess}, converged alpha: {alpha}")
         # maximum variance usually at the zero lag: max(acg[:len(r_dist)])
         return np.max(acg), alpha[0]  # alpha unit 1/km
-    else:
-        return np.max(acg), None
+
+    return np.max(acg), None
 
 
 class RDist():
@@ -280,7 +280,6 @@ def get_vcmt(ifgs, maxvar):
     if isinstance(ifgs, dict):
         ifgs = {k: v for k, v in ifgs.items() if isinstance(v, PrereadIfg)}
         ifgs = OrderedDict(sorted(ifgs.items()))
-        # pylint: disable=redefined-variable-type
         ifgs = ifgs.values()
 
     nifgs = len(ifgs)
@@ -330,9 +329,14 @@ def maxvar_vcm_calc_wrapper(params):
     r_dist = mpiops.run_once(_get_r_dist, ifg_paths[0])
     prcs_ifgs = mpiops.array_split(list(enumerate(ifg_paths)))
     process_maxvar = {}
+    n_prcs = len(prcs_ifgs)
+    n_ifgs = len(ifg_paths)
+
     for n, i in prcs_ifgs:
-        log.debug(f'Calculating maxvar for {n} of process ifgs {len(prcs_ifgs)} of total {len(ifg_paths)}')
-        process_maxvar[int(n)] = cvd(i, params, r_dist, calc_alpha=True, write_vals=True, save_acg=True)[0]
+        log.debug(f'Calculating maxvar for {n} of process ifgs {n_prcs} of total {n_ifgs}')
+        val = cvd(i, params, r_dist, calc_alpha=True, write_vals=True, save_acg=True)[0]
+        process_maxvar[int(n)] = val
+
     maxvar_d = shared.join_dicts(mpiops.comm.allgather(process_maxvar))
     maxvar = [v[1] for v in sorted(maxvar_d.items(), key=lambda s: s[0])]
 

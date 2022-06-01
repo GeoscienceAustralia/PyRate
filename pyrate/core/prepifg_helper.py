@@ -30,7 +30,8 @@ from decimal import Decimal
 from typing import List, Tuple, Union, Callable
 from numpy import array, nan, isnan, nanmean, float32, zeros, sum as nsum
 
-from pyrate.constants import sixteen_digits_pattern, COHERENCE_FILE_PATHS, IFG_CROP_OPT, IFG_LKSX, IFG_LKSY
+from pyrate.constants import sixteen_digits_pattern, COHERENCE_FILE_PATHS, IFG_CROP_OPT, \
+    IFG_LKSX, IFG_LKSY
 from pyrate.configuration import ConfigException
 from pyrate.core.gdal_python import crop_resample_average
 from pyrate.core.shared import dem_or_ifg, Ifg, DEM
@@ -48,8 +49,13 @@ CROP_OPTIONS = [MINIMUM_CROP, MAXIMUM_CROP, CUSTOM_CROP, ALREADY_SAME_SIZE]
 GRID_TOL = 1e-6
 
 
-def get_analysis_extent(crop_opt: int, rasters: List[Union[Ifg, DEM]], xlooks: int, ylooks: int,
-                        user_exts: Tuple[float, float, float, float]) -> Tuple[float, float, float, float]:
+def get_analysis_extent(
+    crop_opt: int,
+    rasters: List[Union[Ifg, DEM]],
+    xlooks: int,
+    ylooks: int,
+    user_exts: Tuple[float, float, float, float]
+) -> Tuple[float, float, float, float]:
     """
     Function checks prepifg parameters and returns extents/bounding box.
 
@@ -64,15 +70,15 @@ def get_analysis_extent(crop_opt: int, rasters: List[Union[Ifg, DEM]], xlooks: i
     """
 
     if crop_opt not in CROP_OPTIONS:
-        raise PreprocessError("Unrecognised crop option: %s" % crop_opt)
+        raise PreprocessError(f"Unrecognised crop option: {crop_opt}")
 
     if crop_opt == CUSTOM_CROP:
         if not user_exts:
             raise PreprocessError('No custom cropping extents specified')
-        elif len(user_exts) != 4:  # check for required numbers
+        if len(user_exts) != 4:  # check for required numbers
             raise PreprocessError('Custom extents must have all 4 values')
-        elif len(user_exts) == 4:  # check for non floats
-            if not all([_is_number(z) for z in user_exts]):
+        if len(user_exts) == 4:  # check for non floats
+            if not all(_is_number(z) for z in user_exts):
                 raise PreprocessError('Custom extents must be 4 numbers')
 
     _check_looks(xlooks, ylooks)
@@ -101,12 +107,12 @@ def _check_looks(xlooks, ylooks):
 
     if not (isinstance(xlooks, Number) and
             isinstance(ylooks, Number)):  # pragma: no cover
-        msg = "Non-numeric looks parameter(s), x: %s, y: %s" % (xlooks, ylooks)
+        msg = f"Non-numeric looks parameter(s), x: {xlooks}, y: {ylooks}"
         raise PreprocessError(msg)
 
     if not (xlooks > 0 and ylooks > 0):  # pragma: no cover
-        msg = "Invalid looks parameter(s), x: %s, y: %s. " \
-              "Looks must be an integer greater than zero" % (xlooks, ylooks)
+        msg = f"Invalid looks parameter(s), x: {xlooks}, y: {ylooks}. " \
+              "Looks must be an integer greater than zero"
         raise PreprocessError(msg)
 
     if xlooks != ylooks:
@@ -126,7 +132,7 @@ def _check_resolution(ifgs: List[Union[Ifg, DEM]]):
             i.close()
         values = array(values)
         if not (values == values[0]).all():  # pragma: no cover
-            msg = "Grid resolution does not match for %s" % var
+            msg = f"Grid resolution does not match for {var}"
             raise PreprocessError(msg)
 
 
@@ -152,8 +158,10 @@ def _get_extents(ifgs, crop_opt, user_exts=None):
     return extents
 
 
-def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, header, write_to_disk=True, out_path=None,
-                coherence_path=None, coherence_thresh=None):
+def prepare_ifg(
+    raster_path, xlooks, ylooks, exts, thresh, crop_opt, header,
+    write_to_disk=True, out_path=None, coherence_path=None, coherence_thresh=None
+):
     """
     Open, resample, crop and optionally save to disk an interferogram or DEM.
     Returns are only given if write_to_disk=False
@@ -195,8 +203,15 @@ def prepare_ifg(raster_path, xlooks, ylooks, exts, thresh, crop_opt, header, wri
     #         #    reproject()
     driver_type = 'GTiff' if write_to_disk else 'MEM'
     resampled_data, out_ds = crop_resample_average(
-        input_tif=raster.data_path, extents=exts, new_res=resolution, output_file=out_path, thresh=thresh,
-        out_driver_type=driver_type, hdr=header, coherence_path=coherence_path, coherence_thresh=coherence_thresh
+        input_tif=raster.data_path,
+        extents=exts,
+        new_res=resolution,
+        output_file=out_path,
+        thresh=thresh,
+        out_driver_type=driver_type,
+        hdr=header,
+        coherence_path=coherence_path,
+        coherence_thresh=coherence_thresh
     )
 
     return resampled_data, out_ds
@@ -422,9 +437,13 @@ def coherence_paths_for(path: str, params: dict, tif=False) -> str:
     _, filename = split(path)
     epoch = re.search(sixteen_digits_pattern, filename).group(0)
     if tif:
-        coh_file_paths = [f.converted_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.converted_path]
+        coh_file_paths = [
+            f.converted_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.converted_path
+        ]
     else:
-        coh_file_paths = [f.unwrapped_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.unwrapped_path]
+        coh_file_paths = [
+            f.unwrapped_path for f in params[COHERENCE_FILE_PATHS] if epoch in f.unwrapped_path
+        ]
 
     if len(coh_file_paths) > 1:
         raise ConfigException(f"found more than one coherence "

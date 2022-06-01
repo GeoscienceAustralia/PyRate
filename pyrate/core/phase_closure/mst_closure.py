@@ -16,7 +16,7 @@
 
 
 from collections import namedtuple
-from typing import List, Union
+from typing import List
 from datetime import date
 import numpy as np
 import networkx as nx
@@ -29,6 +29,7 @@ Edge = namedtuple('Edge', ['first', 'second'])
 
 
 class SignedEdge:
+    """Represents an edge (line between two points) with an ssociated sign value"""
 
     def __init__(self, edge: Edge, sign: int):
         self.edge = edge
@@ -41,6 +42,7 @@ class SignedEdge:
 
 
 class SignedWeightedEdge(SignedEdge):
+    """Represents an signed edge value (`SignedEdge`) with an associated weight value"""
 
     def __init__(self, signed_edge: SignedEdge, weight: int):
         super().__init__(signed_edge.edge, sign=signed_edge.sign)
@@ -50,7 +52,8 @@ class SignedWeightedEdge(SignedEdge):
 
 class WeightedLoop:
     """
-    Loop with weight equal to the sum of the edge weights, where edge weights are the ifg duration in days
+    Loop with weight equal to the sum of the edge weights,
+    where edge weights are the ifg duration in days
     """
 
     def __init__(self, loop: List[SignedWeightedEdge]):
@@ -58,31 +61,34 @@ class WeightedLoop:
 
     @property
     def weight(self):
+        """Returns the weight value of the whole loop (sum of loop edge weights)"""
         return sum([swe.weight for swe in self.loop])
 
     @property
     def earliest_date(self):
+        """Returns the earliest date in the loop"""
         return min({swe.first for swe in self.loop})
 
     @property
     def primary_dates(self):
+        """Returns the primary dates for each edge in the loop as a string"""
         first_dates = [swe.first for swe in self.loop]
         first_dates.sort()
-        st = ''.join([str(d) for d in first_dates])
-        return st
+        return ''.join([str(d) for d in first_dates])
 
     @property
     def secondary_dates(self):
+        """Returns the secondary dates for each edge in the loop as a string"""
         first_dates = [swe.second for swe in self.loop]
         first_dates.sort()
-        st = ''.join([str(d) for d in first_dates])
-        return st
+        return ''.join([str(d) for d in first_dates])
 
     def __len__(self):
         return len(self.loop)
 
     @property
     def edges(self):
+        """Returns this loops edge values"""
         return [Edge(swe.first, swe.edge.second) for swe in self.loop]
 
 
@@ -103,36 +109,36 @@ def __find_closed_loops(edges: List[Edge], max_loop_length: int) -> List[List[da
         loops.extend(loops_)
 
     node_list = g.nodes()
-    node_list_dict = {i: n for i, n in enumerate(node_list)}
+    node_list_dict = dict(enumerate(node_list))
     loop_subset = []
-    for l in loops:
-        loop = []
-        for ll in l:
-            loop.append(node_list_dict[ll])
-        loop_subset.append(loop)
+    for loop in loops:
+        new_loop = [node_list_dict[i] for i in loop]
+        loop_subset.append(new_loop)
 
     log.debug(f"Total number of loops is {len(loop_subset)}")
 
     return loop_subset
 
 
-def __add_signs_and_weights_to_loops(loops: List[List[date]], available_edges: List[Edge]) -> List[WeightedLoop]:
+def __add_signs_and_weights_to_loops(
+    loops: List[List[date]], available_edges: List[Edge]
+) -> List[WeightedLoop]:
     """
     add signs and weights to loops.
     Additionally, sort the loops (change order of ifgs appearing in loop) by weight and date
     """
     weighted_signed_loops = []
     available_edges = set(available_edges)  # hash it once for O(1) lookup
-    for i, l in enumerate(loops):
+    for loop in loops:
         weighted_signed_loop = []
-        l.append(l[0])  # add the closure loop
-        for ii, ll in enumerate(l[:-1]):
-            if l[ii+1] > ll:
-                edge = Edge(ll, l[ii+1])
+        loop.append(loop[0])  # add the closure loop
+        for i, loop_idx in enumerate(loop[:-1]):
+            if loop[i+1] > loop_idx:
+                edge = Edge(loop_idx, loop[i+1])
                 assert edge in available_edges
                 signed_edge = SignedEdge(edge, 1)  # opposite direction of ifg
             else:
-                edge = Edge(l[ii+1], ll)
+                edge = Edge(loop[i+1], loop_idx)
                 assert edge in available_edges
                 signed_edge = SignedEdge(edge, -1)  # in direction of ifg
             weighted_signed_edge = SignedWeightedEdge(
@@ -163,7 +169,8 @@ def __find_signed_closed_loops(params: dict) -> List[WeightedLoop]:
     ifg_files.sort()
     log.debug(f"The number of ifgs in the list is {len(ifg_files)}")
     available_edges = __setup_edges(ifg_files)
-    all_loops = __find_closed_loops(available_edges, max_loop_length=params[C.MAX_LOOP_LENGTH])  # find loops with weights
+    # find loops with weights
+    all_loops = __find_closed_loops(available_edges, max_loop_length=params[C.MAX_LOOP_LENGTH])
     signed_weighted_loops = __add_signs_and_weights_to_loops(all_loops, available_edges)
     return signed_weighted_loops
 

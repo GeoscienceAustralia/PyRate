@@ -14,13 +14,15 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 """
-This Python module implements the calculation and output of the per-pixel vector of the radar viewing geometry
-(i.e. local angles, incidence angles and azimuth angles) as well as the calculation of per-pixel baseline values
-used for correcting interferograms for residual topographic effects (a.k.a. DEM errors).
+This Python module implements the calculation and output of the per-pixel vector of the radar
+viewing geometry (i.e. local angles, incidence angles and azimuth angles) as well as the
+calculation of per-pixel baseline values used for correcting interferograms for residual
+topographic effects (a.k.a. DEM errors).
 """
 # pylint: disable=invalid-name, too-many-locals, too-many-arguments
-import numpy as np
 from typing import Tuple, Union
+
+import numpy as np
 
 import pyrate.constants as C
 from pyrate.core import ifgconstants as ifc
@@ -71,13 +73,14 @@ def calc_radar_coords(ifg: Ifg, params: dict, xmin: int, xmax: int,
     lookup_table = params[C.LT_FILE]
 
     if lookup_table is None:
-        msg = f"No lookup table file supplied: Geometry cannot be computed"
+        msg = "No lookup table file supplied: Geometry cannot be computed"
         raise FileNotFoundError(msg)
 
     # PyRate IFG multi-looking factors
     ifglksx = params[C.IFG_LKSX]
     ifglksy = params[C.IFG_LKSY]
-    # transform float lookup table file to np array, min/max pixel coordinates are required for cropping
+    # transform float lookup table file to np array,
+    # min/max pixel coordinates are required for cropping
     lt_az, lt_rg = read_lookup_table(ifg, lookup_table, ifglksx, ifglksy, xmin, xmax, ymin, ymax)
     # replace 0.0 with NaN
     lt_az[lt_az == 0.0] = np.nan
@@ -86,42 +89,63 @@ def calc_radar_coords(ifg: Ifg, params: dict, xmin: int, xmax: int,
     return lt_az, lt_rg
 
 
-def get_sat_positions(lat: np.ndarray, lon: np.ndarray, look_angle: np.ndarray, inc_angle: np.ndarray,
-                      heading: np.float64, look_dir: np.float64) -> Tuple[np.ndarray, np.ndarray]:
+def get_sat_positions(
+    lat: np.ndarray,
+    lon: np.ndarray,
+    look_angle: np.ndarray,
+    inc_angle: np.ndarray,
+    heading: np.float64,
+    look_dir: np.float64
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Function to calculate the lon/lat position of the satellite for each pixel.
     :param lat: Ground latitude for each pixel (decimal degrees).
     :param lon: Ground point longitude for each pixel (decimal degrees).
     :param look_angle: Look angle (between nadir and look vector) for each pixel (radians).
-    :param inc_angle: Local incidence angle (between vertical and look vector) for each pixel (radians).
+    :param inc_angle:
+        Local incidence angle (between vertical and look vector) for each pixel (radians).
     :param heading: Satellite flight heading (radians).
     :param look_dir: Look direction w.r.t. satellite heading; +ve = right looking (radians).
     :return: sat_lat: Satellite position latitude for each pixel (decimal degrees).
     :return: sat_lon: Satellite position longitude for each pixel (decimal degrees).
     """
-    # note that the accuracy of satellite lat/lon positions code could be improved by calculating satellite positions
-    # for each azimuth row from orbital state vectors given in .par file, using the following workflow:
+    # note that the accuracy of satellite lat/lon positions code could be improved by
+    # calculating satellite positions for each azimuth row from orbital state vectors given
+    # in .par file, using the following workflow:
     # 1. read orbital state vectors and start/stop times from mli.par
     # 2. for each pixel get the corresponding radar row (from matrix az)
     # 3. get the corresponding radar time for that row (using linear interpolation)
-    # 4. calculate the satellite XYZ position for that time by interpolating the time and velocity state vectors
+    # 4. calculate the satellite XYZ position for that time by interpolating the
+    #    time and velocity state vectors
 
     # angle at the Earth's center between se and re
     epsilon = np.pi - look_angle - (np.pi - inc_angle)
-    # azimuth of satellite look vector (satellite heading + look direction (+90 deg for right-looking SAR)
+    # azimuth of satellite look vector (satellite heading + look direction)
+    # (note: +90 deg for right-looking SAR)
     sat_azi = heading + look_dir
-    # the following equations are adapted from Section 4.4 (page 4-16) in EARTH-REFERENCED AIRCRAFT NAVIGATION AND
-    # SURVEILLANCE ANALYSIS (https://ntlrepository.blob.core.windows.net/lib/59000/59300/59358/DOT-VNTSC-FAA-16-12.pdf)
-    sat_lon = np.divide(np.arcsin(-(np.multiply(np.sin(epsilon), np.sin(sat_azi)))), np.cos(lat)) + lon  # Eq. 103
-    temp = np.multiply(np.divide(np.cos(0.5 * (sat_azi + sat_lon - lon)), np.cos(0.5 * (sat_azi - sat_lon + lon))), \
-                       np.tan(0.5 * (np.pi / 2 + lat - epsilon)))  # Eq. 104
+    # the following equations are adapted from Section 4.4 (page 4-16)
+    # in EARTH-REFERENCED AIRCRAFT NAVIGATION AND SURVEILLANCE ANALYSIS:
+    # https://ntlrepository.blob.core.windows.net/lib/59000/59300/59358/DOT-VNTSC-FAA-16-12.pdf
+
+    # Eq. 103
+    sat_lon = (np.arcsin(-(np.multiply(np.sin(epsilon), np.sin(sat_azi)))) / np.cos(lat)) + lon
+    # Eq. 104
+    temp = np.multiply(
+        np.divide(np.cos(0.5 * (sat_azi + sat_lon - lon)), np.cos(0.5 * (sat_azi - sat_lon + lon))),
+        np.tan(0.5 * (np.pi / 2 + lat - epsilon))
+    )
     sat_lat = -np.pi / 2 + 2 * np.arctan(temp)
 
     return np.real(sat_lat), np.real(sat_lon)
 
 
-def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarray, lat: np.ndarray,
-                        dem_height: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def calc_pixel_geometry(
+    ifg: Union[Ifg, IfgPart],
+    rg: np.ndarray,
+    lon: np.ndarray,
+    lat: np.ndarray,
+    dem_height: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Function to calculate angular satellite to ground geometries and distance for each pixel.
     :param ifg: pyrate.core.shared.Ifg Class object.
@@ -129,8 +153,10 @@ def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarra
     :param lon: Longitude for each pixel (decimal degrees).
     :param lat: Latitude for each pixel (decimal degrees).
     :param dem_height: Height from DEM for each pixel (metres).
-    :return: look_angle: Look angle (between nadir and look vector) for each pixel (radians).
-    :return: incidence_angle: Local incidence angle (between vertical and look vector) for each pixel (radians).
+    :return: look_angle:
+        Look angle (between nadir and look vector) for each pixel (radians).
+    :return: incidence_angle:
+        Local incidence angle (between vertical and look vector) for each pixel (radians).
     :return: azimuth_angle: Geodetic azimuth for each pixel (radians).
     :return: range_dist: Distance from satellite to ground for each pixel (metres).
     """
@@ -142,7 +168,7 @@ def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarra
     near_range = float(ifg.meta_data[ifc.PYRATE_NEAR_RANGE_METRES])
     rps = float(ifg.meta_data[ifc.PYRATE_RANGE_PIX_METRES])
     heading = float(ifg.meta_data[ifc.PYRATE_HEADING_DEGREES])
-    # direction of look vector w.r.t. satellite heading. 
+    # direction of look vector w.r.t. satellite heading.
     # Gamma convention: +ve = right; -ve = left.
     look_dir = float(ifg.meta_data[ifc.PYRATE_AZIMUTH_DEGREES])
 
@@ -161,16 +187,19 @@ def calc_pixel_geometry(ifg: Union[Ifg, IfgPart], rg: np.ndarray, lon: np.ndarra
 
     # look angle at pixel ij -> law of cosines in "satellite - Earth centre - ground pixel" triangle
     # see e.g. Section 2 in https://www.cs.uaf.edu/~olawlor/ref/asf/sar_equations_2006_08_17.pdf
-    look_angle = np.arccos(np.divide(se ** 2 + np.square(range_dist) - np.square(re), 2 * se * range_dist))
+    look_angle = np.divide(se ** 2 + np.square(range_dist) - np.square(re), 2 * se * range_dist)
+    look_angle = np.arccos(look_angle)
 
     # add per-pixel height to the earth radius to obtain a more accurate ground pixel position for
     # incidence angle calculation
     re = re + dem_height
 
-    # incidence angle at pixel ij -> law of cosines in "satellite - Earth centre - ground pixel" triangle
+    # incidence angle at pixel ij:
+    # law of cosines in "satellite - Earth centre - ground pixel" triangle
     # see e.g. Section 2 in https://www.cs.uaf.edu/~olawlor/ref/asf/sar_equations_2006_08_17.pdf
-    incidence_angle = np.pi - np.arccos(np.divide(np.square(range_dist) + np.square(re) - se ** 2,
-                                                  2 * np.multiply(range_dist, re)))
+    incidence_angle = np.pi - np.arccos(
+        np.divide(np.square(range_dist) + np.square(re) - se ** 2, 2 * np.multiply(range_dist, re))
+    )
 
     # calculate satellite positions for each pixel
     sat_lat, sat_lon = get_sat_positions(lat, lon, look_angle, incidence_angle, heading, look_dir)
@@ -203,14 +232,18 @@ def calc_local_baseline(ifg: Ifg, az: np.ndarray, look_angle: np.ndarray) -> np.
     baserate_N = float(ifg.meta_data[ifc.PYRATE_BASELINE_RATE_N])
 
     # calculate per pixel baseline vectors across track (C) and normal to the track (N)
-    mean_az = az_n / 2 - 0.5  # mean azimuth line
-    prf = prf / az_looks  # Pulse Repetition Frequency needs to be adjusted according to GAMMA azimuth looks
+
+    # mean azimuth line
+    mean_az = az_n / 2 - 0.5
+    # Pulse Repetition Frequency needs to be adjusted according to GAMMA azimuth looks
+    prf = prf / az_looks
     base_C_local = base_C + baserate_C * (az - mean_az) / prf
     base_N_local = base_N + baserate_N * (az - mean_az) / prf
 
     # calculate the per-pixel perpendicular baseline (see Eq. 3.5 in Baehr, 2012 available here:
     # http://www.dgk.badw.de/fileadmin/user_upload/Files/DGK/docs/c-719.pdf)
-    bperp = np.multiply(base_C_local, np.cos(look_angle)) - np.multiply(base_N_local, np.sin(look_angle))
+    bperp = np.multiply(base_C_local, np.cos(look_angle))
+    bperp -= np.multiply(base_N_local, np.sin(look_angle))
 
     return bperp
 
@@ -245,10 +278,13 @@ def vincinv(lat1: np.ndarray, lon1: np.ndarray, lat2: np.ndarray, lon2: np.ndarr
     omega = lon
     # Iterate until the change in lambda, lambda_sigma, is insignificant
     # (< 1e-12) or after 1000 iterations have been completed
-    for i in range(1000):
+    for _ in range(1000):
         # Eq. 74
+        # pylint: disable=line-too-long
+        # JUSTIFICATION: slightly over but a lot easier to read this way.
         sin_sigma = np.sqrt(
-            (np.cos(u2) * np.sin(lon)) ** 2 + (np.cos(u1) * np.sin(u2) - np.sin(u1) * np.cos(u2) * np.cos(lon)) ** 2)
+            (np.cos(u2) * np.sin(lon)) ** 2 + (np.cos(u1) * np.sin(u2) - np.sin(u1) * np.cos(u2) * np.cos(lon)) ** 2
+        )
         # Eq. 75
         cos_sigma = np.sin(u1) * np.sin(u2) + np.cos(u1) * np.cos(u2) * np.cos(lon)
         # Eq. 76
@@ -260,6 +296,8 @@ def vincinv(lat1: np.ndarray, lon1: np.ndarray, lat2: np.ndarray, lon2: np.ndarr
         # Eq. 79
         c = (f / 16) * np.cos(alpha) ** 2 * (4 + f * (4 - 3 * np.cos(alpha) ** 2))
         # Eq. 80
+        # pylint: disable=line-too-long
+        # JUSTIFICATION: slightly over but a lot easier to read this way.
         new_lon = omega + (1 - c) * f * np.sin(alpha) * (
                 sigma + c * np.sin(sigma) * (cos_two_sigma_m + c * np.cos(sigma) * (-1 + 2 * (cos_two_sigma_m ** 2)))
         )

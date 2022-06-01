@@ -43,13 +43,16 @@ def update_refpix_metadata(ifg_paths, refx, refy, transform, params):
     """
     Function that adds metadata about the chosen reference pixel to each interferogram.
     """
-    pyrate_refpix_lon, pyrate_refpix_lat = mpiops.run_once(convert_pixel_value_to_geographic_coordinate, refx, refy, transform)
+    pyrate_refpix_lon, pyrate_refpix_lat = mpiops.run_once(
+        convert_pixel_coord_to_lat_lon,
+        refx, refy, transform
+    )
 
 
     process_ifgs_paths = mpiops.array_split(ifg_paths)
 
     for ifg_file in process_ifgs_paths:
-        log.debug("Updating metadata for: "+ifg_file)
+        log.debug(f"Updating metadata for: {ifg_file}")
         ifg = Ifg(ifg_file)
         log.debug("Open dataset")
         ifg.open(readonly=True)
@@ -75,40 +78,58 @@ def update_refpix_metadata(ifg_paths, refx, refy, transform, params):
         ifg.close()
 
 
-def convert_pixel_value_to_geographic_coordinate(refx, refy, transform):
+def convert_pixel_coord_to_lat_lon(refx, refy, transform):
     """
     Converts a pixel coordinate to a latitude/longitude coordinate given the
     geotransform of the image.
     Args:
         refx: The pixel x coordinate.
-        refy: The pixel ye coordinate.
+        refy: The pixel y coordinate.
         transform: The geotransform array of the image.
     Returns:
         Tuple of lon, lat geographic coordinate.
     """
 
-    lon = lon_from_pixel_coordinate(refx, transform)
+    lon = lon_from_pixel_coord(refx, transform)
 
-    lat = lat_from_pixel_coordinate(refy, transform)
+    lat = lat_from_pixel_coord(refy, transform)
 
     return lon, lat
 
 
-def lat_from_pixel_coordinate(refy, transform):
-    yOrigin = transform[3]
-    pixelHeight = -transform[5]
-    lat = yOrigin - refy * pixelHeight
+def lat_from_pixel_coord(refy, transform):
+    """
+    Gets the pixel Y coordinate for a latitude coordinate, given a geotransform for an image.
+
+    Args:
+        refy: The pixel y coordinate.
+        transform: The geotransform array of the image.
+    Returns:
+        The resulting latitude coordinate.
+    """
+    y_origin = transform[3]
+    pixel_height = -transform[5]
+    lat = y_origin - refy * pixel_height
     return lat
 
 
-def lon_from_pixel_coordinate(refx, transform):
-    xOrigin = transform[0]
-    pixelWidth = transform[1]
-    lon = refx * pixelWidth + xOrigin
+def lon_from_pixel_coord(refx, transform):
+    """
+    Gets the pixel X coordinate for a longitude coordinate, given a geotransform for an image.
+
+    Args:
+        refy: The pixel x coordinate.
+        transform: The geotransform array of the image.
+    Returns:
+        The resulting longitude coordinate.
+    """
+    x_origin = transform[0]
+    pixel_width = transform[1]
+    lon = refx * pixel_width + x_origin
     return lon
 
 
-def convert_geographic_coordinate_to_pixel_value(lon, lat, transform):
+def convert_lat_lon_to_pixel_coord(lon, lat, transform):
     """
     Converts a latitude/longitude coordinate to a pixel coordinate given the
     geotransform of the image.
@@ -120,13 +141,13 @@ def convert_geographic_coordinate_to_pixel_value(lon, lat, transform):
         Tuple of refx, refy pixel coordinates.
     """
 
-    xOrigin = transform[0]
-    yOrigin = transform[3]
-    pixelWidth = transform[1]
-    pixelHeight = -transform[5]
+    x_origin = transform[0]
+    y_origin = transform[3]
+    pixel_width = transform[1]
+    pixel_height = -transform[5]
 
-    refx = round((lon - xOrigin) / pixelWidth)
-    refy = round((yOrigin - lat) / pixelHeight)
+    refx = round((lon - x_origin) / pixel_width)
+    refy = round((y_origin - lat) / pixel_height)
 
     return int(refx), int(refy)
 
@@ -186,7 +207,7 @@ def find_min_mean(mean_sds, grid):
     :param list grid: List of ref pixel coordinates tuples
 
     :return: Tuple of (refy, refx) with minimum mean
-    :rtype: tuple    
+    :rtype: tuple
     """
     log.debug('Ranking ref pixel candidates based on mean values')
     try:
@@ -201,10 +222,10 @@ def ref_pixel_setup(ifgs_or_paths, params):
     """
     Sets up the grid for reference pixel computation and saves numpy files
     to disk for later use during ref pixel computation.
-        
+
     :param list ifgs_or_paths: List of interferogram filenames or Ifg objects
     :param dict params: Dictionary of configuration parameters
-    
+
     :return: half_patch_size: size of patch
     :rtype: float
     :return: thresh
@@ -263,12 +284,14 @@ def save_ref_pixel_blocks(grid, half_patch_size, ifg_paths, params):
         ifg.nodata_value = params[C.NO_DATA_VALUE]
         ifg.convert_to_nans()
         ifg.convert_to_mm()
+
+        b = os.path.basename(pth).split('.')[0]
+
         for y, x in grid:
             data = ifg.phase_data[y - half_patch_size:y + half_patch_size + 1,
                                   x - half_patch_size:x + half_patch_size + 1]
 
-            data_file = join(outdir, 'ref_phase_data_{b}_{y}_{x}.npy'.format(
-                    b=os.path.basename(pth).split('.')[0], y=y, x=x))
+            data_file = join(outdir, f'ref_phase_data_{b}_{y}_{x}.npy')
             np.save(file=data_file, arr=data)
         ifg.close()
     log.debug('Saved ref pixel blocks')
@@ -299,10 +322,8 @@ def _ref_pixel_multi(g, half_patch_size, phase_data_or_ifg_paths,
         data = []
         output_dir = params[C.TMPDIR]
         for p in phase_data_or_ifg_paths:
-            data_file = os.path.join(output_dir,
-                                     'ref_phase_data_{b}_{y}_{x}.npy'.format(
-                                         b=os.path.basename(p).split('.')[0],
-                                         y=y, x=x))
+            b = os.path.basename(p).split('.')[0]
+            data_file = os.path.join(output_dir, f'ref_phase_data_{b}_{y}_{x}.npy')
             data.append(np.load(file=data_file))
     else:  # phase_data_or_ifg is phase_data list
         data = [p[y - half_patch_size:y + half_patch_size + 1,
@@ -312,8 +333,8 @@ def _ref_pixel_multi(g, half_patch_size, phase_data_or_ifg_paths,
     if all(valid):  # ignore if 1+ ifgs have too many incoherent cells
         sd = [std(i[~isnan(i)]) for i in data]
         return mean(sd)
-    else:
-        return np.nan
+
+    return np.nan
 
 
 def _step(dim, ref, radius):
@@ -432,19 +453,21 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
 
     ref_pixel_file = Configuration.ref_pixel_path(params)
 
-    def __reuse_ref_pixel_file_if_exists():
-        if ref_pixel_file.exists():
-            refx, refy = np.load(ref_pixel_file)
-            log.info('Reusing pre-calculated ref-pixel values: ({}, {}) from file {}'.format(
-                refx, refy, ref_pixel_file.as_posix()))
-            log.warning("Reusing ref-pixel values from previous run!!!")
-            params[C.REFX_FOUND], params[C.REFY_FOUND] = int(refx), int(refy)
-            return int(refx), int(refy)
-        else:
+    def _reuse_ref_pixel_file_if_exists():
+        if not ref_pixel_file.exists():
             return None, None
 
+        refx, refy = np.load(ref_pixel_file)
+        ref_path = ref_pixel_file.as_posix()
+        log.info(
+            f'Reusing pre-calculated ref-pixel values: ({refx}, {refy}) from file {ref_path}'
+        )
+        log.warning("Reusing ref-pixel values from previous run!!!")
+        params[C.REFX_FOUND], params[C.REFY_FOUND] = int(refx), int(refy)
+        return int(refx), int(refy)
+
     # read and return
-    refx, refy = mpiops.run_once(__reuse_ref_pixel_file_if_exists)
+    refx, refy = mpiops.run_once(_reuse_ref_pixel_file_if_exists)
     if (refx is not None) and (refy is not None):
         update_refpix_metadata(ifg_paths, int(refx), int(refy), transform, params)
         return refx, refy
@@ -465,22 +488,22 @@ def ref_pixel_calc_wrapper(params: dict) -> Tuple[int, int]:
         if isinstance(refpixel_returned, ValueError):
             raise RefPixelError(
                 "Reference pixel calculation returned an all nan slice!\n"
-                "Cannot continue downstream computation. Please change reference pixel algorithm used before "
-                "continuing.")
+                "Cannot continue downstream computation. Please change reference pixel algorithm "
+                "used before continuing.")
         refy, refx = refpixel_returned   # row first means first value is latitude
-        log.info('Selected reference pixel coordinate (x, y): ({}, {})'.format(refx, refy))
-        lon, lat = convert_pixel_value_to_geographic_coordinate(refx, refy, transform)
-        log.info('Selected reference pixel coordinate (lon, lat): ({}, {})'.format(lon, lat))
+        log.info(f'Selected reference pixel coordinate (x, y): ({refx}, {refy})')
+        lon, lat = convert_pixel_coord_to_lat_lon(refx, refy, transform)
+        log.info(f'Selected reference pixel coordinate (lon, lat): ({lon}, {lat})')
     else:
-        log.info('Using reference pixel from config file (lon, lat): ({}, {})'.format(lon, lat))
+        log.info(f'Using reference pixel from config file (lon, lat): ({lon}, {lat})')
         log.warning("Ensure user supplied reference pixel values are in lon/lat")
-        refx, refy = convert_geographic_coordinate_to_pixel_value(lon, lat, transform)
-        log.info('Converted reference pixel coordinate (x, y): ({}, {})'.format(refx, refy))
+        refx, refy = convert_lat_lon_to_pixel_coord(lon, lat, transform)
+        log.info(f'Converted reference pixel coordinate (x, y): ({refx}, {refy})')
 
     np.save(file=ref_pixel_file, arr=[int(refx), int(refy)])
     update_refpix_metadata(ifg_paths, refx, refy, transform, params)
 
-    log.debug("refpx, refpy: "+str(refx) + " " + str(refy))
+    log.debug(f"refpx, refpy: {refx} {refy}")
     ifg.close()
     params[C.REFX_FOUND], params[C.REFY_FOUND] = int(refx), int(refy)
     return int(refx), int(refy)

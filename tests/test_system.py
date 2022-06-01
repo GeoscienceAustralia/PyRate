@@ -50,8 +50,8 @@ def test_workflow(system_conf):
     shutil.rmtree(params[C.OUT_DIR])
 
 
-def test_single_workflow(gamma_or_mexicoa_conf):
-    if MPI_INSTALLED:
+def test_single_workflow(pytestconfig, gamma_or_mexicoa_conf):
+    if MPI_INSTALLED and "not mpi" not in pytestconfig.getoption("-m"):
         check_call(f"mpirun -n 4 pyrate workflow -f {gamma_or_mexicoa_conf}", shell=True)
     else:
         check_call(f"pyrate workflow -f {gamma_or_mexicoa_conf}", shell=True)

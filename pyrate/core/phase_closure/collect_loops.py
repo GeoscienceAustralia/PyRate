@@ -24,7 +24,7 @@ def dfs(graph, marked, n, vert, start, count, loop, all_loops):
     Adapted from https://www.geeksforgeeks.org/print-all-the-cycles-in-an-undirected-graph/
     """
     # Number of vertices
-    V = graph.shape[0] 
+    V = graph.shape[0]
 
     # mark the vertex vert as visited
     marked[vert] = True
@@ -39,9 +39,8 @@ def dfs(graph, marked, n, vert, start, count, loop, all_loops):
         if graph[vert][start] == 1:
             count += 1
             all_loops.append(loop)
-            return count
-        else:
-            return count
+
+        return count
 
     # For searching every possible path of length (n-1)
     for i in range(V):
@@ -111,11 +110,11 @@ def dedupe_loops(loops: List[List]) -> List:
     """
     seen_sets = set()
     filtered = []
-    for l in loops:
-        loop = l[:]
-        l.sort()
-        l = tuple(l)
-        if l not in seen_sets:
-            seen_sets.add(l)
-            filtered.append(loop)
+    for loop in loops:
+        orig_loop = loop[:]
+        loop.sort()
+        loop = tuple(loop)
+        if loop not in seen_sets:
+            seen_sets.add(loop)
+            filtered.append(orig_loop)
     return filtered

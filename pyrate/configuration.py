@@ -23,8 +23,8 @@ from pathlib import Path, PurePath
 from typing import Union
 
 import pyrate.constants as C
-from pyrate.constants import NO_OF_PARALLEL_PROCESSES, sixteen_digits_pattern, twelve_digits_pattern, ORB_ERROR_DIR, \
-    DEM_ERROR_DIR, TEMP_MLOOKED_DIR
+from pyrate.constants import NO_OF_PARALLEL_PROCESSES, sixteen_digits_pattern, \
+    twelve_digits_pattern, ORB_ERROR_DIR, DEM_ERROR_DIR, TEMP_MLOOKED_DIR
 from pyrate.core import ifgconstants as ifg
 from pyrate.default_parameters import PYRATE_DEFAULT_CONFIGURATION
 from pyrate.core.algorithm import factorise_integer
@@ -32,61 +32,81 @@ from pyrate.core.shared import extract_epochs_from_filename, InputTypes, get_til
 
 
 def set_parameter_value(data_type, input_value, default_value, required, input_name):
-    if len(input_value) < 1:
+    """
+    Convers a user-provided value into a final value, by applying data types and
+    default values on the input.
+
+    This function will raise an error if an input value is not given, but required.
+    """
+    if input_value is not None and len(input_value) < 1:
         input_value = None
         if required:  # pragma: no cover
-            raise ValueError("A required parameter is missing value in input configuration file: " + str(input_name))
+            msg = f"A required parameter is missing from the configuration file: {input_name}"
+            raise ValueError(msg)
 
     if input_value is not None:
         if str(data_type) in "path":
             return Path(input_value)
         return data_type(input_value)
+
     return default_value
 
 
-def validate_parameter_value(input_name, input_value, min_value=None, max_value=None, possible_values=None):
+def validate_parameter_value(
+    input_name: str,
+    input_value,
+    min_value=None,
+    max_value=None,
+    possible_values=None
+):
+    """Validates that a supplied value sits within a range or set of allowed values."""
+
     if isinstance(input_value, PurePath):
         if not Path.exists(input_value):  # pragma: no cover
-            raise ValueError("Given path: " + str(input_value) + " does not exist.")
+            raise ValueError(f"Given path: {input_value} does not exist.")
+
     if input_value is not None:
         if min_value is not None:
             if input_value < min_value:  # pragma: no cover
-                raise ValueError(
-                    "Invalid value for " + str(input_name) + " supplied: " + str(
-                        input_value) + ". Provide a value greater than or equal to " + str(min_value) + ".")
-    if input_value is not None:
+                msg = f"Invalid value for {input_name} supplied: {input_value}. " \
+                      f"Provide a value greater than or equal to {min_value}."
+                raise ValueError(msg)
+
         if max_value is not None:
             if input_value > max_value:  # pragma: no cover
-                raise ValueError(
-                    "Invalid value for " + str(input_name) + " supplied: " + str(
-                        input_value) + ". Provide a value less than or equal to " + str(max_value) + ".")
+                msg = f"Invalid value for {input_name} supplied: {input_value}. " \
+                      f"Provide a value less than or equal to {max_value}."
+                raise ValueError(msg)
 
     if possible_values is not None:
         if input_value not in possible_values:  # pragma: no cover
-            raise ValueError(
-                "Invalid value for " + str(input_name) + " supplied: " + str(
-                    input_value) + ". Provide one of these values: " + str(possible_values) + ".")
+            msg = f"Invalid value for {input_name} supplied: {input_value}. " \
+                  f"Provide one of these values: {possible_values}."
+            raise ValueError(msg)
     return True
 
 
 def validate_file_list_values(file_list, no_of_epochs):
+    """Validates that the provided IFG files have enough epochs"""
     if file_list is None:  # pragma: no cover
         raise ValueError("No value supplied for input file list: " + str(file_list))
 
     files = parse_namelist(file_list)
 
-    for f in files:
-        if not Path(f).exists():  # pragma: no cover
-            raise ConfigException(f"{f} does not exist")
-        else:
-            matches = extract_epochs_from_filename(filename_with_epochs=f)
-            if len(matches) < no_of_epochs:  # pragma: no cover
-                raise ConfigException(f"the number of epochs in {f} names are less the required number: {no_of_epochs}")
+    for file in files:
+        if not Path(file).exists():  # pragma: no cover
+            raise ConfigException(f"{file} does not exist")
+
+        matches = extract_epochs_from_filename(filename_with_epochs=file)
+        if len(matches) < no_of_epochs:  # pragma: no cover
+            msg = f"the number of epochs in {file} names are less " \
+                  f"the required number: {no_of_epochs}"
+            raise ConfigException(msg)
 
 
 class MultiplePaths:
+    """A utility class which provides paths related to an interferogram file."""
     def __init__(self, file_name: str, params: dict, input_type: InputTypes = InputTypes.IFG):
-
         self.input_type = input_type
         out_dir = params[C.OUT_DIR]
         tempdir = params[C.TEMP_MLOOKED_DIR]
@@ -98,13 +118,14 @@ class MultiplePaths:
             if d is None:  # could be 6 digit epoch dates
                 d = re.search(twelve_digits_pattern, b.stem)
             if d is None:
-                raise ValueError(f"{input_type.value} filename does not contain two 8- or 6-digit date strings")
+                msg = f"{input_type.value} filename does not contain two 8 or 6 digit date strings"
+                raise ValueError(msg)
             filestr = d.group() + '_'
         else:
             filestr = ''
 
-        dir_exists = input_type.value in InputTypes.dir_map.value.keys()
-        anchoring_dir = Path(out_dir).joinpath(InputTypes.dir_map.value[input_type.value]) \
+        dir_exists = input_type.value in InputTypes.DIR_MAP.value.keys()
+        anchoring_dir = Path(out_dir).joinpath(InputTypes.DIR_MAP.value[input_type.value]) \
             if dir_exists else Path(out_dir)
 
         if b.suffix == ".tif":
@@ -113,7 +134,8 @@ class MultiplePaths:
             self.sampled_path = anchoring_dir.joinpath(filestr + input_type.value + '.tif')
         else:
             self.unwrapped_path = b.as_posix()
-            converted_path = anchoring_dir.joinpath(b.stem.split('.')[0] + '_' + b.suffix[1:]).with_suffix('.tif')
+            converted_path = b.stem.split('.')[0] + '_' + b.suffix[1:]
+            converted_path = (anchoring_dir / converted_path).with_suffix('.tif')
             self.sampled_path = converted_path.with_name(filestr + input_type.value + '.tif')
 
         # tmp_sampled_paths are used after prepifg, during correct steps
@@ -123,6 +145,7 @@ class MultiplePaths:
 
     @staticmethod
     def orb_error_path(ifg_path: Union[str, Path], params) -> Path:
+        """Returns the orbit error path for a specific interferogram file."""
         if isinstance(ifg_path, str):
             ifg_path = Path(ifg_path)
         return Path(params[C.OUT_DIR], C.ORB_ERROR_DIR,
@@ -135,6 +158,7 @@ class MultiplePaths:
 
     @staticmethod
     def dem_error_path(ifg_path: Union[str, Path], params) -> Path:
+        """Returns the DEM error path for a specific interferogram file."""
         if isinstance(ifg_path, str):
             ifg_path = Path(ifg_path)
         return Path(params[C.OUT_DIR], C.DEM_ERROR_DIR,
@@ -142,6 +166,7 @@ class MultiplePaths:
 
     @staticmethod
     def aps_error_path(ifg_path: Union[str, Path], params) -> Path:
+        """Returns the APS error path for a specific interferogram file."""
         if isinstance(ifg_path, str):
             ifg_path = Path(ifg_path)
         return Path(params[C.OUT_DIR], C.APS_ERROR_DIR,
@@ -156,28 +181,62 @@ class MultiplePaths:
                               ]) + '_aps_error.npy')
 
     def __str__(self):  # pragma: no cover
-        st = ""
+        value = ""
         if self.unwrapped_path is not None:
-            st += """\nunwrapped_path = """ + self.unwrapped_path
+            value += """\nunwrapped_path = """ + self.unwrapped_path
         else:
-            st += """\nunwrapped_path = None"""
-        st += """
-            converted_path = """ + self.converted_path + """ 
-            sampled_path = """ + self.sampled_path + """    
-            tmp_sampled_path = """ + self.tmp_sampled_path + """
+            value += """\nunwrapped_path = None"""
+        value += f"""
+            converted_path = {self.converted_path}
+            sampled_path = {self.sampled_path}
+            tmp_sampled_path = {self.tmp_sampled_path}
             """
-        return st
+        return value
 
 
 class Configuration:
+    """
+    The main configuration class for PyRate, which allows access to the values of
+    configurable properties.
 
-    def __init__(self, config_file_path):
+    :param config_file_path: The path to the configuration text file to load
 
+    :ivar outdir: The PyRate output directory
+    """
+    outdir: str
+    refchipsize: int
+
+    # pylint: disable=invalid-name
+    # JUSTIFICATION: these are long-established in the code already, out of scope to fix just yet.
+
+    # TODO: Write documentation for each of the configuration options, at the very least refering
+    # to some other place it's all documented (currently I'm not sure they are?)
+    #
+    # pylint: disable=missing-function-docstring
+    # JUSTIFICATION: This is a whole job in and of itself, the configuration options need docs...
+    # and in writing those docs, the typing info about them can be established / QA can be improved
+
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    # JUSTIFICATION: cleaning up configuration class is out of scope currently, will probably be
+    # tackled when things are restructured (shared.py and configuration.py are cluttered).
+
+    def __init__(self, config_file_path: Union[str, Path]):
+        # Promote config to path object
+        if not isinstance(config_file_path, Path):
+            config_file_path = Path(config_file_path)
+
+        # Setup default values (in case they're not in the config file)
+        self.parallel = False
+        self.processes = 1
+        self.cohfilelist = None
+        self.basefilelist = None
+        self.demfile = None
+
+        # Load config file
         parser = ConfigParser()
         parser.optionxform = str
         # mimic header to fulfil the requirement for configparser
-        with open(config_file_path) as stream:
-            parser.read_string("[root]\n" + stream.read())
+        parser.read_string("[root]\n" + config_file_path.read_text("utf-8"))
 
         for key, value in parser["root"].items():
             self.__dict__[key] = value
@@ -187,7 +246,8 @@ class Configuration:
 
         # custom correct sequence if 'correct' section is provided in config
         if 'correct' in parser and 'steps' in parser['correct']:
-            self.__dict__['correct'] = list(filter(None, parser['correct'].get('steps').splitlines()))
+            filtered_correct = filter(None, parser['correct'].get('steps').splitlines())
+            self.__dict__['correct'] = list(filtered_correct)
         else:
             self.__dict__['correct'] = [
                 'orbfit',
@@ -226,8 +286,8 @@ class Configuration:
         # bespoke parameter validation
         if self.refchipsize % 2 != 1:  # pragma: no cover
             if self.refchipsize - 1 > 1:
-                # Configuration parameters refchipsize must be odd
-                # values too large (>101) will slow down the process without significant gains in results.
+                # Configuration parameters refchipsize must be odd, values too large (>101)
+                # will slow down the process without significant gains in results.
                 self.refchipsize = self.refchipsize - 1
 
         # calculate rows and cols if not supplied
@@ -235,10 +295,10 @@ class Configuration:
             self.rows, self.cols = int(self.rows), int(self.cols)
         else:
             if NO_OF_PARALLEL_PROCESSES > 1:  # i.e. mpirun
-                self.rows, self.cols = [int(num) for num in factorise_integer(NO_OF_PARALLEL_PROCESSES)]
+                self.rows, self.cols = factorise_integer(NO_OF_PARALLEL_PROCESSES)
             else:
                 if self.parallel:  # i.e. joblib parallelism
-                    self.rows, self.cols = [int(num) for num in factorise_integer(self.processes)]
+                    self.rows, self.cols = factorise_integer(self.processes)
                 else:  # i.e. serial
                     self.rows, self.cols = 1, 1
 
@@ -305,20 +365,25 @@ class Configuration:
         if self.cohfilelist is not None:
             # if self.processor != 0:  # not roipac
             validate_file_list_values(self.cohfilelist, 1)
-            self.coherence_file_paths = self.__get_files_from_attr('cohfilelist', input_type=InputTypes.COH)
+            paths = self.__get_files_from_attr('cohfilelist', input_type=InputTypes.COH)
+            self.coherence_file_paths = paths
 
         if self.basefilelist is not None:
             # if self.processor != 0:  # not roipac
             validate_file_list_values(self.basefilelist, 1)
-            self.baseline_file_paths = self.__get_files_from_attr('basefilelist', input_type=InputTypes.BASE)
+            paths = self.__get_files_from_attr('basefilelist', input_type=InputTypes.BASE)
+            self.baseline_file_paths = paths
 
-        self.header_file_paths = self.__get_files_from_attr('hdrfilelist', input_type=InputTypes.HEADER)
+        paths = self.__get_files_from_attr('hdrfilelist', input_type=InputTypes.HEADER)
+        self.header_file_paths = paths
 
-        self.interferogram_files = self.__get_files_from_attr('ifgfilelist')
+        paths = self.__get_files_from_attr('ifgfilelist')
+        self.interferogram_files = paths
 
         self.dem_file = MultiplePaths(self.demfile, self.__dict__, input_type=InputTypes.DEM)
 
         # backward compatibility for string paths
+        # pylint: disable=consider-using-dict-items
         for key in self.__dict__:
             if isinstance(self.__dict__[key], PurePath):
                 self.__dict__[key] = str(self.__dict__[key])
@@ -355,7 +420,9 @@ class Configuration:
     def refresh_ifg_list(self, params):  # update params dict
         filtered_ifgs_list = self.phase_closure_filtered_ifgs_list(params)
         files = parse_namelist(filtered_ifgs_list.as_posix())
-        params[C.INTERFEROGRAM_FILES] = [MultiplePaths(p, self.__dict__, input_type=InputTypes.IFG) for p in files]
+        params[C.INTERFEROGRAM_FILES] = [
+            MultiplePaths(p, self.__dict__, input_type=InputTypes.IFG) for p in files
+        ]
         return params
 
     @staticmethod
@@ -382,6 +449,7 @@ class Configuration:
         closure_d = Path(self.phase_closure_dir)
 
         class Closure:
+            """Just a simple data class"""
             def __init__(self):
                 self.closure = closure_d.joinpath('closure.npy')
                 self.ifgs_breach_count = closure_d.joinpath('ifgs_breach_count.npy')
@@ -393,17 +461,25 @@ class Configuration:
     @staticmethod
     def coherence_stats(params):
         coh_d = Path(params[C.COHERENCE_DIR])
-        return {k: coh_d.joinpath(k.lower() + '.tif').as_posix() for k in [ifg.COH_MEDIAN, ifg.COH_MEAN, ifg.COH_STD]}
+        keys = [ifg.COH_MEDIAN, ifg.COH_MEAN, ifg.COH_STD]
+        return { k: coh_d.joinpath(k.lower() + '.tif').as_posix() for k in keys }
 
     @staticmethod
     def geometry_files(params):
         geom_dir = Path(params[C.GEOMETRY_DIR])
-        return {k: geom_dir.joinpath(k.lower() + '.tif').as_posix() for k in C.GEOMETRY_OUTPUT_TYPES}
+        return {
+            k: geom_dir.joinpath(k.lower() + '.tif').as_posix() for k in C.GEOMETRY_OUTPUT_TYPES
+        }
 
 
 def write_config_parser_file(conf: ConfigParser, output_conf_file: Union[str, Path]):
-    """replacement function for write_config_file which uses dict instead of a ConfigParser instance"""
-    with open(output_conf_file, 'w') as configfile:
+    """
+    Writes a config to a config file. Similar to write_config_file but for ConfigParser.
+
+    :param ConfigParser conf: The config parser instance to write to file.
+    :param str output_conf_file: output file name
+    """
+    with open(output_conf_file, 'w', encoding="utf-8") as configfile:
         conf.write(configfile)
 
 
@@ -417,27 +493,27 @@ def write_config_file(params, output_conf_file):
     :return: config file
     :rtype: list
     """
-    with open(output_conf_file, 'w') as f:
-        for k, v in params.items():
-            if v is not None:
-                if k == 'correct':
-                    f.write(''.join(['[', k, ']' ':\t', '', '\n']))
+    with open(output_conf_file, 'w', encoding="utf-8") as f:
+        for key, val in params.items():
+            if val is not None:
+                if key == 'correct':
+                    f.write(''.join(['[', key, ']', ':\t', '', '\n']))
                     f.write(''.join(['steps = ', '\n']))
-                    for vv in v:
-                        f.write(''.join(['\t' + str(vv), '\n']))
-                elif isinstance(v, list):
+                    for i in val:
+                        f.write(''.join(['\t' + str(i), '\n']))
+                elif isinstance(val, list):
                     continue
                 else:
-                    if isinstance(v, MultiplePaths):
-                        if v.unwrapped_path is None:
-                            vv = v.converted_path
+                    if isinstance(val, MultiplePaths):
+                        if val.unwrapped_path is None:
+                            path = val.converted_path
                         else:
-                            vv = v.unwrapped_path
+                            path = val.unwrapped_path
                     else:
-                        vv = v
-                    f.write(''.join([k, ':\t', str(vv), '\n']))
+                        path = val
+                    f.write(''.join([key, ':\t', str(path), '\n']))
             else:
-                f.write(''.join([k, ':\t', '', '\n']))
+                f.write(''.join([key, ':\t', '', '\n']))
 
 
 def parse_namelist(nml):
@@ -449,7 +525,7 @@ def parse_namelist(nml):
     :return: list of interferogram file names
     :rtype: list
     """
-    with open(nml) as f_in:
+    with open(nml, encoding="utf-8") as f_in:
         lines = [line.rstrip() for line in f_in]
     return filter(None, lines)
 
@@ -458,4 +534,3 @@ class ConfigException(Exception):
     """
     Default exception class for configuration errors.
     """
-
