@@ -287,7 +287,7 @@ def __update_meta_data(p_unset, coh, sampled, params):
     for key, val in md.items():
         key = key.replace(' ', '_')
         val = val.replace(' ', '_')
-        md_str += ' -mo {key}={val}'
+        md_str += f' -mo {key}={val}'
     check_call(f'gdal_edit.py -unsetmd {md_str} {sampled}', shell=True)
     ds = None
 
