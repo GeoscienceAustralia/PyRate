@@ -226,11 +226,11 @@ class Configuration:
             config_file_path = Path(config_file_path)
 
         # Setup default values (in case they're not in the config file)
-        self.parallel = False
-        self.processes = 1
-        self.cohfilelist = None
-        self.basefilelist = None
-        self.demfile = None
+        #self.parallel = False
+        #self.processes = 1
+        #self.cohfilelist = None
+        #self.basefilelist = None
+        #self.demfile = None
 
         # Load config file
         parser = ConfigParser()
