@@ -1376,11 +1376,11 @@ def check_correction_status(ifgs, meta):  # pragma: no cover
 
     if not all(flags) and any(flags):
         log.debug('Detected mix of corrected and uncorrected interferograms')
-        for flag in flags:
+        for i, flag in zip(ifgs, flags):
             if flag:
-                msg = '{i.data_path}: correction detected'
+                msg = f'{i.data_path}: correction detected'
             else:
-                msg = '{i.data_path}: correction NOT detected'
+                msg = f'{i.data_path}: correction NOT detected'
             log.debug(msg)
             close_all(ifgs)
             raise CorrectionStatusError(msg)
